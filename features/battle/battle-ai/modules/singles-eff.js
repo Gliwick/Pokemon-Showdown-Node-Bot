@@ -588,11 +588,11 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 	let res = {
 		obligatory: [],
 		viable: [],
-		switching: [],
-		slowswitching: [],
-		authentic: [],
 		unviable: [],
 		sleepTalk: [],
+		switching: [],
+		slowswitching: [],
+		hasAuthentic: false,
 	};
 	let sideId = 0; // Active, singles
 	let pokeA = battle.getCalcRequestPokemon(sideId, true);
@@ -651,7 +651,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			}
 		}
 
-		if (des.dynamax && !conditionsB.volatiles['dynamax'] && !selfLastPokemon(battle)) continue;
+		if (des.dynamax && !(conditionsB.volatiles['dynamax'] && pokeA.hp > 50) && !selfLastPokemon(battle)) continue;
 
 		let move = des.moveData;
 		let viableZMove = (
@@ -699,7 +699,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				if (move.category === 'Status') res.unviable.push(decisions[i]);
 				continue;
 			} else if (move.category === 'Status') {
-				res.authentic.push(decisions[i]);
+				res.hasAuthentic = true;
 			}
 		}
 		if (move.flags && move.flags['powder'] && battle.gen > 5) {
@@ -1272,9 +1272,10 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		'3hko': [], // +33% -> switch if better types, might use status moves
 		bad: [], // 1-33 -> switch if better types, replaced by status moves
 		immune: [],
-		subbreak: [],
-		authentic: [],
 		defrost: [],
+		subbreak: [],
+		hasAuthentic: false,
+		hasMultihit: false,
 	};
 	let maxBadDamage = 0;
 	let maxDefrostDamage = 0;
@@ -1308,8 +1309,8 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 			}
 		}
 
-		if (des.dynamax && !conditionsB.volatiles['dynamax'] && !selfLastPokemon(battle)) {
-			if (!(conditionsA.boosts.atk > 0 || conditionsA.boosts.spa > 0 || conditionsA.boosts.spe > 0)) continue;
+		if (des.dynamax && !(conditionsB.volatiles['dynamax'] && pokeA.hp > 50) && !selfLastPokemon(battle)) {
+			if (!((conditionsA.boosts.atk > 0 || conditionsA.boosts.spa > 0) && pokeA.hp > 50) && !(conditionsA.boosts.spe > 0)) continue;
 		}
 
 		let move = des.moveData;
@@ -1558,9 +1559,10 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		}
 
 		if (authentic) {
-			res.authentic.push(decisions[i]);
-		} else if (dmg > 25) {
-			res.subbreak.push(decisions[i]);
+			res.hasAuthentic = true;
+		} else {
+			if (multihit) res.hasMultihit = true;
+			if (dmg > 25) res.subbreak.push(decisions[i]);
 		}
 		if (move.flags && move.flags['defrost'] && pc > maxDefrostDamage) {
 			maxDefrostDamage = pc;
@@ -1759,7 +1761,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		// No switch when dynamaxed
 		if (conditionsA.volatiles['dynamax']) bestSwitch = null;
 
-		if (conditionsB.volatiles['substitute'] && !damageMoves.subbreak.length && !damageMoves.authentic.length && !supportMoves.authentic.length) switchIfNoOption = true;
+		if (conditionsB.volatiles['substitute'] && !damageMoves.subbreak.length && !damageMoves.hasMultihit && !damageMoves.hasAuthentic && !supportMoves.hasAuthentic) switchIfNoOption = true;
 		if (conditionsA.volatiles['curse']) switchIfNoOption = true;
 		if (conditionsA.volatiles['leechseed']) switchIfNoOption = true;
 		if (conditionsA.boosts['spa'] < 0) switchIfNoOption = true;
@@ -1911,7 +1913,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	if (filteredMoves.length > 0) finalMoves = filteredMoves;
 
 	// drain or heal
-	if (pokeA.hp <= 85) {
+	if (pokeA.hp <= 85 && !conditionsA.volatiles['healblock']) {
 		filteredMoves = [];
 		for (var i = 0; i < finalMoves.length; i++) {
 			let move = finalMoves[i][0].moveData;
