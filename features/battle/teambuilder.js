@@ -94,11 +94,19 @@ module.exports = {
 				if (teamChosen.maxPokemon && teamChosen.pokemon) {
 					//generate random team
 					var team = [];
+					var hasSpecies = {};
+					if (teamChosen.essentialPokemon) {
+						for (let poke of teamChosen.essentialPokemon) {
+							team.push(poke);
+							hasSpecies[poke.species] = true;
+						}
+					}
 					var pokes = teamChosen.pokemon.randomize();
-					var k = 0;
-					for (var i = 0; i < pokes.length; i++) {
-						if (k++ >= teamChosen.maxPokemon) break;
-						team.push(pokes[i]);
+					for (let i = 0; team.length < teamChosen.maxPokemon; i++) {
+						if (!hasSpecies[pokes[i].species]) {
+							team.push(pokes[i]);
+							hasSpecies[pokes[i].species] = true;
+						}
 					}
 					if (Config.debug.debug) debug("Packed Team: " + JSON.stringify(team));
 					teamStr = this.packTeam(team);

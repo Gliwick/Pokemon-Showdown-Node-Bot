@@ -5,6 +5,8 @@
 const DATA_DIR = "./../../../data/";
 const BAT_DATA_DIR = "./../data/";
 
+const CurrentGen = 8;
+
 exports.getEffect = function (effect, gen) {
 	if (!effect || typeof effect === 'string') {
 		var name = (effect || '').trim();
@@ -56,15 +58,16 @@ exports.getEffect = function (effect, gen) {
 };
 
 exports.getPokemon = exports.getTemplate = function (poke, gen) {
-	if (!gen || gen > 6 || gen < 1) gen = 6;
+	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
 	poke = toId(poke || "");
 	var pokemon = {};
 	var temp;
 	try {
 		temp = DataDownloader.getPokedex()[poke];
-		for (var i in temp) pokemon[i] = temp[i];
+		for (var attr in temp) pokemon[attr] = temp[attr];
+		if (temp.name) pokemon.species = temp.name;
 	} catch (e) {}
-	for (var i = 5; i >= gen; i--) {
+	for (var i = CurrentGen - 1; i >= gen; i--) {
 		try {
 			temp = require(BAT_DATA_DIR + "gen" + i + "/pokedex.js").BattlePokedex[poke];
 			if (!temp) continue;
@@ -74,26 +77,26 @@ exports.getPokemon = exports.getTemplate = function (poke, gen) {
 		if (!temp.inherit) {
 			for (var i in pokemon) delete pokemon[i];
 		}
-		for (var i in temp) pokemon[i] = temp[i];
+		for (var attr in temp) pokemon[attr] = temp[attr];
 	}
-	if (!pokemon.species) {
+	if (!pokemon.name) {
 		return {
-			num: 235,
-			species: "Smeargle",
+			num: 0,
+			name: poke,
+			species: poke,
 			types: ["Normal"],
-			baseStats: {hp: 55, atk: 20, def: 35, spa: 20, spd: 45, spe: 75},
-			abilities: {0: "Own Tempo", 1: "Technician", H: "Moody"},
-			heightm: 1.2,
-			weightkg: 58,
-			color: "White",
-			eggGroups: ["Field"]
+			baseStats: {hp: 90, atk: 90, def: 90, spa: 90, spd: 90, spe: 90},
+			abilities: {0: "No Ability"},
+			heightm: 0,
+			weightkg: 0,
+			unknown: true,
 		};
 	}
 	return pokemon;
 };
 
 exports.getMove = function (move, gen) {
-	if (!gen || gen > 6 || gen < 1) gen = 6;
+	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
 	move = toId(move || "");
 	if (move.indexOf("hiddenpower") === 0) {
 		move = move.replace(/[0-9]/g, "");
@@ -103,8 +106,9 @@ exports.getMove = function (move, gen) {
 	try {
 		temp = DataDownloader.getMovedex()[move];
 		for (var i in temp) moveData[i] = temp[i];
+		moveData.id = move;
 	} catch (e) {}
-	for (var i = 5; i >= gen; i--) {
+	for (var i = CurrentGen - 1; i >= gen; i--) {
 		try {
 			temp = require(BAT_DATA_DIR + "gen" + i + "/moves.js").BattleMovedex[move];
 			if (!temp) continue;
@@ -116,22 +120,20 @@ exports.getMove = function (move, gen) {
 		}
 		for (var i in temp) moveData[i] = temp[i];
 	}
-	if (!moveData.id) {
+	if (!moveData.name) {
 		return {
-			num: 165,
-			accuracy: true,
-			basePower: 50,
+			num: 0,
+			accuracy: 100,
+			basePower: 90,
 			category: "Physical",
-			desc: "Deals typeless damage to one adjacent foe at random. If this move was successful, the user loses 1/4 of its maximum HP, rounded half up; the Ability Rock Head does not prevent this. This move can only be used if none of the user's known moves can be selected.",
-			shortDesc: "User loses 25% of its max HP as recoil.",
 			id: "struggle",
 			name: "Struggle",
 			pp: 1,
-			noPPBoosts: true,
 			priority: 0,
 			flags: {contact: 1, protect: 1},
 			noSketch: true,
-			effectType: "Move"
+			effectType: "Move",
+			type: "Normal",
 		};
 	}
 	if (!moveData.effectType) moveData.effectType = 'Move';
@@ -139,7 +141,7 @@ exports.getMove = function (move, gen) {
 };
 
 exports.getItem = function (item, gen) {
-	if (!gen || gen > 6 || gen < 1) gen = 6;
+	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
 	item = toId(item || "");
 	var itemData = {};
 	var temp;
@@ -147,7 +149,7 @@ exports.getItem = function (item, gen) {
 		temp = DataDownloader.getItems()[item];
 		for (var i in temp) itemData[i] = temp[i];
 	} catch (e) {}
-	for (var i = 5; i >= gen; i--) {
+	for (var i = CurrentGen - 1; i >= gen; i--) {
 		try {
 			temp = require(BAT_DATA_DIR + "gen" + i + "/items.js").BattleItems[item];
 			if (!temp) continue;
@@ -177,7 +179,7 @@ exports.getItem = function (item, gen) {
 };
 
 exports.getAbility = function (ab, gen) {
-	if (!gen || gen > 6 || gen < 1) gen = 6;
+	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
 	ab = toId(ab || "");
 	var ability = {};
 	var temp;
@@ -185,7 +187,7 @@ exports.getAbility = function (ab, gen) {
 		temp = DataDownloader.getAbilities()[ab];
 		for (var i in temp) ability[i] = temp[i];
 	} catch (e) {}
-	for (var i = 5; i >= gen; i--) {
+	for (var i = CurrentGen - 1; i >= gen; i--) {
 		try {
 			temp = require(BAT_DATA_DIR + "gen" + i + "/abilities.js").BattleAbilities[ab];
 			if (!temp) continue;
@@ -437,7 +439,7 @@ exports.Player = (function () {
 })();
 
 exports.getFormatsData = function (gen) {
-	if (!gen || gen > 6 || gen < 1) gen = 6;
+	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
 	try {
 		return require(BAT_DATA_DIR + "gen" + gen + "/formats-data.js").BattleFormatsData;
 	} catch (e) {

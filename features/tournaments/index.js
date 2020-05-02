@@ -10,10 +10,13 @@ var tourData = exports.tourData = {};
 
 var Leaderboards = exports.Leaderboards = require('./leaderboards.js');
 
+const CurrentGen = 8;
+
 var Tournament = exports.Tournament = (function () {
 	function Tournament (room, details) {
-		this.format = details.format || 'randombattle';
+		this.format = details.format || 'gen' + CurrentGen + 'randombattle';
 		this.type = details.type || 'elimination';
+		this.eliminationCount = details.eliminationCount || 1;
 		this.users = 0;
 		this.maxUsers = details.maxUsers || null;
 		this.signups = false;
@@ -26,7 +29,7 @@ var Tournament = exports.Tournament = (function () {
 	}
 
 	Tournament.prototype.createTour = function () {
-		Bot.say(this.room, '/tournament create ' + this.format + ', ' + this.type);
+		Bot.say(this.room, '/tournament create ' + this.format + ', ' + this.type + (this.type === 'elimination' ? ',, ' + this.eliminationCount : ''));
 	};
 	Tournament.prototype.startTimeout = function () {
 		if (!this.timeToStart) return;

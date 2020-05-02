@@ -26,12 +26,12 @@ exports.id = "ingame-nostatus";
 /*
  * Bad moves for 1v1
  */
-const BadMoves = ['focuspunch', 'explosion', 'selfdestruct', 'lastresort', 'dreameater', 'snore'];
+const BadMoves = ['focuspunch', 'shelltrap', 'explosion', 'selfdestruct', 'lastresort', 'dreameater', 'snore'];
 
 /*
  * Moves which require 2 turs without any protection
  */
-const DoubleTurnMoves = ['solarbeam'];
+const DoubleTurnMoves = ['bounce', 'dig', 'dive', 'iceburn', 'fly', 'freezeshock', 'phantomforce', 'shadowforce', 'skyattack', 'solarbeam', 'solarblade'];
 
 /*
  * Team and Switch Decisions
@@ -62,7 +62,7 @@ function getPokemonAverage (battle, s) {
 			if (move.category === "Status") continue;
 			if (BadMoves.indexOf(move.id) >= 0) continue;
 			var dmg = Calc.calculate(pokeA, poke, move, conditions, conditions, battle.conditions, battle.gen);
-			//debug("DMG [" + pokeA.species + ", " + poke.species + ", " + move.name + "] = " + dmg.getMax());
+			// debug("DMG [" + pokeA.species + ", " + poke.species + ", " + move.name + "] = " + dmg.getMax());
 			if (DoubleTurnMoves.indexOf(move.id) >= 0) calcVal += dmg.getMax() * 0.5;
 			else calcVal += dmg.getMax();
 		}
@@ -87,7 +87,7 @@ function getSwitchAverage (battle, s) {
 	var final = 0;
 	var p = battle.request.side.pokemon[s];
 	var pokeA = battle.getCalcRequestPokemon(s, true);
-	if (toId(battle.tier || "").indexOf("challengecup") >= 0) pokeA.happiness = 100;
+	if (toId(battle.tier).indexOf("challengecup") >= 0) pokeA.happiness = 100;
 	var conditionsA = new Conditions({
 		side: battle.self.side,
 		volatiles: {},
@@ -124,7 +124,7 @@ function getSwitchAverage (battle, s) {
 				}
 			}
 			var dmg = Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen);
-			//debug("DMG [" + pokeA.species + ", " + pokeB.species + ", " + move.name + "] = " + dmg.getMax());
+			// debug("DMG [" + pokeA.species + ", " + pokeB.species + ", " + move.name + "] = " + dmg.getMax());
 			if (DoubleTurnMoves.indexOf(move.id) >= 0) final += dmg.getMax() * 0.5;
 			else final += dmg.getMax();
 		}

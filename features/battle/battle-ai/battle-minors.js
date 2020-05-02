@@ -18,6 +18,7 @@ module.exports = {
 			switch (effect.id) {
 				case 'stealthrock':
 				case 'spikes':
+				case 'rosespikes':
 				case 'recoil':
 				case 'sandstorm':
 				case 'hail':
@@ -38,8 +39,8 @@ module.exports = {
 					break;
 				case 'brn':
 				case 'psn':
-					if (!poke.helpers.stausCounter) poke.helpers.stausCounter = 0;
-					poke.helpers.stausCounter++;
+					if (!poke.helpers.statusCounter) poke.helpers.statusCounter = 0;
+					poke.helpers.statusCounter++;
 					break;
 				default:
 					if (ofpoke) {
@@ -251,6 +252,7 @@ module.exports = {
 			case 'substitute':
 				break;
 			case 'hyperspacefury':
+			case 'darkvoid':
 			case 'magikarpsrevenge':
 			case 'skydrop':
 				break;
@@ -448,6 +450,8 @@ module.exports = {
 		var item = battleData.getItem(args[3], this.gen);
 		if (args[2] !== 'Rayquaza') {
 			poke.item = item;
+			var template = battleData.getPokemon(item.megaStone, this.gen);
+			poke.markAbility(template.abilities[0]);	
 		}
 	},
 
@@ -464,11 +468,26 @@ module.exports = {
 				if (fromeffect.id) {
 					if (fromeffect.id === 'colorchange') {
 						poke.markAbility('Color Change');
-					} else if (fromeffect.id === 'reflecttype') {
-						poke.volatiles.typechange = ofpoke.template.types.slice();
+					} else if (fromeffect.id === 'libero') {
+						poke.markAbility('Libero');
+					} else if (fromeffect.id === 'protean') {
+						poke.markAbility('Protean');
 					}
+					if (fromeffect.id === 'reflecttype') {
+						poke.volatiles.typechange = ofpoke.template.types.slice();
+					} else {
+						poke.volatiles.typechange = args[3] ? [args[3]] : true;
+					}
+
 				} else {
 					poke.volatiles.typechange = args[3] ? [args[3]] : true;
+
+					let side = args[1].substr(0, 2);
+					let helpers = (toId(this.players[side].name) === toId(Bot.status.nickName)) ? this.helpers.self : this.helpers.foe;
+					let pokeId = poke.name + '|' + poke.species;
+					if (!helpers[pokeId]) helpers[pokeId] = {};
+					if (!helpers[pokeId].template) helpers[pokeId].template = {};
+					helpers[pokeId].template.types = poke.volatiles.typechange[0].split('/');
 				}
 				break;
 			case 'typeadd':
@@ -541,8 +560,10 @@ module.exports = {
 		}
 		switch (effect.id) {
 			case 'brickbreak':
+			case 'psychicfangs':
 				this.players[ofIdent.side].removeSideCondition('Reflect');
 				this.players[ofIdent.side].removeSideCondition('LightScreen');
+				this.players[ofIdent.side].removeSideCondition('AuroraVeil');
 				break;
 			case 'spite':
 				var move = battleData.getMove(args[3], this.gen).name;
@@ -597,7 +618,7 @@ module.exports = {
 		this.conditions.weather = toId(effect.name);
 		this.conditions.turnSetWeather = this.turn;
 		this.conditions.upkeepWeather = !!kwargs.upkeep;
-		if (kwargs.from) poke.markAbility(ability.id);
+		if (poke && kwargs.from) poke.markAbility(ability.id);
 	},
 
 	"-fieldstart": function (args, kwargs) {

@@ -219,7 +219,7 @@ function parseChat (room, time, by, message) {
 	}
 
 	var pv = 0;
-	var capsMatch = msg.replace(/[^A-Za-z]/g, '').match(/[A-Z]/g);
+	var capsMatch = msg.replace(/[^A-Za-zА-Яа-яЁё]/g, '').match(/[A-ZА-ЯЁ]/g);
 	capsMatch = capsMatch && toId(msg).length > getConst('MIN_CAPS_LENGTH') && (capsMatch.length >= Math.floor(toId(msg).length * getConst('MIN_CAPS_PROPORTION')));
 	var stretchRegExp = new RegExp('(.)\\1{' + getConst('MAX_STRETCH').toString() + ',}', 'g');
 	var repeatRegExp = new RegExp('(..+)\\1{' + getConst('MAX_REPEAT').toString() + ',}', 'g');
@@ -388,7 +388,7 @@ function parseChat (room, time, by, message) {
 	if (modSettings['inapropiate'] !== 0) {
 		var inapropiatephraseSettings = Settings.settings['inapropiatephrases'];
 		var inapropiatePhrases = !!inapropiatephraseSettings ? (Object.keys(inapropiatephraseSettings[room] || {})).concat(Object.keys(inapropiatephraseSettings['global'] || {})) : [];
-		var msgrip = " " + msg.toLowerCase().replace(/[^a-z0-9]/g, ' ') + " ";
+		var msgrip = " " + msg.toLowerCase().replace(/[^a-zа-яё0-9]/g, ' ') + " ";
 		for (var i = 0; i < inapropiatePhrases.length; i++) {
 			if (msgrip.indexOf(" " + inapropiatePhrases[i] + " ") > -1) {
 				infractions.push(trad('inapword-0', room));

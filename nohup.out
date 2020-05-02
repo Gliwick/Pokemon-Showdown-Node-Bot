@@ -1,0 +1,22 @@
+[33m-----------------------------------------------
+   Welcome to Pokemon Showdown Bot for Node!   
+-----------------------------------------------
+[39m
+[36minfo[39m	Loading globals
+[33m
+-----------------------------------------------
+[39m
+[36minfo[39m	Connecting to server pokeliga.com:8000
+(node:25399) [DEP0025] DeprecationWarning: sys is deprecated. Use util instead.
+[36minfo[39m	Received challstr, logging in...
+[33m-----------------------------------------------
+   Welcome to Pokemon Showdown Bot for Node!   
+-----------------------------------------------
+[39m
+[36minfo[39m	Loading globals
+[33m
+-----------------------------------------------
+[39m
+[36minfo[39m	Connecting to server pokeliga.com:8000
+(node:25569) [DEP0025] DeprecationWarning: sys is deprecated. Use util instead.
+[36minfo[39m	Received challstr, logging in...

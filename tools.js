@@ -5,6 +5,7 @@
 /* String utils */
 
 global.toId = exports.toId = function (text) {
+	if (!text) return '';
 	return text.toLowerCase().replace(/[^a-z0-9]/g, '');
 };
 

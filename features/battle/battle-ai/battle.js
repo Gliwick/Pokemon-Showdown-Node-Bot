@@ -31,8 +31,8 @@ var Battle = exports.Battle = (function () {
 		this.foe = null;
 
 		this.gametype = "singles";
-		this.gen = 6;
-		this.tier = "ou";
+		this.gen = 8;
+		this.tier = "gen8ou";
 		this.rules = [];
 		this.variations = [];
 
@@ -55,6 +55,8 @@ var Battle = exports.Battle = (function () {
 		};
 		this.lock = false;
 		this.leaveInterval = null;
+
+		this.helpers = {self: {}, foe: {}};
 	}
 
 	Battle.prototype.createLogStream = function (file) {
@@ -98,6 +100,8 @@ var Battle = exports.Battle = (function () {
 				case "move":
 					str += "move " + (decision[i].moveId + 1);
 					if (decision[i].mega) str += " mega";
+					if (decision[i].zMove) str += " zmove";
+					if (decision[i].dynamax) str += " dynamax";
 					if (decision[i].target !== null) {
 						if (decision[i].target >= 0) str += " " + (decision[i].target + 1);
 						else str += " " + (decision[i].target);
@@ -128,7 +132,7 @@ var Battle = exports.Battle = (function () {
 		if (!this.timer) {
 			if (this.sentTimerReq && Date.now() - this.sentTimerReq < MIN_TIME_LOCK) return; // Do not spam timer commands
 			this.sentTimerReq = Date.now();
-			this.send("/timer on");
+			if (!this.tier.endsWith("survival")) this.send("/timer on");
 		}
 	};
 
@@ -144,7 +148,12 @@ var Battle = exports.Battle = (function () {
 	Battle.prototype.start = function () {
 		if (!this.self || !this.request) return; // Not playing
 		var wmsg = Config.initBattleMsg;
-		if (wmsg && wmsg.length) this.send(wmsg[Math.floor(Math.random() * wmsg.length)]);
+		if (wmsg && wmsg.length) {
+			var msg = wmsg[Math.floor(Math.random() * wmsg.length)];
+			msg = msg.replace(/#date/g, (new Date()).toString().split(' GMT')[0]);
+			msg = msg.replace(/#battleid/g, 'battle-' + this.id.split('-')[2]);
+			this.send(msg);
+		}
 	};
 
 	Battle.prototype.win = function (winner) {
@@ -152,16 +161,27 @@ var Battle = exports.Battle = (function () {
 		var win = (toId(winner) === toId(Bot.status.nickName));
 		if (win) {
 			var winmsg = Config.winmsg;
-			if (winmsg && winmsg.length) this.send(winmsg[Math.floor(Math.random() * winmsg.length)]);
+			if (winmsg && winmsg.length) {
+				var msg = winmsg[Math.floor(Math.random() * winmsg.length)];
+				msg = msg.replace(/#date/g, (new Date()).toString().split(' GMT')[0]);
+				msg = msg.replace(/#battleid/g, 'battle-' + this.id.split('-')[2]);
+				this.send(msg);
+			}
 		} else {
 			var losemsg = Config.losemsg;
-			if (losemsg && losemsg.length) this.send(losemsg[Math.floor(Math.random() * losemsg.length)]);
+			if (losemsg && losemsg.length) {
+				var msg = losemsg[Math.floor(Math.random() * losemsg.length)];
+				msg = msg.replace(/#date/g, (new Date()).toString().split(' GMT')[0]);
+				msg = msg.replace(/#battleid/g, 'battle-' + this.id.split('-')[2]);
+				this.send(msg);
+			}
 		}
 	};
 
 	Battle.prototype.message = function (type, player, poke) {
 		if (!this.self) return; // Not playing
 		if (!Config.battleMessages || !Config.battleMessages[type]) return;
+
 		if (!player) {
 			if (Config.battleMessages[type]["self"]) {
 				this.send(Config.battleMessages[type]["self"][Math.floor(Math.random() * Config.battleMessages[type]["self"].length)]);
@@ -170,8 +190,18 @@ var Battle = exports.Battle = (function () {
 			this.send(Config.battleMessages[type][Math.floor(Math.random() * Config.battleMessages[type].length)]);
 			return;
 		}
+
 		var side = (player === this.self.id) ? "self" : "foe";
 		if (Config.battleMessages[type][side]) {
+			if (type === 'faint') {
+				var lost = true;
+				for (var i = 0; i < this.self.pokemon.length; i++) {
+					if (!this.self.pokemon[i].fainted) {
+						lost = false;
+					}
+				}
+				if (lost) return;
+			}
 			var msg = Config.battleMessages[type][side][Math.floor(Math.random() * Config.battleMessages[type][side].length)];
 			if (poke) msg = msg.replace(/#poke/g, poke);
 			this.send(msg);
@@ -276,6 +306,7 @@ var Battle = exports.Battle = (function () {
 				try {
 					minor.call(this, args, kwargs, isIntro);
 				} catch (e) {
+					console.error(e);
 					errlog(e.message);
 					errlog(e.stack);
 					error("Minor failed | Battle id: " + this.id + " | Minor: " + args[0]);
@@ -298,6 +329,7 @@ var Battle = exports.Battle = (function () {
 				try {
 					major.call(this, args, kwargs, isIntro);
 				} catch (e) {
+					console.error(e);
 					errlog(e.message);
 					errlog(e.stack);
 					error("Major failed | Battle id: " + this.id + " | Major: " + args[0]);
@@ -414,8 +446,14 @@ var Battle = exports.Battle = (function () {
 		var p = this.request.side.pokemon[sideId];
 		var details = this.parseDetails(p.details);
 		var condition = this.parseStatus(p.condition);
-		var pokeA = new Calc.Pokemon(battleData.getPokemon(details.species, this.gen),
-			{level: details.level, shiny: details.shiny, gender: details.gender});
+
+		let side = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
+		let pokeId = p.ident.split(': ')[1] + '|' + details.species;
+
+		var pokeA = new Calc.Pokemon(
+			battleData.getPokemon(details.species, this.gen),
+			{level: details.level, shiny: details.shiny, gender: details.gender, helpers: (this.helpers[side][pokeId] || {})},
+		);
 		pokeA.item = battleData.getItem(p.item, this.gen);
 		pokeA.ability = battleData.getAbility(p.baseAbility, this.gen);
 		pokeA.status = condition.status;
@@ -444,4 +482,3 @@ var Battle = exports.Battle = (function () {
 
 	return Battle;
 })();
-

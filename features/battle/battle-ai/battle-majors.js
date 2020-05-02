@@ -12,7 +12,9 @@ module.exports = {
 
 	request: function (args, kwargs) {
 		args.shift();
-		this.request = JSON.parse(args.join("|"));
+		this.request = {};
+		args = args.join("|");
+		if (args.length) this.request = JSON.parse(args);
 		this.rqid = this.request ? this.request.rqid : -1;
 	},
 
@@ -23,6 +25,11 @@ module.exports = {
 
 	turn: function (args, kwargs) {
 		this.turn = parseInt(args[1]) || 0;
+		this.checkTimer();
+		this.makeDecision();
+	},
+
+	upkeep: function (args, kwargs) {
 		this.checkTimer();
 		this.makeDecision();
 	},
@@ -68,7 +75,7 @@ module.exports = {
 	inactive: function (args, kwargs) {
 		this.timer = true;
 		if (args[1]) {
-			if (args[1].indexOf("Battle timer is now ON") === 0 || args[1].indexOf("You have") === 0 || args[1].indexOf(Bot.status.nickName) >= 0) this.makeDecision();
+			if (args[1].indexOf("Battle timer is ON") === 0 || args[1].indexOf("You have") === 0 || toId(args[1]).indexOf(toId(Bot.status.nickName)) >= 0) this.makeDecision();
 		}
 	},
 
@@ -357,5 +364,36 @@ module.exports = {
 				break;
 		}
 		this.makeDecision(true);
-	}
+	},
+
+	html: function (args, kwargs) {
+		let html = args[1];
+		let fontTag = '<font size=0.95 color=#5c5c8a>';
+		if (!html.startsWith(fontTag)) return;
+		html = html.split(fontTag)[1];
+		if (html.indexOf("'s") < 0) return;
+
+		let stats = html.split('</td><td>');
+		if (stats.length !== 6) return;
+
+		stats[0] = stats[0].split('<td>');
+		stats[0] = stats[0][stats[0].length - 1];
+		stats[5] = stats[5].split('</td>')[0];
+		for (let i in stats) {
+			stats[i] = parseInt(stats[i], 10);
+		}
+
+		let species = html.split("'s")[0];
+
+		for (let side in this.helpers) {
+			let helpers = this.helpers[side];
+			for (let pokeId in helpers) {
+				if (!(pokeId.startsWith(species + '|') || pokeId.endsWith('|' + species))) continue;
+
+				if (!helpers[pokeId]) helpers[pokeId] = {};
+				if (!helpers[pokeId].template) helpers[pokeId].template = {};
+				helpers[pokeId].template.baseStats = {hp: stats[0], atk: stats[1], def: stats[2], spa: stats[3], spd: stats[4], spe: stats[5]};
+			}
+		}
+	},
 };

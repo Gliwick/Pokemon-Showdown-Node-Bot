@@ -33,9 +33,10 @@ exports.parse = function (room, message, isIntro, spl) {
 				if (team) {
 					Bot.say('', '/useteam ' + team);
 				}
+				//Bot.say('', '/ionext');
 				Bot.say('', '/accept ' + i);
 				nBattles++;
-				debug("acepted battle: " + i + " | " + exports.challenges.challengesFrom[i]);
+				debug("accepted battle: " + i + " | " + exports.challenges.challengesFrom[i]);
 			} else {
 				Bot.say('', '/reject ' + i);
 				debug("rejected battle: " + i + " | " + exports.challenges.challengesFrom[i]);

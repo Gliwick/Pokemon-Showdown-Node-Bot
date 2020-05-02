@@ -277,8 +277,8 @@ exports.battleMessages = {
 
 exports.battleModules = {
 	/* Algorithms for use in battles */
-	"challengecup1v1": "ingame-nostatus",
-	"1v1": "ingame-nostatus"
+	"gen8challengecup1v1": "ingame-nostatus",
+	"gen81v1": "ingame-nostatus",
 };
 
 //exports.battleLog = {ageOfLogs: 1}; // Days
@@ -290,20 +290,17 @@ exports.ladderCheckInterval = 10 * 1000;
 exports.ladderNumberOfBattles = 1;
 
 exports.formatAliases = {
-	'random': 'Random Battle',
-	'randomdoubles': 'Random Doubles Battle',
-	'randomtriples': 'Random Triples Battle',
-	'doubles': 'Doubles OU',
-	'triples': 'Smogon Triples',
-	'vgc': 'Battle Spot Doubles (VGC 2015)',
-	'vgc2015': 'Battle Spot Doubles (VGC 2015)',
-	'ag': 'Anything Goes',
-	'oras': 'OU',
+	'random': '[Gen 8] Random Battle',
+	'randomdoubles': '[Gen 8] Random Doubles Battle',
+	'doubles': '[Gen 8] Doubles OU',
+	'ag': '[Gen 8] Anything Goes',
+	'usum': '[Gen 7] OU',
+	'oras': '[Gen 6] OU',
 	'bw': '[Gen 5] OU',
 	'dpp': '[Gen 4] OU',
 	'adv': '[Gen 3] OU',
 	'gsc': '[Gen 2] OU',
-	'rby': '[Gen 1] OU'
+	'rby': '[Gen 1] OU',
 };
 
 /*

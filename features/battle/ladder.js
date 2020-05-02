@@ -20,7 +20,7 @@ exports.start = function (format) {
 		if (Settings.lockdown) return;
 		var counter = 0;
 		var maxBattles = 1;
-		if (Config.ladderNumberOfBattles && Config.ladderNumberOfBattles > 0) maxBattles = Config.ladderNumberOfBattles;
+		if (Config.ladderNumberOfBattles) maxBattles = Config.ladderNumberOfBattles;
 		for (var i in Features['battle'].BattleBot.battles) {
 			if (Features['battle'].BattleBot.battles[i].tier && toId(Features['battle'].BattleBot.battles[i].tier) === format && Features['battle'].BattleBot.battles[i].rated) counter++;
 		}
