@@ -367,13 +367,16 @@ module.exports = {
 	},
 
 	html: function (args, kwargs) {
-		let html = args[1];
-		let fontTag = '<font size=0.95 color=#5c5c8a>';
-		if (!html.startsWith(fontTag)) return;
-		html = html.split(fontTag)[1];
-		if (html.indexOf("'s") < 0) return;
+		let html = args[1].split("'s stats:");
+		if (html.length !== 2) return;
 
-		let stats = html.split('</td><td>');
+		let species = html[0];
+		if (species.indexOf('>') > 0) {
+			species = species.split('>');
+			species = species[species.length - 1];
+		}
+
+		let stats = html[1].split('</td><td>');
 		if (stats.length !== 6) return;
 
 		stats[0] = stats[0].split('<td>');
@@ -382,8 +385,6 @@ module.exports = {
 		for (let i in stats) {
 			stats[i] = parseInt(stats[i], 10);
 		}
-
-		let species = html.split("'s")[0];
 
 		for (let side in this.helpers) {
 			let helpers = this.helpers[side];

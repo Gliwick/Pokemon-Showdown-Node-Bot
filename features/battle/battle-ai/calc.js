@@ -116,7 +116,7 @@ var Pokemon = exports.Pokemon = (function () {
 		return res;
 	};
 
-	Pokemon.prototype.getMinStats = function (gen) {
+	Pokemon.prototype.getUninvestedStats = function (gen) {
 		if (!gen) gen = CurrentGen;
 		let stats = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 		let res = {};
@@ -127,15 +127,15 @@ var Pokemon = exports.Pokemon = (function () {
 			}
 			if (gen <= 2) {
 				if (stats[i] === 'hp') {
-					res[stats[i]] = Math.floor(((this.getBaseStat(stats[i]) + 0) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level / 100) + 10 + this.level;
+					res[stats[i]] = Math.floor(((this.getBaseStat(stats[i]) + 15) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level / 100) + 10 + this.level;
 				} else {
-					res[stats[i]] = Math.floor(((this.getBaseStat(stats[i]) + 0) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level / 100) + 5;
+					res[stats[i]] = Math.floor(((this.getBaseStat(stats[i]) + 15) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level / 100) + 5;
 				}
 			} else {
 				if (stats[i] === 'hp') {
-					res[stats[i]] = Math.floor((2 * this.getBaseStat(stats[i]) + 0 + 0 / 4) * this.level / 100 + this.level + 10);
+					res[stats[i]] = Math.floor((2 * this.getBaseStat(stats[i]) + 31 + 0 / 4) * this.level / 100 + this.level + 10);
 				} else {
-					res[stats[i]] = Math.floor(Math.floor((2 * this.getBaseStat(stats[i]) + 0 + 0 / 4) * this.level / 100 + 5) * 9 / 10.0);
+					res[stats[i]] = Math.floor((2 * this.getBaseStat(stats[i]) + 31 + 0 / 4) * this.level / 100 + 5);
 				}
 			}
 		}
@@ -192,13 +192,13 @@ var Pokemon = exports.Pokemon = (function () {
 		let gconditions = battle.conditions;
 		let spe = 0;
 		if (this.hasAbility('stall') || moves.includes('gyroball') || moves.includes('trickroom')) {
-			spe = this.getMinStats(gen)['spe'];
+			spe = this.getUninvestedStats(gen)['spe'];
 		} else if (randomBattle) {
 			spe = this.getStat('spe', gen);
-		} else if ((this.template.baseStats && this.template.baseStats.spe >= 60) || this.hasItem('choicescarf')) {
+		} else if ((this.template.baseStats && this.template.baseStats.spe >= 70) || this.hasItem('choicescarf')) {
 			spe = this.getMaxStats(gen)['spe'];
 		} else {
-			spe = this.getMinStats(gen)['spe'];
+			spe = this.getUninvestedStats(gen)['spe'];
 		}
 		spe = Math.floor(spe);
 		if (conditions['tailwind']) spe *= 2;
@@ -603,12 +603,12 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 
 	switch (move.id) {
 		case 'frustration':
-			bp = Math.floor(((255 - pokeA.happiness) * 10) / 25) || 1;
+			bp = Math.floor(((255 - pokeA.happiness) * 2) / 5) || 1;
 			break;
 		case 'return':
 		case 'pikapapow':
 		case 'veeveevolley':
-			bp = Math.floor((pokeA.happiness * 10) / 25) || 1;
+			bp = Math.floor((pokeA.happiness * 2) / 5) || 1;
 			break;
 		case 'fling':
 			if (pokeA.item && pokeA.item.fling) bp = pokeA.item.fling.basePower || 0;
@@ -620,7 +620,9 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 			break;
 		case 'grassknot':
 		case 'lowkick':
-			if (pokeB.template.weightkg) {
+			if (conditionsB.volatiles['dynamax']) {
+				bp = 0;
+			} else if (pokeB.template.weightkg) {
 				if (pokeB.template.weightkg >= 200) {
 					bp = 120;
 				} else if (pokeB.template.weightkg >= 100) {
@@ -634,11 +636,15 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 				} else {
 					bp = 20;
 				}
-			} else bp = 20;
+			} else {
+				bp = 20;
+			}
 			break;
 		case 'heavyslam':
 		case 'heatcrash':
-			if (pokeA.template.weightkg && pokeB.template.weightkg) {
+			if (conditionsB.volatiles['dynamax']) {
+				bp = 0;
+			} else if (pokeA.template.weightkg && pokeB.template.weightkg) {
 				if (pokeA.template.weightkg / pokeB.template.weightkg > 5) {
 					bp = 120;
 				} else if (pokeA.template.weightkg / pokeB.template.weightkg > 4) {
@@ -650,7 +656,9 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 				} else {
 					bp = 40;
 				}
-			} else bp = 40;
+			} else {
+				bp = 40;
+			}
 			break;
 		case 'gyroball':
 			bp = (Math.floor(25 * speB / speA) || 1);
@@ -712,6 +720,7 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	if (!bp) {
 		if (move.damage === 'level') return new Damage(statsB.hp, [pokeA.level]);
 		if (typeof move.damage === 'number') return new Damage(statsB.hp, [move.damage]);
+		if (move.id === 'endeavor') new Damage(statsB.hp, [Math.max(0, statsB.hp * (pokeB.hp / 100.0) - statsA.hp * (pokeA.hp / 100.0))]);
 		if (move.id === 'psywave') new Damage(statsB.hp, getRolls(pokeA.level, 0.5, 1.5));
 		return new Damage(statsB.hp);
 	}
@@ -1079,7 +1088,8 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 		if (typeof move.multihit === 'number' && move.id !== 'triplekick') dmg *= move.multihit;
 		if (move.multihit === [2, 5]) {
 			if (pokeA.hasAbility('skilllink')) dmg *= 5;
-			else return new Damage(statsB.hp, [2, 2, 3, 3, 4, 5]); // multihit rolls more important than damage rolls
+			// multihit rolls more important than damage rolls
+			else return new Damage(statsB.hp, [2 * dmg, 2 * dmg, 3 * dmg, 3 * dmg, 4 * dmg, 5 * dmg]);
 		}
 	}
 	if (move.id === 'beatup') dmg *= 6;
