@@ -862,7 +862,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				else if (!pokeA.item) res.unviable.push(decisions[i]);
 				continue;
 			case 'destinybond':
-				if (battle.self.active[0].helpers.lastMove === 'destinybond' || conditionsB.volatiles['dynamax'] || pokeA.hp > 25 || (speA < speB && !hasAbility(pokeA, 'prankster') && !pokeA.hasItem('custapberry')) res.unviable.push(decisions[i]);
+				if (battle.self.active[0].helpers.lastMove === 'destinybond' || conditionsB.volatiles['dynamax'] || pokeA.hp > 25 || (speA < speB && !hasAbility(pokeA, 'prankster') && !pokeA.hasItem('custapberry'))) res.unviable.push(decisions[i]);
 				else res.viable.push(decisions[i]);
 				continue;
 			case 'disable':
