@@ -488,7 +488,7 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 				if (pokeA.hp < 50 && cat === 'Physical') atk = Math.floor(atk * 0.5);
 				break;
 			case 'guts':
-				if (pokeA.status && cat === 'Physical') atk = Math.floor(atk * 1.5);
+				if (pokeA.status && pokeA.status !== 'frz' && cat === 'Physical') atk = Math.floor(atk * 1.5);
 				break;
 			case 'hugepower':
 			case 'purepower':
@@ -499,7 +499,7 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 				if (cat === 'Physical') atk = Math.floor(atk * 1.5);
 				break;
 			case 'solarpower':
-				if (!supressedWeather && gconditions.weather in {'desolateland':1, 'sunnyday':1,}) {
+				if (!supressedWeather && gconditions.weather in {'desolateland':1, 'sunnyday':1}) {
 					if (cat === 'Special') atk = Math.floor(atk * 1.5);
 				}
 				break;
