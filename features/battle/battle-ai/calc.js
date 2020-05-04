@@ -212,7 +212,7 @@ var Pokemon = exports.Pokemon = (function () {
 		if (gconditions['electricterrain'] && this.hasAbility('surgesurfer')) spe = Math.floor(spe * 2);
 		if (this.hasAbility('slowstart')) spe = Math.floor(spe * 0.5);
 		if (this.hasItem('choicescarf')) spe = Math.floor(spe * 1.5);
-		if (this.hasItem{'ironball':1, 'machobrace':1})) spe = Math.floor(spe * 0.5);
+		if (this.hasItem({'ironball':1, 'machobrace':1})) spe = Math.floor(spe * 0.5);
 		if (this.status === 'par') {
 			if (this.hasAbility('quickfeet')) {
 				spe = Math.floor(spe * 1.5);

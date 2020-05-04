@@ -323,7 +323,7 @@ function evaluatePokemon (battle, sideId) {
 
 			if (!hasAbility(pokeB, {'moldbreaker':1, 'teravolt':1, 'turboblaze':1, 'neutralizinggas':1})) {
 				if (hasAbility(pokeA, immunityAbilities) && type.startsWith(immunityAbilities[pokeA.ability.id])) mux = 0;
-				if (type !== 'Statusbrn' && hasAbility(pokeA, 'shielddust') && ) mux = 0;
+				if (type !== 'Statusbrn' && hasAbility(pokeA, 'shielddust')) mux = 0;
 			}
 			if (battle.conditions.weather && !supressedWeather) {
 				if (toId(battle.conditions.weather) === 'desolateland' && type === 'Waterbrn') mux = 0;
