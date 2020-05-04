@@ -827,7 +827,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 					res.unviable.push(decisions[i]);
 				}
 				continue;
-			case 'sleepTalk':
+			case 'sleeptalk':
 			case 'snore':
 				if (pokeA.status === 'slp') {
 					if (typeof battle.self.active[0].helpers.sleepCounter === 'number') {
