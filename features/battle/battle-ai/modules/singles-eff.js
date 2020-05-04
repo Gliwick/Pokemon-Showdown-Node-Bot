@@ -607,7 +607,6 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		volatiles: battle.self.active[0].volatiles,
 		boosts: battle.self.active[0].boosts
 	});
-	console.log(conditionsA);
 	let conditionsB = new Conditions({
 		side: battle.foe.side,
 		volatiles: battle.foe.active[0].volatiles,
