@@ -247,8 +247,9 @@ var Battle = exports.Battle = (function () {
 				}
 			}
 		} catch (ex) {
-			debug(ex.stack);
-			debug("Module failed: " + mod.id + " | " + sys.inspect(ex));
+			errlog(e.message);
+			errlog(e.stack);
+			error("Module failed: " + mod.id + " | " + sys.inspect(ex));
 			SecurityLog.log("BATTLE MODULE FAILED: " + ex.message + "\nmodule: " + mod.id + "\n" + ex.stack);
 		}
 		this.lock = false;
@@ -306,7 +307,6 @@ var Battle = exports.Battle = (function () {
 				try {
 					minor.call(this, args, kwargs, isIntro);
 				} catch (e) {
-					console.error(e);
 					errlog(e.message);
 					errlog(e.stack);
 					error("Minor failed | Battle id: " + this.id + " | Minor: " + args[0]);
@@ -329,7 +329,6 @@ var Battle = exports.Battle = (function () {
 				try {
 					major.call(this, args, kwargs, isIntro);
 				} catch (e) {
-					console.error(e);
 					errlog(e.message);
 					errlog(e.stack);
 					error("Major failed | Battle id: " + this.id + " | Major: " + args[0]);
