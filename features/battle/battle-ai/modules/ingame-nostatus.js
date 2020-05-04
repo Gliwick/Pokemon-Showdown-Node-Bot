@@ -31,7 +31,7 @@ const BadMoves = ['focuspunch', 'shelltrap', 'explosion', 'selfdestruct', 'lastr
 /*
  * Moves which require 2 turs without any protection
  */
-const DoubleTurnMoves = ['bounce', 'dig', 'dive', 'iceburn', 'fly', 'freezeshock', 'phantomforce', 'shadowforce', 'skyattack', 'solarbeam', 'solarblade'];
+const DoubleTurnMoves = ['iceburn', 'freezeshock', 'razorwind', 'skyattack', 'solarbeam', 'solarblade'];
 
 /*
  * Team and Switch Decisions
@@ -62,7 +62,7 @@ function getPokemonAverage (battle, s) {
 			if (move.category === "Status") continue;
 			if (BadMoves.indexOf(move.id) >= 0) continue;
 			var dmg = Calc.calculate(pokeA, poke, move, conditions, conditions, battle.conditions, battle.gen);
-			// debug("DMG [" + pokeA.species + ", " + poke.species + ", " + move.name + "] = " + dmg.getMax());
+			debug("DMG [" + pokeA.species + ", " + poke.species + ", " + move.name + "] = " + dmg.getMax());
 			if (DoubleTurnMoves.indexOf(move.id) >= 0) calcVal += dmg.getMax() * 0.5;
 			else calcVal += dmg.getMax();
 		}
@@ -124,7 +124,7 @@ function getSwitchAverage (battle, s) {
 				}
 			}
 			var dmg = Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen);
-			// debug("DMG [" + pokeA.species + ", " + pokeB.species + ", " + move.name + "] = " + dmg.getMax());
+			debug("DMG [" + pokeA.species + ", " + pokeB.species + ", " + move.name + "] = " + dmg.getMax());
 			if (DoubleTurnMoves.indexOf(move.id) >= 0) final += dmg.getMax() * 0.5;
 			else final += dmg.getMax();
 		}
@@ -200,7 +200,7 @@ function evaluateMoveDecision (battle, desEnv, des, act) {
 			}
 		}
 		var dmg = Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen);
-		//debug("DMG [" + pokeA.species + ", " + pokeB.species + ", " + move.name + "] = " + dmg.getMax());
+		debug("DMG [" + pokeA.species + ", " + pokeB.species + ", " + move.name + "] = " + dmg.getMax());
 		if (DoubleTurnMoves.indexOf(move.id) >= 0) final += dmg.getMax() * 0.5;
 		else final += dmg.getMax();
 	}
