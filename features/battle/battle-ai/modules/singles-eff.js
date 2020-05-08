@@ -29,7 +29,7 @@ function supposeActiveFoe (battle) {
 	pokeB.status = target.status;
 	let hackmonsBattle = (battle.id.indexOf('hackmonscup') >= 0);
 	if (!target.supressedAbility) {
-		if (target.ability === '&unknown') {
+		if (!target.ability || target.ability === '&unknown') {
 			if (battle.gen >= 3 && !hackmonsBattle && pokeB.template.abilities) {
 				let abilities = Object.values(pokeB.template.abilities);
 				abilities.sort((a, b) => Data.getAbility(b).rating - Data.getAbility(a).rating);
@@ -41,7 +41,7 @@ function supposeActiveFoe (battle) {
 			pokeB.ability = target.ability;
 		}
 	}
-	if (target.item === '&unknown') {
+	if (!target.item || target.item === '&unknown') {
 		if (battle.gen < 2 || hackmonsBattle) {
 			pokeB.item = null;
 		} else if (pokeB.template.requiredItem) {
@@ -1160,7 +1160,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 					if ((pokeB.hasType(['Poison', 'Steel'], conditionsB) && !hasAbility(pokeA, 'corrosion')) || (hasAbility(pokeB, {'guts':1, 'immunity':1, 'magicguard':1, 'pastelveil':1, 'toxicboost':1}))) {
 						res.unviable.push(decisions[i]);
 						continue;
-					} else {
+					} else if (battle.gen > 2) {
 						let obligatory = false;
 						for (var j = 0; j < movesB.length; j++) {
 							if ((movesB[j].heal && movesB[j].id !== 'lifedew') || movesB[j].id in {'leechseed':1, 'moonlight':1, 'morningsun':1, 'rest':1, 'sappyseed':1, 'shoreup':1, 'strengthsap':1, 'synthesis':1, 'wish':1}) obligatory = true;
@@ -1349,7 +1349,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		if (conditionsB.volatiles['dynamax']) {
 			hp *= 2;
 			if (speA < speB && move.priority <= 0 && pokeB.template.species.startsWith('Alcremie')) hp = Math.min(200, hp + 33.3);
-		} else if (speA < speB && move.priority <= 0 && !conditionsB.volatiles['healblock'] && !conditionsB.volatiles['taunt']) {
+		} else if (speA < speB && move.priority <= 0 && !(pokeB.status in {'frz':1, 'slp':1}) && !conditionsB.volatiles['healblock'] && !conditionsB.volatiles['taunt']) {
 			let movesB = battle.foe.active[0].moves;
 			let foeRecoveryHP = 0;
 			for (var j = 0; j < movesB.length; j++) {
@@ -1508,7 +1508,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 					break;
 			}
 		}
-		if (!(move.id in {'genesissupernova':1, 'splinteredstormshards':1, 'maxlightning':1, 'maxmindstorm':1, 'maxstarfall':1, 'gmaxwindrage':1}) && battle.conditions['grassyterrain'] && !conditionsB.volatiles['healblock'] && pokeB.isGrounded(conditionsB)) residual += 6.25;
+		if (!(move.id in {'genesissupernova':1, 'splinteredstormshards':1, 'maxlightning':1, 'maxmindstorm':1, 'maxstarfall':1, 'gmaxwindrage':1}) && (move.id === 'maxovergrowth' || battle.conditions['grassyterrain']) && !conditionsB.volatiles['healblock'] && pokeB.isGrounded(conditionsB)) residual += 6.25;
 
 		// gmax effects
 		if (move.id in {'gmaxvolcalith':1, 'gmaxwildfire':1} && !pokeB.hasType(move.type, conditionsB)) residual -= 100 / 6.0;
@@ -1557,7 +1557,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		}
 
 		let foeCanProtect = false;
-		if (!(battle.foe.active[0].helpers.lastMove in singleTurnMoves)) {
+		if (!(battle.foe.active[0].helpers.lastMove in singleTurnMoves) && !(pokeB.status in {'frz':1, 'slp':1})) {
 			let movesB = battle.foe.active[0].moves;
 			if (conditionsB.volatiles['dynamax']) {
 				for (var j = 0; j < movesB.length; j++) {
@@ -1575,13 +1575,15 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 			res.ohko.push(decisions[i]);
 		} else if (pc <= Math.max(0, residual[0])) {
 			res.immune.push(decisions[i]);
-		} else if (2 * pc >= 100 + sub + residual[0] + (foeCanProtect ? Math.max(0, residual[1]) : 0)) {
-			res.thko.push(decisions[i]);
-		} else if (3 * pc >= 100 + sub + residual[0] + residual[1]) {
-			res['3hko'].push(decisions[i]);
-		} else if (pc > maxBadDamage) {
-			maxBadDamage = pc;
-			res.bad = [decisions[i]];
+		} else if (!(move.flags && move.flags['recharge'])) {
+			if (2 * pc >= 100 + sub + residual[0] + (foeCanProtect ? Math.max(0, residual[1]) : 0)) {
+				res.thko.push(decisions[i]);
+			} else if (3 * pc >= 100 + sub + residual[0] + residual[1]) {
+				res['3hko'].push(decisions[i]);
+			} else if (pc > maxBadDamage) {
+				maxBadDamage = pc;
+				res.bad = [decisions[i]];
+			}
 		}
 
 		if (authentic) {
@@ -1955,7 +1957,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		filteredMoves = [];
 		for (var i = 0; i < finalDamageMoves.length; i++) {
 			let move = finalDamageMoves[i][0].moveData;
-			if (move.drain || move.id === 'gmaxfinale') filteredMoves.push(finalDamageMoves[i]);
+			if (move.drain || move.id in {'gmaxfinale':1, 'maxovergrowth':1, 'sappyseed':1}) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 	}

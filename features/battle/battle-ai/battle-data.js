@@ -148,6 +148,7 @@ exports.getItem = function (item, gen) {
 	try {
 		temp = DataDownloader.getItems()[item];
 		for (var i in temp) itemData[i] = temp[i];
+		itemData.id = item;
 	} catch (e) {}
 	for (var i = CurrentGen - 1; i >= gen; i--) {
 		try {
@@ -186,6 +187,7 @@ exports.getAbility = function (ab, gen) {
 	try {
 		temp = DataDownloader.getAbilities()[ab];
 		for (var i in temp) ability[i] = temp[i];
+		ability.id = ab;
 	} catch (e) {}
 	for (var i = CurrentGen - 1; i >= gen; i--) {
 		try {
@@ -205,7 +207,7 @@ exports.getAbility = function (ab, gen) {
 			shortDesc: "This Pokemon has no ability.",
 			id: "none",
 			name: "None",
-			rating: 1,
+			rating: 0,
 			num: 1,
 			category: "Effect",
 			effectType: "Ability"
