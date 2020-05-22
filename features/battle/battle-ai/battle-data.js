@@ -158,6 +158,7 @@ exports.getMove = function (move, gen, battleId) {
 			num: 0,
 			accuracy: 100,
 			basePower: 90,
+			category: 'Physical',
 			id: move,
 			name: move,
 			pp: 10,
@@ -167,11 +168,37 @@ exports.getMove = function (move, gen, battleId) {
 			type: 'Normal',
 		};
 
-		const typeCategory = {'Bug': 'Physical', 'Dark': 'Special', 'Dragon': 'Special', 'Electric': 'Special', 'Fairy': 'Special', 'Fighting': 'Physical', 'Fire': 'Special', 'Flying': 'Physical', 'Ghost': 'Physical', 'Grass': 'Special', 'Ground': 'Physical', 'Ice': 'Special', 'Normal': 'Physical', 'Poison': 'Physical', 'Psychic': 'Special', 'Rock': 'Physical', 'Steel': 'Physical', 'Water': 'Special'};
-		for (let moveType in typeCategory) {
-			if (move.indexOf(toId(moveType)) >= 0) moveData.type = moveType;
+
+		const typeAliases = {
+			'Bug': ['bug'],
+			'Dark': ['dark'],
+			'Dragon': ['dragon'],
+			'Electric': ['electr', 'thunder'],
+			'Fairy': ['fairy'],
+			'Fighting': ['fight'],
+			'Fire': ['fire', 'flame', 'heat'],
+			'Flying': ['fly', 'sky'],
+			'Ghost': ['ghost', 'shadow'],
+			'Grass': ['grass', 'leaf', 'seed'],
+			'Ground': ['ground', 'earth', 'mud'],
+			'Ice': ['ice', 'freeze'],
+			'Normal': ['normal'],
+			'Poison': ['poison', 'sludge', 'venom'],
+			'Psychic': ['psy'],
+			'Rock': ['rock'],
+			'Steel': ['steel', 'iron', 'metal'],
+			'Water': ['water', 'aqua', 'bubble', 'hydro'],
+		};
+		for (let moveType in typeAliases) {
+			for (typeAlias of typeAliases[moveType]) {
+				if (move.indexOf(typeAlias) >= 0) {
+					moveData.type = typeAlias;
+					break;
+				}
+			}
 		}
-		moveData.category = typeCategory[moveData.type];
+		const specialTypes = {Fairy: 1, Fire: 1, Water: 1, Grass: 1, Ice: 1, Electric: 1, Dark: 1, Psychic: 1, Dragon: 1};
+		if (moveData.type in specialTypes) moveData.category = 'Special';
 		if (moveData.category ==='Physical' && !(moveData.type in {'Ground':1, 'Rock':1})) moveData.flags.contact = 1;
 	}
 
