@@ -116,7 +116,7 @@ exports.decide = function (battle, decisions) {
 Format Mods
 ------------
 
-You can add format mods in ```./data/mods/```, like you do it in a Pokemon Showdown server. A mod can have ```abilities.js```, ```formats-data.js```, ```items.js```, ```moves.js``` and ```pokedex.js``` files.
+You can add format mods in ```./data/mods/```, like you do it in a Pokemon Showdown server. A mod can have ```abilities.js```, ```formats-data.js```, ```items.js```, ```moves.js``` and ```pokedex.js``` files. Note that scripts won't work here. For example, if you wanted a stat-changing mod, you'd have to generate new stats for each pokemon and put them in ```pokedex.js``` file.
 
 You also have to specify which formats use mods in ```../../config.js```
 
