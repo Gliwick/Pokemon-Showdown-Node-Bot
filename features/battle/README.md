@@ -111,3 +111,17 @@ exports.decide = function (battle, decisions) {
 	return decisions[Math.floor(Math.random() * decisions.length)]; // For example, random decision
 };
 ```
+
+
+Format Mods
+------------
+
+You can add format mods in ```./data/mods/```, like you do it in a Pokemon Showdown server. A mod can have ```abilities.js```, ```formats-data.js```, ```items.js```, ```moves.js``` and ```pokedex.js``` files.
+
+You also have to specify which formats use mods in ```../../config.js```
+
+```
+exports.formatMods = {
+	'gen8flipped': 'flipped', // 'format name': 'mod directory name',
+};
+```
