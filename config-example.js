@@ -276,7 +276,7 @@ exports.battleMessages = {
 };
 
 exports.formatMods = {
-}
+};
 
 exports.battleModules = {
 	/* Algorithms for use in battles */

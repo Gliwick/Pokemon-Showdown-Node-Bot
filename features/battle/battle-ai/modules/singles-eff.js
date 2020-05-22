@@ -27,7 +27,7 @@ function supposeActiveFoe (battle) {
 	});
 	pokeB.hp = target.hp;
 	pokeB.status = target.status;
-	let hackmonsBattle = (battle.id.indexOf('hackmonscup') >= 0);
+	let hackmonsBattle = (battle.id.indexOf('hackmon') >= 0);
 	if (battle.gen >= 3 && !target.supressedAbility) {
 		if (!target.ability || target.ability === '&unknown') {
 			if (!hackmonsBattle && pokeB.template.abilities) {
@@ -46,6 +46,8 @@ function supposeActiveFoe (battle) {
 		if (battle.gen >= 2 && !hackmonsBattle) {
 			if (pokeB.template.requiredItem) {
 				itemId = pokeB.template.requiredItem;
+			} else if (pokeB.template.requiredItems) {
+				itemId = pokeB.template.requiredItems[0];
 			} else if ((pokeB.template.nfe || pokeB.template.evos) && !(pokeB.template.species in {'Cubone':1, "Farfetch'd-Galar":1, 'Pikachu':1})) {
 				if (battle.gen === 7 && pokeB.template.species === 'Eevee') itemId = 'eeviumz';
 				else pokeB.item = itemId = 'eviolite';
@@ -111,7 +113,6 @@ function evaluatePokemon (battle, sideId) {
 
 	let pokeA = battle.getCalcRequestPokemon(sideId, (sideId < battle.self.active.length));
 	let pokeB = supposeActiveFoe(battle);
-	let movesB = battle.foe.active[0].moves;
 	let conditionsA, conditionsB;
 	conditionsB = new Conditions({
 		side: Object.assign({}, battle.foe.side),
@@ -202,12 +203,19 @@ function evaluatePokemon (battle, sideId) {
 	let res = {t: 0, d: 0};
 	let t = 0;
 
+	let movesB = battle.foe.active[0].moves;
+	if (pokeB.template.requiredMove && battle.id.indexOf('hackmon') < 0) {
+		movesB = movesB.slice();
+		movesB.push(requiredMove);
+	}
+
 	let physicalB = false;
 	/* Calculate t - types mux */
 	let types = {};
-	for (var i = 0; i < movesB.length; i++) {
-		if (movesB[i].id === 'struggle') continue;
-		let move = Data.getMove(movesB[i].id, battle.gen, battle.id);
+	for (let moveId of movesB) {
+		if (moveId === 'struggle') continue;
+		let move = Data.getMove(moveId, battle.gen, battle.id);
+
 		if (conditionsB.volatiles['taunt'] && move.id === 'naturepower') continue;
 		if (conditionsB.volatiles['torment'] && battle.foe.active[0].helpers.lastMove && battle.foe.active[0].helpers.lastMove === move.id) continue;
 		if (((pokeB.item && pokeB.item.id.startsWith('choice')) || conditionsB.volatiles['encore']) && battle.foe.active[0].helpers.lastMove && battle.foe.active[0].helpers.lastMove !== move.id) continue;
@@ -235,8 +243,6 @@ function evaluatePokemon (battle, sideId) {
 				types[pokeB.item.onMemory] = 1;
 			} else if (move.id === 'revelationdance') {
 				types[pokeB.getTypes(conditionsB)[0]] = 1;
-			} else if (move.id === 'struggle') {
-				types['Normal*'] = 1;
 			} else if (hasAbility(pokeB, {'normalize':1})) {
 				types['Normal'] = 1;
 			} else if (move.type === 'Normal' && hasAbility(pokeB, ateAbilities)) {
@@ -1017,8 +1023,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				continue;
 			case 'trick':
 			case 'switcheroo':
-				let requiredItemSpecies = {'Charizard-Mega-X':1, 'Charizard-Mega-Y':1, 'Mewtwo-Mega-X':1, 'Mewtwo-Mega-Y':1, 'Kyogre-Primal':1, 'Groudon-Primal':1, 'Giratina-Origin':1, 'Genesect-Burn':1, 'Genesect-Chill':1, 'Genesect-Douse':1, 'Genesect-Shock':1, 'Necrozma-Ultra':1};
-				if (!pokeA.item || !pokeA.item.id.startsWith('choice') || pokeB.template.species.endsWith('-Mega') || pokeB.template.species.startsWith('Arceus-') || pokeB.template.species.startsWith('Silvally-') || pokeB.template.species in requiredItemSpecies || (pokeB.item && (pokeB.onTakeItem || pokeB.item.id.startsWith('choice')))) {
+				if (!pokeA.item || !pokeA.item.id.startsWith('choice') || pokeB.template.requiredItem || pokeB.template.requiredItems || (pokeB.item && (pokeB.onTakeItem || pokeB.item.id.startsWith('choice')))) {
 					res.unviable.push(decisions[i]);
 				} else if (pokeB.category === 'Status') {
 					res.obligatory.push(decisions[i]);

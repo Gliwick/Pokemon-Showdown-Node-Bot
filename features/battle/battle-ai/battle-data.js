@@ -60,7 +60,7 @@ exports.getEffect = function (effect, gen) {
 
 exports.getPokemon = exports.getTemplate = function (poke, gen, battleId) {
 	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
-	poke = toId(poke || "");
+	poke = toId(poke);
 	var pokemon = {};
 	var temp;
 	try {
@@ -114,7 +114,7 @@ exports.getPokemon = exports.getTemplate = function (poke, gen, battleId) {
 
 exports.getMove = function (move, gen, battleId) {
 	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
-	move = toId(move || "");
+	move = toId(move);
 	if (move.indexOf("hiddenpower") === 0) {
 		move = move.replace(/[0-9]/g, "");
 	}
@@ -154,28 +154,34 @@ exports.getMove = function (move, gen, battleId) {
 	}
 
 	if (!moveData.name) {
-		return {
+		moveData = {
 			num: 0,
 			accuracy: 100,
 			basePower: 90,
-			category: "Physical",
 			id: move,
 			name: move,
-			pp: 1,
+			pp: 10,
 			priority: 0,
-			flags: {contact: 1, protect: 1},
-			noSketch: true,
-			effectType: "Move",
-			type: "Normal",
+			flags: {protect: 1},
+			effectType: 'Move',
+			type: 'Normal',
 		};
+
+		const typeCategory = {'Bug': 'Physical', 'Dark': 'Special', 'Dragon': 'Special', 'Electric': 'Special', 'Fairy': 'Special', 'Fighting': 'Physical', 'Fire': 'Special', 'Flying': 'Physical', 'Ghost': 'Physical', 'Grass': 'Special', 'Ground': 'Physical', 'Ice': 'Special', 'Normal': 'Physical', 'Poison': 'Physical', 'Psychic': 'Special', 'Rock': 'Physical', 'Steel': 'Physical', 'Water': 'Special'};
+		for (let moveType in typeCategory) {
+			if (move.indexOf(toId(moveType)) >= 0) moveData.type = moveType;
+		}
+		moveData.category = typeCategory[moveData.type];
+		if (moveData.category ==='Physical' && !(moveData.type in {'Ground':1, 'Rock':1})) moveData.flags.contact = 1;
 	}
+
 	if (!moveData.effectType) moveData.effectType = 'Move';
 	return moveData;
 };
 
 exports.getItem = function (item, gen, battleId) {
 	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
-	item = toId(item || "");
+	item = toId(item);
 	var itemData = {};
 	var temp;
 	try {
@@ -229,7 +235,7 @@ exports.getItem = function (item, gen, battleId) {
 
 exports.getAbility = function (ab, gen, battleId) {
 	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
-	ab = toId(ab || "");
+	ab = toId(ab);
 	var ability = {};
 	var temp;
 	try {
@@ -475,7 +481,7 @@ exports.Player = (function () {
 	function Player (id, name, avatar) {
 		this.id = id || "p0";
 		this.name = name || "";
-		this.userid = toId(name || "");
+		this.userid = toId(name);
 		this.avatar = avatar || 0;
 		this.active = [];
 		this.side = {};
