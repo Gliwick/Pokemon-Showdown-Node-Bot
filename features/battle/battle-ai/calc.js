@@ -746,7 +746,7 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 			if (pokeB.item && !pokeB.onTakeItem) bp = Math.floor(bp * 1.5);
 			break;
 		case 'acrobatics':
-			if (!pokeA.item || !pokeA.item.id || pokeA.item.id in {'':1, 'pokeball':1, 'flyinggem':1}) bp = Math.floor(bp * 2);
+			if (!pokeA.item || !pokeA.item.id || pokeA.item.id in {'':1, 'flyinggem':1}) bp = Math.floor(bp * 2);
 			break;
 		case 'retaliate':
 			if (conditionsA.side.faintedLastTurn) bp = Math.floor(bp * 2);

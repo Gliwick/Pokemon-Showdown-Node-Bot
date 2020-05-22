@@ -468,7 +468,7 @@ function evaluatePokemon (battle, sideId) {
 
 	/* Calculate d - max damage */
 	let moves = battle.request.side.pokemon[sideId].moves;
-	if (sideId !== 0 && hasAbility(pokeA, {'imposter':1}) && !conditionsB.volatiles['substitute']) moves = battle.foe.active[0].moves;
+	if (sideId !== 0 && hasAbility(pokeA, 'imposter') && !conditionsB.volatiles['substitute']) moves = battle.foe.active[0].moves;
 	let d = 0;
 	for (var i = 0; i < moves.length; i++) {
 		let move = Data.getMove(moves[i], battle.gen, battle.id);

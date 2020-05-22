@@ -365,36 +365,4 @@ module.exports = {
 		}
 		this.makeDecision(true);
 	},
-
-	html: function (args, kwargs) {
-		let html = args[1].split("'s stats:");
-		if (html.length !== 2) return;
-
-		let species = html[0];
-		if (species.indexOf('>') > 0) {
-			species = species.split('>');
-			species = species[species.length - 1];
-		}
-
-		let stats = html[1].split('</td><td>');
-		if (stats.length !== 6) return;
-
-		stats[0] = stats[0].split('<td>');
-		stats[0] = stats[0][stats[0].length - 1];
-		stats[5] = stats[5].split('</td>')[0];
-		for (let i in stats) {
-			stats[i] = parseInt(stats[i], 10);
-		}
-
-		for (let side in this.helpers) {
-			let helpers = this.helpers[side];
-			for (let pokeId in helpers) {
-				if (!(pokeId.startsWith(species + '|') || pokeId.endsWith('|' + species))) continue;
-
-				if (!helpers[pokeId]) helpers[pokeId] = {};
-				if (!helpers[pokeId].template) helpers[pokeId].template = {};
-				helpers[pokeId].template.baseStats = {hp: stats[0], atk: stats[1], def: stats[2], spa: stats[3], spd: stats[4], spe: stats[5]};
-			}
-		}
-	},
 };
