@@ -2,8 +2,9 @@
 	Battle data
 */
 
-const DATA_DIR = "./../../../data/";
-const BAT_DATA_DIR = "./../data/";
+const DATA_DIR = './../../../data/';
+const BAT_DATA_DIR = './../data/';
+const MODS_DATA_DIR = BAT_DATA_DIR + 'mods/';
 
 const CurrentGen = 8;
 
@@ -57,7 +58,7 @@ exports.getEffect = function (effect, gen) {
 	return effect;
 };
 
-exports.getPokemon = exports.getTemplate = function (poke, gen) {
+exports.getPokemon = exports.getTemplate = function (poke, gen, battleId) {
 	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
 	poke = toId(poke || "");
 	var pokemon = {};
@@ -79,6 +80,22 @@ exports.getPokemon = exports.getTemplate = function (poke, gen) {
 		}
 		for (var attr in temp) pokemon[attr] = temp[attr];
 	}
+
+	let formatId = battleId ? battleId.split('-')[1] : '';
+	let formatMod = Config.formatMods[formatId];
+	if (formatMod) {
+		temp = null;
+		try {
+			temp = require(MODS_DATA_DIR + formatMod + "/pokedex.js").BattlePokedex[poke];
+		} catch (e) {}
+		if (temp) {
+			if (!temp.inherit) {
+				for (var i in pokemon) delete pokemon[i];
+			}
+			for (var attr in temp) pokemon[attr] = temp[attr];
+		}
+	}
+
 	if (!pokemon.name) {
 		return {
 			num: 0,
@@ -95,7 +112,7 @@ exports.getPokemon = exports.getTemplate = function (poke, gen) {
 	return pokemon;
 };
 
-exports.getMove = function (move, gen) {
+exports.getMove = function (move, gen, battleId) {
 	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
 	move = toId(move || "");
 	if (move.indexOf("hiddenpower") === 0) {
@@ -120,14 +137,30 @@ exports.getMove = function (move, gen) {
 		}
 		for (var i in temp) moveData[i] = temp[i];
 	}
+
+	let formatId = battleId ? battleId.split('-')[1] : '';
+	let formatMod = Config.formatMods[formatId];
+	if (formatMod) {
+		temp = null;
+		try {
+			temp = require(MODS_DATA_DIR + formatMod + "/moves.js").BattleMovedex[move];
+		} catch (e) {}
+		if (temp) {
+			if (!temp.inherit) {
+				for (var i in moveData) delete moveData[i];
+			}
+			for (var attr in temp) moveData[attr] = temp[attr];
+		}
+	}
+
 	if (!moveData.name) {
 		return {
 			num: 0,
 			accuracy: 100,
 			basePower: 90,
 			category: "Physical",
-			id: "struggle",
-			name: "Struggle",
+			id: move,
+			name: move,
 			pp: 1,
 			priority: 0,
 			flags: {contact: 1, protect: 1},
@@ -140,7 +173,7 @@ exports.getMove = function (move, gen) {
 	return moveData;
 };
 
-exports.getItem = function (item, gen) {
+exports.getItem = function (item, gen, battleId) {
 	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
 	item = toId(item || "");
 	var itemData = {};
@@ -162,14 +195,29 @@ exports.getItem = function (item, gen) {
 		}
 		for (var i in temp) itemData[i] = temp[i];
 	}
+
+	let formatId = battleId ? battleId.split('-')[1] : '';
+	let formatMod = Config.formatMods[formatId];
+	if (formatMod) {
+		temp = null;
+		try {
+			temp = require(MODS_DATA_DIR + formatMod + "/items.js").BattleItems[move];
+		} catch (e) {}
+		if (temp) {
+			if (!temp.inherit) {
+				for (var i in itemData) delete itemData[i];
+			}
+			for (var attr in temp) itemData[attr] = temp[attr];
+		}
+	}
+
 	if (!itemData.id) {
 		return {
-			id: "pokeball",
-			name: "Poke Ball",
-			spritenum: 345,
-			num: 4,
-			gen: 1,
-			desc: "A device for catching wild Pokemon. It is designed as a capsule system.",
+			id: item,
+			name: item,
+			spritenum: 0,
+			num: 0,
+			gen: CurrentGen,
 			category: "Effect",
 			effectType: "Item"
 		};
@@ -179,7 +227,7 @@ exports.getItem = function (item, gen) {
 	return itemData;
 };
 
-exports.getAbility = function (ab, gen) {
+exports.getAbility = function (ab, gen, battleId) {
 	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
 	ab = toId(ab || "");
 	var ability = {};
@@ -201,14 +249,28 @@ exports.getAbility = function (ab, gen) {
 		}
 		for (var i in temp) ability[i] = temp[i];
 	}
+
+	let formatId = battleId ? battleId.split('-')[1] : '';
+	let formatMod = Config.formatMods[formatId];
+	if (formatMod) {
+		temp = null;
+		try {
+			temp = require(MODS_DATA_DIR + formatMod + "/abilities.js").BattleAbilities[move];
+		} catch (e) {}
+		if (temp) {
+			if (!temp.inherit) {
+				for (var i in ability) delete ability[i];
+			}
+			for (var attr in temp) ability[attr] = temp[attr];
+		}
+	}
+
 	if (!ability.id) {
 		return {
-			desc: "This Pokemon has no ability.",
-			shortDesc: "This Pokemon has no ability.",
-			id: "none",
-			name: "None",
+			id: ab,
+			name: ab,
 			rating: 0,
-			num: 1,
+			num: 0,
 			category: "Effect",
 			effectType: "Ability"
 		};
@@ -224,7 +286,7 @@ var Move = exports.Move = (function () {
 		this.template = template;
 		this.name = this.template.name;
 		this.id = this.template.id;
-		this.pp = Math.floor(this.template.pp * 1.60);
+		this.pp = Math.floor(this.template.pp * 1.6);
 		this.disabled = false;
 		this.helpers = {};
 	}
@@ -233,7 +295,7 @@ var Move = exports.Move = (function () {
 		if (pp) {
 			this.pp += pp;
 		} else {
-			this.pp = Math.floor(this.template.pp * 1.60);
+			this.pp = Math.floor(this.template.pp * 1.6);
 		}
 	};
 

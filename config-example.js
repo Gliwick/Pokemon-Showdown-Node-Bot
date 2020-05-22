@@ -275,6 +275,9 @@ exports.battleMessages = {
 	*/
 };
 
+exports.formatMods = {
+}
+
 exports.battleModules = {
 	/* Algorithms for use in battles */
 	"gen8challengecup1v1": "ingame-nostatus",

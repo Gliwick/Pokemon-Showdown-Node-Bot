@@ -46,7 +46,7 @@ module.exports = {
 					if (ofpoke) {
 						return;
 					} else if (effect.effectType === 'Item') {
-						poke.item = battleData.getItem(effect.name, this.gen);
+						poke.item = battleData.getItem(effect.name, this.gen, this.id);
 					} else if (effect.effectType === 'Ability') {
 						poke.markAbility(effect.name);
 					}
@@ -84,7 +84,7 @@ module.exports = {
 				case 'leftovers':
 				case 'shellbell':
 				case 'blacksludge':
-					poke.item = battleData.getItem(effect.name, this.gen);
+					poke.item = battleData.getItem(effect.name, this.gen, this.id);
 					break;
 			}
 		}
@@ -305,7 +305,7 @@ module.exports = {
 
 	"-item": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var item = battleData.getItem(args[2], this.gen);
+		var item = battleData.getItem(args[2], this.gen, this.id);
 		var effect = battleData.getEffect(kwargs.from, this.gen);
 		var ofpoke = this.getActive(kwargs.of);
 		poke.item = item;
@@ -352,7 +352,7 @@ module.exports = {
 
 	"-enditem": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var item = battleData.getItem(args[2], this.gen);
+		var item = battleData.getItem(args[2], this.gen, this.id);
 		var effect = battleData.getEffect(kwargs.from, this.gen);
 		var ofpoke = this.getActive(kwargs.of);
 		poke.item = '';
@@ -411,7 +411,7 @@ module.exports = {
 
 	"-ability": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var ability = battleData.getAbility(args[2], this.gen);
+		var ability = battleData.getAbility(args[2], this.gen, this.id);
 		var effect = battleData.getEffect(kwargs.from, this.gen);
 		poke.markAbility(ability.name, effect.id && !kwargs.fail);
 		poke.supressedAbility = false;
@@ -434,7 +434,7 @@ module.exports = {
 
 	"-formechange": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var template = battleData.getPokemon(args[2], this.gen);
+		var template = battleData.getPokemon(args[2], this.gen, this.id);
 		var fromeffect = battleData.getEffect(kwargs.from, this.gen);
 		poke.removeVolatile('typeadd');
 		poke.removeVolatile('typechange');
@@ -447,10 +447,10 @@ module.exports = {
 
 	"-mega": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var item = battleData.getItem(args[3], this.gen);
+		var item = battleData.getItem(args[3], this.gen, this.id);
 		if (args[2] !== 'Rayquaza') {
 			poke.item = item;
-			var template = battleData.getPokemon(item.megaStone, this.gen);
+			var template = battleData.getPokemon(item.megaStone, this.gen, this.id);
 			poke.markAbility(template.abilities[0]);	
 		}
 	},
@@ -566,7 +566,7 @@ module.exports = {
 				this.players[ofIdent.side].removeSideCondition('AuroraVeil');
 				break;
 			case 'spite':
-				var move = battleData.getMove(args[3], this.gen).name;
+				var move = battleData.getMove(args[3], this.gen, this.id).name;
 				var pp = args[4];
 				poke.markMove(move, Number(pp) * (-1));
 				break;
@@ -576,8 +576,8 @@ module.exports = {
 				break;
 			case 'skillswap':
 				if (this.gen <= 4) break;
-				var pokeability = args[3] ? battleData.getAbility(args[3], this.gen) : ofpoke.ability;
-				var ofpokeability = args[4] ? battleData.getAbility(args[4], this.gen) : poke.ability;
+				var pokeability = args[3] ? battleData.getAbility(args[3], this.gen, this.id) : ofpoke.ability;
+				var ofpokeability = args[4] ? battleData.getAbility(args[4], this.gen, this.id) : poke.ability;
 				if (pokeability) {
 					poke.ability = pokeability;
 					if (!ofpoke.baseAbility) ofpoke.baseAbility = pokeability;
@@ -588,13 +588,13 @@ module.exports = {
 				}
 				break;
 			case 'quickclaw':
-				poke.item = battleData.getItem("quickclaw", this.gen);
+				poke.item = battleData.getItem("quickclaw", this.gen, this.id);
 				break;
 			case 'focusband':
-				poke.item = battleData.getItem("focusband", this.gen);
+				poke.item = battleData.getItem("focusband", this.gen, this.id);
 				break;
 			case 'safetygoggles':
-				poke.item = battleData.getItem("safetygoggles", this.gen);
+				poke.item = battleData.getItem("safetygoggles", this.gen, this.id);
 				break;
 		}
 	},

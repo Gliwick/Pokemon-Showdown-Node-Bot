@@ -1,6 +1,6 @@
 'use strict';
-/**@type {{[k: string]: ModdedItemData}} */
-let BattleItems = {
+
+exports.BattleItems = {
 	abomasite: {
 		inherit: true,
 		isNonstandard: null,

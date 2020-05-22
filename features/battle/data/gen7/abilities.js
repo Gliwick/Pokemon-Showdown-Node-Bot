@@ -1,7 +1,6 @@
 'use strict';
 
-/**@type {{[k: string]: ModdedAbilityData}} */
-let BattleAbilities = {
+exports.BattleAbilities = {
 	"chlorophyll": {
 		inherit: true,
 		desc: "If Sunny Day is active, this Pokemon's Speed is doubled.",

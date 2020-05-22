@@ -246,11 +246,11 @@ var Battle = exports.Battle = (function () {
 					return;
 				}
 			}
-		} catch (ex) {
-			errlog(e.message);
-			errlog(e.stack);
-			error("Module failed: " + mod.id + " | " + sys.inspect(ex));
-			SecurityLog.log("BATTLE MODULE FAILED: " + ex.message + "\nmodule: " + mod.id + "\n" + ex.stack);
+		} catch (e2) {
+			errlog(e2.message);
+			errlog(e2.stack);
+			error("Module failed: " + mod.id + " | " + sys.inspect(e2));
+			SecurityLog.log("BATTLE MODULE FAILED: " + e2.message + "\nmodule: " + mod.id + "\n" + e2.stack);
 		}
 		this.lock = false;
 		this.sendDecision(decisions[Math.floor(Math.random() * decisions.length)]);
@@ -450,7 +450,7 @@ var Battle = exports.Battle = (function () {
 		let pokeId = p.ident.split(': ')[1] + '|' + details.species;
 
 		var pokeA = new Calc.Pokemon(
-			battleData.getPokemon(details.species, this.gen),
+			battleData.getPokemon(details.species, this.gen, this.id),
 			{level: details.level, shiny: details.shiny, gender: details.gender, helpers: (this.helpers[side][pokeId] || {})},
 		);
 		pokeA.item = battleData.getItem(p.item, this.gen);
@@ -460,7 +460,7 @@ var Battle = exports.Battle = (function () {
 		pokeA.stats = p.stats;
 		if (forceMega && (p.canMegaEvo || (this.request.active && this.request.active[sideId] && this.request.active[sideId].canMegaEvo))) {
 			if (pokeA.item.megaStone) {
-				pokeA.template = battleData.getPokemon(pokeA.item.megaStone, this.gen);
+				pokeA.template = battleData.getPokemon(pokeA.item.megaStone, this.gen, this.id);
 				pokeA.species = pokeA.template.species;
 				pokeA.ability = battleData.getAbility(pokeA.template.abilities[0]);
 			}

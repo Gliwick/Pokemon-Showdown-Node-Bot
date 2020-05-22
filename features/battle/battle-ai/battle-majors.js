@@ -149,7 +149,7 @@ module.exports = {
 		poke.removeVolatile('typeadd');
 		poke.removeVolatile('typechange');
 		for (var i in details) poke[i] = details[i];
-		poke.template = battleData.getPokemon(details.species, this.gen);
+		poke.template = battleData.getPokemon(details.species, this.gen, this.id);
 	},
 
 	teampreview: function (args, kwargs) {
@@ -174,7 +174,7 @@ module.exports = {
 				poke = this.players[p].pokemon[i];
 		}
 		if (!poke) {
-			poke = new battleData.Pokemon(battleData.getPokemon(details.species, this.gen), {name: name});
+			poke = new battleData.Pokemon(battleData.getPokemon(details.species, this.gen, this.id), {name: name});
 			this.players[p].pokemon.push(poke);
 		}
 		poke.active = true;
@@ -245,7 +245,7 @@ module.exports = {
 		var poke = this.getActive(args[1]);
 		var det = this.parsePokemonIdent(args[1]);
 		var poke2 = this.getActive(args[3]);
-		var moveTemplate = battleData.getMove(args[2], this.gen);
+		var moveTemplate = battleData.getMove(args[2], this.gen, this.id);
 		var fromeffect = null;
 		var noDeductPP = false;
 		if (kwargs.from) fromeffect = battleData.getEffect(kwargs.from, this.gen);
@@ -301,7 +301,7 @@ module.exports = {
 	cant: function (args, kwargs, isIntro) {
 		var poke = this.getActive(args[1]);
 		var effect = battleData.getEffect(args[2], this.gen);
-		var moveTemplate = battleData.getMove(args[3] || "", this.gen);
+		var moveTemplate = battleData.getMove(args[3] || "", this.gen, this.id);
 		var det = this.parsePokemonIdent(args[1]);
 		switch (effect.id) {
 			case 'taunt':

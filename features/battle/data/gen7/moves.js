@@ -1,7 +1,6 @@
 'use strict';
 
-/**@type {{[k: string]: ModdedMoveData}} */
-let BattleMovedex = {
+exports.BattleMovedex = {
 	"10000000voltthunderbolt": {
 		inherit: true,
 		isNonstandard: null,

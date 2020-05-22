@@ -1,7 +1,6 @@
 'use strict';
 
-/**@type {{[k: string]: ModdedTemplateData}} */
-let BattlePokedex = {
+exports.BattlePokedex = {
 	charizard: {
 		inherit: true,
 		otherFormes: ["charizardmegax", "charizardmegay"],

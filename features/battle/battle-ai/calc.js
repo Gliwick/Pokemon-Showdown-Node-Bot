@@ -2,7 +2,7 @@
  * Pokemon Showdown Bot - Damage calculator
 */
 
-var typechart = require('./typechart.js');
+var TypeChart = require('./typechart.js');
 
 const CurrentGen = 8;
 
@@ -56,13 +56,17 @@ var Pokemon = exports.Pokemon = (function () {
 		if (this.template && this.template.baseStats) {
 			if (this.template.species === 'Aegislash' && this.hasAbility('stancechange') && stat in {'atk':1, 'spa':1}) return (this.gen >= 8 ? 140 : 150);
 			else return this.template.baseStats[stat] || 0;
-		} else return 0;
+		} else {
+			return 90;
+		}
 	};
 
 	Pokemon.prototype.getStat = function (stat, gen) {
 		if (this.stats[stat]) {
 			return this.stats[stat];
 		}
+
+		if (stat === 'hp' && this.getBaseStat(stat) === 1) return 1;
 
 		if (!gen) gen = CurrentGen;
 		if (gen <= 2) {
@@ -301,7 +305,7 @@ var Damage = exports.Damage = (function () {
 	return Damage;
 })();
 
-exports.getHazardsDamage = function (poke, conditions, gen, gconditions) {
+exports.getHazardsDamage = function (poke, conditions, gconditions, gen, battleId) {
 	if ((gen >= 3 && poke.hasAbility('magicguard')) || poke.hasItem('heavydutyboots')) return 0;
 
 	let side = conditions.side;
@@ -311,13 +315,13 @@ exports.getHazardsDamage = function (poke, conditions, gen, gconditions) {
 	let dmg = 0;
 
 	if (side['stealthrock']) {
-		dmg += (100 * typechart.getMultipleEff('Rock', poke.getTypes(conditions), gen, inverse)) / 8.0;
+		dmg += (100 * TypeChart.getMultipleEff('Rock', poke.getTypes(conditions), gen, false, !!gconditions.inversebattle, battleId)) / 8.0;
 	}
 	if (side['spikes']) {
 		if (gconditions['gravity'] || !poke.isGrounded(conditions)) dmg += (100 * side['spikes']) / 24.0;
 	}
 	if (side['gmaxsteelsurge']) {
-		dmg += (100 * typechart.getMultipleEff('Steel', poke.getTypes(conditions), gen, inverse)) / 8.0;
+		dmg += (100 * TypeChart.getMultipleEff('Steel', poke.getTypes(conditions), gen, false, !!gconditions.inversebattle, battleId)) / 8.0;
 	}
 
 	return dmg;
@@ -338,7 +342,7 @@ exports.getHazardsDamage = function (poke, conditions, gen, gconditions) {
  *  - gen (6 by default)
 */
 
-exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gconditions, gen) {
+exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gconditions, gen, battleId) {
 	if (!gen) gen = CurrentGen;
 	if (!gconditions) gconditions = {};
 	if (!conditionsA) conditionsA = {};
@@ -394,7 +398,7 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 			defStat = 'def';
 		}
 	} else {
-		let specialTypes = {Fire: 1, Water: 1, Grass: 1, Ice: 1, Electric: 1, Dark: 1, Psychic: 1, Dragon: 1};
+		const specialTypes = {Fire: 1, Water: 1, Grass: 1, Ice: 1, Electric: 1, Dark: 1, Psychic: 1, Dragon: 1};
 		if (move.type && move.type in specialTypes) {
 			cat = defcat = 'Special';
 			atk = statsA.spa;
@@ -423,7 +427,6 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	* Types (effectiveness)
 	*******************************/
 
-	let typesMux = 1;
 	let moveType = move.type || 'Normal';
 	let movePriority = move.priority;
 	let immune = false;
@@ -535,25 +538,15 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 		}
 	}
 
-	let eff;
-	let defTypes = pokeB.getTypes(conditionsB).slice();
+	let notImmune = false;
+	if (move.id in {'struggle':1, 'thousandarrows':1}) notImmune = true;
+	if (moveType in {'Fighting':1, 'Normal':1} && (conditionsB.volatiles['foresight'] || pokeA.hasAbility('scrappy'))) notImmune = true;
+	if (moveType === 'Ground' && gconditions['gravity']) notImmune = true;
 
-	for (var t = 0; t < defTypes.length; t++) {
-		eff = typechart.getEffectiveness(moveType, defTypes[t], gen);
-		if (!eff && defTypes[t] === 'Ghost') {
-			if (conditionsB.volatiles['foresight'] || move.id === 'struggle') eff = 1;
-			if (gen >= 3 && pokeA.ability && pokeA.hasAbility('scrappy')) eff = 1;
-		}
-		if (!eff && defTypes[t] === 'Flying') {
-			if (gconditions['gravity'] || move.id === 'thousandarrows') eff = 1;
-		}
-		if (gconditions['inversebattle']) {
-			if (eff === 0) eff = 2;
-			else eff = 1 / eff;
-		}
-		if (move.id === 'freezedry' && defTypes[t] === 'Water') eff = 2;
-		typesMux *= eff;
-	}
+	let defTypes = pokeB.getTypes(conditionsB).slice();
+	let typesMux = TypeChart.getMultipleEff(moveType, defTypes, gen, notImmune, !!gconditions.inversebattle, battleId);
+
+	if (move.id === 'freezedry' && defTypes.indexOf('Water') >= 0 && !gconditions.inversebattle) typesMux *= 4;
 
 	if (gen >= 3 && pokeB.ability && !pokeB.supressedAbility && !pokeA.hasAbility({'moldbreaker':1, 'teravolt':1, 'turboblaze':1, 'neutralizinggas':1}) && !move.ignoreAbility) {
 		switch (pokeB.ability.id) {
@@ -884,40 +877,48 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 		}
 	}
 
-	if (gen >= 3 && pokeB.ability && !pokeB.supressedAbility && !pokeA.hasAbility({'moldbreaker':1, 'teravolt':1, 'turboblaze':1, 'neutralizinggas':1}) && !move.ignoreAbility) {
+	if (gen >= 3 && pokeB.ability && !pokeB.supressedAbility && !pokeA.hasAbility('neutralizinggas')) {
 		switch (pokeB.ability.id) {
-			case 'fluffy':
-				if (moveType === 'Fire') bp = Math.floor(bp * 2);
-				if (move.flags && move.flags['contact']) bp = Math.floor(bp * 0.5);
-				break;
-			case 'darkaura':
-				if (move.type === 'Dark') {
-					if (pokeA.hasAbility('aurabreak')) bp = Math.floor(bp * 0.75);
-					else bp = Math.floor(bp * 1.33);
-				}
-				break;
-			case 'fairyaura':
-				if (move.type === 'Fairy') {
-					if (pokeA.hasAbility('aurabreak')) bp = Math.floor(bp * 0.75);
-					else bp = Math.floor(bp * 1.33);
-				}
-				break;
-			case 'dryskin':
-				if (moveType === 'Fire') bp = Math.floor(bp * 1.25);
-				break;
-			case 'heatproof':
-			case 'waterbubble':
-				if (moveType === 'Fire') bp = Math.floor(bp * 0.5);
-				break;
-			case 'filter':
-			case 'solidrock':
-			case 'peismarmor':
+			case 'prismarmor':
 				if (typesMux > 1) bp = Math.floor(bp * 0.75);
 				break;
-			case 'multiscale':
 			case 'shadowshield':
 				if (pokeB.hp >= 100) bp = Math.floor(bp * 0.5);
 				break;
+		}
+		if (!pokeA.hasAbility({'moldbreaker':1, 'teravolt':1, 'turboblaze':1}) && !move.ignoreAbility) {
+			switch (pokeB.ability.id) {
+				case 'fluffy':
+					if (moveType === 'Fire') bp = Math.floor(bp * 2);
+					if (move.flags && move.flags['contact']) bp = Math.floor(bp * 0.5);
+					break;
+				case 'darkaura':
+					if (move.type === 'Dark') {
+						if (pokeA.hasAbility('aurabreak')) bp = Math.floor(bp * 0.75);
+						else bp = Math.floor(bp * 1.33);
+					}
+					break;
+				case 'fairyaura':
+					if (move.type === 'Fairy') {
+						if (pokeA.hasAbility('aurabreak')) bp = Math.floor(bp * 0.75);
+						else bp = Math.floor(bp * 1.33);
+					}
+					break;
+				case 'dryskin':
+					if (moveType === 'Fire') bp = Math.floor(bp * 1.25);
+					break;
+				case 'heatproof':
+				case 'waterbubble':
+					if (moveType === 'Fire') bp = Math.floor(bp * 0.5);
+					break;
+				case 'filter':
+				case 'solidrock':
+					if (typesMux > 1) bp = Math.floor(bp * 0.75);
+					break;
+				case 'multiscale':
+					if (pokeB.hp >= 100) bp = Math.floor(bp * 0.5);
+					break;
+			}
 		}
 	}
 
@@ -1078,10 +1079,14 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	} else if (pokeA.hasAbility('parentalbond') && !pokeB.hasAbility('neutralizinggas')) {
 		if (!move.selfdestruct && !move.multihit && !(move.flags && move.flags['charge']) && !(move.spreadHit && gconditions['gametype'] in {'doubles':1, 'triples':1}) && !move.isZ && !move.isMax) {
 			let secondHitMultiplier = 1;
-			if (move.id === 'acidspray') {
-				secondHitMultiplier = 2;
-			} else if (move.id in {'appleacid':1, 'chargebeam':1, 'fierydance':1, 'firelash':1, 'gravapple':1, 'poweruppunch':1, 'strongarm':1}) {
+			if (move.id === 'acidspray' && !pokeB.hasAbility({'clearbody':1, 'fullmetalbody':1, 'mirrorarmor':1, 'whitesmoke':1})) {
+				if (!pokeB.hasAbility('contrary')) secondHitMultiplier = 2;
+				else secondHitMultiplier = 0.5;
+			} else if (move.id in {'chargebeam':1, 'fierydance':1, 'poweruppunch':1} || (move.category === 'Physical' && pokeB.hasAbility('weakarmor'))) {
 				secondHitMultiplier = 1.5;
+			} else if (move.id in {'appleacid':1, 'firelash':1, 'gravapple':1} && !pokeB.hasAbility({'clearbody':1, 'fullmetalbody':1, 'mirrorarmor':1, 'whitesmoke':1})) {
+				if (!pokeB.hasAbility('contrary')) secondHitMultiplier = 1.5;
+				else secondHitMultiplier = 0.66;
 			} else if (move.id === 'superpower') {
 				secondHitMultiplier = 0.66;
 			} else if (move.id in {'dracometeor':1, 'fleurcannon':1, 'leafstorm':1, 'overheat':1, 'psychoboost':1}) {

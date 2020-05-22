@@ -22,6 +22,7 @@ data/_temp
 !data/*-example.js
 features/battle/battle-ai/temp
 features/battle/teams.js
+features/battle/data/mods
 
 # Runtime data
 pids
