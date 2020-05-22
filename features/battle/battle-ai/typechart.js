@@ -29,7 +29,6 @@ exports.getEffectiveness = function (typeA, typeB, gen, battleId) {
 			let temp = require(MODS_DATA_DIR + formatMod + "/typechart.js").BattleTypeChart;
 			if (temp) chart = temp;
 		} catch (e) {}
-		console.log(chart);
 	}
 
 	if (!chart[typeB] || !chart[typeB][typeA]) return 1;
