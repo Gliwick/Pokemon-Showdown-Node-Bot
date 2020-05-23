@@ -755,9 +755,11 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		if (move.selfSwitch) {
 			if (pokeA.status in {'frz':1, 'slp':1} || conditionsA.volatiles['confusion']) {
 				res.unviable.push(decisions[i]);
+			} else if (move.flags && move.flags['contact'] && (hasAbility(pokeB, {'ironbarbs':1, 'roughskin':1}) || hasItem(pokeB, 'rockyhelmet'))) {
+				res.unviable.push(decisions[i]);
 			} else if (move.id === 'partingshot' && hasAbility(pokeB, {'contrary':1, 'magicbounce':1})) {
 				res.unviable.push(decisions[i]);
-			} else if (move.flags && move.flags['contact'] && (hasAbility(pokeB, {'ironbarbs':1, 'roughskin':1}) || hasItem(pokeB, 'rockyhelmet'))) {
+			} else if (move.id === 'batonpass' && (conditionsA.volatiles['perish3'] || conditionsA.volatiles['perish2'] || conditionsA.volatiles['perish1'])) {
 				res.unviable.push(decisions[i]);
 			} else if (move.id === 'batonpass' && (conditionsA.boosts.atk > 0 || conditionsA.boosts.def > 0 || conditionsA.boosts.spa > 0 || conditionsA.boosts.spd > 0 || conditionsA.boosts.spe > 0)) {
 				res.obligatory.push(decisions[i]);
@@ -1779,7 +1781,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		if (conditionsA.volatiles['curse'] || conditionsA.volatiles['leechseed'] || conditionsA.boosts.atk < 0 || conditionsA.boosts.spa < 0) switchIfNoOption = true;
 
 		if (bestSwitch) {
-			if (supportMoves.switching.length) bestSwitch = this.sample(supportMoves.switching);
+			if (supportMoves.switching.length) bestSwitch = sample(supportMoves.switching);
 			if (conditionsA.volatiles['perish1']) return bestSwitch;
 		}
 	}
