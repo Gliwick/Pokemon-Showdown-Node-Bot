@@ -176,7 +176,7 @@ exports.getMove = function (move, gen, battleId) {
 			'Electric': ['electr', 'thunder'],
 			'Fairy': ['fairy'],
 			'Fighting': ['fight'],
-			'Fire': ['fire', 'flame', 'heat'],
+			'Fire': ['fire', 'flame', 'flare', 'heat'],
 			'Flying': ['fly', 'sky'],
 			'Ghost': ['ghost', 'shadow'],
 			'Grass': ['grass', 'leaf', 'seed'],

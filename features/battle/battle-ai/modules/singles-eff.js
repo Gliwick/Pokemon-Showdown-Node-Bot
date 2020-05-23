@@ -209,13 +209,11 @@ function evaluatePokemon (battle, sideId) {
 		movesB.push(requiredMove);
 	}
 
-	let physicalB = false;
 	/* Calculate t - types mux */
+	let physicalB = false;
 	let types = {};
-	for (let moveId of movesB) {
-		if (moveId === 'struggle') continue;
-		let move = Data.getMove(moveId, battle.gen, battle.id);
-
+	for (let move of movesB) {
+		if (move.id === 'struggle') continue;
 		if (conditionsB.volatiles['taunt'] && move.id === 'naturepower') continue;
 		if (conditionsB.volatiles['torment'] && battle.foe.active[0].helpers.lastMove && battle.foe.active[0].helpers.lastMove === move.id) continue;
 		if (((pokeB.item && pokeB.item.id.startsWith('choice')) || conditionsB.volatiles['encore']) && battle.foe.active[0].helpers.lastMove && battle.foe.active[0].helpers.lastMove !== move.id) continue;
@@ -500,7 +498,7 @@ function evaluatePokemon (battle, sideId) {
 			if (move.id === 'leechseed' && !pokeB.hasType('Grass', conditionsB) && !hasAbility(pokeB, 'sapsipper')) dmg = 12.5;
 			if (!battle.conditions['mistyterrain'] || !pokeB.isGrounded(conditionsB)) {
 				if (move.status === 'brn' && !pokeB.hasType('Fire', conditionsB) && !hasAbility(pokeB, {'comatose':1, 'flashfire':1, 'waterbubble':1, 'waterveil':1})) {
-					if (this.gen >= 7) dmg = 6.25;
+					if (battle.gen >= 7) dmg = 6.25;
 					else dmg = 12.5;
 				}
 				if (pokeB.hasType(['Poison', 'Steel'], conditionsB) && !hasAbility(pokeB, {'comatose':1, 'immunity':1, 'poisonheal':1, 'pastelveil':1})) {
@@ -712,22 +710,23 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				continue;
 			}
 		}
-		if (move.priority > 0 && move.target && !(move.target in {'all':1, 'allySide':1, 'foeSide':1, 'self':1}) && (battle.conditions['psychicterrain'] || hasAbility(pokeB, {'dazzling':1, 'queenlymajesty':1}))) {
-			if (pokeB.isGrounded(conditionsB)) {
+
+		let movePriority = move.priority;
+		if (move.flags && move.flags['heal'] && hasAbility(pokeA, 'triage')) movePriority += 3;
+		if (move.category === 'Status' && hasAbility(pokeA, 'prankster')) movePriority++;
+		if (move.type === 'Flying' && hasAbility(pokeA, 'galewings') && (battle.gen <= 6 || pokeA.hp >= 100)) movePriority++;
+
+		if (move.target && !(move.target in {'all':1, 'allySide':1, 'foeSide':1, 'self':1})) {
+			if (movePriority > 0 && ((battle.conditions['psychicterrain'] && pokeB.isGrounded(conditionsB)) || hasAbility(pokeB, {'dazzling':1, 'queenlymajesty':1}))) {
+				res.unviable.push(decisions[i]);
+				continue;
+			}
+			if (battle.gen >= 7 && move.category === 'Status' && hasAbility(pokeA, 'prankster') && pokeB.hasType('Dark', conditionsB)) {
 				res.unviable.push(decisions[i]);
 				continue;
 			}
 		}
-		if (move.category === 'Status' && move.target && !(move.target in {'all':1, 'allySide':1, 'foeSide':1, 'self':1}) && hasAbility(pokeA, 'prankster')) {
-			if ((battle.conditions['psychicterrain'] && pokeB.isGrounded(conditionsB)) || hasAbility(pokeB, {'dazzling':1, 'queenlymajesty':1})) {
-				res.unviable.push(decisions[i]);
-				continue;
-			}
-			if (pokeB.hasType('Dark', conditionsB) && battle.gen >= 7) {
-				res.unviable.push(decisions[i]);
-				continue;
-			}
-		}
+
 		if (move.id === 'stockpile') {
 			if (conditionsA.volatiles['stockpile3']) {
 				res.unviable.push(decisions[i]);
@@ -740,14 +739,29 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				continue;
 			}
 		}
+		if (move.forceSwitch || (move.id === 'partingshot' && hasAbility(pokeB, 'magicbounce'))) {
+			if (conditionsB.volatiles['dynamax'] || hasAbility(pokeB, 'suctioncups') || !foeCanSwitch(battle)) {
+				res.unviable.push(decisions[i]);
+			} else {
+				let boostsPHaze = 0;
+				for (var j in conditionsB.boosts) {
+					if (conditionsB.boosts[j] > 0) boostsPHaze++;
+				}
+				if (boostsPHaze) res.viable.push(decisions[i]);
+				else res.unviable.push(decisions[i]);
+			}
+			continue;
+		}
 		if (move.selfSwitch) {
-			if (move.id === 'partingshot' && hasAbility(pokeB, {'contrary':1, 'magicbounce':1})) {
+			if (pokeA.status in {'frz':1, 'slp':1} || conditionsA.volatiles['confusion']) {
+				res.unviable.push(decisions[i]);
+			} else if (move.id === 'partingshot' && hasAbility(pokeB, {'contrary':1, 'magicbounce':1})) {
 				res.unviable.push(decisions[i]);
 			} else if (move.flags && move.flags['contact'] && (hasAbility(pokeB, {'ironbarbs':1, 'roughskin':1}) || hasItem(pokeB, 'rockyhelmet'))) {
 				res.unviable.push(decisions[i]);
 			} else if (move.id === 'batonpass' && (conditionsA.boosts.atk > 0 || conditionsA.boosts.def > 0 || conditionsA.boosts.spa > 0 || conditionsA.boosts.spd > 0 || conditionsA.boosts.spe > 0)) {
 				res.obligatory.push(decisions[i]);
-			} else if (move.priority >= 0) {
+			} else if (movePriority > 0 || (movePriority === 0 && speA > speB)) {
 				res.switching.push(decisions[i]);
 			} else {
 				res.slowswitching.push(decisions[i]);
@@ -1083,19 +1097,6 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				res.obligatory.push(decisions[i]);
 			} else {
 				res.viable.push(decisions[i]);
-			}
-			continue;
-		}
-		if (move.forceSwitch) {
-			if (conditionsB.volatiles['dynamax'] || hasAbility(pokeB, 'suctioncups') || !foeCanSwitch(battle)) {
-				res.unviable.push(decisions[i]);
-			} else {
-				let boostsPHaze = 0;
-				for (var j in conditionsB.boosts) {
-					if (conditionsB.boosts[j] > 0) boostsPHaze++;
-				}
-				if (boostsPHaze) res.viable.push(decisions[i]);
-				else res.unviable.push(decisions[i]);
 			}
 			continue;
 		}
@@ -1778,7 +1779,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		if (conditionsA.volatiles['curse'] || conditionsA.volatiles['leechseed'] || conditionsA.boosts.atk < 0 || conditionsA.boosts.spa < 0) switchIfNoOption = true;
 
 		if (bestSwitch) {
-			if (supportMoves.switching.length && speA > speB && !(pokeA.status in {'frz':1, 'slp':1}) && !conditionsA.volatiles['confusion']) bestSwitch = supportMoves.switching[Math.floor(Math.random() * supportMoves.switching.length)];
+			if (supportMoves.switching.length) bestSwitch = this.sample(supportMoves.switching);
 			if (conditionsA.volatiles['perish1']) return bestSwitch;
 		}
 	}
@@ -1836,7 +1837,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		let priority = move.priority;
 		if (move.drain && hasAbility(pokeA, 'triage')) priority += 3;
 		if (move.id === 'naturepower' && hasAbility(pokeA, 'prankster')) priority += 1;
-		if (move.type === 'Flying' && (this.gen <= 6 || pokeA.hp >= 100) && hasAbility(pokeA, 'galewings')) priority += 1;
+		if (move.type === 'Flying' && (battle.gen <= 6 || pokeA.hp >= 100) && hasAbility(pokeA, 'galewings')) priority += 1;
 		if (priority === maxPriority) {
 			filteredMoves.push(finalDamageMoves[i]);
 		} else if (priority > maxPriority) {
@@ -2033,7 +2034,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		}
 	}
 
-	if (speA <= speB && ev.t <= 19 * defMultiplier && supportMoves.slowswitching.length) bestSwitch = sample(supportMoves.slowswitching);
+	if (ev.t <= 19 * defMultiplier && supportMoves.slowswitching.length) bestSwitch = sample(supportMoves.slowswitching);
 
 	if (damageMoves.ohko.length) {
 		return sample(finalDamageMoves);
