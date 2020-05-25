@@ -849,7 +849,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				}
 				continue;
 			case 'substitute':
-				if (conditionsA.volatiles['substitute'] || ev.t >= 31 || pokeA.hp <= 25 || (pokeA.hp <= 49 && speA <= speB) || battle.self.active[0].helpers.lastMove === 'substitute' || pokeA.status in {'psn':1, 'tox':1} || conditionsB.volatiles['taunt']) {
+				if (conditionsA.volatiles['substitute'] || ev.t >= 31 || pokeA.hp <= 25 || (pokeA.hp < 50 && speA <= speB) || battle.self.active[0].helpers.lastMove === 'substitute' || pokeA.status in {'psn':1, 'tox':1} || conditionsB.volatiles['taunt']) {
 					res.unviable.push(decisions[i]);
 				} else if (pokeB.category === 'Status' || ev.t <= 14) {
 					res.obligatory.push(decisions[i]);
@@ -1021,7 +1021,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				}
 				continue;
 			case 'trickroom':
-				if (battle.conditions['trickroom'] || (speA > speB && (!conditionsA.boosts.spe || conditionsA.boosts.spe >= 0) && (!conditionsB.boosts.spe || conditionsB.boosts.spe <= 0))) {
+				if (battle.conditions['trickroom'] || speA >= speB || conditionsA.boosts.spe > 0 || conditionsB.boosts.spe < 0) {
 					res.unviable.push(decisions[i]);
 				} else {
 					res.obligatory.push(decisions[i]);
@@ -1093,9 +1093,13 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		if (move.id in singleTurnMoves) {
 			if (battle.self.active[0].helpers.lastMove in singleTurnMoves) {
 				res.unviable.push(decisions[i]);
-			} else if (move.id === 'maxguard' && !conditionsB.volatiles['dynamax']) {
+			} else if (move.id === 'maxguard' !== !!conditionsB.volatiles['dynamax']) {
 				res.unviable.push(decisions[i]);
 			} else if (hasAbility(pokeA, 'speedboost') && !(conditionsA.boosts.spe > 0)) {
+				res.obligatory.push(decisions[i]);
+			// protect on badly poisoned foe, but don't be too predictable to prevent safe switch-in or setup
+			// needs to be obligatory to be chosen instead of a switch-out
+			} else if (pokeB.status === 'tox' && !(pokeA.status in {'brn':1, 'psn':1, 'tox':1}) && Math.random() >= 0.5) {
 				res.obligatory.push(decisions[i]);
 			} else {
 				res.viable.push(decisions[i]);
@@ -1190,16 +1194,28 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			continue;
 		}
 		if ((move.heal && move.id !== 'lifedew') || move.id in {'moonlight':1, 'morningsun':1, 'rest':1, 'shoreup':1, 'strengthsap':1, 'synthesis':1, 'wish':1}) {
-			if (pokeA.hp > 85 || (pokeA.status && pokeA.status === 'tox' && battle.self.active[0].helpers.sw < battle.turn - 2)) {
+			if (ev.t >= 31 || (pokeA.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3)) {
 				res.unviable.push(decisions[i]);
 			} else if (move.id in {'moonlight':1, 'morningsun':1, 'synthesis':1} && !supressedWeather && toId(battle.conditions.weather) in {'primordialsea':1, 'raindance':1, 'sandstorm':1, 'hail':1}) {
 				res.unviable.push(decisions[i]);
 			} else if (move.id === 'wish' && battle.self.active[0].helpers.lastMove === 'wish') {
 				res.unviable.push(decisions[i]);
-			} else if (pokeA.hp <= 25) {
-				res.obligatory.push(decisions[i]);
+			} else if (speA > speB && move.id !== 'wish') {
+				if (pokeA.hp >= 60) {
+					res.unviable.push(decisions[i]);
+				} else if (pokeA.hp <= 25) {
+					res.obligatory.push(decisions[i]);
+				} else {
+					res.viable.push(decisions[i]);
+				}
 			} else {
-				res.viable.push(decisions[i]);
+				if (pokeA.hp >= 85) {
+					res.unviable.push(decisions[i]);
+				} else if (pokeA.hp <= 25 && ev.t <= 19) {
+					res.obligatory.push(decisions[i]);
+				} else {
+					res.viable.push(decisions[i]);
+				}
 			}
 			continue;
 		}
@@ -1758,9 +1774,11 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 
 	let randomBattle = (battle.id.indexOf('random') >= 0 || battle.id.indexOf('challengecup') >= 0 || battle.id.indexOf('hackmonscup') >= 0);
 	let speA = pokeA.getSpe(battle, conditionsA, battle.self.active[0].moves, false, randomBattle);
+	let speNoBoostA = pokeA.getSpe(battle, conditionsA, battle.self.active[0].moves, true, randomBattle);
 	let speB = pokeB.getSpe(battle, conditionsB, movesB, false, randomBattle);
 	if (battle.conditions['trickroom']) {
 		speA = -1 * speA;
+		speNoBoostA = -1 * speNoBoostA;
 		speB = -1 * speB;
 	}
 	let supressedWeather = weatherSupressed(pokeA, pokeB);
@@ -1777,8 +1795,18 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		if (conditionsA.volatiles['dynamax']) bestSwitch = null;
 
 		if (conditionsB.volatiles['substitute'] && !damageMoves.subbreak.length && !damageMoves.hasMultihit && !damageMoves.hasAuthentic && !supportMoves.hasAuthentic) switchIfNoOption = true;
-		if (pokeA.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3) switchIfNoOption = true;
-		if (conditionsA.volatiles['curse'] || conditionsA.volatiles['leechseed'] || conditionsA.boosts.atk < 0 || conditionsA.boosts.spa < 0) switchIfNoOption = true;
+		if (pokeA.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3 && !hasAbility(pokeA, {'magicguard':1, 'poisonheal':1})) switchIfNoOption = true;
+		if (pokeA.status && hasAbility(pokeA, 'naturalcure')) switchIfNoOption = true;
+		if (conditionsA.volatiles['curse'] || conditionsA.volatiles['leechseed'] || (!battle.conditions['trickroom'] && speNoBoostA > speB && speA < speB && conditionsA.boosts.spe < 0)) switchIfNoOption = true;
+
+		let movesA = battle.request.side.pokemon[0].moves;
+		for (let moveId of movesA) {
+			if (moveId === 'photongeyser') continue;
+			let move = Data.getMove(moveId, battle.gen, battle.id);
+			if ((move.category === 'Physical' && conditionsA.boosts.atk < 0) || (move.category === 'Special' && conditionsA.boosts.spa < 0)) {
+				switchIfNoOption = true;
+			}
+		}
 
 		if (bestSwitch) {
 			if (supportMoves.switching.length) bestSwitch = sample(supportMoves.switching);
@@ -2043,7 +2071,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	} else if (supportMoves.obligatory.length) {
 		return sample(supportMoves.obligatory);
 	} else if (damageMoves.thko.length) {
-		if (supportMoves.viable.length > 0 && maxPriority <= 0 && Math.random() > 0.5) {
+		if (supportMoves.viable.length > 0 && maxPriority <= 0 && Math.random() >= 0.5) {
 			return sample(supportMoves.viable);
 		} else {
 			return sample(finalDamageMoves);

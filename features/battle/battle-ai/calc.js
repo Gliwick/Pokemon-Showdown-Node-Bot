@@ -205,6 +205,8 @@ var Pokemon = exports.Pokemon = (function () {
 			spe = this.getUninvestedStats(gen)['spe'];
 		}
 		spe = Math.floor(spe);
+		if (!ignoreBoost) spe = this.getBoostedStat('spe', spe, conditions.boosts);
+
 		if (conditions['tailwind']) spe *= 2;
 		if (conditions.volatiles['unburden']) spe *= 2;
 		if (gconditions.weather && !gconditions.supressedWeather) {
@@ -225,7 +227,6 @@ var Pokemon = exports.Pokemon = (function () {
 				else spe = Math.floor(spe * 0.5);
 			}
 		}
-		if (!ignoreBoost) spe = this.getBoostedStat('spe', spe, conditions.boosts);
 		return spe;
 	};
 
