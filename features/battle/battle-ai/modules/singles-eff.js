@@ -204,9 +204,9 @@ function evaluatePokemon (battle, sideId) {
 	let t = 0;
 
 	let movesB = battle.foe.active[0].moves;
-	if (pokeB.template.requiredMove && battle.id.indexOf('hackmon') < 0) {
+	if (pokeB.template.requiredMove && movesB.indexOf(pokeB.template.requiredMove) < 0 && battle.id.indexOf('hackmon') < 0) {
 		movesB = movesB.slice();
-		movesB.push(requiredMove);
+		movesB.push(pokeB.template.requiredMove);
 	}
 
 	/* Calculate t - types mux */
