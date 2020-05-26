@@ -1850,11 +1850,17 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	}
 
 	// multihit if sub/disguise/ice face
-	if ((conditionsB.volatiles['substitute'] || (pokeB.template.species === 'Mimikyu' && hasAbility(pokeB, 'disguise')) || (pokeB.template.species === 'Eiscue' && hasAbility(pokeB, 'iceface') && move.category === 'Physical')) && !hasAbility(pokeA, {'infiltrator':1, 'parentalbond':1})) {
+	if (
+		(
+			conditionsB.volatiles['substitute'] || 
+			(pokeB.template.species === 'Mimikyu' && hasAbility(pokeB, 'disguise')) ||
+			(pokeB.template.species === 'Eiscue' && hasAbility(pokeB, 'iceface'))
+		) && !hasAbility(pokeA, {'infiltrator':1, 'parentalbond':1})
+	) {
 		filteredMoves = [];
 		for (var i = 0; i < finalDamageMoves.length; i++) {
 			var move = finalDamageMoves[i][0].moveData;
-			if (move.multihit || move.id === 'beatup') filteredMoves.push(moves[i]);
+			if (move.multihit || move.id === 'beatup' || (hasAbility(pokeB, 'iceface') && move.category !== 'Physical')) filteredMoves.push(moves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 	}
