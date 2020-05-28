@@ -95,7 +95,7 @@ exports.getPokemon = exports.getTemplate = function (poke, gen, battleId) {
 		}
 	}
 
-	if (!pokemon.species) pokemon.species = temp.name;
+	if (!pokemon.species) pokemon.species = pokemon.name;
 
 	if (!pokemon.name) {
 		return {
