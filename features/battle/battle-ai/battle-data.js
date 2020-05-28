@@ -66,7 +66,6 @@ exports.getPokemon = exports.getTemplate = function (poke, gen, battleId) {
 	try {
 		temp = DataDownloader.getPokedex()[poke];
 		for (var attr in temp) pokemon[attr] = temp[attr];
-		if (temp.name) pokemon.species = temp.name;
 	} catch (e) {}
 	for (var i = CurrentGen - 1; i >= gen; i--) {
 		try {
@@ -95,6 +94,8 @@ exports.getPokemon = exports.getTemplate = function (poke, gen, battleId) {
 			for (var attr in temp) pokemon[attr] = temp[attr];
 		}
 	}
+
+	if (!pokemon.species) pokemon.species = temp.name;
 
 	if (!pokemon.name) {
 		return {
@@ -252,7 +253,7 @@ exports.getItem = function (item, gen, battleId) {
 			num: 0,
 			gen: CurrentGen,
 			category: "Effect",
-			effectType: "Item"
+			effectType: "Item",
 		};
 	}
 	if (!itemData.category) itemData.category = 'Effect';
@@ -305,7 +306,7 @@ exports.getAbility = function (ab, gen, battleId) {
 			rating: 0,
 			num: 0,
 			category: "Effect",
-			effectType: "Ability"
+			effectType: "Ability",
 		};
 	}
 	if (!ability.category) ability.category = 'Effect';

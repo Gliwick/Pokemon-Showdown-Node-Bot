@@ -25,7 +25,7 @@ var Pokemon = exports.Pokemon = (function () {
 		this.evs = {};
 		this.ivs = {};
 		this.dvs = {};
-		this.nature = null;
+		this.nature = {};
 		this.ability = null;
 		this.level = 100;
 		this.shiny = false;
@@ -62,10 +62,7 @@ var Pokemon = exports.Pokemon = (function () {
 	};
 
 	Pokemon.prototype.getStat = function (stat, gen) {
-		if (this.stats[stat]) {
-			return this.stats[stat];
-		}
-
+		if (this.stats[stat]) return this.stats[stat];
 		if (stat === 'hp' && this.getBaseStat(stat) === 1) return 1;
 
 		if (!gen) gen = CurrentGen;
@@ -79,7 +76,7 @@ var Pokemon = exports.Pokemon = (function () {
 			if (stat === 'hp') {
 				return Math.floor((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, gen) / 4) * this.level / 100 + this.level + 10);
 			} else {
-				return Math.floor(Math.floor((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, gen) / 4) * this.level / 100 + 5) * (this.nature ? (this.nature.value || 1) : 1));
+				return Math.floor(Math.floor((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, gen) / 4) * this.level / 100 + 5) * (this.nature[stat] || 1));
 			}
 		}
 	};
@@ -90,58 +87,6 @@ var Pokemon = exports.Pokemon = (function () {
 		let res = {};
 		for (var i = 0; i < stats.length; i++) {
 			res[stats[i]] = this.getStat(stats[i], gen);
-		}
-		return res;
-	};
-
-	Pokemon.prototype.getMaxStats = function (gen) {
-		if (!gen) gen = CurrentGen;
-		let stats = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
-		let res = {};
-		for (var i = 0; i < stats.length; i++) {
-			if (this.stats[stats[i]]) {
-				res[stats[i]] = this.stats[stats[i]];
-				continue;
-			}
-			if (gen <= 2) {
-				if (stats[i] === 'hp') {
-					res[stats[i]] = Math.floor(((this.getBaseStat(stats[i]) + 15) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level / 100) + 10 + this.level;
-				} else {
-					res[stats[i]] = Math.floor(((this.getBaseStat(stats[i]) + 15) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level / 100) + 5;
-				}
-			} else {
-				if (stats[i] === 'hp') {
-					res[stats[i]] = Math.floor((2 * this.getBaseStat(stats[i]) + 31 + 252 / 4) * this.level / 100 + this.level + 10);
-				} else {
-					res[stats[i]] = Math.floor(Math.floor((2 * this.getBaseStat(stats[i]) + 31 + 252 / 4) * this.level / 100 + 5) * 11 / 10.0);
-				}
-			}
-		}
-		return res;
-	};
-
-	Pokemon.prototype.getUninvestedStats = function (gen) {
-		if (!gen) gen = CurrentGen;
-		let stats = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
-		let res = {};
-		for (var i = 0; i < stats.length; i++) {
-			if (this.stats[stats[i]]) {
-				res[stats[i]] = this.stats[stats[i]];
-				continue;
-			}
-			if (gen <= 2) {
-				if (stats[i] === 'hp') {
-					res[stats[i]] = Math.floor(((this.getBaseStat(stats[i]) + 15) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level / 100) + 10 + this.level;
-				} else {
-					res[stats[i]] = Math.floor(((this.getBaseStat(stats[i]) + 15) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level / 100) + 5;
-				}
-			} else {
-				if (stats[i] === 'hp') {
-					res[stats[i]] = Math.floor((2 * this.getBaseStat(stats[i]) + 31 + 0 / 4) * this.level / 100 + this.level + 10);
-				} else {
-					res[stats[i]] = Math.floor((2 * this.getBaseStat(stats[i]) + 31 + 0 / 4) * this.level / 100 + 5);
-				}
-			}
 		}
 		return res;
 	};
@@ -189,26 +134,28 @@ var Pokemon = exports.Pokemon = (function () {
 		return !(this.hasType('Flying', conditions) || this.hasAbility('levitate') || this.hasItem('airballoon'));
 	}
 
-	Pokemon.prototype.getSpe = function (battle, conditions, moves, ignoreBoost, randomBattle) {
+	Pokemon.prototype.getFullSpe = function (battle, conditions, moves, ignoreBoost, randomBattle) {
 		let gen = battle.gen || CurrentGen;
-		if ('spe' in this.evs && ('spe' in this.ivs || 'spe' in this.dvs)) return this.getStat('spe', gen);
 
 		let gconditions = battle.conditions;
 		let spe = 0;
-		if (this.hasAbility('stall') || moves.includes('gyroball') || moves.includes('trickroom')) {
-			spe = this.getUninvestedStats(gen)['spe'];
-		} else if (randomBattle) {
+
+		if (this.stats['spe']) {
+			spe = this.stats['spe'];
+		} else if ('spe' in this.evs && ('spe' in this.ivs || 'spe' in this.dvs)) {
 			spe = this.getStat('spe', gen);
-		} else if ((this.template.baseStats && this.template.baseStats.spe >= 70) || this.hasItem('choicescarf')) {
-			spe = this.getMaxStats(gen)['spe'];
-		} else {
-			spe = this.getUninvestedStats(gen)['spe'];
 		}
 		spe = Math.floor(spe);
 		if (!ignoreBoost) spe = this.getBoostedStat('spe', spe, conditions.boosts);
 
-		if (conditions['tailwind']) spe *= 2;
-		if (conditions.volatiles['unburden']) spe *= 2;
+		if (this.status && this.hasAbility('quickfeet')) {
+			spe = Math.floor(spe * 1.5);
+		} else if (this.status === 'par') {
+			spe = Math.floor(spe * (gen < 7 ? 0.25 : 0.5));
+		}
+		if (this.hasAbility('slowstart')) spe = Math.floor(spe * 0.5);
+		if (this.hasItem({'ironball':1, 'machobrace':1})) spe = Math.floor(spe * 0.5);
+		if (this.hasItem('choicescarf')) spe = Math.floor(spe * 1.5);
 		if (gconditions.weather && !gconditions.supressedWeather) {
 			if (toId(gconditions.weather) in {'desolateland':1, 'sunnyday':1} && this.hasAbility('chlorophyll')) spe *= 2;
 			if (toId(gconditions.weather) in {'primordealsea':1, 'raindance':1} && this.hasAbility('swiftswim')) spe *= 2;
@@ -216,17 +163,9 @@ var Pokemon = exports.Pokemon = (function () {
 			if (toId(gconditions.weather) === 'hail' && this.hasAbility('slushrush')) spe *= 2;
 		}
 		if (gconditions['electricterrain'] && this.hasAbility('surgesurfer')) spe = Math.floor(spe * 2);
-		if (this.hasAbility('slowstart')) spe = Math.floor(spe * 0.5);
-		if (this.hasItem('choicescarf')) spe = Math.floor(spe * 1.5);
-		if (this.hasItem({'ironball':1, 'machobrace':1})) spe = Math.floor(spe * 0.5);
-		if (this.status === 'par') {
-			if (this.hasAbility('quickfeet')) {
-				spe = Math.floor(spe * 1.5);
-			} else {
-				if (gen < 7) spe = Math.floor(spe * 0.25);
-				else spe = Math.floor(spe * 0.5);
-			}
-		}
+		if (conditions['tailwind']) spe *= 2;
+		if (conditions.volatiles['unburden']) spe *= 2;
+
 		return spe;
 	};
 
@@ -352,8 +291,8 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	let supressedWeather = gconditions.supressedWeather;
 
 	let statsA = pokeA.getStats(gen), statsB = pokeB.getStats(gen);
-	let speA = pokeA.getSpe({conditions: gconditions, gen: gen}, conditionsA, [move.id], true, gen);
-	let speB = pokeB.getSpe({conditions: gconditions, gen: gen}, conditionsB, [], true, gen);
+	let speA = pokeA.getFullSpe({conditions: gconditions, gen: gen}, conditionsA, [move.id], true, gen);
+	let speB = pokeB.getFullSpe({conditions: gconditions, gen: gen}, conditionsB, [], true, gen);
 
 	let atk, def, bp, atkStat, defStat;
 	let cat, defcat;

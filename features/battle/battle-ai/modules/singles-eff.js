@@ -16,7 +16,6 @@ const singleTurnMoves = {'protect':1, 'detect':1, 'kingsshield':1, 'quickguard':
 
 function supposeActiveFoe (battle) {
 	let target = battle.foe.active[0];
-	let pokeA = battle.getCalcRequestPokemon(0, true);
 	let pokeBId = target.name + '|' + target.species;
 	let pokeB = new Pokemon(target.template, {
 		level: target.level,
@@ -27,7 +26,10 @@ function supposeActiveFoe (battle) {
 	});
 	pokeB.hp = target.hp;
 	pokeB.status = target.status;
+
 	let hackmonsBattle = (battle.id.indexOf('hackmon') >= 0);
+
+	// ability
 	if (battle.gen >= 3 && !target.supressedAbility) {
 		if (!target.ability || target.ability === '&unknown') {
 			if (!hackmonsBattle && pokeB.template.abilities) {
@@ -41,6 +43,8 @@ function supposeActiveFoe (battle) {
 			pokeB.ability = target.ability;
 		}
 	}
+
+	// item
 	if (!target.item || target.item === '&unknown') {
 		let itemId = null;
 		if (battle.gen >= 2 && !hackmonsBattle) {
@@ -93,6 +97,42 @@ function supposeActiveFoe (battle) {
 	} else {
 		pokeB.item = target.item;
 	}
+
+	// evs, ivs and nature
+	if (battle.gen >= 3) pokeB.ivs = {hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31};
+	if (battle.id.indexOf('hackmonscup') > 0) {
+		pokeB.evs = {hp: 124, atk: 124, def: 124, spa: 124, spd: 124, spe: 124};
+	} else if (battle.gen <= 2) {
+		pokeB.evs = {hp: 252, atk: 252, def: 252, spa: 252, spd: 252, spe: 252};
+	} else if (battle.id.indexOf('random') > 0) {
+		pokeB.evs = {hp: 84, atk: 84, def: 84, spa: 84, spd: 84, spe: 84};
+	} else {
+		if (hackmonsBattle && battle.gen !== 6) {
+			pokeB.evs = {hp: 252, atk: 252, def: 252, spa: 252, spd: 252, spe: 252};
+		} else if ((pokeB.template.baseStats.spe >= 70 || pokeB.hasItem('choicescarf')) && !pokeB.hasAbility({'slowstart':1, 'stall':1}) && !pokeB.hasItem({'fullincense':1, 'ironball':1, 'laggingtail':1, 'machobrace':1})) {
+			pokeB.evs = {hp: 0, atk: 252, def: 4, spa: 252, spd: 4, spe: 252};
+			if (battle.gen >= 3) pokeB.nature = {spe: 1.1};
+		} else if (Math.max(pokeB.template.baseStats.atk, pokeB.template.baseStats.spa) >= Math.max(pokeB.template.baseStats.hp, pokeB.template.baseStats.def, pokeB.template.baseStats.spd) || pokeB.hasAbility({'hugepower':1, 'purepower':1})) {
+			pokeB.evs = {hp: 252, atk: 252, def: 0, spa: 252, spd: 0, spe: 4};
+			if (battle.gen >= 3) pokeB.nature = {atk: 1.1, spa: 1.1};
+		} else {
+			pokeB.evs = {hp: 252, atk: 0, def: 128, spa: 0, spd: 128, spe: 0};
+		}
+		for (let move of battle.foe.active[0].moves) {
+			if (move.id in {'gyroball':1, 'trickroom':1}) {
+				if (pokeB.evs.spe > 0) {
+					pokeB.evs.hp = Math.min(252, pokeB.evs.hp + pokeB.evs.spe);
+					pokeB.evs.spe = 0;
+				}
+				if (battle.gen >= 3) {
+					pokeB.ivs.spe = 0;
+					pokeB.nature.spe = 0.9;
+				}
+			}
+		}
+	}
+	debug(pokeB.template.species + ' EVs: ' + JSON.stringify(pokeB.evs) + ' | IVs: ' + JSON.stringify(pokeB.ivs) + ' | Nature: ' + JSON.stringify(pokeB.nature));
+
 	return pokeB;
 }
 
@@ -204,9 +244,15 @@ function evaluatePokemon (battle, sideId) {
 	let t = 0;
 
 	let movesB = battle.foe.active[0].moves;
-	if (pokeB.template.requiredMove && movesB.indexOf(pokeB.template.requiredMove) < 0 && battle.id.indexOf('hackmon') < 0) {
-		movesB = movesB.slice();
-		movesB.push(pokeB.template.requiredMove);
+	if (pokeB.template.requiredMove && battle.id.indexOf('hackmon') < 0) {
+		let alreadyHasRequiredMove = false;
+		for (let move of movesB) {
+			if (move.id === pokeB.template.requiredMove) alreadyHasRequiredMove = true;
+		}
+		if (!alreadyHasRequiredMove) {
+			movesB = movesB.slice();
+			movesB.push(Data.getMove(pokeB.template.requiredMove));
+		}
 	}
 
 	/* Calculate t - types mux */
@@ -607,8 +653,8 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 	let movesB = battle.foe.active[0].moves;
 
 	let randomBattle = (battle.id.indexOf('random') >= 0 || battle.id.indexOf('challengecup') >= 0 || battle.id.indexOf('hackmonscup') >= 0);
-	let speA = pokeA.getSpe(battle, conditionsA, battle.self.active[0].moves, false, randomBattle);
-	let speB = pokeB.getSpe(battle, conditionsB, movesB, false, randomBattle);
+	let speA = pokeA.getFullSpe(battle, conditionsA, battle.self.active[0].moves, false, randomBattle);
+	let speB = pokeB.getFullSpe(battle, conditionsB, movesB, false, randomBattle);
 
 	pokeB.category = '';
 	let hasPhysical = false, hasSpecial = false, hasStatus = false;
@@ -1065,8 +1111,8 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			case 'spectralthief':
 			case 'topsyturvy':
 				let boostsHaze = {total: 0};
-				let speA2 = pokeA.getSpe(battle, conditionsA, battle.self.active[0].moves, true, randomBattle);
-				let speB2 = pokeB.getSpe(battle, conditionsB, movesB, true, randomBattle);
+				let speA2 = pokeA.getFullSpe(battle, conditionsA, battle.self.active[0].moves, true, randomBattle);
+				let speB2 = pokeB.getFullSpe(battle, conditionsB, movesB, true, randomBattle);
 				for (var j in conditionsB.boosts) {
 					if (conditionsB.boosts[j] > 0) {
 						boostsHaze[j] = 1;
@@ -1315,8 +1361,8 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		boosts: battle.foe.active[0].boosts
 	});
 	let randomBattle = (battle.id.indexOf('random') >= 0 || battle.id.indexOf('challengecup') >= 0 || battle.id.indexOf('hackmonscup') >= 0);
-	let speA = pokeA.getSpe(battle, conditionsA, battle.self.active[0].moves, false, randomBattle);
-	let speB = pokeB.getSpe(battle, conditionsB, battle.foe.active[0].moves, false, randomBattle);
+	let speA = pokeA.getFullSpe(battle, conditionsA, battle.self.active[0].moves, false, randomBattle);
+	let speB = pokeB.getFullSpe(battle, conditionsB, battle.foe.active[0].moves, false, randomBattle);
 
 	let supressedWeather = weatherSupressed(pokeA, pokeB);
 	for (var i = 0; i < decisions.length; i++) {
@@ -1773,9 +1819,9 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	let movesB = battle.foe.active[0].moves;
 
 	let randomBattle = (battle.id.indexOf('random') >= 0 || battle.id.indexOf('challengecup') >= 0 || battle.id.indexOf('hackmonscup') >= 0);
-	let speA = pokeA.getSpe(battle, conditionsA, battle.self.active[0].moves, false, randomBattle);
-	let speNoBoostA = pokeA.getSpe(battle, conditionsA, battle.self.active[0].moves, true, randomBattle);
-	let speB = pokeB.getSpe(battle, conditionsB, movesB, false, randomBattle);
+	let speA = pokeA.getFullSpe(battle, conditionsA, battle.self.active[0].moves, false, randomBattle);
+	let speNoBoostA = pokeA.getFullSpe(battle, conditionsA, battle.self.active[0].moves, true, randomBattle);
+	let speB = pokeB.getFullSpe(battle, conditionsB, movesB, false, randomBattle);
 	if (battle.conditions['trickroom']) {
 		speA = -1 * speA;
 		speNoBoostA = -1 * speNoBoostA;
