@@ -653,8 +653,8 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 	let movesB = battle.foe.active[0].moves;
 
 	let randomBattle = (battle.id.indexOf('random') >= 0 || battle.id.indexOf('challengecup') >= 0 || battle.id.indexOf('hackmonscup') >= 0);
-	let speA = pokeA.getFullSpe(battle, conditionsA, battle.self.active[0].moves, false, randomBattle);
-	let speB = pokeB.getFullSpe(battle, conditionsB, movesB, false, randomBattle);
+	let speA = pokeA.getFullSpe(battle, conditionsA, false);
+	let speB = pokeB.getFullSpe(battle, conditionsB, false);
 
 	pokeB.category = '';
 	let hasPhysical = false, hasSpecial = false, hasStatus = false;
@@ -1106,22 +1106,27 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 					res.unviable.push(decisions[i]);
 				}
 				continue;
+			case 'guadswap':
 			case 'haze':
 			case 'heartswap':
+			case 'powerswap':
 			case 'spectralthief':
 			case 'topsyturvy':
-				let boostsHaze = {total: 0};
-				let speA2 = pokeA.getFullSpe(battle, conditionsA, battle.self.active[0].moves, true, randomBattle);
-				let speB2 = pokeB.getFullSpe(battle, conditionsB, movesB, true, randomBattle);
-				for (var j in conditionsB.boosts) {
-					if (conditionsB.boosts[j] > 0) {
-						boostsHaze[j] = 1;
-						boostsHaze.total++;
+				let clearedStats = ['atk', 'def', 'spa', 'spd', 'spe'];
+				if (move.id === 'guardswap') clearedStats = ['def', 'spd'];
+				if (move.id === 'powerswap') clearedStats = ['atk', 'spa'];
+				let clearedBoosts = {total: 0};
+				for (let stat of clearedStats) {
+					if (conditionsB.boosts[stat] > 0) {
+						clearedBoosts[stat] = 1;
+						clearedBoosts.total++;
 					}
 				}
-				if (boostsHaze.atk || boostsHaze.spa || (boostsHaze.spe && speA2 >= speB2)) {
+				let speANoBoost = pokeA.getFullSpe(battle, conditionsB, true);
+				let speBNoBoost = pokeB.getFullSpe(battle, conditionsB, true);
+				if (clearedBoosts.atk || clearedBoosts.spa || (clearedBoosts.spe && speANoBoost >= speBNoBoost)) {
 					res.obligatory.push(decisions[i]);
-				} else if (boostsHaze.total > 0) {
+				} else if (clearedBoosts.total > 0) {
 					res.viable.push(decisions[i]);
 				} else {
 					res.unviable.push(decisions[i]);
@@ -1361,8 +1366,8 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		boosts: battle.foe.active[0].boosts
 	});
 	let randomBattle = (battle.id.indexOf('random') >= 0 || battle.id.indexOf('challengecup') >= 0 || battle.id.indexOf('hackmonscup') >= 0);
-	let speA = pokeA.getFullSpe(battle, conditionsA, battle.self.active[0].moves, false, randomBattle);
-	let speB = pokeB.getFullSpe(battle, conditionsB, battle.foe.active[0].moves, false, randomBattle);
+	let speA = pokeA.getFullSpe(battle, conditionsA, false);
+	let speB = pokeB.getFullSpe(battle, conditionsB, false);
 
 	let supressedWeather = weatherSupressed(pokeA, pokeB);
 	for (var i = 0; i < decisions.length; i++) {
@@ -1819,12 +1824,12 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	let movesB = battle.foe.active[0].moves;
 
 	let randomBattle = (battle.id.indexOf('random') >= 0 || battle.id.indexOf('challengecup') >= 0 || battle.id.indexOf('hackmonscup') >= 0);
-	let speA = pokeA.getFullSpe(battle, conditionsA, battle.self.active[0].moves, false, randomBattle);
-	let speNoBoostA = pokeA.getFullSpe(battle, conditionsA, battle.self.active[0].moves, true, randomBattle);
-	let speB = pokeB.getFullSpe(battle, conditionsB, movesB, false, randomBattle);
+	let speA = pokeA.getFullSpe(battle, conditionsA, false);
+	let speANoBoost = pokeA.getFullSpe(battle, conditionsA, true);
+	let speB = pokeB.getFullSpe(battle, conditionsB, false);
 	if (battle.conditions['trickroom']) {
 		speA = -1 * speA;
-		speNoBoostA = -1 * speNoBoostA;
+		speANoBoost = -1 * speANoBoost;
 		speB = -1 * speB;
 	}
 	let supressedWeather = weatherSupressed(pokeA, pokeB);
@@ -1843,7 +1848,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		if (conditionsB.volatiles['substitute'] && !damageMoves.subbreak.length && !damageMoves.hasMultihit && !damageMoves.hasAuthentic && !supportMoves.hasAuthentic) switchIfNoOption = true;
 		if (pokeA.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3 && !hasAbility(pokeA, {'magicguard':1, 'poisonheal':1})) switchIfNoOption = true;
 		if (pokeA.status && hasAbility(pokeA, 'naturalcure')) switchIfNoOption = true;
-		if (conditionsA.volatiles['curse'] || conditionsA.volatiles['leechseed'] || (!battle.conditions['trickroom'] && speNoBoostA > speB && speA < speB && conditionsA.boosts.spe < 0)) switchIfNoOption = true;
+		if (conditionsA.volatiles['curse'] || conditionsA.volatiles['leechseed'] || (!battle.conditions['trickroom'] && speANoBoost > speB && speA < speB && conditionsA.boosts.spe < 0)) switchIfNoOption = true;
 
 		let movesA = battle.request.side.pokemon[0].moves;
 		for (let moveId of movesA) {

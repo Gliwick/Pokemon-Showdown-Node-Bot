@@ -134,7 +134,7 @@ var Pokemon = exports.Pokemon = (function () {
 		return !(this.hasType('Flying', conditions) || this.hasAbility('levitate') || this.hasItem('airballoon'));
 	}
 
-	Pokemon.prototype.getFullSpe = function (battle, conditions, moves, ignoreBoost, randomBattle) {
+	Pokemon.prototype.getFullSpe = function (battle, conditions, ignoreBoost) {
 		let gen = battle.gen || CurrentGen;
 
 		let gconditions = battle.conditions;
@@ -291,8 +291,8 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	let supressedWeather = gconditions.supressedWeather;
 
 	let statsA = pokeA.getStats(gen), statsB = pokeB.getStats(gen);
-	let speA = pokeA.getFullSpe({conditions: gconditions, gen: gen}, conditionsA, [move.id], true, gen);
-	let speB = pokeB.getFullSpe({conditions: gconditions, gen: gen}, conditionsB, [], true, gen);
+	let speA = pokeA.getFullSpe({conditions: gconditions, gen: gen}, conditionsA, false);
+	let speB = pokeB.getFullSpe({conditions: gconditions, gen: gen}, conditionsB, false);
 
 	let atk, def, bp, atkStat, defStat;
 	let cat, defcat;
