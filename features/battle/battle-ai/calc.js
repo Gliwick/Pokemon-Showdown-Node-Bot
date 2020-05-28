@@ -137,15 +137,7 @@ var Pokemon = exports.Pokemon = (function () {
 	Pokemon.prototype.getFullSpe = function (battle, conditions, ignoreBoost) {
 		let gen = battle.gen || CurrentGen;
 
-		let gconditions = battle.conditions;
-		let spe = 0;
-
-		if (this.stats['spe']) {
-			spe = this.stats['spe'];
-		} else if ('spe' in this.evs && ('spe' in this.ivs || 'spe' in this.dvs)) {
-			spe = this.getStat('spe', gen);
-		}
-		spe = Math.floor(spe);
+		let spe = Math.floor(this.getStat('spe', gen));
 		if (!ignoreBoost) spe = this.getBoostedStat('spe', spe, conditions.boosts);
 
 		if (this.status && this.hasAbility('quickfeet')) {
@@ -156,6 +148,10 @@ var Pokemon = exports.Pokemon = (function () {
 		if (this.hasAbility('slowstart')) spe = Math.floor(spe * 0.5);
 		if (this.hasItem({'ironball':1, 'machobrace':1})) spe = Math.floor(spe * 0.5);
 		if (this.hasItem('choicescarf')) spe = Math.floor(spe * 1.5);
+		if (conditions['tailwind']) spe *= 2;
+		if (conditions.volatiles['unburden']) spe *= 2;
+
+		let gconditions = battle.conditions;
 		if (gconditions.weather && !gconditions.supressedWeather) {
 			if (toId(gconditions.weather) in {'desolateland':1, 'sunnyday':1} && this.hasAbility('chlorophyll')) spe *= 2;
 			if (toId(gconditions.weather) in {'primordealsea':1, 'raindance':1} && this.hasAbility('swiftswim')) spe *= 2;
@@ -163,8 +159,6 @@ var Pokemon = exports.Pokemon = (function () {
 			if (toId(gconditions.weather) === 'hail' && this.hasAbility('slushrush')) spe *= 2;
 		}
 		if (gconditions['electricterrain'] && this.hasAbility('surgesurfer')) spe = Math.floor(spe * 2);
-		if (conditions['tailwind']) spe *= 2;
-		if (conditions.volatiles['unburden']) spe *= 2;
 
 		return spe;
 	};
