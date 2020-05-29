@@ -536,15 +536,42 @@ exports.Player = (function () {
 	return Player;
 })();
 
-exports.getFormatsData = function (gen) {
+exports.getFormatsData = function (poke, gen, battleId) {
 	if (!gen || gen > CurrentGen || gen < 1) gen = CurrentGen;
+	poke = toId(poke);
+	var formatsData = {};
+	var temp;
 	try {
-		return require(BAT_DATA_DIR + "gen" + gen + "/formats-data.js").BattleFormatsData;
-	} catch (e) {
+		temp = DataDownloader.getFormatsData()[poke];
+		for (var attr in temp) formatsData[attr] = temp[attr];
+	} catch (e) {}
+	for (var i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			return DataDownloader.getFormatsData();
-		} catch (ex) {
-			return null;
+			temp = require(BAT_DATA_DIR + "gen" + gen + "/formats-data.js").BattleFormatsData[poke];
+			if (!temp) continue;
+		} catch (e) {
+			continue;
+		}
+		if (!temp.inherit) {
+			for (var i in formatsData) delete formatsData[i];
+		}
+		for (var attr in temp) formatsData[attr] = temp[attr];
+	}
+
+	let formatId = battleId ? battleId.split('-')[1] : '';
+	let formatMod = Config.formatMods[formatId];
+	if (formatMod) {
+		temp = null;
+		try {
+			temp = require(MODS_DATA_DIR + formatMod + "/formats-data.js.js").BattleFormatsData[poke];
+		} catch (e) {}
+		if (temp) {
+			if (!temp.inherit) {
+				for (var i in pokemon) delete formatsData[i];
+			}
+			for (var attr in temp) formatsData[attr] = temp[attr];
 		}
 	}
+
+	return formatsData;
 };
