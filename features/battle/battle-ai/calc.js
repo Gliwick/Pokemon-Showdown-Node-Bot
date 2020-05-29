@@ -854,7 +854,7 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 					if (moveType === 'Fire') bp = Math.floor(bp * 1.25);
 					break;
 				case 'thickfat':
-					if (moveType === 'Ice' || moveType === 'Fire') atk = Math.floor(atk * 0.5);
+					if (moveType in {'Ice':1, 'Fire':1}) atk = Math.floor(atk * 0.5);
 					break;
 				case 'heatproof':
 				case 'waterbubble':
@@ -866,6 +866,9 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 					break;
 				case 'multiscale':
 					if (pokeB.hp >= 100) bp = Math.floor(bp * 0.5);
+					break;
+				case 'punkrock':
+					if (move.flags && move.flags['sound']) bp = Math.floor(bp * 0.5);
 					break;
 			}
 		}

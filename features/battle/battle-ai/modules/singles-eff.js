@@ -125,23 +125,19 @@ function supposeActiveFoe (battle) {
 			pokeB.evs = {hp: 252, atk: 252, def: 252, spa: 252, spd: 252, spe: 252};
 		} else if ((pokeB.template.baseStats.spe >= 70 || pokeB.hasItem('choicescarf')) && !pokeB.hasAbility({'slowstart':1, 'stall':1}) && !pokeB.hasItem({'fullincense':1, 'ironball':1, 'laggingtail':1, 'machobrace':1})) {
 			pokeB.evs = {hp: 0, atk: 252, def: 4, spa: 252, spd: 4, spe: 252};
-			if (battle.gen >= 3) pokeB.nature = {spe: 1.1};
+			pokeB.nature = {spe: 1.1};
 		} else if (Math.max(pokeB.template.baseStats.atk, pokeB.template.baseStats.spa) >= Math.max(pokeB.template.baseStats.hp, pokeB.template.baseStats.def, pokeB.template.baseStats.spd) || pokeB.hasAbility({'hugepower':1, 'purepower':1})) {
 			pokeB.evs = {hp: 252, atk: 252, def: 0, spa: 252, spd: 0, spe: 4};
-			if (battle.gen >= 3) pokeB.nature = {atk: 1.1, spa: 1.1};
+			pokeB.nature = {atk: 1.1, spa: 1.1};
 		} else {
 			pokeB.evs = {hp: 252, atk: 0, def: 128, spa: 0, spd: 128, spe: 0};
 		}
 		for (let move of battle.foe.active[0].moves) {
 			if (move.id in {'gyroball':1, 'trickroom':1}) {
-				if (pokeB.evs.spe > 0) {
-					pokeB.evs.hp = Math.min(252, pokeB.evs.hp + pokeB.evs.spe);
-					pokeB.evs.spe = 0;
-				}
-				if (battle.gen >= 3) {
-					pokeB.ivs.spe = 0;
-					pokeB.nature.spe = 0.9;
-				}
+				pokeB.evs.hp = Math.min(252, pokeB.evs.hp + pokeB.evs.spe);
+				pokeB.evs.spe = 0;
+				pokeB.ivs.spe = 0;
+				pokeB.nature.spe = 0.9;
 			}
 		}
 	}
@@ -235,7 +231,7 @@ function evaluatePokemon (battle, sideId) {
 		volatiles: Object.assign({}, battle.foe.active[0].volatiles),
 		boosts:  Object.assign({}, battle.foe.active[0].boosts),
 	});
-	if (sideId > 0) {
+	if (sideId === 0) {
 		conditionsA = new Conditions({
 			side: battle.self.side,
 			volatiles: battle.self.active[0].volatiles,
@@ -258,7 +254,7 @@ function evaluatePokemon (battle, sideId) {
 		pokeA.status = statusA;
 		pokeA.supressedAbility = supressedA;
 		pokeA.item = itemA;
-	} else if (sideId !== 0 && hasAbility(pokeA, 'trace')) {
+	} else if (sideId > 0 && hasAbility(pokeA, 'trace')) {
 		pokeA.ability = pokeB.ability;
 	}
 	let supressedWeather = isWeatherSupressed(pokeA, pokeB);
@@ -403,7 +399,6 @@ function evaluatePokemon (battle, sideId) {
 			if (battle.conditions['mistyterrain']) move = Data.getMove('moonblast', battle.gen, battle.id);
 			if (battle.conditions['psychicterrain']) move = Data.getMove('psychic', battle.gen, battle.id);
 		}
-		if (move.id === 'hiddenpower') continue; // ignore typeless HP
 		if (move.id in {'hurricane':1, 'thunder':1} && !supressedWeather && toId(battle.conditions.weather) in {'desolateland':1, 'sunnyday':1}) continue;
 		if (move.id in {'solarbeam':1, 'solarblade':1} && !supressedWeather && !(toId(battle.conditions.weather) in {'desolateland':1, 'sunnyday':1})) continue;
 
