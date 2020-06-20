@@ -1131,7 +1131,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 					} else if (battle.gen > 2) {
 						let obligatory = false;
 						for (var j = 0; j < movesB.length; j++) {
-							if ((movesB[j].heal && movesB[j].id !== 'lifedew') || movesB[j].id in {'leechseed':1, 'moonlight':1, 'morningsun':1, 'rest':1, 'sappyseed':1, 'shoreup':1, 'strengthsap':1, 'synthesis':1, 'wish':1}) obligatory = true;
+							if ((movesB[j].heal && movesB[j].heal[0] / movesB[j].heal[1] >= 0.33) || movesB[j].id in {'leechseed':1, 'moonlight':1, 'morningsun':1, 'rest':1, 'sappyseed':1, 'shoreup':1, 'strengthsap':1, 'synthesis':1, 'wish':1}) obligatory = true;
 						}
 						if (obligatory) {
 							res.obligatory.push(decisions[i]);
@@ -1161,7 +1161,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			}
 			continue;
 		}
-		if ((move.heal && move.id !== 'lifedew') || move.id in {'moonlight':1, 'morningsun':1, 'rest':1, 'shoreup':1, 'strengthsap':1, 'synthesis':1, 'wish':1}) {
+		if ((move.heal && move.heal[0] / move.heal[1] >= 0.33) || move.id in {'moonlight':1, 'morningsun':1, 'rest':1, 'shoreup':1, 'strengthsap':1, 'synthesis':1, 'wish':1}) {
 			if (ev.r >= 50 || (pokeA.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3)) {
 				res.unviable.push(decisions[i]);
 			} else if (move.id in {'moonlight':1, 'morningsun':1, 'synthesis':1} && !supressedWeather && toId(battle.conditions.weather) in {'primordialsea':1, 'raindance':1, 'sandstorm':1, 'hail':1}) {
@@ -1334,8 +1334,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 			let movesB = battle.foe.active[0].moves;
 			let foeRecoveryHP = 0;
 			for (var j = 0; j < movesB.length; j++) {
-				if (movesB[j].id === 'lifedew') foeRecoveryHP = Math.max(foeRecoveryHP, 25);
-				if (movesB[j].id in {'healorder':1, 'milkdrink':1, 'recover':1, 'roost':1, 'slackoff':1, 'softboiled':1, 'shoreup':1, 'strengthsap':1}) foeRecoveryHP = Math.max(foeRecoveryHP, 50);
+				if (movesB[j].heal) foeRecoveryHP = Math.max(foeRecoveryHP, (movesB[j].heal[0] / movesB[j].heal[1]) * 100);
 				if (movesB[j].id === 'purify' && pokeA.status) foeRecoveryHP = Math.max(foeRecoveryHP, 50);
 				if (move.id in {'moonlight':1, 'morningsun':1, 'synthesis':1}) {
 					if (supressedWeather || !battle.conditions.weather) {
