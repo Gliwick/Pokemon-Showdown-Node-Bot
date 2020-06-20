@@ -1537,13 +1537,13 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		}
 
 		let foeCanProtect = false;
-		if (!(battle.foe.active[0].helpers.lastMove in singleTurnMoves) && !(pokeB.status in {'frz':1, 'slp':1})) {
+		if (!(move.id in {'gmaxoneblow':1, 'gmaxrapidflow':1}) && !(battle.foe.active[0].helpers.lastMove in singleTurnMoves) && !(pokeB.status in {'frz':1, 'slp':1})) {
 			let movesB = battle.foe.active[0].moves;
 			if (conditionsB.volatiles['dynamax']) {
 				for (var j = 0; j < movesB.length; j++) {
 					if (movesB[j].category === 'Status') foeCanProtect = true;
 				}
-			} else {
+			} else if (move.flags && move.flags['protect'] && (!move.flags['contact'] || !pokeA.hasAbility('unseenfist'))) {
 				const protectMoves = {'protect':1, 'detect':1, 'kingsshield':1, 'quickguard':1, 'spikyshield':1, 'wideguard':1, 'banefulbunker':1, 'obstruct':1};
 				for (var j = 0; j < movesB.length; j++) {
 					if (movesB[j].id in protectMoves) foeCanProtect = true;

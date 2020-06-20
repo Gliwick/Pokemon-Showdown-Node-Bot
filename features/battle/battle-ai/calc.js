@@ -390,7 +390,7 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 			atkStat = 'def';
 		}
 
-		if ((move.id in {'photongeyser':1, 'lightthatburststhesky':1} && statsA.atk > statsA.spa) || (move.id === 'shellsideam' && statsA.atk / statsB.def > statsA.spa / statsB.spd)) {
+		if ((move.id in {'photongeyser':1, 'lightthatburststhesky':1} && statsA.atk > statsA.spa) || (move.id === 'shellsidearm' && statsA.atk / statsB.def > statsA.spa / statsB.spd)) {
 			atk = statsA.atk;
 			atkStat = 'atk';
 			def = statsB.def;
@@ -994,10 +994,8 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	/* Boosting */
 
 	if (conditionsA.boosts && !pokeB.hasAbility('unaware')) {
-		if (!pokeB.ability || pokeB.ability.id !== 'unaware') {
-			if (move.id === 'foulplay') atk = pokeB.getBoostedStat(atkStat, atk, conditionsB.boosts);
-			else atk = pokeA.getBoostedStat(atkStat, atk, conditionsA.boosts);
-		}
+		if (move.id === 'foulplay') atk = pokeB.getBoostedStat(atkStat, atk, conditionsB.boosts);
+		else atk = pokeA.getBoostedStat(atkStat, atk, conditionsA.boosts);
 	}
 
 	let willCrit = conditionsA.immediate['crit'] || move.willCrit || pokeA.hasItem({'leek':1, 'luckypunch':1, 'stick':1});
