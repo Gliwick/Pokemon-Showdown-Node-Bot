@@ -354,69 +354,52 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	/******************************
 	* Attack and Defense Stats
 	*******************************/
+
+	if (move.isMax && move.basePower <= 10 && pokeA.template.baseStats.spa > pokeA.template.baseStats.atk) {
+		move = Object.assign({}, move);
+		move.category = 'Special';
+	}
+
 	if (gen > 3) {
-		if (move.isMax && move.basePower <= 10 && pokeA.template.baseStats.spa > pokeA.template.baseStats.atk) {
-			move = Object.assign({}, move);
-			move.category = 'Special';
-		}
-
-		if (move.category === 'Special') {
-			atk = statsA.spa;
-			atkStat = 'spa';
-		} else if (move.category === 'Physical') {
-			atk = statsA.atk;
-			atkStat = 'atk';
-		} else {
-			return new Damage(statsB.hp);
-		}
-
-		cat = defcat = move.category;
-		if (move.defensiveCategory) defcat = move.defensiveCategory;
-
-		if (defcat === 'Special') {
-			def = statsB.spd;
-			defStat = 'spd';
-		} else if (defcat === 'Physical') {
-			def = statsB.def;
-			defStat = 'def';
-		} else {
-			return new Damage(statsB.hp);
-		}
-
-		// custom attacking stat
-		if (move.id === 'foulplay') atk = statsB.atk;
-		if (move.id === 'bodypress') {
-			atk = statsA.def;
-			atkStat = 'def';
-		}
-
-		if ((move.id in {'photongeyser':1, 'lightthatburststhesky':1} && statsA.atk > statsA.spa) || (move.id === 'shellsidearm' && statsA.atk / statsB.def > statsA.spa / statsB.spd)) {
-			atk = statsA.atk;
-			atkStat = 'atk';
-			def = statsB.def;
-			defStat = 'def';
-			if (move.id === 'shellsidearm') {
-				move = Object.assign({}, move);
-				move.flags = Object.assign({}, move.flags);
-				move.flags['contact'] = true;
-			}
-		}
+		cat = move.category;
 	} else {
 		const specialTypes = {Fire: 1, Water: 1, Grass: 1, Ice: 1, Electric: 1, Dark: 1, Psychic: 1, Dragon: 1};
-		if (move.type && move.type in specialTypes) {
-			cat = defcat = 'Special';
-			atk = statsA.spa;
-			atkStat = 'spa';
-			def = statsB.spd;
-			defStat = 'spd';
-		} else {
-			cat = defcat = 'Physical';
-			atk = statsA.atk;
-			atkStat = 'atk';
-			def = statsB.def;
-			defStat = 'def';
+		cat = (move.type && move.type in specialTypes ? 'Special' : 'Physical');
+	}
+
+	if (cat === 'Special') {
+		atkStat = 'spa';
+	} else if (cat === 'Physical') {
+		atkStat = 'atk';
+	} else {
+		return new Damage(statsB.hp);
+	}
+
+	defcat = cat;
+	if (move.defensiveCategory) defcat = move.defensiveCategory;
+	if (defcat === 'Special') {
+		defStat = 'spd';
+	} else if (defcat === 'Physical') {
+		defStat = 'def';
+	} else {
+		return new Damage(statsB.hp);
+	}
+
+	// custom attacking stat
+	if (move.id === 'bodypress') atkStat = 'def';
+	if ((move.id in {'photongeyser':1, 'lightthatburststhesky':1} && statsA.atk > statsA.spa) || (move.id === 'shellsidearm' && statsA.atk / statsB.def > statsA.spa / statsB.spd)) {
+		atkStat = 'atk';
+		defStat = 'def';
+		if (move.id === 'shellsidearm') {
+			move = Object.assign({}, move);
+			move.flags = Object.assign({}, move.flags);
+			move.flags['contact'] = true;
 		}
 	}
+
+	atk = statsA[atkStat];
+	def = statsB[defStat];
+	if (move.id === 'foulplay') atk = statsB.atk;
 
 	let moveType = getMoveType(pokeA, move, conditionsA, gconditions, gen) || 'Normal';
 	let movePriority = move.priority;
@@ -1101,6 +1084,7 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 			}
 			multihitRolls[i] = rollDmg;
 		}
+		// multihit rolls more important than damage rolls
 		return new Damage(statsB.hp, multihitRolls);
 	}
 
