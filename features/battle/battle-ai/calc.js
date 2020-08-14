@@ -375,8 +375,7 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 		return new Damage(statsB.hp);
 	}
 
-	defcat = cat;
-	if (move.defensiveCategory) defcat = move.defensiveCategory;
+	defcat = (move.defensiveCategory ? move.defensiveCategory : cat);
 	if (defcat === 'Special') {
 		defStat = 'spd';
 	} else if (defcat === 'Physical') {
