@@ -318,7 +318,7 @@ var getMoveType = exports.getMoveType = function (poke, move, conditions, gcondi
 
 var getDamage = function (level, bp, atk, def, modifier, typesMux) {
 	if (bp === 0) return 0;
-	return Math.floor((((((2 * level / 5.0) + 2) * bp * atk / def) / 50.0) + 2) * modifier * typesMux) || 1;
+	return Math.floor((Math.floor(Math.floor((Math.floor(2 * level / 5.0) + 2) * bp * atk / def) / 50.0) + 2) * modifier * typesMux) || 1;
 };
 
 /*
@@ -395,6 +395,11 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 			atkStat = 'atk';
 			def = statsB.def;
 			defStat = 'def';
+			if (move.id === 'shellsidearm') {
+				move = Object.assign({}, move);
+				move.flags = Object.assign({}, move.flags);
+				move.flags['contact'] = true;
+			}
 		}
 	} else {
 		const specialTypes = {Fire: 1, Water: 1, Grass: 1, Ice: 1, Electric: 1, Dark: 1, Psychic: 1, Dragon: 1};
@@ -402,17 +407,13 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 			cat = defcat = 'Special';
 			atk = statsA.spa;
 			atkStat = 'spa';
+			def = statsB.spd;
+			defStat = 'spd';
 		} else {
 			cat = defcat = 'Physical';
 			atk = statsA.atk;
 			atkStat = 'atk';
-		}
-		if (move.defensiveCategory) defcat = move.defensiveCategory;
-		if (defcat === 'Special') {
-			def = statsA.spd;
-			defStat = 'spd';
-		} else {
-			def = statsA.def;
+			def = statsB.def;
 			defStat = 'def';
 		}
 	}
@@ -420,7 +421,7 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	let moveType = getMoveType(pokeA, move, conditionsA, gconditions, gen) || 'Normal';
 	let movePriority = move.priority;
 
-	if (gconditions['grassyterrain'] && move.id === 'grassyglide') movePriority++;
+	if (move.id === 'grassyglide' && gconditions['grassyterrain'] && pokeA.isGrounded(conditionsA)) movePriority++;
 
 	if (gen >= 3 && pokeA.ability && !pokeA.supressedAbility) {
 		switch (pokeA.ability.id) {
@@ -744,8 +745,10 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 			if (gconditions['gravity']) bp = Math.floor(bp * 1.5);
 			break;
 		case 'terrainpulse':
-			for (gcondition in gconditions) {
-				if (gcondition.endsWith('terrain')) bp *= 2;
+			if (pokeA.isGrounded(conditionsA)) {
+				for (gcondition in gconditions) {
+					if (gcondition.endsWith('terrain')) bp *= 2;
+				}
 			}
 			break;
 		case 'steelroller':
@@ -759,10 +762,10 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 			if (gconditions['electricterrain'] && pokeB.isGrounded(conditionsB)) bp *= 2;
 			break;
 		case 'expandingforce':
-			if (gconditions['psychicterrain']) bp = Math.floor(bp * (2.0 / 1.3));
+			if (gconditions['psychicterrain'] && pokeA.isGrounded(conditionsA)) bp = Math.floor(bp * 1.5);
 			break;
 		case 'mistyexplosion':
-			if (gconditions['mistyterrain']) bp = Math.floor(bp * 1.5);
+			if (gconditions['mistyterrain'] && pokeA.isGrounded(conditionsA)) bp = Math.floor(bp * 1.5);
 			break;
 	}
 
@@ -1051,8 +1054,8 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	if (move.id in {'tripleaxel':1, 'triplekick':1}) {
 		if (this.gen === 2) hitsBP = [bp, bp + 10, bp + 20];
 		else hitsBP = [bp, 2 * bp, 3 * bp];
-	} else if (move.multihit && typeof move.multihit === 'number') {
-		for (let hit = 1; hit < move.multihit; hit++) {
+	} else if (move.multihit) {
+		for (let hit = 1; hit < (move.multihit[1] || move.multihit); hit++) {
 			hitsBP.push(bp);
 		}
 	} else if (move.id === 'beatup') {
@@ -1079,26 +1082,31 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 		}
 	}
 
-	if (this.gen === 2 && move.id === 'triplekick') {
-		let rolls = [];
-		for (let hitBP of hitsBP) {
-			let hitDamage = getDamage(pokeA.level, hitBP, atk, def, modifier, typesMux);
-			if (rolls.length === 0) rolls.push(hitDamage);
-			else rolls.push(rolls[rolls.length - 1] + hitDamage);
+	let multihitRolls = [];
+	if (move.multihit && typeof move.multihit !== 'number' && !(pokeA.hasAbility('skilllink') && !pokeB.hasAbility('neutralizinggas'))) {
+		if (move.multihit[0] === 2 && move.multihit[1] === 5) {
+			multihitRolls = (this.gen >= 5 ? [2, 2, 3, 3, 4, 5] : [2, 2, 2, 3, 3, 3, 4, 5]);
+		} else {
+			multihitRolls = [move.multihit[0]];
+			for (let numberOfHits = move.multihit[0]; numberOfHits < move.multihit[1]; numberOfHits++) {
+				multihitRolls.push(numberOfHits);
+			}
 		}
-		// multihit rolls more important than damage rolls
-		return new Damage(statsB.hp, rolls);
+	}
+	if (multihitRolls.length) {
+		for (let i = 0; i < multihitRolls.length; i++) {
+			let rollDmg = 0;
+			for (let hitNumber = 0; hitNumber < multihitRolls[i]; hitNumber++) {
+				rollDmg += getDamage(pokeA.level, hitsBP[hitNumber], atk, def, modifier, typesMux);
+			}
+			multihitRolls[i] = rollDmg;
+		}
+		return new Damage(statsB.hp, multihitRolls);
 	}
 
 	let dmg = 0;
 	for (let hitBP of hitsBP) {
 		dmg += getDamage(pokeA.level, hitBP, atk, def, modifier, typesMux);
-	}
-
-	if (move.multihit && typeof move.multihit !== 'number' && move.multihit[0] === 2 && move.multihit[1] === 5) {
-		if (pokeA.hasAbility('skilllink')) dmg *= 5;
-		// multihit rolls more important than damage rolls
-		else return new Damage(statsB.hp, [2 * dmg, 2 * dmg, 3 * dmg, 3 * dmg, 4 * dmg, 5 * dmg]);
 	}
 
 	return new Damage(statsB.hp, getRolls(dmg));

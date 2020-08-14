@@ -67,7 +67,6 @@ exports.commands = {
 	},
 
 	move: function (arg, by, room, cmd) {
-		if (!this.isExcepted) return false;
 		this.sclog();
 		if (this.roomType !== 'battle') return this.reply(this.trad('notbattle'));
 		try {

@@ -31,7 +31,7 @@ const BadMoves = ['focuspunch', 'shelltrap', 'explosion', 'selfdestruct', 'lastr
 /*
  * Moves which require 2 turs without any protection
  */
-const DoubleTurnMoves = ['iceburn', 'freezeshock', 'razorwind', 'skyattack', 'solarbeam', 'solarblade'];
+const DoubleTurnMoves = ['iceburn', 'freezeshock', 'meteorbeam', 'razorwind', 'skyattack', 'solarbeam', 'solarblade'];
 
 /*
  * Team and Switch Decisions
