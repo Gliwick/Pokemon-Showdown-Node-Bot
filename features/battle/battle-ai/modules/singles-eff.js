@@ -1205,6 +1205,10 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 						res.unviable.push(decisions[i]);
 						continue;
 					}
+					if (battle.conditions['electricterrain'] && pokeB.isGrounded(conditionsB)) {
+						res.unviable.push(decisions[i]);
+						continue;
+					}
 					break;
 			}
 			res.viable.push(decisions[i]);
