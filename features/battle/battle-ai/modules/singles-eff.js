@@ -1955,8 +1955,9 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		filteredMoves = [];
 		for (var i = 0; i < finalDamageMoves.length; i++) {
 			let move = finalDamageMoves[i][0].moveData;
-			if (!pokeA.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && pokeA.hasAbility('serenegrace'))) && move.secondary.boosts && (move.secondary.boosts.def || move.secondary.boosts.spd || move.secondary.boosts.spe)) filteredMoves.push(finalDamageMoves[i]);
-			if (move.id in {'maxdarkness':1, 'maxphantasm':1, 'maxstrike':1, 'gmaxfoamburst':1}) filteredMoves.push(finalDamageMoves[i]);
+			if (!pokeA.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && pokeA.hasAbility('serenegrace'))) && move.secondary.boosts && (move.secondary.boosts.def || move.secondary.boosts.spd || (move.secondary.boosts.spe && speA <= speB))) filteredMoves.push(finalDamageMoves[i]);
+			if (move.id in {'maxdarkness':1, 'maxphantasm':1}) filteredMoves.push(finalDamageMoves[i]);
+			if (speA <= speB && move.id in {'maxstrike':1, 'gmaxfoamburst':1}) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 	}
@@ -1975,7 +1976,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		for (var i = 0; i < finalDamageMoves.length; i++) {
 			let move = finalDamageMoves[i][0].moveData;
 			let accuracy = move.finalDamageMoves;
-			if (move.id in {'tripleaxel':1, 'triplekick':1} && !pokeA.hasAbility('skilllink')) accuracy = 72.9;
+			if (move.id in {'tripleaxel':1, 'triplekick':1} && !pokeA.hasAbility('skilllink')) accuracy = 73;
 			if (!supressedWeather) {
 				if (move.id in {'hurricane':1, 'thunder':1}) {
 					if (toId(battle.conditions.weather) in {'primordealsea':1, 'raindance':1}) accuracy = true;
@@ -1985,7 +1986,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 			}
 			if (typeof accuracy !== 'number') {
 				// z and max moves are considered normal accuracy to prevent them from being chosen on this step (should be used sparingly)
-				if (!move.isZ && !move.isMax) accuracy = 101;
+				if (!move.isZ && (!move.isMax || selfLastPokemon(battle))) accuracy = 101;
 				else accuracy = 100;
 			}
 			if (accuracy === maxAccuracy) {
