@@ -1629,7 +1629,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 			res.ohko.push(decisions[i]);
 		} else if (pc <= Math.max(0, residual[0])) {
 			res.immune.push(decisions[i]);
-		} else if (!(move.flags && move.flags['recharge']) || battle.gen === 1) {
+		} else if (!(move.flags && move.flags['recharge'])) {
 			if (2 * pc >= 100 + sub + residual[0] + (foeCanProtect ? Math.max(0, residual[1]) : 0)) {
 				res.thko.push(decisions[i]);
 			} else if (3 * pc >= 100 + sub + residual[0] + residual[1]) {
