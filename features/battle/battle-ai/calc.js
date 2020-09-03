@@ -1038,7 +1038,6 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 		else hitsBP = [bp, 2 * bp, 3 * bp];
 	} else if (move.multihit) {
 		let numberOfHits = (typeof move.multihit === 'number' ? move.multihit : (move.multihit[1] || 1));
-		console.log('numberOfHits', numberOfHits);
 		for (let hit = 1; hit < numberOfHits; hit++) {
 			hitsBP.push(bp);
 		}
@@ -1072,14 +1071,12 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 			multihitRolls = (this.gen >= 5 ? [2, 2, 3, 3, 4, 5] : [2, 2, 2, 3, 3, 3, 4, 5]);
 		} else {
 			multihitRolls = [move.multihit[0]];
-			console.log('move.multihit', move.multihit);
 			for (let numberOfHits = move.multihit[0]; numberOfHits < move.multihit[1]; numberOfHits++) {
 				multihitRolls.push(numberOfHits);
 			}
 		}
 	}
 	if (multihitRolls.length) {
-		console.log('multihitRolls', multihitRolls);
 		for (let i = 0; i < multihitRolls.length; i++) {
 			let rollDmg = 0;
 			for (let hitNumber = 0; hitNumber < multihitRolls[i]; hitNumber++) {
@@ -1092,7 +1089,6 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	}
 
 	let dmg = 0;
-	console.log('hitsBP', hitsBP);
 	for (let hitBP of hitsBP) {
 		dmg += getDamage(pokeA.level, hitBP, atk, def, modifier, typesMux);
 	}

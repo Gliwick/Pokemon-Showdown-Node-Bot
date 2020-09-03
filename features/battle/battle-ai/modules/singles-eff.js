@@ -1986,8 +1986,8 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 			}
 			if (typeof accuracy !== 'number') {
 				// z and max moves are considered normal accuracy to prevent them from being chosen on this step (should be used sparingly)
-				if (!move.isZ && (!move.isMax || selfLastPokemon(battle))) accuracy = 101;
-				else accuracy = 100;
+				if (move.isZ || (move.isMax && !selfLastPokemon(battle))) accuracy = 100;
+				else accuracy = 101;
 			}
 			if (accuracy === maxAccuracy) {
 				filteredMoves.push(finalDamageMoves[i]);
