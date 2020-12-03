@@ -185,6 +185,7 @@ Commands for battle feature
  - `team get, [id]` - Get a team in exportable format
  - `team check, [id], (user)` - Challenge with a specific team
  - `teamslist` - Upload teams list to Hastebin to view it.
+ - `formatlist` - List formats that have teams
 
 Tournaments
 ------------

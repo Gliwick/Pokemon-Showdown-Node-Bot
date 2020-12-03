@@ -942,7 +942,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				}
 				continue;
 			case 'yawn':
-				if (!conditionsB.volatiles[move.volatileStatus] && pokeB.status !== 'slp') {
+				if (!conditionsB.volatiles[move.volatileStatus] && !pokeB.status) {
 					res.viable.push(decisions[i]);
 				} else {
 					res.unviable.push(decisions[i]);
@@ -1152,7 +1152,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			}
 		}
 		if (moveStatus) {
-			if (pokeB.status || pokeB.hasAbility('comatose') || (pokeB.template.species === 'Minior' || pokeB.hasAbility('shieldsdown'))) {
+			if (pokeB.status || conditionsB.volatiles['yawn'] || pokeB.hasAbility('comatose') || (pokeB.template.species === 'Minior' || pokeB.hasAbility('shieldsdown'))) {
 				res.unviable.push(decisions[i]);
 				continue;
 			}
@@ -1250,7 +1250,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			continue;
 		}
 		if (move.boosts && move.target === 'self') {
-			if (pokeA.hp < 75 || (move.boosts.spe > 0 && battle.conditions['trickroom']) || (move.id !== 'shellsmash' && pokeA.hasAbility('contrary'))) {
+			if (pokeA.hp < 75 || (move.boosts.spe > 0 && (pokeA.status === 'par' || battle.conditions['trickroom'])) || (move.id !== 'shellsmash' && pokeA.hasAbility('contrary'))) {
 				res.unviable.push(decisions[i]);
 				continue;
 			}

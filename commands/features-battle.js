@@ -286,7 +286,7 @@ exports.commands = {
 	teamlist: function (arg, by, room, cmd) {
 		if (!this.isRanked(Tools.getGroup('admin'))) return false;
 		var teamsStr = this.trad('list') + ':\n\n';
-		var teams = Features['battle'].TeamBuilder.dynTeams;
+		var teams = Features['battle'].TeamBuilder.staticTeams;
 		var nTeams = 0;
 		for (var i in teams) {
 			teamsStr += this.trad('id') + ': ' + i + ' | ' + this.trad('format') + ': ' + teams[i].format + ' | ' + this.trad('pokemon') + ': ' + Tools.teamOverview(teams[i].packed) + '\n';
@@ -297,5 +297,20 @@ exports.commands = {
 			if (r) return this.pmReply(this.trad('list') + ': ' + link);
 			else this.pmReply(this.trad('err'));
 		}.bind(this));
+	},
+
+	formatlist: function (arg, by, room, cmd) {
+		if (!this.isRanked(Tools.getGroup('admin'))) return false;
+		var teamsStr = this.trad('list') + ':\n\n';
+		var teams = Features['battle'].TeamBuilder.staticTeams;
+		genToFormats = {};
+		for (let format in teams) {
+			let gen = format.substr(3, 1);
+			if (!genToFormats[gen]) genToFormats[gen] = [];
+			genToFormats[gen].push(format);
+		}
+		for (let gen of Object.keys(genToFormats).sort().reverse()) {
+		this.pmReply('gen ' + gen + ': ' + genToFormats[gen].join(', '));
+		}
 	}
 };
