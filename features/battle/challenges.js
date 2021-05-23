@@ -1,7 +1,7 @@
 
-exports.challenges = {};
+exports.challenges = [];
 
-function canChallenge(i, nBattles) {
+function canChallenge(nBattles) {
 	if (!nBattles) return true; //If it is not busy, accept the challenge
 	if (Config.aceptAll) return true; //Acept all challenges if 'aceptAll' is enabled
 	if (Config.maxBattles && Config.maxBattles > nBattles) return true; //If it is not in too many battles, accept the challenge
@@ -10,36 +10,33 @@ function canChallenge(i, nBattles) {
 }
 
 exports.parse = function (room, message, isIntro, spl) {
-	if (spl[0] !== 'updatechallenges') return;
+	if (!spl[3].startsWith('/challenge')) return;
 	var nBattles = Object.keys(Features['battle'].BattleBot.battles).length;
-	try {
-		exports.challenges = JSON.parse(message.substr(18));
-	} catch (e) {return;}
-	if (exports.challenges.challengesFrom) {
-		for (var i in exports.challenges.challengesFrom) {
-			if (canChallenge(i, nBattles)) {
-				var format = exports.challenges.challengesFrom[i];
-
+	exports.challenges = [spl[4]];
+	if (exports.challenges) {
+		for (var format of exports.challenges) {
+			const player = spl[1];
+			if (canChallenge(nBattles)) {
 				if (Settings.lockdown || !(format in Formats) || !Formats[format].chall) {
-					Bot.say('', '/reject ' + i);
+					Bot.say('', '/reject ' + player);
 					continue;
 				}
 				if (Formats[format].team && !Features['battle'].TeamBuilder.hasTeam(format)) {
-					Bot.say('', '/reject ' + i);
+					Bot.say('', '/reject ' + player);
 					continue;
 				}
 
 				var team = Features['battle'].TeamBuilder.getTeam(format);
 				if (team) {
-					Bot.say('', '/useteam ' + team);
+					Bot.say(spl[1], '/useteam ' + team);
 				}
 				//Bot.say('', '/ionext');
-				Bot.say('', '/accept ' + i);
+				Bot.say('', '/accept ' + player);
 				nBattles++;
-				debug("accepted battle: " + i + " | " + exports.challenges.challengesFrom[i]);
+				debug("accepted battle: " + format);
 			} else {
-				Bot.say('', '/reject ' + i);
-				debug("rejected battle: " + i + " | " + exports.challenges.challengesFrom[i]);
+				Bot.say('', '/reject ' + player);
+				debug("rejected battle: " + format);
 				continue;
 			}
 		}
