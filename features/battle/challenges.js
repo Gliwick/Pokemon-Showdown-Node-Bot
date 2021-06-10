@@ -10,35 +10,35 @@ function canChallenge(nBattles) {
 }
 
 exports.parse = function (room, message, isIntro, spl) {
-	let nBattles = Object.keys(Features['battle'].BattleBot.battles).length;
-	try {
-		exports.challenges = JSON.parse(spl[1]).challengesFrom;
-	} catch (e) {return;}
-	if (!exports.challenges) return;
+	if (!spl[3].startsWith('/challenge')) return;
+	var nBattles = Object.keys(Features['battle'].BattleBot.battles).length;
+	exports.challenges = [spl[4]];
+	if (exports.challenges) {
+		for (var format of exports.challenges) {
+			const player = spl[1];
+			if (canChallenge(nBattles)) {
+				if (Settings.lockdown || !(format in Formats) || !Formats[format].chall) {
+					Bot.say('', '/reject ' + player);
+					continue;
+				}
+				if (Formats[format].team && !Features['battle'].TeamBuilder.hasTeam(format)) {
+					Bot.say('', '/reject ' + player);
+					continue;
+				}
 
-	for (const player in exports.challenges) {
-		const format = exports.challenges[player];
-		if (canChallenge(nBattles)) {
-			if (Settings.lockdown || !(format in Formats) || !Formats[format].chall) {
+				var team = Features['battle'].TeamBuilder.getTeam(format);
+				if (team) {
+					Bot.say(spl[1], '/useteam ' + team);
+				}
+				//Bot.say('', '/ionext');
+				Bot.say('', '/accept ' + player);
+				nBattles++;
+				debug("accepted battle: " + format);
+			} else {
 				Bot.say('', '/reject ' + player);
+				debug("rejected battle: " + format);
 				continue;
 			}
-			if (Formats[format].team && !Features['battle'].TeamBuilder.hasTeam(format)) {
-				Bot.say('', '/reject ' + player);
-				continue;
-			}
-
-			const team = Features['battle'].TeamBuilder.getTeam(format);
-			if (team) {
-				Bot.say(spl[1], '/useteam ' + team);
-			}
-			Bot.say('', '/accept ' + player);
-			nBattles++;
-			debug("accepted battle: " + format);
-		} else {
-			Bot.say('', '/reject ' + player);
-			debug("rejected battle: " + format);
-			continue;
 		}
 	}
 };
