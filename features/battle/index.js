@@ -22,7 +22,6 @@ exports.init = function () {
 };
 
 exports.parse = function (room, message, isIntro, spl) {
-
 	switch (spl[0]) {
 		case 'tournament':
 			TourManager.parse(room, message, isIntro, spl);
@@ -30,10 +29,9 @@ exports.parse = function (room, message, isIntro, spl) {
 		case 'rated':
 			LadderManager.reportBattle(room);
 			break;
-		default:
-			if (spl.length > 3 && spl[3].startsWith('/challenge')) {
-				ChallManager.parse(room, message, isIntro, spl);
-			}
+		case 'updatechallenges':
+			ChallManager.parse(room, message, isIntro, spl);
+			break;
 	}
 
 	if (!Bot.rooms[room]) {
