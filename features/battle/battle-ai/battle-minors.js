@@ -279,7 +279,7 @@ module.exports = {
 	"-status": function (args, kwargs, isIntro) {
 		var poke = this.getActive(args[1]);
 		poke.status = args[2];
-		poke.helpers.stausCounter = 0;
+		poke.helpers.statusCounter = 0;
 		if (poke.status === "slp") {
 			poke.helpers.sleepCounter = 0;
 		}
@@ -457,7 +457,7 @@ module.exports = {
 
 	"-terastallize": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		poke.teraType = args[2];
+		poke.addVolatile('terastallize');
 	},
 
 	"-start": function (args, kwargs) {
