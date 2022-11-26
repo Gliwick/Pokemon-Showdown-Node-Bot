@@ -1415,7 +1415,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 				if (movesB[j].id === 'rest' && !((battle.conditions['electricterrain'] || battle.conditions['mistyterrain']) && pokeB.isGrounded(conditionsB))) foeRecoveryHP = Math.max(foeRecoveryHP, 100);
 				if (movesB[j].id === 'strengthsap') foeRecoveryHP = Math.max(foeRecoveryHP, (100 * pokeA.getStat('atk', battle.gen)) / pokeB.getStat('hp', battle.gen));
 			}
-			if (move.id === 'suckerpunch' && foeRecoveryHP > 0) continue;
+			if (move.id === 'suckerpunch' && (foeRecoveryHP > 0 || battle.self.active[0].helpers.lastMove === 'suckerpunch')) continue;
 			hp = Math.min(100, hp + foeRecoveryHP);
 		}
 
