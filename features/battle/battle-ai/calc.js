@@ -266,22 +266,19 @@ var getMoveType = exports.getMoveType = function (poke, move, conditions, gcondi
 	switch (move.id) {
 		case 'aurawheel':
 			if (poke.template.species === 'Morpeko-Hangry') return 'Dark';
+			return move.type;
 		case 'judgment':
-			if (poke.item && poke.item.onPlate) return poke.item.onPlate;
-			return move.type;
+			return poke.item?.onPlate || move.type;
 		case 'multiattack':
-			if (poke.item && poke.item.onMemory) return poke.item.onMemory;
-			return move.type;
+			return poke.item?.onMemory || move.type;
 		case 'naturalgift':
-			if (poke.item && poke.item.naturalGift && poke.item.naturalGift.type) return poke.item.naturalGift.type;
-			return move.type;
+			return poke.item?.naturalGift?.type || move.type;
 		case 'revelationdance':
 			return poke.getTypes(conditions)[0];
 		case 'struggle':
 			return move.type;
 		case 'technoblast':
-			if (poke.item && poke.item.onDrive) return poke.item.onDrive;
-			return 'Normal';
+			return poke.item?.onDrive || move.type;
 		case 'weatherball':
 			if (gconditions.weather in { 'primordialsea': 1, 'raindance': 1 }) return 'Water';
 			if (gconditions.weather in { 'desolateland': 1, 'sunnyday': 1 }) return 'Fire';
@@ -294,6 +291,8 @@ var getMoveType = exports.getMoveType = function (poke, move, conditions, gcondi
 			if (gconditions['mistyterrain']) return 'Fairy';
 			if (gconditions['psychicterrain']) return 'Psychic';
 			return move.type;
+		case 'terablast':
+			return conditions.volatiles.terastallize || move.type;
 	}
 
 	if (gen >= 3 && poke.ability && !poke.supressedAbility) {
@@ -955,9 +954,23 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 	if (pokeA.item && pokeA.item.id === 'lifeorb') modifier *= 1.3;
 
 	/* STAB */
-	if (pokeA.hasType(moveType, conditionsA) >= 0 || pokeA.hasAbility({ 'libero': 1, 'protean': 1 })) {
-		if (gen >= 3 && pokeA.hasAbility('adaptability')) modifier *= 2;
-		else modifier *= 1.5;
+	let stab;
+	if (conditionsA.volatiles.terastallize) {
+		let originalStab = (pokeA.template.types.includes(moveType) >= 0 || pokeA.hasAbility({ 'libero': 1, 'protean': 1 });
+		let teraStab = (move.type === conditionsA.volatiles.terastallize);
+		if (originalStab && teraStab) {
+			stab = 2;
+		} else if (originalStab || teraStab) {
+			stab = 1.5;
+		}
+	} else {
+		if (pokeA.hasType(moveType, conditionsA) >= 0 || pokeA.hasAbility({ 'libero': 1, 'protean': 1 })) {
+			stab = 1.5;
+		}
+	}
+	if (stab) {
+		if (gen >= 3 && pokeA.hasAbility('adaptability')) stab *= (4.0 / 3.0);
+		modifier *= stab;
 	}
 
 	/* Weather */
