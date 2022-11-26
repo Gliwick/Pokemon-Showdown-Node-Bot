@@ -10,14 +10,14 @@ exports.getMultipleEff = function (typeA, typesB, gen, notImmune, inverse, battl
 	let mux = 1;
 	let tmp;
 	for (let i = 0; i < typesB.length; i++) {
-		tmp = exports.getEffectiveness(typeA, typesB[i], gen, battleId);
+		tmp = exports.getEffectiveness(typeA, typesB[i], gen, inverse, battleId);
 		if (tmp === 0 && notImmune) tmp = 1;
 		mux *= tmp;
 	}
 	return mux;
 };
 
-exports.getEffectiveness = function (typeA, typeB, gen, battleId) {
+exports.getEffectiveness = function (typeA, typeB, gen, inverse, battleId) {
 	if (!gen) gen = CurrentGen;
 
 	let chart = exports['gen' + CurrentGen];
@@ -28,17 +28,17 @@ exports.getEffectiveness = function (typeA, typeB, gen, battleId) {
 		try {
 			let temp = require(MODS_DATA_DIR + formatMod + "/typechart.js").BattleTypeChart;
 			if (temp) chart = temp;
-		} catch (e) {}
+		} catch (e) { }
 	}
 
 	if (!chart[typeB] || !chart[typeB][typeA]) return 1;
 	switch (chart[typeB][typeA]) {
 		case 1:
-			return 2;
+			return inverse ? 0.5 : 2;
 		case 2:
-			return 0.5;
+			return inverse ? 2 : 0.5;
 		case 3:
-			return 0;
+			return inverse ? 2 : 0;
 		default:
 			return 1;
 	}

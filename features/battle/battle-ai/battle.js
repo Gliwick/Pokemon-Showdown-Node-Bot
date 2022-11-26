@@ -99,10 +99,15 @@ var Battle = exports.Battle = (function () {
 					break;
 				case "move":
 					str += "move " + (decision[i].moveId + 1);
-					if (decision[i].transformation) str += (" " + decision[i].transformation);
+					const transformation = decision[i].transformation;
+					if (typeof transformation === 'string') {
+						str += (" " + decision[i].transformation);
+					} else if (transformation) {
+						str += (" " + Object.keys(decision[i].transformation)[0]);
+					}
 					if (decision[i].target !== null) {
 						if (decision[i].target >= 0) str += " " + (decision[i].target + 1);
-						else str += " " + (decision[i].target);
+						else str += (" " + (decision[i].target));
 					}
 					break;
 				case "switch":

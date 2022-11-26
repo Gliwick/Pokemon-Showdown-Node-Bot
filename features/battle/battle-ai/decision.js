@@ -224,7 +224,7 @@ exports.getDecisions = function (battle) {
 					for (let target of targets) {
 						tables[i].push(new MoveDecision(j, target, null, move.move, move.pp));
 						if (mega) tables[i].push(new MoveDecision(j, target, 'mega', move.move, move.pp));
-						if (active.canTerastallize) tables[i].push(new MoveDecision(j, target, 'terastallize', move.move, move.pp));;
+						if (active.canTerastallize) tables[i].push(new MoveDecision(j, target, { terastallize: active.canTerastallize }, move.move, move.pp));;
 					}
 
 					if (active.canZMove && active.canZMove[j]) {

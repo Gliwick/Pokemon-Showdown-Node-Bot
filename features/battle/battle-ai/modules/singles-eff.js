@@ -452,7 +452,10 @@ function evaluatePokemon(battle, sideId) {
 		if (move.id in { 'solarbeam': 1, 'solarblade': 1 } && !supressedWeather && !(toId(gconditions.weather) in { 'desolateland': 1, 'sunnyday': 1 })) continue;
 
 		let dmg = 0;
-		if (move.category !== 'Status') dmg = Calc.calculate(pokeB, pokeA, move, conditionsB, conditionsA, gconditions, battle.gen, battle.id).getAvg();
+		if (move.category !== 'Status') {
+			dmg = Calc.calculate({ poke: pokeB, conditions: conditionsB }, { poke: pokeA, conditions: conditionsA },
+				move, gconditions, battle).getAvg();
+		}
 		if (dmg > r) r = dmg;
 
 		// 20% burn chance is enough to fear burn
@@ -510,7 +513,10 @@ function evaluatePokemon(battle, sideId) {
 		if (move.id in { 'solarbeam': 1, 'solarblade': 1 } && !supressedWeather && !(toId(gconditions.weather) in { 'desolateland': 1, 'sunnyday': 1 })) continue;
 
 		let dmg = 0;
-		if (move.category !== 'Status') dmg = Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, gconditions, battle.gen, battle.id).getAvg();
+		if (move.category !== 'Status') {
+			dmg = Calc.calculate({ poke: pokeA, conditions: conditionsA }, { poke: pokeB, conditions: conditionsB },
+				move, gconditions, battle).getAvg();
+		}
 		if (move.category === 'Physical' && foeCanBurn) dmg *= 0.5;
 
 		if (dmg === 0 && !pokeB.hasAbility({ 'magicbounce': 1, 'magicguard': 1 }) && (!conditionsB.volatiles['substitute'] || pokeA.hasAbility('infiltrator'))) {
@@ -664,7 +670,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		}
 
 		if (des.transformation === 'dynamax' && !(conditionsB.volatiles.dynamax && pokeA.hp > 50) && !selfLastPokemon(battle)) continue;
-		if (des.transformation === 'terastallize' && !selfLastPokemon(battle)) continue;
+		if (des.transformation?.terastallize && !selfLastPokemon(battle)) continue;
 
 		let move = des.moveData;
 		let viableZMove = (
@@ -679,14 +685,16 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		}
 		if (des.transformation === 'zmove') {
 			if (viableZMove) {
-				res.obligatory.push(deciions[i]);
+				res.obligatory.push(decisions[i]);
 			} else {
-				res.unviable.push(deciions[i]);
+				res.unviable.push(decisions[i]);
 			}
 			continue;
 		}
 
-		if (move.category !== 'Status' && Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen, battle.id).getAvg() === 0) {
+		if (move.category !== 'Status' &&
+			Calc.calculate({ poke: pokeA, conditions: conditionsA }, { poke: pokeB, conditions: conditionsB }, move, battle.conditions, battle, des.transformation).getMax() <= 0
+		) {
 			continue;
 		}
 		const immunityAbilities = {
@@ -751,7 +759,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			}
 		}
 		if (!(move.target in { 'self': 1, 'allySide': 1, 'allyTeam': 1, 'foeSide': 1 }) && move.category !== 'Status' && !move.ignoreImmunity) {
-			if (Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen, battle.id).getMax() === 0) {
+			if (Calc.calculate({ poke: pokeA, conditions: conditionsA }, { poke: pokeB, conditions: conditionsB }, move, battle.conditions, battle, des.transformation).getMax() <= 0) {
 				res.unviable.push(decisions[i]);
 				continue;
 			}
@@ -1370,7 +1378,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		if (des.transformation === 'dynamax' && !(conditionsB.volatiles.dynamax && pokeA.hp > 50) && !selfLastPokemon(battle)) {
 			if (!((conditionsA.boosts.atk > 0 || conditionsA.boosts.spa > 0) && pokeA.hp > 50) && !(conditionsA.boosts.spe > 0)) continue;
 		}
-		if (des.transformation === 'terastallize') {
+		if (des.transformation?.terastallize) {
 			if (
 				des.moveData.id !== 'terablast' &&
 				!selfLastPokemon(battle) &&
@@ -1400,7 +1408,8 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		if (move.id in { 'solarbeam': 1, 'solarblade': 1 } && !supressedWeather && !(toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 })) continue;
 		if ((move.id === 'burnup' && !pokeA.hasType('Fire')) || (move.id === 'doubleshock' && !pokeA.hasType('Electric'))) continue;
 
-		let dmg = Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen, battle.id).getAvg();
+		let dmg = Calc.calculate({ poke: pokeA, conditions: conditionsA }, { poke: pokeB, conditions: conditionsB },
+			move, battle.conditions, battle, des.transformation).getAvg();
 
 		let hp = pokeB.hp;
 		if (conditionsB.volatiles.dynamax) {
@@ -2034,7 +2043,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	// prefer terastal
 	filteredMoves = [];
 	for (var i = 0; i < finalDamageMoves.length; i++) {
-		if (finalDamageMoves[i][0].transformation === 'terastallize') filteredMoves.push(finalDamageMoves[i]);
+		if (finalDamageMoves[i][0].transformation?.terastallize) filteredMoves.push(finalDamageMoves[i]);
 	}
 	if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 

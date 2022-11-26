@@ -37,7 +37,7 @@ const DoubleTurnMoves = ['iceburn', 'freezeshock', 'meteorbeam', 'razorwind', 's
  * Team and Switch Decisions
  */
 
-function getPokemonAverage (battle, s) {
+function getPokemonAverage(battle, s) {
 	if (!battle.foe.teamPv.length) return 0;
 
 	var p = battle.request.side.pokemon[s];
@@ -52,7 +52,7 @@ function getPokemonAverage (battle, s) {
 		var poke = new Pokemon(template, {
 			level: pokeView.level,
 			gender: pokeView.gender,
-			evs: {hp: 192, def: 124, spd: 124}
+			evs: { hp: 192, def: 124, spd: 124 }
 		});
 		if (toId(battle.tier || "").indexOf("challengecup") >= 0) poke.happiness = 100;
 		if (template.abilities) poke.ability = Data.getAbility(template.abilities[0], battle.gen);
@@ -61,7 +61,8 @@ function getPokemonAverage (battle, s) {
 			var move = Data.getMove(p.moves[j], battle.gen);
 			if (move.category === "Status") continue;
 			if (BadMoves.indexOf(move.id) >= 0) continue;
-			var dmg = Calc.calculate(pokeA, poke, move, conditions, conditions, battle.conditions, battle.gen);
+			var dmg = Calc.calculate({ poke: pokeA, conditions: conditions }, { poke: poke, conditions: conditions },
+				move, battle.conditions, battle);
 			debug("DMG [" + pokeA.species + ", " + poke.species + ", " + move.name + "] = " + dmg.getMax());
 			if (DoubleTurnMoves.indexOf(move.id) >= 0) calcVal += dmg.getMax() * 0.5;
 			else calcVal += dmg.getMax();
@@ -71,7 +72,7 @@ function getPokemonAverage (battle, s) {
 	return 0 + final;
 }
 
-function evaluateTeamDecision (battle, des) {
+function evaluateTeamDecision(battle, des) {
 	var final = 0;
 	for (var i = 0; i < des.team.length; i++) {
 		final += getPokemonAverage(battle, des.team[i]);
@@ -83,7 +84,7 @@ function evaluateTeamDecision (battle, des) {
  * Switch Decisions
  */
 
-function getSwitchAverage (battle, s) {
+function getSwitchAverage(battle, s) {
 	var final = 0;
 	var p = battle.request.side.pokemon[s];
 	var pokeA = battle.getCalcRequestPokemon(s, true);
@@ -107,7 +108,7 @@ function getSwitchAverage (battle, s) {
 				level: targets[j].level,
 				gender: targets[j].gender,
 				shiny: targets[j].shiny,
-				evs: {hp: 192, def: 124, spd: 124}
+				evs: { hp: 192, def: 124, spd: 124 }
 			});
 			pokeB.hp = targets[j].hp;
 			pokeB.status = targets[j].status;
@@ -123,7 +124,8 @@ function getSwitchAverage (battle, s) {
 					pokeB.ability = targets[j].ability;
 				}
 			}
-			var dmg = Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen);
+			var dmg = Calc.calculate({ poke: pokeA, conditions: conditionsA }, { poke: pokeB, conditions: conditionsB },
+				move, battle.conditions, battle);
 			debug("DMG [" + pokeA.species + ", " + pokeB.species + ", " + move.name + "] = " + dmg.getMax());
 			if (DoubleTurnMoves.indexOf(move.id) >= 0) final += dmg.getMax() * 0.5;
 			else final += dmg.getMax();
@@ -133,7 +135,7 @@ function getSwitchAverage (battle, s) {
 	return final / p.moves.length;
 }
 
-function evaluateSwitchDecision (battle, des) {
+function evaluateSwitchDecision(battle, des) {
 	var final = -1000;
 	final += getSwitchAverage(battle, des.pokeId);
 	return final;
@@ -143,7 +145,7 @@ function evaluateSwitchDecision (battle, des) {
  * Move Decisions
  */
 
-function evaluateMoveDecision (battle, desEnv, des, act) {
+function evaluateMoveDecision(battle, desEnv, des, act) {
 	var final = 0;
 	var p = battle.request.side.pokemon[act];
 	var a = battle.request.active[act];
@@ -183,7 +185,7 @@ function evaluateMoveDecision (battle, desEnv, des, act) {
 			level: targets[i].level,
 			gender: targets[i].gender,
 			shiny: targets[i].shiny,
-			evs: {hp: 192, def: 124, spd: 124}
+			evs: { hp: 192, def: 124, spd: 124 }
 		});
 		pokeB.hp = targets[i].hp;
 		pokeB.status = targets[i].status;
@@ -199,7 +201,8 @@ function evaluateMoveDecision (battle, desEnv, des, act) {
 				pokeB.ability = targets[i].ability;
 			}
 		}
-		var dmg = Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen);
+		var dmg = Calc.calculate({ poke: pokeA, conditions: conditionsA }, { poke: pokeB, conditions: conditionsB },
+			move, battle.conditions, battle);
 		debug("DMG [" + pokeA.species + ", " + pokeB.species + ", " + move.name + "] = " + dmg.getMax());
 		if (DoubleTurnMoves.indexOf(move.id) >= 0) final += dmg.getMax() * 0.5;
 		else final += dmg.getMax();
@@ -212,7 +215,7 @@ function evaluateMoveDecision (battle, desEnv, des, act) {
  * Swapper
  */
 
-function getDecisionValue (battle, decisions, desEnv, des, act) {
+function getDecisionValue(battle, decisions, desEnv, des, act) {
 	if (des.type === "team") {
 		return evaluateTeamDecision(battle, des);
 	} else if (des.type === "move") {
@@ -233,7 +236,7 @@ exports.decide = function (battle, decisions) {
 		for (var i = 0; i < decisions[d].length; i++) {
 			p += getDecisionValue(battle, decisions, decisions[d], decisions[d][i], i);
 		}
-		dTable.push({des: d, val: p});
+		dTable.push({ des: d, val: p });
 		if (maxP === null || maxP < p) maxP = p;
 	}
 	var chosen = [];
