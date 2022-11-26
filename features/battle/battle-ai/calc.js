@@ -337,7 +337,7 @@ exports.calculate = function (attacker, defender, move, globalConditions, battle
 	const defenderPoke = defender.poke;
 	const defenderConditions = defender.conditions || {};
 
-	if (typeof transformation === 'object' && transformation.terastallize) {
+	if (typeof transformation === 'object' && transformation?.terastallize) {
 		attackerConditions.volatiles.terastallize = transformation.terastallize;
 	}
 
