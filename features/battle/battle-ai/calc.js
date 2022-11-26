@@ -959,15 +959,15 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
 		let originalStab = (pokeA.template.types.includes(moveType) >= 0 || pokeA.hasAbility({ 'libero': 1, 'protean': 1 }));
 		let teraStab = (move.type === conditionsA.volatiles.terastallize);
 		if (originalStab && teraStab) {
-			debugger('applying double stab');
+			debug('applying double stab');
 			stab = 2;
 		} else if (originalStab || teraStab) {
-			debugger('applying stab');
+			debug('applying stab');
 			stab = 1.5;
 		}
 	} else {
 		if (pokeA.hasType(moveType, conditionsA) >= 0 || pokeA.hasAbility({ 'libero': 1, 'protean': 1 })) {
-			debugger('applying stab');
+			debug('applying stab');
 			stab = 1.5;
 		}
 	}
