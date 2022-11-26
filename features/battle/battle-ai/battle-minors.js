@@ -457,7 +457,7 @@ module.exports = {
 
 	"-terastallize": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		poke.addVolatile('terastallize');
+		poke.volatiles.terastallize = args[2];
 	},
 
 	"-start": function (args, kwargs) {
