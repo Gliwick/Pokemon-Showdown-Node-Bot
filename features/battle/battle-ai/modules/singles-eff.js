@@ -12,9 +12,9 @@ var Data = require('./../battle-data.js');
 var Pokemon = Calc.Pokemon;
 var Conditions = Calc.Conditions;
 
-const singleTurnMoves = {'protect':1, 'detect':1, 'kingsshield':1, 'quickguard':1, 'spikyshield':1, 'wideguard':1, 'banefulbunker':1, 'obstruct':1, 'maxguard':1, 'endure':1};
+const singleTurnMoves = { 'protect': 1, 'detect': 1, 'kingsshield': 1, 'quickguard': 1, 'spikyshield': 1, 'wideguard': 1, 'banefulbunker': 1, 'obstruct': 1, 'maxguard': 1, 'endure': 1 };
 
-function supposeActiveFoe (battle) {
+function supposeActiveFoe(battle) {
 	let target = battle.foe.active[0];
 	let pokeBId = target.name + '|' + target.species;
 	let pokeB = new Pokemon(target.template, {
@@ -52,7 +52,7 @@ function supposeActiveFoe (battle) {
 				itemId = pokeB.template.requiredItem;
 			} else if (pokeB.template.requiredItems) {
 				itemId = pokeB.template.requiredItems[0];
-			} else if (pokeB.template.evos && !(pokeB.template.id in {'cubone':1, 'farfetchdgalar':1, 'pikachu':1})) {
+			} else if (pokeB.template.evos && !(pokeB.template.id in { 'cubone': 1, 'farfetchdgalar': 1, 'pikachu': 1 })) {
 				if (battle.gen === 7 && pokeB.template.id === 'eevee' && battle.id.indexOf('lc') < 0) itemId = 'eeviumz';
 				else pokeB.item = itemId = 'eviolite';
 			} else {
@@ -112,29 +112,29 @@ function supposeActiveFoe (battle) {
 	}
 
 	// evs, ivs and nature
-	if (battle.gen >= 3) pokeB.ivs = {hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31};
+	if (battle.gen >= 3) pokeB.ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 	if (battle.id.indexOf('hackmonscup') > 0) {
-		pokeB.evs = {hp: 124, atk: 124, def: 124, spa: 124, spd: 124, spe: 124};
-		if (battle.gen >= 3) pokeB.ivs = {hp: 15, atk: 15, def: 15, spa: 15, spd: 15, spe: 15};
+		pokeB.evs = { hp: 124, atk: 124, def: 124, spa: 124, spd: 124, spe: 124 };
+		if (battle.gen >= 3) pokeB.ivs = { hp: 15, atk: 15, def: 15, spa: 15, spd: 15, spe: 15 };
 	} else if (battle.gen <= 2) {
-		pokeB.evs = {hp: 252, atk: 252, def: 252, spa: 252, spd: 252, spe: 252};
-		pokeB.dvs = {hp: 15, atk: 15, def: 15, spa: 15, spd: 15, spe: 15};
+		pokeB.evs = { hp: 252, atk: 252, def: 252, spa: 252, spd: 252, spe: 252 };
+		pokeB.dvs = { hp: 15, atk: 15, def: 15, spa: 15, spd: 15, spe: 15 };
 	} else if (battle.id.indexOf('random') > 0) {
-		pokeB.evs = {hp: 84, atk: 84, def: 84, spa: 84, spd: 84, spe: 84};
+		pokeB.evs = { hp: 84, atk: 84, def: 84, spa: 84, spd: 84, spe: 84 };
 	} else {
 		if (hackmonsBattle && battle.gen !== 6) {
-			pokeB.evs = {hp: 252, atk: 252, def: 252, spa: 252, spd: 252, spe: 252};
-		} else if ((pokeB.template.baseStats.spe >= 70 || pokeB.hasItem('choicescarf')) && !pokeB.hasAbility({'slowstart':1, 'stall':1}) && !pokeB.hasItem({'fullincense':1, 'ironball':1, 'laggingtail':1, 'machobrace':1})) {
-			pokeB.evs = {hp: 0, atk: 252, def: 4, spa: 252, spd: 4, spe: 252};
-			pokeB.nature = {spe: 1.1};
-		} else if (Math.max(pokeB.template.baseStats.atk, pokeB.template.baseStats.spa) >= Math.max(pokeB.template.baseStats.hp, pokeB.template.baseStats.def, pokeB.template.baseStats.spd) || pokeB.hasAbility({'hugepower':1, 'purepower':1})) {
-			pokeB.evs = {hp: 252, atk: 252, def: 0, spa: 252, spd: 0, spe: 4};
-			pokeB.nature = {atk: 1.1, spa: 1.1};
+			pokeB.evs = { hp: 252, atk: 252, def: 252, spa: 252, spd: 252, spe: 252 };
+		} else if ((pokeB.template.baseStats.spe >= 70 || pokeB.hasItem('choicescarf')) && !pokeB.hasAbility({ 'slowstart': 1, 'stall': 1 }) && !pokeB.hasItem({ 'fullincense': 1, 'ironball': 1, 'laggingtail': 1, 'machobrace': 1 })) {
+			pokeB.evs = { hp: 0, atk: 252, def: 4, spa: 252, spd: 4, spe: 252 };
+			pokeB.nature = { spe: 1.1 };
+		} else if (Math.max(pokeB.template.baseStats.atk, pokeB.template.baseStats.spa) >= Math.max(pokeB.template.baseStats.hp, pokeB.template.baseStats.def, pokeB.template.baseStats.spd) || pokeB.hasAbility({ 'hugepower': 1, 'purepower': 1 })) {
+			pokeB.evs = { hp: 252, atk: 252, def: 0, spa: 252, spd: 0, spe: 4 };
+			pokeB.nature = { atk: 1.1, spa: 1.1 };
 		} else {
-			pokeB.evs = {hp: 252, atk: 0, def: 128, spa: 0, spd: 128, spe: 0};
+			pokeB.evs = { hp: 252, atk: 0, def: 128, spa: 0, spd: 128, spe: 0 };
 		}
 		for (let move of battle.foe.active[0].moves) {
-			if (move.id in {'gyroball':1, 'trickroom':1}) {
+			if (move.id in { 'gyroball': 1, 'trickroom': 1 }) {
 				pokeB.evs.hp = Math.min(252, pokeB.evs.hp + pokeB.evs.spe);
 				pokeB.evs.spe = 0;
 				pokeB.ivs.spe = 0;
@@ -146,19 +146,19 @@ function supposeActiveFoe (battle) {
 	return pokeB;
 }
 
-function isWeatherSupressed (pokeA, pokeB) {
-	return (!pokeA.hasAbility('neutralizinggas') && !pokeB.hasAbility('neutralizinggas') && (pokeA.hasAbility({'airlock':1, 'cloudnine':1}) || pokeB.hasAbility({'airlock':1, 'cloudnine':1})));
+function isWeatherSupressed(pokeA, pokeB) {
+	return (!pokeA.hasAbility('neutralizinggas') && !pokeB.hasAbility('neutralizinggas') && (pokeA.hasAbility({ 'airlock': 1, 'cloudnine': 1 }) || pokeB.hasAbility({ 'airlock': 1, 'cloudnine': 1 })));
 }
 
 function getConditionsAfterSwitchIn(battle, pokeA, pokeB, conditionsB, gconditions) {
 	let conditionsA = new Conditions({
 		side: Object.assign({}, battle.self.side),
 		volatiles: {},
-		boosts: {atk: 0, def: 0, spa: 0, spd: 0, spe: 0},
+		boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
 	});
 	gconditions = Object.assign({}, gconditions);
 
-	if (!(gconditions.weather in {'deltastream':1, 'desolateland':1, 'primordealsea':1})) {
+	if (!(gconditions.weather in { 'deltastream': 1, 'desolateland': 1, 'primordealsea': 1 })) {
 		if (pokeA.hasAbility('drizzle')) gconditions.weather = 'raindance';
 		if (pokeA.hasAbility('drought')) gconditions.weather = 'sunnyday';
 		if (pokeA.hasAbility('sandstream')) gconditions.weather = 'sandstorm';
@@ -177,9 +177,9 @@ function getConditionsAfterSwitchIn(battle, pokeA, pokeB, conditionsB, gconditio
 	if (pokeA.hasAbility('intimidate')) {
 		if (pokeB.hasAbility('mirrorarmor')) {
 			conditionsA.boosts.atk -= 1;
-		} else if (!pokeB.hasAbility({'clearbody':1, 'whitesmoke':1, 'fullmetalbody':1})) {
+		} else if (!pokeB.hasAbility({ 'clearbody': 1, 'whitesmoke': 1, 'fullmetalbody': 1 })) {
 			if (!conditionsB.boosts.atk) conditionsB.boosts.atk = 0;
-			if (pokeB.hasAbility({'contrary':1, 'defiant':1})) conditionsB.boosts.atk = 1;
+			if (pokeB.hasAbility({ 'contrary': 1, 'defiant': 1 })) conditionsB.boosts.atk = 1;
 			else conditionsB.boosts.atk = -1;
 			if (pokeB.hasAbility('competitive')) conditionsB.boosts.spa = (conditionsB.boosts.spa ? conditionsB.boosts.spa + 2 : 2);
 		}
@@ -212,14 +212,14 @@ function getConditionsAfterSwitchIn(battle, pokeA, pokeB, conditionsB, gconditio
 
 	if (conditionsA.side['stickyweb'] && !pokeA.hasItem('heavydutyboots') && !pokeA.isGrounded(conditionsA)) {
 		if (pokeA.hasAbility('mirrorarmor')) {
-			if (!pokeB.hasAbility({'clearbody':1, 'whitesmoke':1, 'fullmetalbody':1})) {
+			if (!pokeB.hasAbility({ 'clearbody': 1, 'whitesmoke': 1, 'fullmetalbody': 1 })) {
 				if (!conditionsB.boosts.spe) conditionsB.boosts.spe = 0;
-				if (pokeB.hasAbility({'contrary':1})) conditionsB.boosts.spe = 1;
+				if (pokeB.hasAbility({ 'contrary': 1 })) conditionsB.boosts.spe = 1;
 				else conditionsB.boosts.spe = -1;
-				if (pokeB.hasAbility({'defiant':1})) conditionsB.boosts.atk = (conditionsB.boosts.atk ? conditionsB.boosts.atk + 2 : 2);
-				if (pokeB.hasAbility({'competitive':1})) conditionsB.boosts.spa = (conditionsB.boosts.spa ? conditionsB.boosts.spa + 2 : 2);
+				if (pokeB.hasAbility({ 'defiant': 1 })) conditionsB.boosts.atk = (conditionsB.boosts.atk ? conditionsB.boosts.atk + 2 : 2);
+				if (pokeB.hasAbility({ 'competitive': 1 })) conditionsB.boosts.spa = (conditionsB.boosts.spa ? conditionsB.boosts.spa + 2 : 2);
 			}
-		} else if (!pokeA.hasAbility({'clearbody':1, 'whitesmoke':1, 'fullmetalbody':1})) {
+		} else if (!pokeA.hasAbility({ 'clearbody': 1, 'whitesmoke': 1, 'fullmetalbody': 1 })) {
 			if (pokeA.hasAbility('contrary')) conditionsA.boosts.spe += 1;
 			else conditionsA.boosts.spe -= 1;
 			if (pokeA.hasAbility('defiant')) conditionsA.boosts.atk += 2;
@@ -227,11 +227,11 @@ function getConditionsAfterSwitchIn(battle, pokeA, pokeB, conditionsB, gconditio
 		}
 	}
 
-	return {pokeA: pokeA, conditionsA: conditionsA, conditionsB: conditionsB, gconditions: gconditions};
+	return { pokeA: pokeA, conditionsA: conditionsA, conditionsB: conditionsB, gconditions: gconditions };
 }
 
-function evaluatePokemon (battle, sideId) {
-	if (!battle.foe.active[0] || battle.foe.active[0].fainted) return {t: 0, d: 0};
+function evaluatePokemon(battle, sideId) {
+	if (!battle.foe.active[0] || battle.foe.active[0].fainted) return { t: 0, d: 0 };
 
 	let isActive = (sideId === 0 && !!battle.request.active);
 
@@ -241,7 +241,7 @@ function evaluatePokemon (battle, sideId) {
 	let conditionsB = new Conditions({
 		side: Object.assign({}, battle.foe.side),
 		volatiles: Object.assign({}, battle.foe.active[0].volatiles),
-		boosts:  Object.assign({}, battle.foe.active[0].boosts),
+		boosts: Object.assign({}, battle.foe.active[0].boosts),
 	});
 	let gconditions = battle.conditions;
 
@@ -275,7 +275,7 @@ function evaluatePokemon (battle, sideId) {
 		}
 	}
 	let supressedWeather = isWeatherSupressed(pokeA, pokeB);
-	let res = {r: 0, rpc: 0, d: 0};
+	let res = { r: 0, rpc: 0, d: 0 };
 
 	/* Calculate r - received damage in percentage of current HP */
 
@@ -406,7 +406,7 @@ function evaluatePokemon (battle, sideId) {
 		}
 	}
 
-	if (conditionsB.volatiles['dynamax']) {
+	if (conditionsB.volatiles.dynamax) {
 		const typeMaxMove = {
 			'Bug': 'maxflutterby',
 			'Dark': 'maxdarkness',
@@ -448,19 +448,19 @@ function evaluatePokemon (battle, sideId) {
 			if (gconditions['mistyterrain']) move = Data.getMove('moonblast', battle.gen, battle.id);
 			if (gconditions['psychicterrain']) move = Data.getMove('psychic', battle.gen, battle.id);
 		}
-		if (move.id in {'hurricane':1, 'thunder':1} && !supressedWeather && toId(gconditions.weather) in {'desolateland':1, 'sunnyday':1}) continue;
-		if (move.id in {'solarbeam':1, 'solarblade':1} && !supressedWeather && !(toId(gconditions.weather) in {'desolateland':1, 'sunnyday':1})) continue;
+		if (move.id in { 'hurricane': 1, 'thunder': 1 } && !supressedWeather && toId(gconditions.weather) in { 'desolateland': 1, 'sunnyday': 1 }) continue;
+		if (move.id in { 'solarbeam': 1, 'solarblade': 1 } && !supressedWeather && !(toId(gconditions.weather) in { 'desolateland': 1, 'sunnyday': 1 })) continue;
 
 		let dmg = 0;
 		if (move.category !== 'Status') dmg = Calc.calculate(pokeB, pokeA, move, conditionsB, conditionsA, gconditions, battle.gen, battle.id).getAvg();
 		if (dmg > r) r = dmg;
 
 		// 20% burn chance is enough to fear burn
-		if (!pokeA.status && !pokeA.hasType('Fire', conditionsA) && !pokeA.hasAbility({'comatose':1, 'guts':1, 'mistysurge':1, 'naturalcure':1, 'waterbubble':1, 'waterveil':1}) && (move.category === 'Status' || dmg > 0) && (!isActive || !conditionsA.volatiles['substitute'])) {
+		if (!pokeA.status && !pokeA.hasType('Fire', conditionsA) && !pokeA.hasAbility({ 'comatose': 1, 'guts': 1, 'mistysurge': 1, 'naturalcure': 1, 'waterbubble': 1, 'waterveil': 1 }) && (move.category === 'Status' || dmg > 0) && (!isActive || !conditionsA.volatiles['substitute'])) {
 			if (
 				(move.secondary && move.secondary.status === 'brn' && (move.secondary.chance >= 20 || (move.secondary.chance >= 10 && pokeA.hasAbility('serenegrace')))) ||
-				(move.id in {'firefang':1, 'triattack':1} && pokeA.hasAbility('serenegrace')) || 
-				(move.id === 'burningjealousy' && !isActive && (conditionsA.boosts.atk > 0 || conditionsA.boosts.def > 0 || conditionsA.boosts.spa > 0 || conditionsA.boosts.spd > 0 || conditionsA.boosts.spe > 0)) || 
+				(move.id in { 'firefang': 1, 'triattack': 1 } && pokeA.hasAbility('serenegrace')) ||
+				(move.id === 'burningjealousy' && !isActive && (conditionsA.boosts.atk > 0 || conditionsA.boosts.def > 0 || conditionsA.boosts.spa > 0 || conditionsA.boosts.spd > 0 || conditionsA.boosts.spe > 0)) ||
 				(move.id === 'psychoshift' && pokeB.status === 'brn')
 			) {
 				foeCanBurn = true;
@@ -506,21 +506,21 @@ function evaluatePokemon (battle, sideId) {
 			if (gconditions['psychicterrain']) move = Data.getMove('psychic', battle.gen, battle.id);
 		}
 		if (move.selfdestruct && pokeA.hp > 25) continue;
-		if (move.id in {'hurricane':1, 'thunder':1} && !supressedWeather && toId(gconditions.weather) in {'desolateland':1, 'sunnyday':1}) continue;
-		if (move.id in {'solarbeam':1, 'solarblade':1} && !supressedWeather && !(toId(gconditions.weather) in {'desolateland':1, 'sunnyday':1})) continue;
+		if (move.id in { 'hurricane': 1, 'thunder': 1 } && !supressedWeather && toId(gconditions.weather) in { 'desolateland': 1, 'sunnyday': 1 }) continue;
+		if (move.id in { 'solarbeam': 1, 'solarblade': 1 } && !supressedWeather && !(toId(gconditions.weather) in { 'desolateland': 1, 'sunnyday': 1 })) continue;
 
 		let dmg = 0;
 		if (move.category !== 'Status') dmg = Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, gconditions, battle.gen, battle.id).getAvg();
 		if (move.category === 'Physical' && foeCanBurn) dmg *= 0.5;
 
-		if (dmg === 0 && !pokeB.hasAbility({'magicbounce':1, 'magicguard':1}) && (!conditionsB.volatiles['substitute'] || pokeA.hasAbility('infiltrator'))) {
+		if (dmg === 0 && !pokeB.hasAbility({ 'magicbounce': 1, 'magicguard': 1 }) && (!conditionsB.volatiles['substitute'] || pokeA.hasAbility('infiltrator'))) {
 			if (move.id === 'leechseed' && !pokeB.hasType('Grass', conditionsB) && !pokeB.hasAbility('sapsipper')) dmg = 12.5;
 			if (!gconditions['mistyterrain'] || !pokeB.isGrounded(conditionsB)) {
-				if (move.status === 'brn' && !pokeB.hasType('Fire', conditionsB) && !pokeB.hasAbility({'comatose':1, 'flashfire':1, 'waterbubble':1, 'waterveil':1})) {
+				if (move.status === 'brn' && !pokeB.hasType('Fire', conditionsB) && !pokeB.hasAbility({ 'comatose': 1, 'flashfire': 1, 'waterbubble': 1, 'waterveil': 1 })) {
 					if (battle.gen >= 7) dmg = 6.25;
 					else dmg = 12.5;
 				}
-				if (pokeB.hasType(['Poison', 'Steel'], conditionsB) && !pokeB.hasAbility({'comatose':1, 'immunity':1, 'poisonheal':1, 'pastelveil':1})) {
+				if (pokeB.hasType(['Poison', 'Steel'], conditionsB) && !pokeB.hasAbility({ 'comatose': 1, 'immunity': 1, 'poisonheal': 1, 'pastelveil': 1 })) {
 					if (move.status === 'psn') dmg = 12.5;
 					if (move.status === 'tox') dmg = 18.75;
 				}
@@ -537,7 +537,7 @@ function evaluatePokemon (battle, sideId) {
 * Moves
 */
 
-function foeCanSwitch (battle) {
+function foeCanSwitch(battle) {
 	let totalPokes = battle.foe.teamPv.length || 6;
 	if (battle.foe.pokemon.length === totalPokes) {
 		for (var i = 0; i < battle.foe.pokemon.length; i++) {
@@ -550,7 +550,7 @@ function foeCanSwitch (battle) {
 	return true;
 }
 
-function selfLastPokemon (battle) {
+function selfLastPokemon(battle) {
 	for (var i = 0; i < battle.request.side.pokemon.length; i++) {
 		if (battle.request.side.pokemon[i].condition !== '0 fnt' && !battle.request.side.pokemon[i].active) {
 			return false;
@@ -559,7 +559,7 @@ function selfLastPokemon (battle) {
 	return true;
 }
 
-function selfCanSwitch (decisions, pokeA, conditionsA, pokeB, conditionsB) {
+function selfCanSwitch(decisions, pokeA, conditionsA, pokeB, conditionsB) {
 	if (!pokeA.hasItem('shedshell') && !pokeA.hasType('Ghost', conditionsA)) {
 		if (pokeB.hasAbility('arenatrap') && !pokeA.isGrounded(conditionsA)) return false;
 		if (pokeB.hasAbility('magnetpull') && pokeA.hasType('Steel', conditionsA)) return false;
@@ -571,16 +571,16 @@ function selfCanSwitch (decisions, pokeA, conditionsA, pokeB, conditionsB) {
 	return false;
 }
 
-function selfHasStatus (battle) {
+function selfHasStatus(battle) {
 	for (var i = 0; i < battle.request.side.pokemon.length; i++) {
-		if (battle.parseStatus(battle.request.side.pokemon[i].condition).status in {'slp':1, 'brn':1, 'psn':1, 'tox':1, 'par':1, 'frz':1}) {
+		if (battle.parseStatus(battle.request.side.pokemon[i].condition).status in { 'slp': 1, 'brn': 1, 'psn': 1, 'tox': 1, 'par': 1, 'frz': 1 }) {
 			return true;
 		}
 	}
 	return false;
 }
 
-function alreadyOppSleeping (battle) {
+function alreadyOppSleeping(battle) {
 	for (var i = 0; i < battle.foe.pokemon.length; i++) {
 		if (battle.foe.pokemon[i].status === 'slp') {
 			return true;
@@ -589,11 +589,11 @@ function alreadyOppSleeping (battle) {
 	return false;
 }
 
-function sideHasHazards (conditions) {
+function sideHasHazards(conditions) {
 	return (conditions.side['gmaxsteelsurge'] || conditions.side['spikes'] || conditions.side['stealthrock'] || conditions.side['stickyweb'] || conditions.side['toxicspikes']);
 }
 
-function sideHasDamagingHazards (conditions) {
+function sideHasDamagingHazards(conditions) {
 	return (conditions.side['gmaxsteelsurge'] || conditions.side['spikes'] || conditions.side['stealthrock'] || conditions.side['toxicspikes']);
 }
 
@@ -633,7 +633,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		let move = Data.getMove(movesB[i].id, battle.gen, battle.id);
 		if (conditionsB.volatiles['torment'] && battle.foe.active[0].helpers.lastMove && battle.foe.active[0].helpers.lastMove === move.id) continue;
 		if (((pokeB.item && pokeB.item.id.startsWith('choice')) || conditionsB.volatiles['encore']) && battle.foe.active[0].helpers.lastMove && battle.foe.active[0].helpers.lastMove !== move.id) continue;
-		if ((move.category === 'Physical' && !(move.id in {'flamecharge':1, 'flipturn':1, 'nuzzle':1, 'rapidspin':1, 'uturn':1})) || move.id === 'photongeyser') hasPhysical = true;
+		if ((move.category === 'Physical' && !(move.id in { 'flamecharge': 1, 'flipturn': 1, 'nuzzle': 1, 'rapidspin': 1, 'uturn': 1 })) || move.id === 'photongeyser') hasPhysical = true;
 		if (move.category === 'Special' || move.id === 'naturepower') hasSpecial = true;
 		if (move.category === 'Status') hasStatus = true;
 	}
@@ -656,30 +656,31 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		let des = decisions[i][0];
 		if (des.type !== 'move') continue; // not a move
 		if (battle.request.active[0].canMegaEvo || battle.request.side.pokemon[0].canMegaEvo) {
-			if (pokeA.hasAbility({'speedboost':1}) && (!conditionsA.boosts || conditionsA.boosts.spe <= 0)) {
-				if (des.mega) continue;
+			if (pokeA.hasAbility({ 'speedboost': 1 }) && (!conditionsA.boosts || conditionsA.boosts.spe <= 0)) {
+				if (des.transformation === 'mega') continue;
 			} else {
-				if (!des.mega) continue; // Mega evolve by default
+				if (des.transformation !== 'mega') continue; // Mega evolve by default
 			}
 		}
 
-		if (des.dynamax && !(conditionsB.volatiles['dynamax'] && pokeA.hp > 50) && !selfLastPokemon(battle)) continue;
+		if (des.transformation === 'dynamax' && !(conditionsB.volatiles.dynamax && pokeA.hp > 50) && !selfLastPokemon(battle)) continue;
+		if (des.transformation === 'terastallize' && !selfLastPokemon(battle)) continue;
 
 		let move = des.moveData;
 		let viableZMove = (
-			move.id in {'bellydrum':1, 'healblock':1, 'hypnosis':1, 'mirrormove':1, 'raindance':1, 'sleeppowder':1, 'splash':1, 'sunnyday':1} ||
+			move.id in { 'bellydrum': 1, 'healblock': 1, 'hypnosis': 1, 'mirrormove': 1, 'raindance': 1, 'sleeppowder': 1, 'splash': 1, 'sunnyday': 1 } ||
 			(move.zMoveBoost && move.zMoveBoost.atk && move.zMoveBoost.def && move.zMoveBoost.spa && move.zMoveBoost.spd && move.zMoveBoost.spe)
 		);
 		if (battle.request.active[0].canZMove || battle.request.side.pokemon[0].canZMove) {
-			if (!des.zMove && viableZMove && pokeA.item) {
+			if (des.transformation !== 'zmove' && viableZMove && pokeA.item) {
 				if (pokeA.item.zMoveType && pokeA.item.zMoveType === move.type) continue;
 				if (pokeA.item.zMoveFrom && pokeA.item.zMoveFrom === move.name) continue;
 			}
 		}
-		if (des.zMove) {
+		if (des.transformation === 'zmove') {
 			if (viableZMove) {
 				res.obligatory.push(deciions[i]);
-        		} else {
+			} else {
 				res.unviable.push(deciions[i]);
 			}
 			continue;
@@ -695,7 +696,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			'levitate': 'Ground',
 			'dryskin': 'Water', 'stormdrain': 'Water', 'waterabsorb': 'Water',
 		}
-		if (!(move.target in {'all':1, 'allySide':1, 'foeSide':1, 'self':1}) && pokeB.hasAbility(immunityAbilities) && !pokeA.hasAbility({'moldbreaker':1, 'teravolt':1, 'turboblaze':1, 'neutralizinggas':1}) && immunityAbilities[pokeB.ability.id] === move.type) {
+		if (!(move.target in { 'all': 1, 'allySide': 1, 'foeSide': 1, 'self': 1 }) && pokeB.hasAbility(immunityAbilities) && !pokeA.hasAbility({ 'moldbreaker': 1, 'teravolt': 1, 'turboblaze': 1, 'neutralizinggas': 1 }) && immunityAbilities[pokeB.ability.id] === move.type) {
 			continue;
 		}
 		if (move.id === 'thunderwave' && pokeB.hasType((pokeA.hasAbility('normalize') ? 'Ghost' : 'Ground'), conditionsB)) {
@@ -706,7 +707,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			res.unviable.push(decisions[i]);
 			continue;
 		}
-		if (conditionsB.volatiles['substitute'] && !(move.target in {'self':1, 'allySide':1, 'allyTeam':1, 'foeSide':1})) {
+		if (conditionsB.volatiles['substitute'] && !(move.target in { 'self': 1, 'allySide': 1, 'allyTeam': 1, 'foeSide': 1 })) {
 			if (!(move.flags && move.flags['authentic'])) {
 				if (move.category === 'Status') res.unviable.push(decisions[i]);
 				continue;
@@ -732,8 +733,8 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		if (move.category === 'Status' && pokeA.hasAbility('prankster')) movePriority++;
 		if (move.type === 'Flying' && pokeA.hasAbility('galewings') && (battle.gen <= 6 || pokeA.hp >= 100)) movePriority++;
 
-		if (move.target && !(move.target in {'all':1, 'allySide':1, 'foeSide':1, 'self':1})) {
-			if (movePriority > 0 && ((battle.conditions['psychicterrain'] && pokeB.isGrounded(conditionsB)) || pokeB.hasAbility({'dazzling':1, 'queenlymajesty':1}))) {
+		if (move.target && !(move.target in { 'all': 1, 'allySide': 1, 'foeSide': 1, 'self': 1 })) {
+			if (movePriority > 0 && ((battle.conditions['psychicterrain'] && pokeB.isGrounded(conditionsB)) || pokeB.hasAbility({ 'dazzling': 1, 'queenlymajesty': 1 }))) {
 				res.unviable.push(decisions[i]);
 				continue;
 			}
@@ -749,14 +750,14 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				continue;
 			}
 		}
-		if (!(move.target in {'self':1, 'allySide':1, 'allyTeam':1, 'foeSide':1}) && move.category !== 'Status' && !move.ignoreImmunity) {
+		if (!(move.target in { 'self': 1, 'allySide': 1, 'allyTeam': 1, 'foeSide': 1 }) && move.category !== 'Status' && !move.ignoreImmunity) {
 			if (Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen, battle.id).getMax() === 0) {
 				res.unviable.push(decisions[i]);
 				continue;
 			}
 		}
 		if (move.forceSwitch || (move.id === 'partingshot' && pokeB.hasAbility('magicbounce'))) {
-			if (conditionsB.volatiles['dynamax'] || pokeB.hasAbility('suctioncups') || !foeCanSwitch(battle)) {
+			if (conditionsB.volatiles.dynamax || pokeB.hasAbility('suctioncups') || !foeCanSwitch(battle)) {
 				res.unviable.push(decisions[i]);
 			} else {
 				let boostsPHaze = 0;
@@ -769,11 +770,11 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			continue;
 		}
 		if (move.selfSwitch) {
-			if (pokeA.status in {'frz':1, 'slp':1} || conditionsA.volatiles['confusion']) {
+			if (pokeA.status in { 'frz': 1, 'slp': 1 } || conditionsA.volatiles['confusion']) {
 				res.unviable.push(decisions[i]);
-			} else if (move.flags && move.flags['contact'] && (pokeB.hasAbility({'ironbarbs':1, 'roughskin':1}) || pokeB.hasItem('rockyhelmet'))) {
+			} else if (move.flags && move.flags['contact'] && (pokeB.hasAbility({ 'ironbarbs': 1, 'roughskin': 1 }) || pokeB.hasItem('rockyhelmet'))) {
 				res.unviable.push(decisions[i]);
-			} else if (move.id === 'partingshot' && pokeB.hasAbility({'contrary':1, 'magicbounce':1})) {
+			} else if (move.id === 'partingshot' && pokeB.hasAbility({ 'contrary': 1, 'magicbounce': 1 })) {
 				res.unviable.push(decisions[i]);
 			} else if (move.id === 'batonpass' && (conditionsA.volatiles['perish3'] || conditionsA.volatiles['perish2'] || conditionsA.volatiles['perish1'])) {
 				res.unviable.push(decisions[i]);
@@ -865,7 +866,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				}
 				continue;
 			case 'substitute':
-				if (conditionsA.volatiles['substitute'] || ev.r >= 50 || pokeA.hp <= 25 || (pokeA.hp < 50 && speA <= speB) || battle.self.active[0].helpers.lastMove === 'substitute' || pokeA.status in {'psn':1, 'tox':1} || conditionsB.volatiles['taunt']) {
+				if (conditionsA.volatiles['substitute'] || ev.r >= 50 || pokeA.hp <= 25 || (pokeA.hp < 50 && speA <= speB) || battle.self.active[0].helpers.lastMove === 'substitute' || pokeA.status in { 'psn': 1, 'tox': 1 } || conditionsB.volatiles['taunt']) {
 					res.unviable.push(decisions[i]);
 				} else if (pokeB.category === 'Status' || ev.r <= 25) {
 					res.obligatory.push(decisions[i]);
@@ -874,7 +875,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				}
 				continue;
 			case 'leechseed':
-				if (!conditionsB.volatiles['leechseed'] && !pokeB.hasAbility({'liquidooze':1, 'magicguard':1}) && !pokeB.hasType('Grass', conditionsB)) res.viable.push(decisions[i]);
+				if (!conditionsB.volatiles['leechseed'] && !pokeB.hasAbility({ 'liquidooze': 1, 'magicguard': 1 }) && !pokeB.hasType('Grass', conditionsB)) res.viable.push(decisions[i]);
 				else res.unviable.push(decisions[i]);
 				continue;
 			case 'endeavor':
@@ -894,13 +895,13 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				else if (!pokeA.item) res.unviable.push(decisions[i]);
 				continue;
 			case 'destinybond':
-				if (battle.self.active[0].helpers.lastMove === 'destinybond' || conditionsB.volatiles['dynamax'] || pokeA.hp > 25 || (speA < speB && !pokeA.hasAbility('prankster') && !pokeA.hasItem('custapberry'))) res.unviable.push(decisions[i]);
+				if (battle.self.active[0].helpers.lastMove === 'destinybond' || conditionsB.volatiles.dynamax || pokeA.hp > 25 || (speA < speB && !pokeA.hasAbility('prankster') && !pokeA.hasItem('custapberry'))) res.unviable.push(decisions[i]);
 				else res.viable.push(decisions[i]);
 				continue;
 			case 'disable':
 			case 'encore':
 			case 'torment':
-				if (conditionsB.volatiles[move.volatileStatus] || conditionsB.volatiles['dynamax'] || pokeB.hasAbility('aromaveil')) {
+				if (conditionsB.volatiles[move.volatileStatus] || conditionsB.volatiles.dynamax || pokeB.hasAbility('aromaveil')) {
 					res.unviable.push(decisions[i]);
 				} else if (move.id !== 'torment' && !(battle.foe.active[0].helpers.lastMove && battle.turn - battle.foe.active[0].helpers.sw > 1 && battle.foe.active[0].helpers.lastMoveTurn > battle.foe.active[0].helpers.sw)) {
 					res.unviable.push(decisions[i]);
@@ -911,14 +912,14 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				}
 				continue;
 			case 'attract':
-				if (conditionsB.volatiles['attract'] || pokeB.hasAbility({'aromaveil':1, 'oblivious':1}) || !(pokeA.gender + pokeB.gender in {'FM':1, 'MF':1})) {
+				if (conditionsB.volatiles['attract'] || pokeB.hasAbility({ 'aromaveil': 1, 'oblivious': 1 }) || !(pokeA.gender + pokeB.gender in { 'FM': 1, 'MF': 1 })) {
 					res.unviable.push(decisions[i]);
 				} else {
 					res.viable.push(decisions[i]);
 				}
 				continue;
 			case 'taunt':
-				if (conditionsB.volatiles[move.volatileStatus] || !hasStatus || pokeB.hasAbility({'aromaveil':1, 'oblivious':1})) {
+				if (conditionsB.volatiles[move.volatileStatus] || !hasStatus || pokeB.hasAbility({ 'aromaveil': 1, 'oblivious': 1 })) {
 					res.unviable.push(decisions[i]);
 				} else if (pokeB.category === 'Status' || ev.rpc <= 25) {
 					res.obligatory.push(decisions[i]);
@@ -931,7 +932,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 					if (!conditionsB.volatiles[move.volatileStatus]) res.viable.push(decisions[i]);
 					else res.unviable.push(decisions[i]);
 				} else {
-					let curseBoosts = (pokeA.hasAbility('contrary') ? {'spe':1} : {'atk':1, 'def':1});
+					let curseBoosts = (pokeA.hasAbility('contrary') ? { 'spe': 1 } : { 'atk': 1, 'def': 1 });
 					let alCurBoost = 0;
 					for (var cb in curseBoosts) {
 						alCurBoost++;
@@ -1019,7 +1020,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			case 'baddybad':
 				if (conditionsA.side['reflect'] || conditionsA.volatiles['reflect']) { // Gen 1
 					res.unviable.push(decisions[i]);
-				} else if (pokeB.category in {'Mixed':1, 'Physical':1}) {
+				} else if (pokeB.category in { 'Mixed': 1, 'Physical': 1 }) {
 					res.obligatory.push(decisions[i]);
 				} else {
 					res.viable.push(decisions[i]);
@@ -1029,7 +1030,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			case 'glitzyglow':
 				if (conditionsA.side['lightscreen']) {
 					res.unviable.push(decisions[i]);
-				} else if (pokeB.category in {'Mixed':1, 'Special':1}) {
+				} else if (pokeB.category in { 'Mixed': 1, 'Special': 1 }) {
 					res.obligatory.push(decisions[i]);
 				} else {
 					res.viable.push(decisions[i]);
@@ -1084,7 +1085,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 				let clearedStats = ['atk', 'def', 'spa', 'spd', 'spe'];
 				if (move.id === 'guardswap') clearedStats = ['def', 'spd'];
 				if (move.id === 'powerswap') clearedStats = ['atk', 'spa'];
-				let clearedBoosts = {total: 0};
+				let clearedBoosts = { total: 0 };
 				for (let stat of clearedStats) {
 					if (conditionsB.boosts[stat] > 0) {
 						clearedBoosts[stat] = 1;
@@ -1104,7 +1105,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			case 'relicsong':
 				if (pokeA.template.name === 'Meloetta') res.viable.push(decisions[i]);
 				continue;
-				
+
 		}
 		if (move.target === 'allySide' && move.sideCondition) {
 			if (!conditionsA.side[toId(move.sideCondition)]) {
@@ -1117,15 +1118,15 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		if (move.id in singleTurnMoves) {
 			if (battle.self.active[0].helpers.lastMove in singleTurnMoves) {
 				res.unviable.push(decisions[i]);
-			} else if ((move.id === 'maxguard') !== !!conditionsB.volatiles['dynamax']) {
+			} else if ((move.id === 'maxguard') !== !!conditionsB.volatiles.dynamax) {
 				res.unviable.push(decisions[i]);
 			} else if (pokeA.hasAbility('speedboost') && !(conditionsA.boosts.spe > 0)) {
 				res.obligatory.push(decisions[i]);
 			} else if (move.id === 'kingsshield' && pokeA.template.name === 'Aegislash-Blade' && speA <= speB) {
 				res.obligatory.push(decisions[i]);
-			// protect on badly poisoned foe, but don't be too predictable to prevent safe switch-in or setup
-			// needs to be obligatory to be chosen instead of a switch-out
-			} else if (pokeB.status === 'tox' && !(pokeA.status in {'brn':1, 'psn':1, 'tox':1}) && Math.random() >= 0.5) {
+				// protect on badly poisoned foe, but don't be too predictable to prevent safe switch-in or setup
+				// needs to be obligatory to be chosen instead of a switch-out
+			} else if (pokeB.status === 'tox' && !(pokeA.status in { 'brn': 1, 'psn': 1, 'tox': 1 }) && Math.random() >= 0.5) {
 				res.obligatory.push(decisions[i]);
 			} else {
 				res.viable.push(decisions[i]);
@@ -1137,7 +1138,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		if (!pokeA.hasAbility('sheerforce') && move.secondary && move.secondary.status && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && pokeA.hasAbility('serenegrace'))) && (move.accuracy > 70 || pokeA.hasAbility('noguard'))) {
 			moveStatus = move.secondary.status;
 		}
-		if (move.id === 'psychoshift' && !(pokeA.status in {'frz':1, 'slp':1})) moveStatus = pokeA.status;
+		if (move.id === 'psychoshift' && !(pokeA.status in { 'frz': 1, 'slp': 1 })) moveStatus = pokeA.status;
 		if (move.id === 'fling' && pokeA.item && !pokeA.hasAbility('sheerforce') && !pokeA.hasAbility('klutz')) {
 			switch (pokeA.item.id) {
 				case 'lightball':
@@ -1162,8 +1163,8 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			}
 			if (!supressedWeather) {
 				if (
-					(toId(battle.conditions.weather) in {'desolateland':1, 'sunnyday':1} && pokeB.hasAbility('leafguard')) ||
-					(toId(battle.conditions.weather) in {'primordealsea':1, 'raindance':1} && pokeB.hasAbility('hydration'))
+					(toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 } && pokeB.hasAbility('leafguard')) ||
+					(toId(battle.conditions.weather) in { 'primordealsea': 1, 'raindance': 1 } && pokeB.hasAbility('hydration'))
 				) {
 					res.unviable.push(decisions[i]);
 					continue;
@@ -1171,25 +1172,25 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			}
 			switch (moveStatus) {
 				case 'par':
-					if ((speA > speB && !(!conditionsB.boosts.spe || conditionsB.boosts.spe <= 0) && !pokeA.hasAbility('prankster')) || (battle.gen > 5 && pokeB.hasType('Electric', conditionsB)) || pokeB.hasAbility({'guts':1, 'limber':1})) {
+					if ((speA > speB && !(!conditionsB.boosts.spe || conditionsB.boosts.spe <= 0) && !pokeA.hasAbility('prankster')) || (battle.gen > 5 && pokeB.hasType('Electric', conditionsB)) || pokeB.hasAbility({ 'guts': 1, 'limber': 1 })) {
 						res.unviable.push(decisions[i]);
 						continue;
 					}
 					break;
 				case 'brn':
-					if (!(pokeB.category in {'Mixed':1, 'Physical':1}) || pokeB.hasType('Fire', conditionsB) || pokeB.hasAbility({'flareboost':1, 'guts':1, 'waterbubble':1, 'waterveil':1})) {
+					if (!(pokeB.category in { 'Mixed': 1, 'Physical': 1 }) || pokeB.hasType('Fire', conditionsB) || pokeB.hasAbility({ 'flareboost': 1, 'guts': 1, 'waterbubble': 1, 'waterveil': 1 })) {
 						res.unviable.push(decisions[i]);
 						continue;
 					}
 					break;
 				case 'tox':
-					if ((pokeB.hasType(['Poison', 'Steel'], conditionsB) && !pokeA.hasAbility('corrosion')) || (pokeB.hasAbility({'guts':1, 'immunity':1, 'magicguard':1, 'pastelveil':1, 'toxicboost':1}))) {
+					if ((pokeB.hasType(['Poison', 'Steel'], conditionsB) && !pokeA.hasAbility('corrosion')) || (pokeB.hasAbility({ 'guts': 1, 'immunity': 1, 'magicguard': 1, 'pastelveil': 1, 'toxicboost': 1 }))) {
 						res.unviable.push(decisions[i]);
 						continue;
 					} else if (battle.gen > 2) {
 						let obligatory = false;
 						for (var j = 0; j < movesB.length; j++) {
-							if ((movesB[j].heal && movesB[j].heal[0] / movesB[j].heal[1] >= 0.33) || movesB[j].id in {'leechseed':1, 'moonlight':1, 'morningsun':1, 'rest':1, 'sappyseed':1, 'shoreup':1, 'strengthsap':1, 'synthesis':1, 'wish':1}) obligatory = true;
+							if ((movesB[j].heal && movesB[j].heal[0] / movesB[j].heal[1] >= 0.33) || movesB[j].id in { 'leechseed': 1, 'moonlight': 1, 'morningsun': 1, 'rest': 1, 'sappyseed': 1, 'shoreup': 1, 'strengthsap': 1, 'synthesis': 1, 'wish': 1 }) obligatory = true;
 						}
 						if (obligatory) {
 							res.obligatory.push(decisions[i]);
@@ -1201,7 +1202,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 					res.unviable.push(decisions[i]);
 					continue;
 				case 'slp':
-					if (pokeB.hasAbility({'insomnia':1, 'sweetveil':1, 'vitalspirit':1}) || (move.id === 'darkvoid' && pokeA.template.species !== 'Darkrai') || (battle.rules.indexOf('Sleep Clause Mod') >= 0 && alreadyOppSleeping(battle))) {
+					if (pokeB.hasAbility({ 'insomnia': 1, 'sweetveil': 1, 'vitalspirit': 1 }) || (move.id === 'darkvoid' && pokeA.template.species !== 'Darkrai') || (battle.rules.indexOf('Sleep Clause Mod') >= 0 && alreadyOppSleeping(battle))) {
 						res.unviable.push(decisions[i]);
 						continue;
 					}
@@ -1223,10 +1224,10 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			}
 			continue;
 		}
-		if ((move.heal && move.heal[0] / move.heal[1] >= 0.33) || move.id in {'moonlight':1, 'morningsun':1, 'rest':1, 'shoreup':1, 'strengthsap':1, 'synthesis':1, 'wish':1}) {
+		if ((move.heal && move.heal[0] / move.heal[1] >= 0.33) || move.id in { 'moonlight': 1, 'morningsun': 1, 'rest': 1, 'shoreup': 1, 'strengthsap': 1, 'synthesis': 1, 'wish': 1 }) {
 			if (ev.r >= 50 || (pokeA.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3)) {
 				res.unviable.push(decisions[i]);
-			} else if (move.id in {'moonlight':1, 'morningsun':1, 'synthesis':1} && !supressedWeather && toId(battle.conditions.weather) in {'primordialsea':1, 'raindance':1, 'sandstorm':1, 'hail':1}) {
+			} else if (move.id in { 'moonlight': 1, 'morningsun': 1, 'synthesis': 1 } && !supressedWeather && toId(battle.conditions.weather) in { 'primordialsea': 1, 'raindance': 1, 'sandstorm': 1, 'hail': 1 }) {
 				res.unviable.push(decisions[i]);
 			} else if (move.id === 'wish' && battle.self.active[0].helpers.lastMove === 'wish') {
 				res.unviable.push(decisions[i]);
@@ -1260,7 +1261,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			let moves = battle.request.side.pokemon[0].moves;
 			for (var j = 0; j < moves.length; j++) {
 				let move2 = Data.getMove(moves[j], battle.gen, battle.id);
-				if ((move2.category === 'Physical' && !(move2.id in {'bodypress':1, 'flamecharge':1, 'flipturn':1, 'foulplay':1, 'nuzzle':1, 'rapidspin':1, 'uturn':1})) || move2.id === 'photongeyser') hasPhysical = true;
+				if ((move2.category === 'Physical' && !(move2.id in { 'bodypress': 1, 'flamecharge': 1, 'flipturn': 1, 'foulplay': 1, 'nuzzle': 1, 'rapidspin': 1, 'uturn': 1 })) || move2.id === 'photongeyser') hasPhysical = true;
 				if (move2.category === 'Special' || move2.id === 'naturepower') hasSpecial = true;
 			}
 			if ((move.boosts.atk > 0 && !(move.boosts.spa > 0) && !hasPhysical) || (move.boosts.spa > 0 && !(move.boosts.atk > 0) && !hasSpecial)) {
@@ -1291,7 +1292,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		}
 		if (move.weather && battle.conditions.weather) {
 			let weather = toId(battle.conditions.weather);
-			if (weather && ((weather in {'desolateland':1, 'primordialsea':1, 'deltastream':1}) || weather === toId(move.weather))) {
+			if (weather && ((weather in { 'desolateland': 1, 'primordialsea': 1, 'deltastream': 1 }) || weather === toId(move.weather))) {
 				res.unviable.push(decisions[i]);
 			} else {
 				res.viable.push(decisions[i]);
@@ -1356,13 +1357,16 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 
 		if (battle.request.active[0].canMegaEvo || battle.request.side.pokemon[0].canMegaEvo) {
 			if (pokeA.hasAbility('speedboost') && !(conditionsA.boosts > 0)) {
-				if (des.mega) continue; // don't mega immediately with speed boost
+				if (des.transformation === 'mega') continue; // don't mega immediately with speed boost
 			} else {
-				if (!des.mega) continue; // Mega evolve by default
+				if (des.transformation !== 'mega') continue; // Mega evolve by default
 			}
 		}
 
-		if (des.dynamax && !(conditionsB.volatiles['dynamax'] && pokeA.hp > 50) && !selfLastPokemon(battle)) {
+		if (des.transformation === 'dynamax' && !(conditionsB.volatiles.dynamax && pokeA.hp > 50) && !selfLastPokemon(battle)) {
+			if (!((conditionsA.boosts.atk > 0 || conditionsA.boosts.spa > 0) && pokeA.hp > 50) && !(conditionsA.boosts.spe > 0)) continue;
+		}
+		if (des.transformation === 'terastallize' && !selfLastPokemon(battle)) {
 			if (!((conditionsA.boosts.atk > 0 || conditionsA.boosts.spa > 0) && pokeA.hp > 50) && !(conditionsA.boosts.spe > 0)) continue;
 		}
 
@@ -1378,30 +1382,30 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 
 		// bad moves
 		if (move.selfdestruct && (pokeA.hp > 25 || selfLastPokemon(battle))) continue;
-		if (move.id in {'bide':1, 'lastresort':1}) continue;
+		if (move.id in { 'bide': 1, 'lastresort': 1 }) continue;
 		if (move.id === 'dreameater' && pokeB.status !== 'slp') continue;
-		if (move.id in {'fakeout':1, 'firstimpression':1} && (battle.self.active[0].helpers.sw !== battle.turn || conditionsB.volatiles['dynamax'])) continue;
-		if (move.id === 'focuspunch' && !(conditionsA.volatiles['substitute'] || pokeB.status in {'frz':1, 'slp':1})) continue;
-		if (move.id in {'hurricane':1, 'thunder':1} && toId(battle.conditions.weather) in {'desolateland':1, 'sunnyday':1}) continue;
-		if (move.id in {'endeavor':1, 'snore':1}) continue; // handled as support moves
-		if (move.id in {'solarbeam':1, 'solarblade':1} && !supressedWeather && !(toId(battle.conditions.weather) in {'desolateland':1, 'sunnyday':1})) continue;
+		if (move.id in { 'fakeout': 1, 'firstimpression': 1 } && (battle.self.active[0].helpers.sw !== battle.turn || conditionsB.volatiles.dynamax)) continue;
+		if (move.id === 'focuspunch' && !(conditionsA.volatiles['substitute'] || pokeB.status in { 'frz': 1, 'slp': 1 })) continue;
+		if (move.id in { 'hurricane': 1, 'thunder': 1 } && toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 }) continue;
+		if (move.id in { 'endeavor': 1, 'snore': 1 }) continue; // handled as support moves
+		if (move.id in { 'solarbeam': 1, 'solarblade': 1 } && !supressedWeather && !(toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 })) continue;
 
 		let dmg = Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen, battle.id).getAvg();
 
 		let hp = pokeB.hp;
-		if (conditionsB.volatiles['dynamax']) {
+		if (conditionsB.volatiles.dynamax) {
 			hp *= 2;
 			if (speA < speB && move.priority <= 0 && pokeB.template.species.startsWith('Alcremie')) hp = Math.min(200, hp + 33.3);
-		} else if (speA < speB && move.priority <= 0 && !(pokeB.status in {'frz':1, 'slp':1}) && !conditionsB.volatiles['healblock'] && !conditionsB.volatiles['taunt']) {
+		} else if (speA < speB && move.priority <= 0 && !(pokeB.status in { 'frz': 1, 'slp': 1 }) && !conditionsB.volatiles['healblock'] && !conditionsB.volatiles['taunt']) {
 			let movesB = battle.foe.active[0].moves;
 			let foeRecoveryHP = 0;
 			for (var j = 0; j < movesB.length; j++) {
 				if (movesB[j].heal) foeRecoveryHP = Math.max(foeRecoveryHP, (movesB[j].heal[0] / movesB[j].heal[1]) * 100);
 				if (movesB[j].id === 'purify' && pokeA.status) foeRecoveryHP = Math.max(foeRecoveryHP, 50);
-				if (move.id in {'moonlight':1, 'morningsun':1, 'synthesis':1}) {
+				if (move.id in { 'moonlight': 1, 'morningsun': 1, 'synthesis': 1 }) {
 					if (supressedWeather || !battle.conditions.weather) {
 						foeRecoveryHP = Math.max(foeRecoveryHP, 50);
-					} else if (toId(battle.conditions.weather) in {'desolateland':1, 'sunnyday':1}) {
+					} else if (toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 }) {
 						foeRecoveryHP = Math.max(foeRecoveryHP, 66.6);
 					} else {
 						foeRecoveryHP = Math.max(foeRecoveryHP, 25);
@@ -1420,7 +1424,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 			if (hp < 87.5) continue;
 			if (!pokeB.hasAbility('wonderguard')) pc = 74.9;
 		}
-		if (move.id in {'naturesmadness':1, 'superfang':1}) {
+		if (move.id in { 'naturesmadness': 1, 'superfang': 1 }) {
 			if (hp < 87.5) continue;
 			if (!pokeB.hasAbility('wonderguard') && !battle.conditions.inversebattle && TypeChart.getMultipleEff(move.type, pokeB.getTypes(conditionsB), battle.gen, false, false, battle.id) > 0) pc = 49.9;
 		}
@@ -1439,13 +1443,13 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 			let afterMoveStatus = pokeB.status;
 			if (afterMoveStatus) {
 				if (afterMoveStatus === 'brn' && move.id === 'sparklingaria') afterMoveStatus = null;
-				if (afterMoveStatus === 'slp' && move.id in {'wakeupslap':1, 'maxlightning':1}) afterMoveStatus = null;
+				if (afterMoveStatus === 'slp' && move.id in { 'wakeupslap': 1, 'maxlightning': 1 }) afterMoveStatus = null;
 			} else if ((!conditionsB.volatiles['substitute'] || pokeA.hasAbility('infiltrator')) && !(battle.conditions['mistyterrain'] && pokeB.isGrounded(conditionsB))) {
 				if (!pokeA.hasAbility('sheerforce') && move.secondary && move.secondary.status && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && pokeA.hasAbility('serenegrace')))) {
 					afterMoveStatus = move.secondary.status;
 				}
 				if (move.id === 'gmaxstunshock') afterMoveStatus = 'psn';
-				if (move.id === 'psychoshift' && !(pokeA.status in {'frz':1, 'slp':1})) afterMoveStatus = pokeA.status;
+				if (move.id === 'psychoshift' && !(pokeA.status in { 'frz': 1, 'slp': 1 })) afterMoveStatus = pokeA.status;
 				if (move.id === 'fling' && pokeA.item && !pokeA.hasAbility('sheerforce') && !pokeA.hasAbility('klutz')) {
 					switch (pokeA.item.id) {
 						case 'flameorb':
@@ -1482,7 +1486,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 			}
 			if (conditionsB.volatiles['curse']) residual -= 25;
 			if (move.id === 'sappyseed' || conditionsB.volatiles['leechseed']) residual -= 12.5;
-			if (move.volatileStatus === 'partiallytrapped' || move.id in {'gmaxcentiferno':1, 'gmaxsandblast':1}) residual -= (pokeA.hasItem('bindingband') ? 100 / 6.0 : 12.5);
+			if (move.volatileStatus === 'partiallytrapped' || move.id in { 'gmaxcentiferno': 1, 'gmaxsandblast': 1 }) residual -= (pokeA.hasItem('bindingband') ? 100 / 6.0 : 12.5);
 		}
 
 		if (move.id !== 'rapidspin' && conditionsA.volatiles['leechseed']) {
@@ -1508,7 +1512,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 					}
 					break;
 				case 'lifeorb':
-					if (!pokeB.hasAbility({'magicguard':1, 'sheerforce':1})) residual -= 10;
+					if (!pokeB.hasAbility({ 'magicguard': 1, 'sheerforce': 1 })) residual -= 10;
 					break;
 				case 'stickybarb':
 					if ((!pokeA.item || !(move.flags && move.flags['contact'])) && !pokeB.hasAbility('magicguard')) residual -= 12.5;
@@ -1517,7 +1521,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		}
 
 		// weather/terrain
-		if (!pokeB.hasAbility({'magicguard':1, 'overcoat':1})) {
+		if (!pokeB.hasAbility({ 'magicguard': 1, 'overcoat': 1 })) {
 			let afterMoveWeather = (supressedWeather ? null : toId(battle.conditions.weather));
 			if (!supressedWeather) {
 				switch (move.id) {
@@ -1540,7 +1544,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 				switch (afterMoveWeather) {
 					case 'desolateland':
 					case 'sunnyday':
-						if (pokeB.hasAbility({'dryskin':1, 'solarpower':1})) residual -= 12.5;
+						if (pokeB.hasAbility({ 'dryskin': 1, 'solarpower': 1 })) residual -= 12.5;
 						break;
 					case 'primordealsea':
 					case 'raindance':
@@ -1550,7 +1554,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 						}
 						break;
 					case 'sandstorm':
-						if (!pokeB.hasType(['Ground', 'Rock', 'Steel'], conditionsB) && !pokeB.hasAbility({'sandforce':1, 'sandrush':1, 'sandveil':1})) residual -= 6.25;
+						if (!pokeB.hasType(['Ground', 'Rock', 'Steel'], conditionsB) && !pokeB.hasAbility({ 'sandforce': 1, 'sandrush': 1, 'sandveil': 1 })) residual -= 6.25;
 						break;
 					case 'hail':
 						if (pokeB.hasAbility('icebody')) {
@@ -1562,27 +1566,27 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 				}
 			}
 		}
-		if (!(move.id in {'genesissupernova':1, 'splinteredstormshards':1, 'maxlightning':1, 'maxmindstorm':1, 'maxstarfall':1, 'gmaxwindrage':1, 'steelroller':1}) && (move.id === 'maxovergrowth' || battle.conditions['grassyterrain']) && !conditionsB.volatiles['healblock'] && pokeB.isGrounded(conditionsB)) residual += 6.25;
+		if (!(move.id in { 'genesissupernova': 1, 'splinteredstormshards': 1, 'maxlightning': 1, 'maxmindstorm': 1, 'maxstarfall': 1, 'gmaxwindrage': 1, 'steelroller': 1 }) && (move.id === 'maxovergrowth' || battle.conditions['grassyterrain']) && !conditionsB.volatiles['healblock'] && pokeB.isGrounded(conditionsB)) residual += 6.25;
 
 		// gmax effects
-		if (move.id in {'gmaxcannonade':1, 'gmaxvinelash':1, 'gmaxvolcalith':1, 'gmaxwildfire':1} && !pokeB.hasAbility('magicguard') && !pokeB.hasType(move.type, conditionsB)) residual -= 100 / 6.0;
+		if (move.id in { 'gmaxcannonade': 1, 'gmaxvinelash': 1, 'gmaxvolcalith': 1, 'gmaxwildfire': 1 } && !pokeB.hasAbility('magicguard') && !pokeB.hasType(move.type, conditionsB)) residual -= 100 / 6.0;
 
 		residual = [residual, residual];
-		if (pokeB.status === 'tox' && !pokeB.hasAbility({'magicguard':1, 'poisonheal':1})) residual[1] -= 6.25;
+		if (pokeB.status === 'tox' && !pokeB.hasAbility({ 'magicguard': 1, 'poisonheal': 1 })) residual[1] -= 6.25;
 		for (var j = 0; j < residual.length; j++) {
 			residual[j] = residual[j] * 100 / hp;
 		}
 		debug('Residual: ' + residual);
 
 		let hazard = Calc.getHazardsDamage(pokeB, conditionsB, battle.conditions, battle.gen, battle.id);
-		if (pokeB.hasAbility({'regenerator':1})) hazard -= 33.3;
+		if (pokeB.hasAbility({ 'regenerator': 1 })) hazard -= 33.3;
 		hazard = hazard * 100 / hp;
 		if (hazard < 0) hazard = 0;
 		if (hazard > 100) hazard = 100;
 
-		if (move.id in {'fakeout':1, 'firstimpression':1}) {
+		if (move.id in { 'fakeout': 1, 'firstimpression': 1 }) {
 			if (pc >= 100 - hazard + Math.min(0, residual[0])) {
-					res.ohko.push(decisions[i]);
+				res.ohko.push(decisions[i]);
 			} else if (TypeChart.getMultipleEff(move.type, pokeB.getTypes(conditionsB), battle.gen, false, !!battle.conditions.inversebattle, battle.id) >= 1) {
 				res.thko.push(decisions[i]);
 			} else {
@@ -1593,7 +1597,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 
 		let authentic = (move.flags && move.flags['authentic']) || pokeA.hasAbility('infiltrator');
 		let sub = (conditionsB.volatiles['substitute'] && !authentic ? 25 * 100 / hp : 0);
-		if (sub === 0 && !pokeA.hasAbility({'moldbreaker':1, 'teravolt':1, 'turboblaze':1, 'neutralizinggas':1})) {
+		if (sub === 0 && !pokeA.hasAbility({ 'moldbreaker': 1, 'teravolt': 1, 'turboblaze': 1, 'neutralizinggas': 1 })) {
 			if (pokeB.template.species === 'Mimikyu' && pokeB.hasAbility('disguise')) sub = 0.1;
 			if (pokeB.template.species === 'Eiscue' && pokeB.hasAbility('iceface') && move.category === 'Physical') sub = 0.1;
 		}
@@ -1601,24 +1605,24 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		let multihit = (move.multihit || move.id === 'beatup' || (pokeA.hasAbility('parentalbond') && !move.selfdestruct && !move.multihit && !(move.flags && move.flags['charge']) && !move.isZ && !move.isMax));
 		let ohkoPrevent = (!multihit && (sub > 0 || (hp >= 100 && (pokeB.hasAbility('sturdy') || pokeB.hasItem('focussash')))));
 
-		if (move.id in {'nuzzle':1, 'rapidspin':1} && (sub > 0 || pc < 100)) continue;
-		if ((des.zMove || des.dynamax) && sub > 0) continue;
+		if (move.id in { 'nuzzle': 1, 'rapidspin': 1 } && (sub > 0 || pc < 100)) continue;
+		if (['zmove', 'dynamax'].includes(des.transformation) && sub > 0) continue;
 		if ((battle.request.active[0].canZMove || battle.request.side.pokemon[0].canZMove) && sub === 0 && pc < 100) {
-			if (!des.zMove && pokeA.item) {
+			if (des.transformation !== 'zmove' && pokeA.item) {
 				if (pokeA.item.zMoveType && pokeA.item.zMoveType === move.type) continue;
 				if (pokeA.item.zMoveFrom && pokeA.item.zMoveFrom === move.name) continue;
 			}
 		}
 
 		let foeCanProtect = false;
-		if (!(move.id in {'gmaxoneblow':1, 'gmaxrapidflow':1}) && !(battle.foe.active[0].helpers.lastMove in singleTurnMoves) && !(pokeB.status in {'frz':1, 'slp':1})) {
+		if (!(move.id in { 'gmaxoneblow': 1, 'gmaxrapidflow': 1 }) && !(battle.foe.active[0].helpers.lastMove in singleTurnMoves) && !(pokeB.status in { 'frz': 1, 'slp': 1 })) {
 			let movesB = battle.foe.active[0].moves;
-			if (conditionsB.volatiles['dynamax']) {
+			if (conditionsB.volatiles.dynamax) {
 				for (var j = 0; j < movesB.length; j++) {
 					if (movesB[j].category === 'Status') foeCanProtect = true;
 				}
 			} else if (move.flags && move.flags['protect'] && (!move.flags['contact'] || !pokeA.hasAbility('unseenfist'))) {
-				const protectMoves = {'protect':1, 'detect':1, 'kingsshield':1, 'quickguard':1, 'spikyshield':1, 'wideguard':1, 'banefulbunker':1, 'obstruct':1};
+				const protectMoves = { 'protect': 1, 'detect': 1, 'kingsshield': 1, 'quickguard': 1, 'spikyshield': 1, 'wideguard': 1, 'banefulbunker': 1, 'obstruct': 1 };
 				for (var j = 0; j < movesB.length; j++) {
 					if (movesB[j].id in protectMoves) foeCanProtect = true;
 				}
@@ -1654,7 +1658,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 	return res;
 };
 
-function getMovesData (battle, decisions) {
+function getMovesData(battle, decisions) {
 	for (let i = 0; i < decisions.length; i++) {
 		let des = decisions[i][0];
 		if (des.type !== 'move') continue;
@@ -1663,7 +1667,7 @@ function getMovesData (battle, decisions) {
 		des.moveData = Object.assign({}, Data.getMove(des.move, battle.gen, battle.id));
 
 		if (des.moveData.category !== 'Status') {
-			if (des.zMove) {
+			if (des.transformation === 'zmove') {
 				let baseMove = Data.getMove(baseMoveName, battle.gen, battle.id);
 				if (pokeA.item && pokeA.item.zMoveType && pokeA.item.zMoveType === baseMove.type) {
 					des.moveData = Object.assign({}, des.moveData);
@@ -1736,7 +1740,7 @@ function getMovesData (battle, decisions) {
 						des.moveData.basePower = 90;
 					}
 				}
-			}		
+			}
 		}
 
 		decisions[i] = [des];
@@ -1745,7 +1749,7 @@ function getMovesData (battle, decisions) {
 	return decisions;
 }
 
-function filterRedundantMaxMoves (decisions) {
+function filterRedundantMaxMoves(decisions) {
 	let maxGmaxPowers = {};
 	for (let des of decisions) {
 		if (des[0].moveData && des[0].moveData.isMax && des[0].moveData.category !== 'Status') {
@@ -1765,7 +1769,7 @@ function filterRedundantMaxMoves (decisions) {
 	return decisions;
 }
 
-function debugBestMove (bestSw, damageMoves, supportMoves) {
+function debugBestMove(bestSw, damageMoves, supportMoves) {
 	debug('Best switch: ' + (bestSw ? bestSw[0].poke : 'none'));
 
 	let tmp;
@@ -1788,7 +1792,7 @@ function debugBestMove (bestSw, damageMoves, supportMoves) {
 	}
 }
 
-function sample (arr) {
+function sample(arr) {
 	return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -1836,10 +1840,10 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		// No switch behind sub
 		if (conditionsA.volatiles['substitute'] && (damageMoves.ohko.length || damageMoves.thko.length || damageMoves['3hko'].length)) bestSwitch = null;
 		// No switch when dynamaxed
-		if (conditionsA.volatiles['dynamax']) bestSwitch = null;
+		if (conditionsA.volatiles.dynamax) bestSwitch = null;
 
 		if (conditionsB.volatiles['substitute'] && !damageMoves.subbreak.length && !damageMoves.hasMultihit && !damageMoves.hasAuthentic && !supportMoves.hasAuthentic) switchIfNoOption = true;
-		if (pokeA.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3 && !pokeA.hasAbility({'magicguard':1, 'poisonheal':1})) switchIfNoOption = true;
+		if (pokeA.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3 && !pokeA.hasAbility({ 'magicguard': 1, 'poisonheal': 1 })) switchIfNoOption = true;
 		if (pokeA.status && pokeA.hasAbility('naturalcure')) switchIfNoOption = true;
 		if (conditionsA.volatiles['curse'] || conditionsA.volatiles['leechseed'] || (!battle.conditions['trickroom'] && speANoBoost > speB && speA < speB && conditionsA.boosts.spe < 0)) switchIfNoOption = true;
 
@@ -1873,7 +1877,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	let filteredMoves = [];
 
 	// multihit or authentic if sub
-	if (conditionsB.volatiles['substitute'] && !pokeA.hasAbility({'infiltrator':1, 'parentalbond':1})) {
+	if (conditionsB.volatiles['substitute'] && !pokeA.hasAbility({ 'infiltrator': 1, 'parentalbond': 1 })) {
 		filteredMoves = [];
 		for (var i = 0; i < finalDamageMoves.length; i++) {
 			var move = finalDamageMoves[i][0].moveData;
@@ -1896,10 +1900,10 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	// multihit if sub/disguise/ice face
 	if (
 		(
-			conditionsB.volatiles['substitute'] || 
+			conditionsB.volatiles['substitute'] ||
 			(pokeB.template.species === 'Mimikyu' && pokeB.hasAbility('disguise')) ||
 			(pokeB.template.species === 'Eiscue' && pokeB.hasAbility('iceface'))
-		) && !pokeA.hasAbility({'infiltrator':1, 'parentalbond':1})
+		) && !pokeA.hasAbility({ 'infiltrator': 1, 'parentalbond': 1 })
 	) {
 		filteredMoves = [];
 		for (var i = 0; i < finalDamageMoves.length; i++) {
@@ -1923,7 +1927,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 			filteredMoves.push(finalDamageMoves[i]);
 		} else if (priority > maxPriority) {
 			maxPriority = move.priority;
-			filteredMoves = [finalDamageMoves[i]];	
+			filteredMoves = [finalDamageMoves[i]];
 		}
 	}
 	if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
@@ -1934,7 +1938,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	for (var i = 0; i < finalDamageMoves.length; i++) {
 		let move = finalDamageMoves[i][0].moveData;
 		if (!(move.flags && (move.flags['recharge'] || (move.flags['charge'] && !pokeA.hasItem('whiteherb'))))) filteredMoves.push(finalDamageMoves[i]);
-		if (move.id in {'solarbeam':1, 'solarblade':1} && !supressedWeather && toId(battle.conditions.weather) in {'desolateland':1, 'sunnyday':1}) filteredMoves.push(finalDamageMoves[i]);
+		if (move.id in { 'solarbeam': 1, 'solarblade': 1 } && !supressedWeather && toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 }) filteredMoves.push(finalDamageMoves[i]);
 	}
 	if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 
@@ -1956,8 +1960,8 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		for (var i = 0; i < finalDamageMoves.length; i++) {
 			let move = finalDamageMoves[i][0].moveData;
 			if (!pokeA.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && pokeA.hasAbility('serenegrace'))) && move.secondary.boosts && (move.secondary.boosts.def || move.secondary.boosts.spd || (move.secondary.boosts.spe && speA <= speB))) filteredMoves.push(finalDamageMoves[i]);
-			if (move.id in {'maxdarkness':1, 'maxphantasm':1}) filteredMoves.push(finalDamageMoves[i]);
-			if (speA <= speB && move.id in {'maxstrike':1, 'gmaxfoamburst':1}) filteredMoves.push(finalDamageMoves[i]);
+			if (move.id in { 'maxdarkness': 1, 'maxphantasm': 1 }) filteredMoves.push(finalDamageMoves[i]);
+			if (speA <= speB && move.id in { 'maxstrike': 1, 'gmaxfoamburst': 1 }) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 	}
@@ -1971,16 +1975,16 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 
 	// max accuracy
-	if (!(conditionsA.boosts.accuracy > 0) && !(conditionsB.boosts.evasion < 0) && !pokeA.hasAbility({'compoundeyes':1, 'noguard':1, 'victorystar':1})) {
+	if (!(conditionsA.boosts.accuracy > 0) && !(conditionsB.boosts.evasion < 0) && !pokeA.hasAbility({ 'compoundeyes': 1, 'noguard': 1, 'victorystar': 1 })) {
 		let maxAccuracy = 0;
 		for (var i = 0; i < finalDamageMoves.length; i++) {
 			let move = finalDamageMoves[i][0].moveData;
 			let accuracy = move.finalDamageMoves;
-			if (move.id in {'tripleaxel':1, 'triplekick':1} && !pokeA.hasAbility('skilllink')) accuracy = 73;
+			if (move.id in { 'tripleaxel': 1, 'triplekick': 1 } && !pokeA.hasAbility('skilllink')) accuracy = 73;
 			if (!supressedWeather) {
-				if (move.id in {'hurricane':1, 'thunder':1}) {
-					if (toId(battle.conditions.weather) in {'primordealsea':1, 'raindance':1}) accuracy = true;
-					if (toId(battle.conditions.weather) in {'desolateland':1, 'sunnyday':1}) accuracy = 50;
+				if (move.id in { 'hurricane': 1, 'thunder': 1 }) {
+					if (toId(battle.conditions.weather) in { 'primordealsea': 1, 'raindance': 1 }) accuracy = true;
+					if (toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 }) accuracy = 50;
 				}
 				if (move.id === 'blizzard' && toId(battle.conditions.weather) === 'hail') accuracy = true;
 			}
@@ -2017,10 +2021,17 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 	}
 
+	// prefer terastal
+	filteredMoves = [];
+	for (var i = 0; i < finalDamageMoves.length; i++) {
+		if (finalDamageMoves[i][0].transformation === 'terastallize') filteredMoves.push(finalDamageMoves[i]);
+	}
+	if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
+
 	// no z or max
 	filteredMoves = [];
 	for (var i = 0; i < finalDamageMoves.length; i++) {
-		if (!finalDamageMoves[i][0].zMove && !finalDamageMoves[i][0].dynamax) filteredMoves.push(finalDamageMoves[i]);
+		if (!['zmove', 'dynamax'].includes(finalDamageMoves[i][0].transformation)) filteredMoves.push(finalDamageMoves[i]);
 	}
 	if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 
@@ -2035,11 +2046,11 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	}
 
 	// flinch
-	if (!damageMoves.ohko.length && !conditionsB.volatiles['dynamax'] && !pokeA.hasAbility('sheerforce') && !pokeA.hasItem({'kingsrock':1, 'razorfang':1})) {
+	if (!damageMoves.ohko.length && !conditionsB.volatiles.dynamax && !pokeA.hasAbility('sheerforce') && !pokeA.hasItem({ 'kingsrock': 1, 'razorfang': 1 })) {
 		filteredMoves = [];
 		for (var i = 0; i < finalDamageMoves.length; i++) {
 			let move = finalDamageMoves[i][0].moveData;
-			if ((move.secondary && move.secondary.volatileStatus === 'flinch') || move.id in {'firefang':1, 'icefang':1, 'thunderfang':1}) filteredMoves.push(finalDamageMoves[i]);
+			if ((move.secondary && move.secondary.volatileStatus === 'flinch') || move.id in { 'firefang': 1, 'icefang': 1, 'thunderfang': 1 }) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 	}
@@ -2052,7 +2063,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 			if (move.drain && !pokeB.hasAbility('liquidooze')) filteredMoves.push(finalDamageMoves[i]);
 			if (move.id === 'gmaxfinale') filteredMoves.push(finalDamageMoves[i]);
 			if (move.id === 'maxovergrowth' && pokeA.isGrounded(conditionsA) && !pokeB.isGrounded(conditionsA)) filteredMoves.push(finalDamageMoves[i]);
-			if (move.id === 'sappyseed' && !pokeB.hasType('Grass', conditionsB) && !pokeB.hasAbility({'liquidooze':1, 'magicguard':1})) filteredMoves.push(finalDamageMoves[i]);
+			if (move.id === 'sappyseed' && !pokeB.hasType('Grass', conditionsB) && !pokeB.hasAbility({ 'liquidooze': 1, 'magicguard': 1 })) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 	}
@@ -2063,7 +2074,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		for (var i = 0; i < finalDamageMoves.length; i++) {
 			let move = finalDamageMoves[i][0].moveData;
 			if (!pokeA.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && pokeA.hasAbility('serenegrace'))) && move.secondary.self && move.secondary.self.boosts && (move.secondary.self.boosts.def || move.secondary.self.boosts.spd)) filteredMoves.push(finalDamageMoves[i]);
-			if (move.id in {'maxquake':1, 'maxsteelspike':1}) filteredMoves.push(finalDamageMoves[i]);
+			if (move.id in { 'maxquake': 1, 'maxsteelspike': 1 }) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 	}
@@ -2074,7 +2085,7 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 		for (var i = 0; i < finalDamageMoves.length; i++) {
 			let move = finalDamageMoves[i][0].moveData;
 			if (!pokeA.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && pokeA.hasAbility('serenegrace'))) && move.secondary.boosts && (move.secondary.boosts.atk || move.secondary.boosts.spa)) filteredMoves.push(finalDamageMoves[i]);
-			if (move.id in {'maxflutterby':1, 'maxwyrmwind':1}) filteredMoves.push(finalDamageMoves[i]);
+			if (move.id in { 'maxflutterby': 1, 'maxwyrmwind': 1 }) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 	}
@@ -2090,10 +2101,10 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	}
 
 	// no contact
-	if (!pokeA.hasAbility({'toughclaws':1, 'unseenfist':1}) && !pokeA.hasItem('protectivepads')) {
+	if (!pokeA.hasAbility({ 'toughclaws': 1, 'unseenfist': 1 }) && !pokeA.hasItem('protectivepads')) {
 		filteredMoves = [];
 		for (var i = 0; i < finalDamageMoves.length; i++) {
-			let move =finalDamageMoves[i][0].moveData;
+			let move = finalDamageMoves[i][0].moveData;
 			if (!move.flags || !move.flags['contact']) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
@@ -2108,11 +2119,11 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 	let foeHasSwitch = false;
 	for (var i = 0; i < movesB.length; i++) {
 		if (movesB[i].selfSwitch) {
-			if (movesB[i].id === 'partingshot' && pokeA.hasAbility({'contrary':1, 'magicbounce':1})) continue;
+			if (movesB[i].id === 'partingshot' && pokeA.hasAbility({ 'contrary': 1, 'magicbounce': 1 })) continue;
 			if (movesB[i].category !== 'Status') {
 				if ((movesB[i].type === 'Electric' && pokeA.hasType('Ground', conditionsA)) || pokeA.hasAbility('wonderguard')) continue;
 			}
-			if (movesB[i].flags && movesB[i].flags['contact'] && (pokeA.hasAbility({'ironbarbs':1, 'roughskin':1}) || pokeA.hasItem('rockyhelmet'))) continue;
+			if (movesB[i].flags && movesB[i].flags['contact'] && (pokeA.hasAbility({ 'ironbarbs': 1, 'roughskin': 1 }) || pokeA.hasItem('rockyhelmet'))) continue;
 			foeHasSwitch = true;
 		}
 	}
@@ -2228,7 +2239,7 @@ var getBestLead = exports.getBestLead = function (battle, decisions) {
 			let sideId = decisions[i][0].team[0];
 			let moves = battle.request.side.pokemon[sideId].moves;
 			for (var j = 0; j < moves.length; j++) {
-				if (moves[j] in {'spikes':1, 'stealthrock':1, 'stickyweb':1, 'toxicspikes':1}) {
+				if (moves[j] in { 'spikes': 1, 'stealthrock': 1, 'stickyweb': 1, 'toxicspikes': 1 }) {
 					leads.push(decisions[i]);
 					break;
 				}
@@ -2241,7 +2252,7 @@ var getBestLead = exports.getBestLead = function (battle, decisions) {
 		for (var i = 0; i < decisions.length; i++) {
 			let sideId = decisions[i][0].team[0];
 			let pokeA = sideIdToPokemon[sideId];
-			if (pokeA.hasAbility({'drizzle':1, 'drought':1, 'sandstream':1, 'snowwarning':1}) && !pokeA.hasItem({'blueorb':1, 'redorb':1})) {
+			if (pokeA.hasAbility({ 'drizzle': 1, 'drought': 1, 'sandstream': 1, 'snowwarning': 1 }) && !pokeA.hasItem({ 'blueorb': 1, 'redorb': 1 })) {
 				leads.push(decisions[i]);
 			}
 		}
@@ -2253,7 +2264,7 @@ var getBestLead = exports.getBestLead = function (battle, decisions) {
 			let sideId = decisions[i][0].team[0];
 			let pokeA = sideIdToPokemon[sideId];
 			for (let move of battle.request.side.pokemon[sideId].moves) {
-				if (move in {'lightscreen':1, 'reflect':1} || (move === 'auroraveil' && pokeA.hasAbility('snowwarning'))) {
+				if (move in { 'lightscreen': 1, 'reflect': 1 } || (move === 'auroraveil' && pokeA.hasAbility('snowwarning'))) {
 					leads.push(decisions[i]);
 					break;
 				}
@@ -2271,7 +2282,7 @@ var getBestLead = exports.getBestLead = function (battle, decisions) {
 				continue;
 			}
 			for (let move of battle.request.side.pokemon[sideId].moves) {
-				if (move in {'defog':1, 'magiccoat':1, 'rapidspin':1}) {
+				if (move in { 'defog': 1, 'magiccoat': 1, 'rapidspin': 1 }) {
 					leads.push(decisions[i]);
 					break;
 				}
@@ -2289,7 +2300,7 @@ var getBestLead = exports.getBestLead = function (battle, decisions) {
 				continue;
 			}
 			for (let move of battle.request.side.pokemon[sideId].moves) {
-				if (move in {'partingshot':1, 'uturn':1, 'taunt':1, 'teleport':1, 'voltswitch':1}) {
+				if (move in { 'partingshot': 1, 'uturn': 1, 'taunt': 1, 'teleport': 1, 'voltswitch': 1 }) {
 					leads.push(decisions[i]);
 					break;
 				}

@@ -5,22 +5,20 @@
 var Data = require('./battle-data.js');
 
 var MoveDecision = exports.MoveDecision = (function () {
-	function MoveDecision (moveId, target, mega, move, movePP, zMove, dynamax) {
+	function MoveDecision(moveId, target, transformation, move, movePP) {
 		this.type = "move";
 		this.moveId = moveId || 0;
 		this.target = target;
 		this.move = move || "struggle";
 		this.movePP = movePP || 1;
-		this.mega = mega || false;
-		this.zMove = zMove || false;
-		this.dynamax = dynamax || false;
+		this.transformation = transformation;
 	}
 
 	return MoveDecision;
 })();
 
 var SwitchDecision = exports.SwitchDecision = (function () {
-	function SwitchDecision (pokeId, poke) {
+	function SwitchDecision(pokeId, poke) {
 		this.type = "switch";
 		this.poke = poke || "pikachu";
 		this.pokeId = pokeId || 0;
@@ -30,7 +28,7 @@ var SwitchDecision = exports.SwitchDecision = (function () {
 })();
 
 var TeamDecision = exports.TeamDecision = (function () {
-	function TeamDecision (team) {
+	function TeamDecision(team) {
 		this.type = "team";
 		this.team = team || [0, 1, 2, 3, 4, 5];
 	}
@@ -39,7 +37,7 @@ var TeamDecision = exports.TeamDecision = (function () {
 })();
 
 var PassDecision = exports.PassDecision = (function () {
-	function PassDecision () {
+	function PassDecision() {
 		this.type = "pass";
 	}
 
@@ -47,7 +45,7 @@ var PassDecision = exports.PassDecision = (function () {
 })();
 
 var ShiftDecision = exports.ShiftDecision = (function () {
-	function ShiftDecision () {
+	function ShiftDecision() {
 		this.type = "shift";
 	}
 
@@ -62,7 +60,7 @@ function isTooFar(battle, a, b) {
 	}
 }
 
-function combinateTeamPreview (array, i, values, solutions) {
+function combinateTeamPreview(array, i, values, solutions) {
 	if (i >= array.length) {
 		solutions.push(array.slice());
 		return;
@@ -75,7 +73,7 @@ function combinateTeamPreview (array, i, values, solutions) {
 	}
 }
 
-function generateTeamCombinations (sideLength, requiredLength) {
+function generateTeamCombinations(sideLength, requiredLength) {
 	var comb = [];
 	var values = [];
 	var array = [];
@@ -87,7 +85,7 @@ function generateTeamCombinations (sideLength, requiredLength) {
 	return comb;
 }
 
-function validateDecision (des) {
+function validateDecision(des) {
 	var megaConsumed = false;
 	var shiftConsumed = false;
 	var passed = true;
@@ -110,7 +108,7 @@ function validateDecision (des) {
 	return true;
 }
 
-function nextCombinationDecision (array, i, tables, solutions) {
+function nextCombinationDecision(array, i, tables, solutions) {
 	if (i >= array.length) {
 		//validate combinational decision
 		if (!validateDecision(array)) return;
@@ -124,7 +122,7 @@ function nextCombinationDecision (array, i, tables, solutions) {
 	}
 }
 
-function cartesianProduct (tables) {
+function cartesianProduct(tables) {
 	var array = [];
 	var comb = [];
 	for (var i = 0; i < tables.length; i++) array.push(null);
@@ -132,9 +130,9 @@ function cartesianProduct (tables) {
 	return comb;
 }
 
-function getTargets (battle, activeIndex, move) {
+function getTargets(battle, activeIndex, move) {
 	let targets = [];
-	if (move.target in {'any':1, 'normal':1, 'adjacentAlly':1, 'adjacentAllyOrSelf':1, 'adjacentFoe':1}) {
+	if (move.target in { 'any': 1, 'normal': 1, 'adjacentAlly': 1, 'adjacentAllyOrSelf': 1, 'adjacentFoe': 1 }) {
 		if (!move.target.startsWith('adjacentAlly')) {
 			let auxHasTarget = false;
 			for (var tar = 0; tar < battle.foe.active.length; tar++) {
@@ -213,33 +211,34 @@ exports.getDecisions = function (battle) {
 			var active = req.active[i];
 
 			// moves
-			let dynamax = !!(battle.self.active[0].volatiles.dynamax);
+			const dynamax = !!(battle.self.active[0].volatiles.dynamax);
 			if (!dynamax) {
 				for (let j = 0; j < active.moves.length; j++) {
-					let move = active.moves[j];
+					const move = active.moves[j];
 					if (move.disabled || move.pp === 0) continue; // No more moves
 
 					let mega = false;
 					if (active.canMegaEvo || (req.side.pokemon[i] && req.side.pokemon[i].canMegaEvo)) mega = true;
 
-					let targets = getTargets(battle, i, move);
+					const targets = getTargets(battle, i, move);
 					for (let target of targets) {
-						tables[i].push(new MoveDecision(j, target, false, move.move));
-						if (mega) tables[i].push(new MoveDecision(j, target, true, move.move, move.pp));;
+						tables[i].push(new MoveDecision(j, target, null, move.move, move.pp));
+						if (mega) tables[i].push(new MoveDecision(j, target, 'mega', move.move, move.pp));
+						if (active.canTerastallize) tables[i].push(new MoveDecision(j, target, 'terastallize', move.move, move.pp));;
 					}
 
 					if (active.canZMove && active.canZMove[j]) {
-						let zMove = active.canZMove[j];
-						let zTargets = getTargets(battle, i, zMove);
+						const zMove = active.canZMove[j];
+						const zTargets = getTargets(battle, i, zMove);
 						for (let target of zTargets) {
-							tables[i].push(new MoveDecision(j, target, false, zMove.move, move.pp, true));
+							tables[i].push(new MoveDecision(j, target, 'zmove', zMove.move, move.pp));
 						}
 					}
 				}
 			}
 
 			// dynamax
-			let canDynamax = !!(active.canDynamax);
+			const canDynamax = !!(active.canDynamax);
 			if ((canDynamax || dynamax) && active.maxMoves) {
 				for (let j = 0; j < active.maxMoves.maxMoves.length; j++) {
 					let move = active.maxMoves.maxMoves[j];
@@ -247,7 +246,7 @@ exports.getDecisions = function (battle) {
 
 					let targets = getTargets(battle, i, move);
 					for (let target of targets) {
-						tables[i].push(new MoveDecision(j, target, false, move.move, move.pp, false, canDynamax));
+						tables[i].push(new MoveDecision(j, target, canDynamax ? 'dynamax' : null, move.move, move.pp));
 					}
 				}
 			}

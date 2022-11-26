@@ -18,7 +18,7 @@ var Player = battleData.Player;
 var Calc = require('./calc.js');
 
 var Battle = exports.Battle = (function () {
-	function Battle (id) {
+	function Battle(id) {
 		this.id = id;
 		this.title = "";
 		this.players = {
@@ -56,12 +56,12 @@ var Battle = exports.Battle = (function () {
 		this.lock = false;
 		this.leaveInterval = null;
 
-		this.helpers = {self: {}, foe: {}};
+		this.helpers = { self: {}, foe: {} };
 	}
 
 	Battle.prototype.createLogStream = function (file) {
 		fs.writeFileSync(file, ""); // Clear File
-		this.stream = fs.createWriteStream(file, {flags: 'a+'});
+		this.stream = fs.createWriteStream(file, { flags: 'a+' });
 		this.file = file;
 	};
 
@@ -99,9 +99,7 @@ var Battle = exports.Battle = (function () {
 					break;
 				case "move":
 					str += "move " + (decision[i].moveId + 1);
-					if (decision[i].mega) str += " mega";
-					if (decision[i].zMove) str += " zmove";
-					if (decision[i].dynamax) str += " dynamax";
+					if (decision[i].transformation) str += (" " + decision[i].transformation);
 					if (decision[i].target !== null) {
 						if (decision[i].target >= 0) str += " " + (decision[i].target + 1);
 						else str += " " + (decision[i].target);
@@ -367,7 +365,7 @@ var Battle = exports.Battle = (function () {
 	};
 
 	Battle.prototype.parseSlot = function (id) {
-		var slots = {a: 0, b: 1, c: 2, d: 3, e: 4, f: 5};
+		var slots = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5 };
 		return slots[id] || 0;
 	};
 
@@ -451,7 +449,7 @@ var Battle = exports.Battle = (function () {
 
 		var pokeA = new Calc.Pokemon(
 			battleData.getPokemon(details.species, this.gen, this.id),
-			{level: details.level, shiny: details.shiny, gender: details.gender, helpers: (this.helpers[side][pokeId] || {})},
+			{ level: details.level, shiny: details.shiny, gender: details.gender, helpers: (this.helpers[side][pokeId] || {}) },
 		);
 		pokeA.item = battleData.getItem(p.item, this.gen);
 		pokeA.ability = battleData.getAbility(p.baseAbility, this.gen);
