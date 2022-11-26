@@ -1,0 +1,104 @@
+diff --git a/features/battle/battle-ai/calc.js b/features/battle/battle-ai/calc.js
+index f9eae11..746f876 100644
+--- a/features/battle/battle-ai/calc.js
++++ b/features/battle/battle-ai/calc.js
+@@ -678,10 +678,10 @@ exports.calculate = function (pokeA, pokeB, move, conditionsA, conditionsB, gcon
+ 			if (pokeB.item && !pokeB.onTakeItem) bp = Math.floor(bp * 1.5);
+ 			break;
+ 		case 'acrobatics':
+-			if (!pokeA.item || !pokeA.item.id || pokeA.item.id in {'':1, 'flyinggem':1}) bp *= 2;
++			if (!pokeA.item || !pokeA.item.id || pokeA.item.id === 'flyinggem') bp *= 2;
+ 			break;
+ 		case 'poltergeist':
+-			if (!pokeB.item || !pokeB.item.id || pokeB.item.id === '') bp = 0;
++			if (!pokeB.item || !pokeB.item.id) bp = 0;
+ 			break;
+ 		case 'retaliate':
+ 			if (conditionsA.side.faintedLastTurn) bp *= 2;
+diff --git a/features/battle/battle-ai/decision.js b/features/battle/battle-ai/decision.js
+index 9fd8de6..396b3e2 100644
+--- a/features/battle/battle-ai/decision.js
++++ b/features/battle/battle-ai/decision.js
+@@ -211,6 +211,7 @@ exports.getDecisions = function (battle) {
+ 				continue;
+ 			}
+ 			var active = req.active[i];
++			console.log(active);
+ 
+ 			// moves
+ 			let dynamax = !!(battle.self.active[0].volatiles.dynamax);
+diff --git a/features/battle/battle-ai/modules/singles-eff.js b/features/battle/battle-ai/modules/singles-eff.js
+index c111735..5cae28d 100644
+--- a/features/battle/battle-ai/modules/singles-eff.js
++++ b/features/battle/battle-ai/modules/singles-eff.js
+@@ -1654,7 +1654,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
+ 	return res;
+ };
+ 
+-function getMovesData (battle, decisions) {
++function getMovesData (battle, decisions, pokeA, pokeB) {
+ 	for (let i = 0; i < decisions.length; i++) {
+ 		let des = decisions[i][0];
+ 		if (des.type !== 'move') continue;
+@@ -1793,7 +1793,9 @@ function sample (arr) {
+ }
+ 
+ var getBestMove = exports.getBestMove = function (battle, decisions) {
+-	decisions = filterRedundantMaxMoves(getMovesData(battle, decisions));
++	let pokeA = battle.getCalcRequestPokemon(0, true);
++	let pokeB = supposeActiveFoe(battle);
++	decisions = filterRedundantMaxMoves(getMovesData(battle, decisions, pokeA, pokeB));
+ 
+ 	let bestSwitch = exports.getBestSwitch(battle, decisions);
+ 	let damageMoves = getViableDamageMoves(battle, decisions);
+@@ -1802,8 +1804,6 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
+ 
+ 	let ev = evaluatePokemon(battle, 0);
+ 
+-	let pokeA = battle.getCalcRequestPokemon(0, true);
+-	let pokeB = supposeActiveFoe(battle);
+ 	let conditionsA = new Conditions({
+ 		side: battle.self.side,
+ 		volatiles: battle.self.active[0].volatiles,
+diff --git a/features/battle/challenges.js b/features/battle/challenges.js
+index 3059c27..2a8af0d 100644
+--- a/features/battle/challenges.js
++++ b/features/battle/challenges.js
+@@ -10,7 +10,7 @@ function canChallenge(nBattles) {
+ }
+ 
+ exports.parse = function (room, message, isIntro, spl) {
+-	if (!spl[3].startsWith('/challenge')) return;
++	if (!spl[3].startsWith('/challenge ')) return;
+ 	var nBattles = Object.keys(Features['battle'].BattleBot.battles).length;
+ 	exports.challenges = [spl[4]];
+ 	if (exports.challenges) {
+@@ -19,24 +19,23 @@ exports.parse = function (room, message, isIntro, spl) {
+ 			if (canChallenge(nBattles)) {
+ 				if (Settings.lockdown || !(format in Formats) || !Formats[format].chall) {
+ 					Bot.say('', '/reject ' + player);
++					debug("rejected battle: " + format);
+ 					continue;
+ 				}
+ 				if (Formats[format].team && !Features['battle'].TeamBuilder.hasTeam(format)) {
+ 					Bot.say('', '/reject ' + player);
++					debug("rejected battle (no team) : " + format);
+ 					continue;
+ 				}
+ 
+ 				var team = Features['battle'].TeamBuilder.getTeam(format);
+-				if (team) {
+-					Bot.say(spl[1], '/useteam ' + team);
+-				}
+-				//Bot.say('', '/ionext');
++				Bot.say(spl[1], '/useteam ' + (team || 'null'));
+ 				Bot.say('', '/accept ' + player);
+ 				nBattles++;
+ 				debug("accepted battle: " + format);
+ 			} else {
+ 				Bot.say('', '/reject ' + player);
+-				debug("rejected battle: " + format);
++				debug("rejected battle (busy): " + format);
+ 				continue;
+ 			}
+ 		}

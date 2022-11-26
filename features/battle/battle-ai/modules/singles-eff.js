@@ -1662,7 +1662,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 	return res;
 };
 
-function getMovesData(battle, decisions) {
+function getMovesData(battle, decisions, pokeA, pokeB) {
 	for (let i = 0; i < decisions.length; i++) {
 		let des = decisions[i][0];
 		if (des.type !== 'move') continue;
@@ -1801,7 +1801,9 @@ function sample(arr) {
 }
 
 var getBestMove = exports.getBestMove = function (battle, decisions) {
-	decisions = filterRedundantMaxMoves(getMovesData(battle, decisions));
+	let pokeA = battle.getCalcRequestPokemon(0, true);
+	let pokeB = supposeActiveFoe(battle);
+	decisions = filterRedundantMaxMoves(getMovesData(battle, decisions, pokeA, pokeB));
 
 	let bestSwitch = exports.getBestSwitch(battle, decisions);
 	let damageMoves = getViableDamageMoves(battle, decisions);
@@ -1810,8 +1812,6 @@ var getBestMove = exports.getBestMove = function (battle, decisions) {
 
 	let ev = evaluatePokemon(battle, 0);
 
-	let pokeA = battle.getCalcRequestPokemon(0, true);
-	let pokeB = supposeActiveFoe(battle);
 	let conditionsA = new Conditions({
 		side: battle.self.side,
 		volatiles: battle.self.active[0].volatiles,
