@@ -168,7 +168,7 @@ module.exports = {
 	"-restoreboost": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
 		for (var i in poke.boosts) {
-			if (poke.boosts[i] < 0)	delete poke.boosts[i];
+			if (poke.boosts[i] < 0) delete poke.boosts[i];
 		}
 	},
 
@@ -451,8 +451,13 @@ module.exports = {
 		if (args[2] !== 'Rayquaza') {
 			poke.item = item;
 			var template = battleData.getPokemon(item.megaStone, this.gen, this.id);
-			poke.markAbility(template.abilities[0]);	
+			poke.markAbility(template.abilities[0]);
 		}
+	},
+
+	"-terastallize": function (args, kwargs) {
+		var poke = this.getActive(args[1]);
+		poke.teraType = args[2];
 	},
 
 	"-start": function (args, kwargs) {
@@ -516,10 +521,10 @@ module.exports = {
 				poke.removeVolatile('telekinesis');
 				break;
 			case 'doomdesire':
-				this.players[ident.side].side.doomdesire = {turn: this.turn};
+				this.players[ident.side].side.doomdesire = { turn: this.turn };
 				break;
 			case 'futuresight':
-				this.players[ident.side].side.futuresight = {turn: this.turn};
+				this.players[ident.side].side.futuresight = { turn: this.turn };
 				break;
 		}
 	},
@@ -624,7 +629,7 @@ module.exports = {
 	"-fieldstart": function (args, kwargs) {
 		var effect = battleData.getEffect(args[1], this.gen);
 		var pw = toId(effect.name);
-		this.conditions[pw] = {turn: this.turn};
+		this.conditions[pw] = { turn: this.turn };
 	},
 
 	"-fieldend": function (args, kwargs) {
