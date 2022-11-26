@@ -342,7 +342,7 @@ exports.calculate = function (attacker, defender, move, globalConditions, battle
 	}
 
 	const gen = battle.gen || CurrentGen;
-	const battleId = batlle.id;
+	const battleId = battle.id;
 
 	if (!globalConditions) globalConditions = {};
 	globalConditions.supressedWeather = (attackerPoke.hasAbility({ 'airlock': 1, 'cloudnine': 1 }) || defenderPoke.hasAbility({ 'airlock': 1, 'cloudnine': 1 }));
