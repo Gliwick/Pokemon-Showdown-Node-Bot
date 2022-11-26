@@ -1370,8 +1370,13 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		if (des.transformation === 'dynamax' && !(conditionsB.volatiles.dynamax && pokeA.hp > 50) && !selfLastPokemon(battle)) {
 			if (!((conditionsA.boosts.atk > 0 || conditionsA.boosts.spa > 0) && pokeA.hp > 50) && !(conditionsA.boosts.spe > 0)) continue;
 		}
-		if (des.transformation === 'terastallize' && !selfLastPokemon(battle)) {
-			if (!((conditionsA.boosts.atk > 0 || conditionsA.boosts.spa > 0) && pokeA.hp > 50) && !(conditionsA.boosts.spe > 0)) continue;
+		if (des.transformation === 'terastallize') {
+			if (
+				des.moveData.id !== 'terablast' &&
+				!selfLastPokemon(battle) &&
+				!((conditionsA.boosts.atk > 0 || conditionsA.boosts.spa > 0) && pokeA.hp > 50) &&
+				!(conditionsA.boosts.spe > 0)
+			) continue;
 		}
 
 		let move = des.moveData;
@@ -1393,6 +1398,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 		if (move.id in { 'hurricane': 1, 'thunder': 1 } && toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 }) continue;
 		if (move.id in { 'endeavor': 1, 'snore': 1 }) continue; // handled as support moves
 		if (move.id in { 'solarbeam': 1, 'solarblade': 1 } && !supressedWeather && !(toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 })) continue;
+		if ((move.id === 'burnup' && !pokeA.hasType('Fire')) || (move.id === 'doubleshock' && !pokeA.hasType('Electric'))) continue;
 
 		let dmg = Calc.calculate(pokeA, pokeB, move, conditionsA, conditionsB, battle.conditions, battle.gen, battle.id).getAvg();
 
