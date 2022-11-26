@@ -1178,7 +1178,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 					}
 					break;
 				case 'brn':
-					if (!(pokeB.category in { 'Mixed': 1, 'Physical': 1 }) || pokeB.hasType('Fire', conditionsB) || pokeB.hasAbility({ 'flareboost': 1, 'guts': 1, 'waterbubble': 1, 'waterveil': 1 })) {
+					if (!['Mixed', 'Physical'].includes(pokeB.category) || pokeB.hasType('Fire', conditionsB) || pokeB.hasAbility({ 'flareboost': 1, 'guts': 1, 'waterbubble': 1, 'waterveil': 1 })) {
 						res.unviable.push(decisions[i]);
 						continue;
 					}
@@ -1283,7 +1283,11 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 			continue;
 		}
 		if (move.volatileStatus === 'confusion') {
-			if (conditionsB.volatiles['confusion'] || (battle.conditions['mistyterrain'] && pokeB.isGrounded(conditionsB))) {
+			if (
+				conditionsB.volatiles['confusion'] ||
+				(battle.conditions['mistyterrain'] && pokeB.isGrounded(conditionsB)) ||
+				(move.id === 'swagger' && ['Mixed', 'Physical'].includes(pokeB.category))
+			) {
 				res.unviable.push(decisions[i]);
 			} else {
 				res.viable.push(decisions[i]);
