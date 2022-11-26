@@ -670,7 +670,7 @@ var getViableSupportMoves = exports.getViableSupportMoves = function (battle, de
 		}
 
 		if (des.transformation === 'dynamax' && !(conditionsB.volatiles.dynamax && pokeA.hp > 50) && !selfLastPokemon(battle)) continue;
-		if (des.transformation?.terastallize && !selfLastPokemon(battle)) continue;
+		if (des.transformation?.terastallize && (des.moveData.category === 'Status' || !selfLastPokemon(battle))) continue;
 
 		let move = des.moveData;
 		let viableZMove = (
@@ -1379,6 +1379,7 @@ var getViableDamageMoves = exports.getViableDamageMoves = function (battle, deci
 			if (!((conditionsA.boosts.atk > 0 || conditionsA.boosts.spa > 0) && pokeA.hp > 50) && !(conditionsA.boosts.spe > 0)) continue;
 		}
 		if (des.transformation?.terastallize) {
+			if (des.moveData.category === 'Status') continue;
 			if (
 				des.moveData.id !== 'terablast' &&
 				!selfLastPokemon(battle) &&
