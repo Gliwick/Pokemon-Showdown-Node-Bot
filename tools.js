@@ -246,7 +246,7 @@ exports.getTargetRoom = function (arg) {
 	if (arg.indexOf("]") < 0) return null;
 	var target = toRoomid(arg.substr(arg.indexOf("[") + 1, arg.indexOf("]") - arg.indexOf("[") - 1));
 	var newArg = arg.substr(arg.indexOf("]") + 1);
-	return {arg: newArg, room: target};
+	return { arg: newArg, room: target };
 };
 
 exports.equalOrHigherRank = function (userIdentity, rank) {
@@ -269,7 +269,7 @@ exports.equalOrHigherRank = function (userIdentity, rank) {
 
 exports.getGroup = function (perm) {
 	if (!perm) return true;
-	var globalPermissions = {'voice': '+', 'driver': '%', 'moderator': '@', 'roomowner': '#', 'admin': '~'};
+	var globalPermissions = { 'voice': '+', 'driver': '%', 'moderator': '@', 'roomowner': '#', 'admin': '~' };
 	if (Config.globalPermissions) {
 		for (var i in Config.globalPermissions) globalPermissions[i] = Config.globalPermissions[i];
 	}
@@ -468,7 +468,7 @@ exports.parseAliases = function (format) {
 	try {
 		var psAliases = DataDownloader.getAliases();
 		if (psAliases[format]) format = toId(psAliases[format]);
-	} catch (e) {}
+	} catch (e) { }
 	return format;
 };
 
@@ -514,7 +514,7 @@ var teamToJSON = exports.teamToJSON = function (text) {
 		if (line === '' || line === '---') {
 			curSet = null;
 		} else if (!curSet) {
-			curSet = {name: '', species: '', gender: '', item: '', ability: '', nature: ''};
+			curSet = { name: '', species: '', gender: '', item: '', ability: '', nature: '' };
 			team.push(curSet);
 			var atIndex = line.lastIndexOf(' @ ');
 			if (atIndex !== -1) {
@@ -560,7 +560,7 @@ var teamToJSON = exports.teamToJSON = function (text) {
 		} else if (line.substr(0, 5) === 'EVs: ') {
 			line = line.substr(5);
 			var evLines = line.split('/');
-			curSet.evs = {hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0};
+			curSet.evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 			for (var j = 0; j < evLines.length; j++) {
 				var evLine = evLines[j].trim();
 				var spaceIndex = evLine.indexOf(' ');
@@ -573,7 +573,7 @@ var teamToJSON = exports.teamToJSON = function (text) {
 		} else if (line.substr(0, 5) === 'IVs: ') {
 			line = line.substr(5);
 			var ivLines = line.split(' / ');
-			curSet.ivs = {hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31};
+			curSet.ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 			for (var j = 0; j < ivLines.length; j++) {
 				var ivLine = ivLines[j];
 				var spaceIndex = ivLine.indexOf(' ');
@@ -697,6 +697,14 @@ var packTeam = exports.packTeam = function (team) {
 		} else {
 			buf += '|';
 		}
+
+		if (set.pokeball || (set.hpType && !hasHP) || set.gigantamax || (set.dynamaxLevel !== undefined && set.dynamaxLevel !== 10) || set.teraType) {
+			buf += ',' + (set.hpType || '');
+			buf += ',' + toID(set.pokeball);
+			buf += ',' + (set.gigantamax ? 'G' : '');
+			buf += ',' + (set.dynamaxLevel !== undefined && set.dynamaxLevel !== 10 ? set.dynamaxLevel : '');
+			buf += ',' + (set.teraType || '');
+		}
 	}
 	return buf;
 };
@@ -730,7 +738,7 @@ var fastUnpackTeam = exports.fastUnpackTeam = function (buf) {
 		j = buf.indexOf('|', i);
 		var ability = buf.substring(i, j);
 		var template = Tools.getTemplate(set.species);
-		set.ability = (template.abilities && ability in {'': 1, 0: 1, 1: 1, H: 1} ? template.abilities[ability || '0'] : ability);
+		set.ability = (template.abilities && ability in { '': 1, 0: 1, 1: 1, H: 1 } ? template.abilities[ability || '0'] : ability);
 		i = j + 1;
 
 		// moves
@@ -817,7 +825,7 @@ exports.getTemplate = function (name) {
 	name = toId(name || '');
 	try {
 		return (DataDownloader.getPokedex()[name] || {});
-	} catch (e) {}
+	} catch (e) { }
 	return {};
 };
 
@@ -825,7 +833,7 @@ exports.getItem = function (name) {
 	name = toId(name || '');
 	try {
 		return (DataDownloader.getItems()[name] || {});
-	} catch (e) {}
+	} catch (e) { }
 	return {};
 };
 
@@ -833,7 +841,7 @@ exports.getAbility = function (name) {
 	name = toId(name || '');
 	try {
 		return (DataDownloader.getAbilities()[name] || {});
-	} catch (e) {}
+	} catch (e) { }
 	return {};
 };
 
@@ -841,7 +849,7 @@ exports.getMove = function (name) {
 	name = toId(name || '');
 	try {
 		return (DataDownloader.getMovedex()[name] || {});
-	} catch (e) {}
+	} catch (e) { }
 	return {};
 };
 
