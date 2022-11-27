@@ -176,7 +176,7 @@ var Conditions = exports.Conditions = (function () {
 		this.immediate = {};
 		for (var i in data) {
 			if (typeof this[i] === 'undefined' || typeof this[i] === 'function') continue;
-			this[i] = data[i];
+			this[i] = { ...data[i] };
 		}
 	}
 
@@ -333,9 +333,9 @@ var getDamage = function (level, bp, atk, def, modifier, typesMux) {
 
 exports.calculate = function (attacker, defender, move, globalConditions, battle, transformation) {
 	const attackerPoke = attacker.poke;
-	const attackerConditions = { ...attacker.conditions } || {};
+	const attackerConditions = new Conditions(attacker.conditions || {});
 	const defenderPoke = defender.poke;
-	const defenderConditions = defender.conditions || {};
+	const defenderConditions = new Conditions(defender.conditions || {});
 
 	if (typeof transformation === 'object' && transformation?.terastallize) {
 		attackerConditions.volatiles.terastallize = transformation.terastallize;
@@ -390,7 +390,7 @@ exports.calculate = function (attacker, defender, move, globalConditions, battle
 
 	// custom attacking stat
 	if (move.id === 'bodypress') atkStat = 'def';
-	if ((move.id in { 'photongeyser': 1, 'lightthatburststhesky': 1 } && statsA.atk > statsA.spa) || (move.id === 'shellsidearm' && statsA.atk / statsB.def > statsA.spa / statsB.spd)) {
+	if ((move.id in { 'photongeyser': 1, 'lightthatburststhesky': 1, 'terablast': 1 } && statsA.atk > statsA.spa) || (move.id === 'shellsidearm' && statsA.atk / statsB.def > statsA.spa / statsB.spd)) {
 		atkStat = 'atk';
 		defStat = 'def';
 		if (move.id === 'shellsidearm') {
