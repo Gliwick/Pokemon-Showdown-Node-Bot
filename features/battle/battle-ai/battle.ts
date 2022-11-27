@@ -10,7 +10,7 @@ var majors = exports.majors = require("./battle-majors.ts");
 var minors = exports.minors = require("./battle-minors.ts");
 
 var modules = require("./modules.ts");
-var decisionMaker = require(".decision.ts");
+var decisionMaker = require("./decision.ts");
 
 var battleData = require("./battle-data.ts");
 var Player = battleData.Player;
