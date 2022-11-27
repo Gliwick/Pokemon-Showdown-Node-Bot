@@ -17,9 +17,9 @@ var globalList = [
 	'colors', 'sys', 'fs', 'path', 'PSClient', 'reloadFeatures', 'SecurityLog',
 	'toId', 'toRoomid', 'ok', 'info', 'error', 'errlog', 'debug', 'cmdr', 'recv', 'sent', 'monitor'
 ];
-globalList.forEach(function (identifier) {globals[identifier] = false;});
+globalList.forEach(function (identifier) { globals[identifier] = false; });
 
-function transformLet () {
+function transformLet() {
 	// Replacing `var` with `let` is sort of a hack that stops jsHint from
 	// complaining that I'm using `var` like `let` should be used, but
 	// without having to deal with iffy `let` support.
@@ -28,21 +28,21 @@ function transformLet () {
 		.pipe(replace.bind(null, /\bvar\b/g, 'let'))();
 }
 
-function lint (jsHintOptions, jscsOptions) {
-	function cachedJsHint () {
-		return cache(jshint(jsHintOptions, {timeout: 450000}), {
+function lint(jsHintOptions, jscsOptions) {
+	function cachedJsHint() {
+		return cache(jshint(jsHintOptions, { timeout: 450000 }), {
 			success: function (file) {
 				return file.jshint.success;
 			},
 			value: function (file) {
-				return {jshint: file.jshint};
+				return { jshint: file.jshint };
 			},
-			fileCache: new FileCache({tmpDir: '.', cacheDirName: 'gulp-cache'})
+			fileCache: new FileCache({ tmpDir: '.', cacheDirName: 'gulp-cache' })
 		});
 	}
 	return lazypipe()
 		.pipe(cachedJsHint)
-		.pipe(jscs.bind(jscs, {configPath: jscsOptions}))
+		.pipe(jscs.bind(jscs, { configPath: jscsOptions }))
 		.pipe(jscs.reporter.bind(jscs.reporter))
 		.pipe(jscs.reporter.bind(jscs.reporter, 'fail'))();
 }
@@ -110,7 +110,7 @@ var linter = function () {
 					.pipe(lint(source.jsHint, source.jscs));
 			})
 		).pipe(jshint.reporter(jshintStylish))
-		 .pipe(jshint.reporter('fail'))
+			.pipe(jshint.reporter('fail'))
 	);
 };
 

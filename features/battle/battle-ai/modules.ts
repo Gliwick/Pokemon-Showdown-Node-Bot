@@ -4,7 +4,7 @@
 
 var modules = exports.modules = {};
 
-var modFiles = ['singles-eff.js', 'ingame-nostatus.js'];
+var modFiles = ['singles-eff.ts', 'ingame-nostatus.ts'];
 
 modFiles.forEach(function (file) {
 	var mod;
@@ -33,7 +33,7 @@ exports.choose = function (battle) {
 
 	/* Module decision by default */
 
-	if (toId(battle.tier) in {'challengecup1v1': 1, '1v1': 1}) {
+	if (toId(battle.tier) in { 'challengecup1v1': 1, '1v1': 1 }) {
 		if (modules["ingame-nostatus"]) {
 			debug("Battle module [" + battle.id + "] - Using ingame-nostatus");
 			return modules["ingame-nostatus"];

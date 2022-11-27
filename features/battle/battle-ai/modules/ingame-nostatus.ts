@@ -15,11 +15,11 @@
  *	- Priority -100000 - Moves 0 damage
  */
 
-var Calc = require('./../calc.js');
+var Calc = require('./../calc.ts');
 var Pokemon = Calc.Pokemon;
 var Conditions = Calc.Conditions;
 
-var Data = require('./../battle-data.js');
+var Data = require('./../battle-data.ts');
 
 exports.id = "ingame-nostatus";
 

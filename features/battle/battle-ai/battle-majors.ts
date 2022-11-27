@@ -2,7 +2,7 @@
 	Majors
 */
 
-var battleData = require("./battle-data.js");
+var battleData = require("./battle-data.ts");
 var Move = battleData.Move;
 
 module.exports = {
@@ -174,7 +174,7 @@ module.exports = {
 				poke = this.players[p].pokemon[i];
 		}
 		if (!poke) {
-			poke = new battleData.Pokemon(battleData.getPokemon(details.species, this.gen, this.id), {name: name});
+			poke = new battleData.Pokemon(battleData.getPokemon(details.species, this.gen, this.id), { name: name });
 			this.players[p].pokemon.push(poke);
 		}
 		poke.active = true;
@@ -265,7 +265,7 @@ module.exports = {
 		}
 		var move = null;
 		for (var i = 0; i < poke.moves.length; i++) {
-			if (poke.moves[i].id ===  moveTemplate.id) {
+			if (poke.moves[i].id === moveTemplate.id) {
 				move = poke.moves[i];
 				break;
 			}
@@ -327,7 +327,7 @@ module.exports = {
 		}
 		var move = null;
 		for (var i = 0; i < poke.moves.length; i++) {
-			if (poke.moves[i].id ===  moveTemplate.id) {
+			if (poke.moves[i].id === moveTemplate.id) {
 				move = poke.moves[i];
 				break;
 			}

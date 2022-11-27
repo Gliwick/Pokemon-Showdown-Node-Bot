@@ -4,9 +4,9 @@
 
 const battleAutojoinFile = AppOptions.data + "_temp/" + "battle-autojoin-tmp.json";
 
-var Battle = require('./battle.js').Battle;
+var Battle = require('./battle.ts').Battle;
 
-var BattleLogger = require('./battle-log.js');
+var BattleLogger = require('./battle-log.ts');
 
 module.exports = {
 	battles: {},
@@ -16,7 +16,7 @@ module.exports = {
 		for (var room in this.battles) {
 			try {
 				this.battles[room].destroy();
-			} catch (e) {}
+			} catch (e) { }
 			delete this.battles[room];
 		}
 		this.battlesCount = 0;
@@ -29,7 +29,7 @@ module.exports = {
 		if (!Config.abandonedBattleAutojoin) return;
 		try {
 			this.autoJoinData = this.autojoinFFM.readObj();
-		} catch (e) {error(e.stack);}
+		} catch (e) { error(e.stack); }
 		debug(JSON.stringify(this.autoJoinData));
 		var cmds = [];
 		for (var i in this.autoJoinData) {
@@ -61,7 +61,7 @@ module.exports = {
 			if (this.battles[room]) {
 				try {
 					this.battles[room].destroy();
-				} catch (e) {}
+				} catch (e) { }
 			}
 			this.battles[room] = new Battle(room);
 			BattleLogger.createStream(this.battles[room]);
@@ -75,7 +75,7 @@ module.exports = {
 			if (this.battles[room]) {
 				try {
 					this.battles[room].destroy();
-				} catch (e) {}
+				} catch (e) { }
 				delete this.battles[room];
 				this.battlesCount--;
 				this.updateBattleAutojoin();
@@ -87,7 +87,7 @@ module.exports = {
 		for (var room in this.battles) {
 			try {
 				this.battles[room].destroy();
-			} catch (e) {}
+			} catch (e) { }
 			delete this.battles[room];
 			this.battlesCount--;
 		}

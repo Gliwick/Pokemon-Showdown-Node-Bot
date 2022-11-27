@@ -6,16 +6,16 @@
 const MAX_RECURSIVE = 5;
 const MIN_TIME_LOCK = 3 * 1000; // 3 secods to avoid send spam
 
-var majors = exports.majors = require("./battle-majors.js");
-var minors = exports.minors = require("./battle-minors.js");
+var majors = exports.majors = require("./battle-majors.ts");
+var minors = exports.minors = require("./battle-minors.ts");
 
-var modules = require("./modules.js");
-var decisionMaker = require("./decision.js");
+var modules = require("./modules.ts");
+var decisionMaker = require(".decision.ts");
 
-var battleData = require("./battle-data.js");
+var battleData = require("./battle-data.ts");
 var Player = battleData.Player;
 
-var Calc = require('./calc.js');
+var Calc = require('./calc.ts');
 
 var Battle = exports.Battle = (function () {
 	function Battle(id) {

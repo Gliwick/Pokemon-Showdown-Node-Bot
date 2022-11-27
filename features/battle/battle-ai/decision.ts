@@ -2,7 +2,7 @@
 * Decision maker
 */
 
-var Data = require('./battle-data.js');
+var Data = require('./battle-data.ts');
 
 var MoveDecision = exports.MoveDecision = (function () {
 	function MoveDecision(moveId, target, transformation, move, movePP) {

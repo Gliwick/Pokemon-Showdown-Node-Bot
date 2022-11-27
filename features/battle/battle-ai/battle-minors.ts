@@ -2,7 +2,7 @@
 	Minors
 */
 
-var battleData = require("./battle-data.js");
+var battleData = require("./battle-data.ts");
 
 module.exports = {
 	"-damage": function (args, kwargs) {

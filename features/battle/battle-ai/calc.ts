@@ -2,7 +2,7 @@
  * Pokemon Showdown Bot - Damage calculator
 */
 
-var TypeChart = require('./typechart.js');
+var TypeChart = require('./typechart.ts');
 
 const CurrentGen = 9;
 
