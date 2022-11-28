@@ -537,7 +537,7 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 	* Base power
 	*******************************/
 
-	let bp = move.basePower || 0;
+	let bp: number = move.basePower || 0;
 
 	if (cat === 'Physical' && attackerPoke.status === 'brn') {
 		if (gen < 3) atk = Math.floor(atk * 0.5);
@@ -570,7 +570,7 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 			break;
 		case 'grassknot':
 		case 'lowkick':
-			if (defenderConditions.volatiles['dynamax']) {
+			if (defenderConditions.volatiles.dynamax) {
 				bp = 0;
 			} else if (defenderPoke.template.weightkg) {
 				if (defenderPoke.template.weightkg >= 200) {
@@ -592,7 +592,7 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 			break;
 		case 'heavyslam':
 		case 'heatcrash':
-			if (defenderConditions.volatiles['dynamax']) {
+			if (defenderConditions.volatiles.dynamax) {
 				bp = 0;
 			} else if (attackerPoke.template.weightkg && defenderPoke.template.weightkg) {
 				if (attackerPoke.template.weightkg / defenderPoke.template.weightkg > 5) {
@@ -652,7 +652,7 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 			break;
 		case 'punishment':
 			bp = 60;
-			for (var stat in defenderConditions.boosts) {
+			for (let stat in defenderConditions.boosts) {
 				if (defenderConditions.boosts[stat] > 0) bp += (20 * defenderConditions.boosts[stat]);
 			}
 			break;
@@ -683,6 +683,7 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 			if (defenderPoke.status in { 'psn': 1, 'tox': 1 }) bp *= 2;
 			break;
 		case 'hex':
+		case 'infernalparade':
 			if (defenderPoke.status) bp *= 2;
 			break;
 		case 'brine':
@@ -715,7 +716,7 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 		case 'behemothblade':
 		case 'behemothbash':
 		case 'dynamaxcannon':
-			if (defenderConditions.volatiles['dynamax']) bp *= 2;
+			if (defenderConditions.volatiles.dynamax) bp *= 2;
 			break;
 		case 'weatherball':
 			if (globalConditions.weather) bp *= 2;
@@ -736,7 +737,7 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 			break;
 		case 'storedpower':
 		case 'powertrip':
-			for (var stat in attackerConditions.boosts) {
+			for (let stat in attackerConditions.boosts) {
 				if (attackerConditions.boosts[stat] > 0) bp += (20 * attackerConditions.boosts[stat]);
 			}
 			break;
@@ -752,7 +753,7 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 			break;
 		case 'steelroller':
 			let terrainActive = false;
-			for (gcondition in globalConditions) {
+			for (let gcondition in globalConditions) {
 				if (gcondition.endsWith('terrain')) terrainActive = true;
 			}
 			if (!terrainActive) bp = 0;
@@ -765,6 +766,9 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 			break;
 		case 'mistyexplosion':
 			if (globalConditions['mistyterrain'] && attackerPoke.isGrounded(attackerConditions)) bp = Math.floor(bp * 1.5);
+			break;
+		case 'lastrespects':
+			bp = 50 + 50 * battle.request.side.pokemon.filter(poke => poke.fainted).reduce((acc) => acc++, 0);
 			break;
 	}
 
@@ -977,7 +981,7 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 		let originalStab = (attackerPoke.template.types.includes(moveType) >= 0 || attackerPoke.hasAbility({ 'libero': 1, 'protean': 1 }));
 		let teraStab = (move.type === attackerConditions.volatiles.terastallize);
 		if (originalStab && teraStab) {
-			debug('applying double stab from terastallization');
+			debug('applying double stab to ' + move.type + 'from terastallization');
 			stab = 2;
 		} else if (originalStab || teraStab) {
 			stab = 1.5;

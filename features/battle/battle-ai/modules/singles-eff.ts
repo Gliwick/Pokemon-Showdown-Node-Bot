@@ -545,7 +545,7 @@ function evaluatePokemon(battle, sideId) {
 function foeCanSwitch(battle) {
 	let totalPokes = battle.foe.teamPv.length || 6;
 	if (battle.foe.pokemon.length === totalPokes) {
-		for (var i = 0; i < battle.foe.pokemon.length; i++) {
+		for (let i = 0; i < battle.foe.pokemon.length; i++) {
 			if (!battle.foe.pokemon[i].fainted && !battle.foe.pokemon[i].active) {
 				return true;
 			}
@@ -556,12 +556,7 @@ function foeCanSwitch(battle) {
 }
 
 function selfLastPokemon(battle) {
-	for (var i = 0; i < battle.request.side.pokemon.length; i++) {
-		if (battle.request.side.pokemon[i].condition !== '0 fnt' && !battle.request.side.pokemon[i].active) {
-			return false;
-		}
-	}
-	return true;
+	return battle.request.side.pokemon.filter(poke => !poke.active).all(poke => poke.fainted);
 }
 
 function selfCanSwitch(decisions, pokeA, conditionsA, pokeB, conditionsB) {

@@ -106,7 +106,7 @@ export class Battle {
 							team.push(j);
 						}
 					}
-					if (this.request && this.request.side && this.request.side.pokemon) {
+					if (this.request?.side?.pokemon) {
 						for (var j = 1; j <= this.request.side.pokemon.length; j++) {
 							if (team.indexOf(j) === -1) {
 								team.push(j);
@@ -215,12 +215,7 @@ export class Battle {
 		var side = (player === this.self.id) ? "self" : "foe";
 		if (Config.battleMessages[type][side]) {
 			if (type === 'faint') {
-				var lost = true;
-				for (var i = 0; i < this.self.pokemon.length; i++) {
-					if (!this.self.pokemon[i].fainted) {
-						lost = false;
-					}
-				}
+				const lost = this.self.pokemon.all(poke => poke.fainted);
 				if (lost) return;
 			}
 			var msg = Config.battleMessages[type][side][Math.floor(Math.random() * Config.battleMessages[type][side].length)];
@@ -440,7 +435,7 @@ export class Battle {
 		var slot = this.parseSlot(pokeId);
 		str = str.substr(1);
 		var name = Tools.toName(str.substr(1));
-		if (this.players[side] && this.players[side].active[slot]) {
+		if (this.players[side]?.active?.[slot]) {
 			this.players[side].active[slot].name = name;
 			return this.players[side].active[slot];
 		}
@@ -479,7 +474,7 @@ export class Battle {
 		pokeA.status = condition.status;
 		pokeA.hp = condition.hp;
 		pokeA.stats = p.stats;
-		if (forceMega && (p.canMegaEvo || (this.request.active && this.request.active[sideId] && this.request.active[sideId].canMegaEvo))) {
+		if (forceMega && (p.canMegaEvo || (this.request.active?.[sideId]?.canMegaEvo))) {
 			if (pokeA.item.megaStone) {
 				pokeA.template = getPokemon(pokeA.item.megaStone, this.gen, this.id);
 				pokeA.species = pokeA.template.species;
