@@ -2,10 +2,9 @@
 	Majors
 */
 
-var battleData = require("./battle-data.ts");
-var Move = battleData.Move;
+import { Move, Pokemon, getPokemon, getMove, getEffect } from './battle-data';
 
-module.exports = {
+export const majors = {
 	rated: function (args, kwargs) {
 		this.rated = true;
 	},
@@ -36,7 +35,7 @@ module.exports = {
 
 	tier: function (args, kwargs) {
 		if (!args[1]) args[1] = '';
-		for (var i in kwargs) args[1] += '[' + i + '] ' + kwargs[i];
+		for (let key in kwargs) args[1] += '[' + key + '] ' + kwargs[key];
 		this.tier = args[1];
 		if (toId(this.tier) === "inversebattle") {
 			this.conditions["inversebattle"] = true;
@@ -130,7 +129,7 @@ module.exports = {
 	clearpoke: function (args, kwargs) {
 		this.players.p1.teamPv = [];
 		this.players.p2.teamPv = [];
-		for (var i = 0; i < this.players.p1.active.length; i++) {
+		for (let i = 0; i < this.players.p1.active.length; i++) {
 			this.players.p1.active[i] = null;
 			this.players.p1.active[i] = null;
 		}
@@ -148,8 +147,8 @@ module.exports = {
 		poke.removeVolatile('formechange');
 		poke.removeVolatile('typeadd');
 		poke.removeVolatile('typechange');
-		for (var i in details) poke[i] = details[i];
-		poke.template = battleData.getPokemon(details.species, this.gen, this.id);
+		for (let attr in details) poke[attr] = details[attr];
+		poke.template = getPokemon(details.species, this.gen, this.id);
 	},
 
 	teampreview: function (args, kwargs) {
@@ -168,18 +167,18 @@ module.exports = {
 		var details = this.parseDetails(args[2]);
 		var health = this.parseStatus(args[3]);
 		/* Get the pokemon or create a new one */
-		var poke = null;
-		for (var i = 0; i < this.players[p].pokemon.length; i++) {
+		var poke: Pokemon | null = null;
+		for (let i = 0; i < this.players[p].pokemon.length; i++) {
 			if (this.players[p].pokemon[i].name === name)
 				poke = this.players[p].pokemon[i];
 		}
 		if (!poke) {
-			poke = new battleData.Pokemon(battleData.getPokemon(details.species, this.gen, this.id), { name: name });
+			poke = new Pokemon(getPokemon(details.species, this.gen, this.id), { name: name });
 			this.players[p].pokemon.push(poke);
 		}
 		poke.active = true;
 		poke.slot = slot;
-		for (var i in details) poke[i] = details[i];
+		for (let attr in details) poke[attr] = details[attr];
 		poke.hp = health.hp;
 		poke.status = health.status;
 		poke.helpers.sw = this.turn;
@@ -245,10 +244,10 @@ module.exports = {
 		var poke = this.getActive(args[1]);
 		var det = this.parsePokemonIdent(args[1]);
 		var poke2 = this.getActive(args[3]);
-		var moveTemplate = battleData.getMove(args[2], this.gen, this.id);
+		var moveTemplate = getMove(args[2], this.gen, this.id);
 		var fromeffect = null;
 		var noDeductPP = false;
-		if (kwargs.from) fromeffect = battleData.getEffect(kwargs.from, this.gen);
+		if (kwargs.from) fromeffect = getEffect(kwargs.from, this.gen);
 		if (fromeffect) {
 			switch (fromeffect.id) {
 				case 'snatch':
@@ -263,8 +262,8 @@ module.exports = {
 					break;
 			}
 		}
-		var move = null;
-		for (var i = 0; i < poke.moves.length; i++) {
+		var move: Move | null = null;
+		for (let i = 0; i < poke.moves.length; i++) {
 			if (poke.moves[i].id === moveTemplate.id) {
 				move = poke.moves[i];
 				break;
@@ -300,8 +299,8 @@ module.exports = {
 
 	cant: function (args, kwargs, isIntro) {
 		var poke = this.getActive(args[1]);
-		var effect = battleData.getEffect(args[2], this.gen);
-		var moveTemplate = battleData.getMove(args[3] || "", this.gen, this.id);
+		var effect = getEffect(args[2], this.gen);
+		var moveTemplate = getMove(args[3] || "", this.gen, this.id);
 		var det = this.parsePokemonIdent(args[1]);
 		switch (effect.id) {
 			case 'taunt':
@@ -325,8 +324,8 @@ module.exports = {
 				if (!isIntro) this.message(effect.id, det.side, poke.name); // hax
 				return; // No move
 		}
-		var move = null;
-		for (var i = 0; i < poke.moves.length; i++) {
+		var move: Move | null = null;
+		for (let i = 0; i < poke.moves.length; i++) {
 			if (poke.moves[i].id === moveTemplate.id) {
 				move = poke.moves[i];
 				break;
@@ -356,7 +355,7 @@ module.exports = {
 				requestData.trapped = true;
 				break;
 			case 'cant':
-				for (var i = 0; i < requestData.moves.length; i++) {
+				for (let i = 0; i < requestData.moves.length; i++) {
 					if (requestData.moves[i].id === args[3]) {
 						requestData.moves[i].disabled = true;
 					}

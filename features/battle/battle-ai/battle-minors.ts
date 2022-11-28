@@ -2,15 +2,15 @@
 	Minors
 */
 
-var battleData = require("./battle-data.ts");
+import { getPokemon, getMove, getEffect, getItem } from './battle-data';
 
-module.exports = {
+export const minors = {
 	"-damage": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
 		var hp = this.parseHealth(args[2]);
 		poke.hp = hp;
 		if (kwargs.from) {
-			var effect = battleData.getEffect(kwargs.from, this.gen);
+			var effect = getEffect(kwargs.from, this.gen);
 			var ofpoke = this.getActive(kwargs.of);
 			if (effect.effectType === 'Ability' && ofpoke) {
 				ofpoke.markAbility(effect.name);
@@ -46,7 +46,7 @@ module.exports = {
 					if (ofpoke) {
 						return;
 					} else if (effect.effectType === 'Item') {
-						poke.item = battleData.getItem(effect.name, this.gen, this.id);
+						poke.item = getItem(effect.name, this.gen, this.id);
 					} else if (effect.effectType === 'Ability') {
 						poke.markAbility(effect.name);
 					}
@@ -61,7 +61,7 @@ module.exports = {
 		var hp = this.parseHealth(args[2]);
 		poke.hp = hp;
 		if (kwargs.from) {
-			var effect = battleData.getEffect(kwargs.from, this.gen);
+			var effect = getEffect(kwargs.from, this.gen);
 			var ofpoke = this.getActive(kwargs.of);
 			if (effect.effectType === 'Ability') {
 				poke.markAbility(effect.name);
@@ -84,7 +84,7 @@ module.exports = {
 				case 'leftovers':
 				case 'shellbell':
 				case 'blacksludge':
-					poke.item = battleData.getItem(effect.name, this.gen, this.id);
+					poke.item = getItem(effect.name, this.gen, this.id);
 					break;
 			}
 		}
@@ -105,7 +105,7 @@ module.exports = {
 		var n = parseInt(args[3]) || 0;
 		poke.addBoost(stat, n);
 		if (kwargs.from) {
-			var effect = battleData.getEffect(kwargs.from, this.gen);
+			var effect = getEffect(kwargs.from, this.gen);
 			var ofpoke = this.getActive(kwargs.of);
 			if (effect.effectType === 'Ability' && !(effect.id === 'weakarmor' && stat === 'spe')) {
 				(ofpoke || poke).markAbility(effect.name);
@@ -119,7 +119,7 @@ module.exports = {
 		var n = parseInt(args[3]) || 0;
 		poke.addBoost(stat, (-1) * n);
 		if (kwargs.from) {
-			var effect = battleData.getEffect(kwargs.from, this.gen);
+			var effect = getEffect(kwargs.from, this.gen);
 			var ofpoke = this.getActive(kwargs.of);
 			if (effect.effectType === 'Ability') {
 				(ofpoke || poke).markAbility(effect.name);
@@ -133,7 +133,7 @@ module.exports = {
 		var n = parseInt(args[3]) || 0;
 		poke.setBoost(stat, (-1) * n);
 		if (kwargs.from) {
-			var effect = battleData.getEffect(kwargs.from, this.gen);
+			var effect = getEffect(kwargs.from, this.gen);
 			switch (effect.id) {
 				case 'bellydrum':
 					break;
@@ -222,8 +222,8 @@ module.exports = {
 
 	"-immune": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var effect = battleData.getEffect(args[2], this.gen);
-		var fromeffect = battleData.getEffect(kwargs.from, this.gen);
+		var effect = getEffect(args[2], this.gen);
+		var fromeffect = getEffect(kwargs.from, this.gen);
 		switch (effect.id) {
 			case 'confusion':
 				break;
@@ -236,8 +236,8 @@ module.exports = {
 
 	"-fail": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var effect = battleData.getEffect(args[2], this.gen);
-		var fromeffect = battleData.getEffect(kwargs.from, this.gen);
+		var effect = getEffect(args[2], this.gen);
+		var fromeffect = getEffect(kwargs.from, this.gen);
 		var ofpoke = this.getActive(kwargs.of);
 		if (fromeffect.id === 'skydrop') {
 			return;
@@ -305,8 +305,8 @@ module.exports = {
 
 	"-item": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var item = battleData.getItem(args[2], this.gen, this.id);
-		var effect = battleData.getEffect(kwargs.from, this.gen);
+		var item = getItem(args[2], this.gen, this.id);
+		var effect = getEffect(kwargs.from, this.gen);
 		var ofpoke = this.getActive(kwargs.of);
 		poke.item = item;
 		poke.itemEffect = '';
@@ -352,8 +352,8 @@ module.exports = {
 
 	"-enditem": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var item = battleData.getItem(args[2], this.gen, this.id);
-		var effect = battleData.getEffect(kwargs.from, this.gen);
+		var item = getItem(args[2], this.gen, this.id);
+		var effect = getEffect(kwargs.from, this.gen);
 		var ofpoke = this.getActive(kwargs.of);
 		poke.item = '';
 		poke.itemEffect = '';
@@ -411,8 +411,8 @@ module.exports = {
 
 	"-ability": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var ability = battleData.getAbility(args[2], this.gen, this.id);
-		var effect = battleData.getEffect(kwargs.from, this.gen);
+		var ability = getAbility(args[2], this.gen, this.id);
+		var effect = getEffect(kwargs.from, this.gen);
 		poke.markAbility(ability.name, effect.id && !kwargs.fail);
 		poke.supressedAbility = false;
 	},
@@ -425,7 +425,7 @@ module.exports = {
 	"-transform": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
 		var tpoke = this.getActive(args[2]);
-		var effect = battleData.getEffect(kwargs.from, this.gen);
+		var effect = getEffect(kwargs.from, this.gen);
 		if (effect.effectType === 'Ability') {
 			poke.markAbility(effect.name);
 		}
@@ -434,8 +434,8 @@ module.exports = {
 
 	"-formechange": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var template = battleData.getPokemon(args[2], this.gen, this.id);
-		var fromeffect = battleData.getEffect(kwargs.from, this.gen);
+		var template = getPokemon(args[2], this.gen, this.id);
+		var fromeffect = getEffect(kwargs.from, this.gen);
 		poke.removeVolatile('typeadd');
 		poke.removeVolatile('typechange');
 		if (fromeffect.effectType === 'Ability') {
@@ -447,10 +447,10 @@ module.exports = {
 
 	"-mega": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var item = battleData.getItem(args[3], this.gen, this.id);
+		var item = getItem(args[3], this.gen, this.id);
 		if (args[2] !== 'Rayquaza') {
 			poke.item = item;
-			var template = battleData.getPokemon(item.megaStone, this.gen, this.id);
+			var template = getPokemon(item.megaStone, this.gen, this.id);
 			poke.markAbility(template.abilities[0]);
 		}
 	},
@@ -463,9 +463,9 @@ module.exports = {
 	"-start": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
 		var ident = this.parsePokemonIdent(args[1]);
-		var effect = battleData.getEffect(args[2], this.gen);
+		var effect = getEffect(args[2], this.gen);
 		var ofpoke = this.getActive(kwargs.of);
-		var fromeffect = battleData.getEffect(kwargs.from, this.gen);
+		var fromeffect = getEffect(kwargs.from, this.gen);
 		poke.addVolatile(effect.id);
 		switch (effect.id) {
 			case 'typechange':
@@ -531,8 +531,8 @@ module.exports = {
 
 	"-end": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
-		var effect = battleData.getEffect(args[2], this.gen);
-		var fromeffect = battleData.getEffect(kwargs.from, this.gen);
+		var effect = getEffect(args[2], this.gen);
+		var fromeffect = getEffect(kwargs.from, this.gen);
 		poke.removeVolatile(effect.id);
 		switch (effect.id) {
 			case 'perishsong':
@@ -557,7 +557,7 @@ module.exports = {
 	"-activate": function (args, kwargs) {
 		var poke = this.getActive(args[1]);
 		var ident = this.parsePokemonIdent(args[1]);
-		var effect = battleData.getEffect(args[2], this.gen);
+		var effect = getEffect(args[2], this.gen);
 		var ofpoke = this.getActive(kwargs.of);
 		var ofIdent = this.parsePokemonIdent(kwargs.of);
 		if (effect.effectType === 'Ability') {
@@ -571,7 +571,7 @@ module.exports = {
 				this.players[ofIdent.side].removeSideCondition('AuroraVeil');
 				break;
 			case 'spite':
-				var move = battleData.getMove(args[3], this.gen, this.id).name;
+				var move = getMove(args[3], this.gen, this.id).name;
 				var pp = args[4];
 				poke.markMove(move, Number(pp) * (-1));
 				break;
@@ -581,8 +581,8 @@ module.exports = {
 				break;
 			case 'skillswap':
 				if (this.gen <= 4) break;
-				var pokeability = args[3] ? battleData.getAbility(args[3], this.gen, this.id) : ofpoke.ability;
-				var ofpokeability = args[4] ? battleData.getAbility(args[4], this.gen, this.id) : poke.ability;
+				var pokeability = args[3] ? getAbility(args[3], this.gen, this.id) : ofpoke.ability;
+				var ofpokeability = args[4] ? getAbility(args[4], this.gen, this.id) : poke.ability;
 				if (pokeability) {
 					poke.ability = pokeability;
 					if (!ofpoke.baseAbility) ofpoke.baseAbility = pokeability;
@@ -593,33 +593,33 @@ module.exports = {
 				}
 				break;
 			case 'quickclaw':
-				poke.item = battleData.getItem("quickclaw", this.gen, this.id);
+				poke.item = getItem("quickclaw", this.gen, this.id);
 				break;
 			case 'focusband':
-				poke.item = battleData.getItem("focusband", this.gen, this.id);
+				poke.item = getItem("focusband", this.gen, this.id);
 				break;
 			case 'safetygoggles':
-				poke.item = battleData.getItem("safetygoggles", this.gen, this.id);
+				poke.item = getItem("safetygoggles", this.gen, this.id);
 				break;
 		}
 	},
 
 	"-sidestart": function (args, kwargs) {
 		var side = this.getSide(args[1]);
-		var effect = battleData.getEffect(args[2], this.gen);
+		var effect = getEffect(args[2], this.gen);
 		side.addSideCondition(effect.name);
 	},
 
 	"-sideend": function (args, kwargs) {
 		var side = this.getSide(args[1]);
-		var effect = battleData.getEffect(args[2], this.gen);
+		var effect = getEffect(args[2], this.gen);
 		side.removeSideCondition(effect.name);
 	},
 
 	"-weather": function (args, kwargs) {
-		var effect = battleData.getEffect(args[1], this.gen);
+		var effect = getEffect(args[1], this.gen);
 		var poke = this.getActive(kwargs.of);
-		var ability = battleData.getEffect(kwargs.from, this.gen);
+		var ability = getEffect(kwargs.from, this.gen);
 		this.conditions.weather = toId(effect.name);
 		this.conditions.turnSetWeather = this.turn;
 		this.conditions.upkeepWeather = !!kwargs.upkeep;
@@ -627,13 +627,13 @@ module.exports = {
 	},
 
 	"-fieldstart": function (args, kwargs) {
-		var effect = battleData.getEffect(args[1], this.gen);
+		var effect = getEffect(args[1], this.gen);
 		var pw = toId(effect.name);
 		this.conditions[pw] = { turn: this.turn };
 	},
 
 	"-fieldend": function (args, kwargs) {
-		var effect = battleData.getEffect(args[1], this.gen);
+		var effect = getEffect(args[1], this.gen);
 		var pw = toId(effect.name);
 		if (this.conditions[pw]) delete this.conditions[pw];
 	},

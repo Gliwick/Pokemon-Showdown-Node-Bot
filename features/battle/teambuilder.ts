@@ -1,11 +1,16 @@
 const teamsDataFile = AppOptions.data + 'teams.json';
 
-module.exports = {
-	teams: {},
-	staticTeams: {},
-	dynTeams: {},
+export class TeamBuilder {
+	teams = {};
+	staticTeams = {};
+	dynTeams = {};
 
-	loadTeamList: function (reloading) {
+	writing: boolean = false;
+	writePending: boolean = false;
+
+	constructor() { };
+
+	loadTeamList(reloading) {
 		try {
 			if (reloading) Tools.uncacheTree('./features/battle/teams.js');
 			this.staticTeams = require('./teams.js').teams;
@@ -20,9 +25,9 @@ module.exports = {
 			error('failed to load teams: ' + sys.inspect(e));
 			return false;
 		}
-	},
+	};
 
-	mergeTeams: function () {
+	mergeTeams() {
 		if (this.teams) delete this.teams;
 		this.teams = {};
 		Object.merge(this.teams, this.staticTeams);
@@ -31,9 +36,9 @@ module.exports = {
 			if (!this.teams[team.format]) this.teams[team.format] = [];
 			this.teams[team.format].push(team.packed);
 		}
-	},
+	};
 
-	addTeam: function (name, format, packed) {
+	addTeam(name, format, packed) {
 		if (this.dynTeams[name]) return false;
 		this.dynTeams[name] = {
 			format: format,
@@ -42,19 +47,17 @@ module.exports = {
 		this.mergeTeams();
 		this.saveTeams();
 		return true;
-	},
+	};
 
-	removeTeam: function (name) {
+	removeTeam(name) {
 		if (!this.dynTeams[name]) return false;
 		delete this.dynTeams[name];
 		this.mergeTeams();
 		this.saveTeams();
 		return true;
-	},
+	};
 
-	writing: false,
-	writePending: false,
-	saveTeams: function () {
+	saveTeams() {
 		var data = JSON.stringify(this.dynTeams);
 		var finishWriting = function () {
 			this.writing = false;
@@ -78,9 +81,9 @@ module.exports = {
 				finishWriting();
 			});
 		});
-	},
+	};
 
-	getTeam: function (format) {
+	getTeam(format) {
 		var formatId = toId(format);
 		var teamStuff = this.teams[formatId];
 		if (!teamStuff || !teamStuff.length) return false;
@@ -110,7 +113,7 @@ module.exports = {
 					}
 					if (Config.debug.debug) debug("Packed Team: " + JSON.stringify(team));
 					teamStr = this.packTeam(team);
-				} else if (teamChosen.length){
+				} else if (teamChosen.length) {
 					//parse team
 					teamStr = this.packTeam(teamChosen);
 				} else {
@@ -125,17 +128,19 @@ module.exports = {
 		} catch (e) {
 			error(e.stack);
 		}
-	},
+	};
 
-	hasTeam: function (format) {
+	hasTeam(format) {
 		var formatId = toId(format);
 		if (this.teams[formatId]) return true;
 		return false;
-	},
+	};
 
 	/* Pack Team function - from Pokemon-Showdown-Client */
 
-	packTeam: function (team) {
+	packTeam(team) {
 		return Tools.packTeam(team);
 	}
 };
+
+export const TEAM_BUILDER = new TeamBuilder();

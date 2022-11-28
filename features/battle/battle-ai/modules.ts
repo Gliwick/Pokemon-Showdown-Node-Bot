@@ -2,15 +2,24 @@
  * Battle modules
  */
 
-var modules = exports.modules = {};
+import { Battle } from './battle';
+import { Decision } from './decision';
 
-var modFiles = ['singles-eff.ts', 'ingame-nostatus.ts'];
+interface Module {
+	ID: string;
+	desc?: string;
+	decide: (battle: Battle, decisions: Decision[][]) => Decision[];
+}
 
-modFiles.forEach(function (file) {
+export const modules: { [key: string]: Module } = {};
+
+const modFiles = ['singles-eff.ts', 'ingame-nostatus.ts', 'random.ts'];
+
+modFiles.forEach((file) => {
 	var mod;
 	try {
-		mod = require("./modules/" + file);
-		if (!mod.id) return;
+		mod = require("./modules/" + file) as Module | undefined;
+		if (!mod?.ID) return;
 		modules[mod.id] = mod;
 		debug("Loaded battle module: " + mod.id + (mod.desc ? (" [" + mod.desc + "]") : ""));
 	} catch (e) {
@@ -19,12 +28,12 @@ modFiles.forEach(function (file) {
 	}
 });
 
-exports.choose = function (battle) {
+export function choose(battle: Battle): Module | null {
 	if (!battle.tier) return null;
 
-	if (Config.battleModules && Config.battleModules[toId(battle.tier)]) {
-		var mod = Config.battleModules[toId(battle.tier)];
-		mod = modules[mod];
+	const modId = Config.battleModules?.[toId(battle.tier)];
+	if (modId) {
+		const mod = modules[modId];
 		if (mod) {
 			debug("Battle module [" + battle.id + "] - Using " + mod);
 			return mod;

@@ -4,15 +4,22 @@
 
 const battleAutojoinFile = AppOptions.data + "_temp/" + "battle-autojoin-tmp.json";
 
-var Battle = require('./battle.ts').Battle;
+import { Battle } from "./battle";
 
-var BattleLogger = require('./battle-log.ts');
+import { createStream } from "./battle-log";
 
-module.exports = {
-	battles: {},
-	battlesCount: 0,
+export class BattleBot {
+	battles = {};
+	battlesCount = 0;
 
-	init: function () {
+	autojoinFFM;
+	autoJoinData: {};
+
+	constructor() {
+		this.autojoinFFM = new Settings.FlatFileManager(battleAutojoinFile);
+	};
+
+	init() {
 		for (var room in this.battles) {
 			try {
 				this.battles[room].destroy();
@@ -20,12 +27,9 @@ module.exports = {
 			delete this.battles[room];
 		}
 		this.battlesCount = 0;
-	},
+	};
 
-	autojoinFFM: new Settings.FlatFileManager(battleAutojoinFile),
-	autoJoinData: {},
-
-	tryJoinAbandonedBattles: function () {
+	tryJoinAbandonedBattles() {
 		if (!Config.abandonedBattleAutojoin) return;
 		try {
 			this.autoJoinData = this.autojoinFFM.readObj();
@@ -41,9 +45,9 @@ module.exports = {
 		}
 		this.autojoinFFM.writeObj(this.autoJoinData);
 		return cmds;
-	},
+	};
 
-	updateBattleAutojoin: function () {
+	updateBattleAutojoin() {
 		if (!Config.abandonedBattleAutojoin) return;
 		for (var i in this.autoJoinData) {
 			delete this.autoJoinData[i];
@@ -52,9 +56,9 @@ module.exports = {
 			this.autoJoinData[room] = 1;
 		}
 		this.autojoinFFM.writeObj(this.autoJoinData);
-	},
+	};
 
-	receive: function (room, data, isIntro) {
+	receive(room, data, isIntro) {
 		if (data.charAt(0) === ">") return;
 		var spl = data.substr(1).split("|");
 		if (spl[0] === 'init') {
@@ -64,7 +68,7 @@ module.exports = {
 				} catch (e) { }
 			}
 			this.battles[room] = new Battle(room);
-			BattleLogger.createStream(this.battles[room]);
+			createStream(this.battles[room]);
 			this.battlesCount++;
 			this.updateBattleAutojoin();
 		}
@@ -81,9 +85,9 @@ module.exports = {
 				this.updateBattleAutojoin();
 			}
 		}
-	},
+	};
 
-	destroy: function () {
+	destroy() {
 		for (var room in this.battles) {
 			try {
 				this.battles[room].destroy();
@@ -93,3 +97,5 @@ module.exports = {
 		}
 	}
 };
+
+export const BATTLE_BOT = new BattleBot();

@@ -2,37 +2,36 @@
 	Battle Feature
 */
 
-exports.id = 'battle';
-exports.desc = 'Automated battle bot';
+export const id = 'battle';
+export const desc = 'Automated battle bot';
 
-var BattleBot = exports.BattleBot = require('./battle-ai/index.js');
+import { BATTLE_BOT } from './battle-ai/index';
 
-var TeamBuilder = exports.TeamBuilder = require('./teambuilder.js');
+import { TEAM_BUILDER } from './teambuilder';
 
-var ChallManager = exports.ChallManager = require('./challenges.js');
+import { CHALLENGE_MANAGER } from './challenges';
 
-var TourManager = exports.TourManager = require('./tournaments.js');
+import { TOUR_MANAGER } from './tournaments';
 
-var LadderManager = exports.LadderManager = require('./ladder.js');
+import { LADDER_MANAGER } from './ladder';
 
-exports.init = function () {
-	BattleBot.init();
-	TourManager.clearData();
-	TeamBuilder.loadTeamList();
+export function init() {
+	BATTLE_BOT.init();
+	TOUR_MANAGER.clearData();
+	TEAM_BUILDER.loadTeamList();
 };
 
-exports.parse = function (room, message, isIntro, spl) {
-
+export function parse(room, message, isIntro, spl) {
 	switch (spl[0]) {
 		case 'tournament':
 			TourManager.parse(room, message, isIntro, spl);
 			break;
 		case 'rated':
-			LadderManager.reportBattle(room);
+			LADDER_MANAGER.reportBattle(room);
 			break;
 		default:
 			if (spl.length > 3 && spl[3].startsWith('/challenge')) {
-				ChallManager.parse(room, message, isIntro, spl);
+				CHALLENGE_MANAGER.parse(room, message, isIntro, spl);
 			}
 	}
 
@@ -41,24 +40,24 @@ exports.parse = function (room, message, isIntro, spl) {
 	} else if (Bot.rooms[room].type !== "battle") return;
 
 	try {
-		BattleBot.receive(room, message, isIntro);
+		BATTLE_BOT.receive(room, message, isIntro);
 	} catch (e) {
 		errlog(e.stack);
-		error("BattleBot crash");
+		error("BATTLE_BOT crash");
 	}
 };
 
-exports.getInitCmds = function () {
-	return BattleBot.tryJoinAbandonedBattles();
+export function getInitCmds() {
+	return BATTLE_BOT.tryJoinAbandonedBattles();
 };
 
-exports.readyToDie = function () {
-	var battles = Object.keys(BattleBot.battles);
+export function readyToDie() {
+	var battles = Object.keys(BATTLE_BOT.battles);
 	if (battles.length) return ("There are " + battles.length + " battles in progress");
 };
 
-exports.destroy = function () {
-	LadderManager.destroy();
-	BattleBot.destroy();
+export function destroy() {
+	LADDER_MANAGER.destroy();
+	BATTLE_BOT.destroy();
 	if (Features[exports.id]) delete Features[exports.id];
 };

@@ -6,74 +6,92 @@
 const MAX_RECURSIVE = 5;
 const MIN_TIME_LOCK = 3 * 1000; // 3 secods to avoid send spam
 
-var majors = exports.majors = require("./battle-majors.ts");
-var minors = exports.minors = require("./battle-minors.ts");
+import { majors } from './battle-majors';
+import { minors } from './battle-minors';
 
-var modules = require("./modules.ts");
-var decisionMaker = require("./decision.ts");
+import { choose } from './modules';
+import { getDecisions } from './decision';
 
-var battleData = require("./battle-data.ts");
-var Player = battleData.Player;
 
-var Calc = require('./calc.ts');
+import { Player, getPokemon, getItem, getAbility, CurrentGen } from './battle-data';
 
-var Battle = exports.Battle = (function () {
-	function Battle(id) {
+import { Pokemon } from './calc';
+
+interface Players {
+	p1: Player;
+	p2: Player;
+}
+
+interface LastSend {
+	rqid: number;
+	time: number;
+	decision: any;
+}
+
+interface Helpers {
+	self: any;
+	foe: any;
+}
+
+export class Battle {
+	id: string;
+	title: string = "";
+	players: Players = {
+		p1: new Player("p1"),
+		p2: new Player("p2")
+	};
+	users = {};
+
+	self = null;
+	foe = null;
+
+	gametype: string = "singles";
+	gen: number = CurrentGen;
+	tier: string = "gen8ou";
+	rules = [];
+	variations = [];
+
+	started: boolean = false;
+	timer: boolean = false;
+	sentTimerReq: number = 0;
+	turn: number = 0;
+	request = null;
+	rqid: number = 0;
+	teamPreview: number = 1;
+
+	conditions = {};
+
+	file = null;
+	stream = null;
+	lastSend: LastSend = {
+		rqid: -1,
+		time: 0,
+		decision: null
+	};
+	lock: boolean = false;
+	leaveInterval = null;
+
+	helpers: Helpers = { self: {}, foe: {} };
+
+	constructor(id) {
 		this.id = id;
-		this.title = "";
-		this.players = {
-			p1: new Player("p1"),
-			p2: new Player("p2")
-		};
-		this.users = {};
-
-		this.self = null;
-		this.foe = null;
-
-		this.gametype = "singles";
-		this.gen = 8;
-		this.tier = "gen8ou";
-		this.rules = [];
-		this.variations = [];
-
-		this.started = false;
-		this.timer = false;
-		this.sentTimerReq = 0;
-		this.turn = 0;
-		this.request = null;
-		this.rqid = 0;
-		this.teamPreview = 1;
-
-		this.conditions = {};
-
-		this.file = null;
-		this.stream = null;
-		this.lastSend = {
-			rqid: -1,
-			time: 0,
-			decision: null
-		};
-		this.lock = false;
-		this.leaveInterval = null;
-
-		this.helpers = { self: {}, foe: {} };
 	}
 
-	Battle.prototype.createLogStream = function (file) {
+	createLogStream = function (file) {
 		fs.writeFileSync(file, ""); // Clear File
 		this.stream = fs.createWriteStream(file, { flags: 'a+' });
 		this.file = file;
 	};
 
-	Battle.prototype.send = function (data) {
+	send = function (data) {
 		Bot.sendRoom(this.id, data, 2000);
 	};
 
-	Battle.prototype.eval = function (str) {
+	eval = function (str) {
 		return eval(str);
 	};
 
-	Battle.prototype.sendDecision = function (decision) {
+	sendDecision = function (decision) {
 		if (!decision || !decision.length) return;
 		debug("Send Decision: ".cyan + JSON.stringify(decision));
 		var str = "/choose ";
@@ -130,7 +148,7 @@ var Battle = exports.Battle = (function () {
 		this.send(str + "|" + this.rqid);
 	};
 
-	Battle.prototype.checkTimer = function () {
+	checkTimer = function () {
 		if (!this.self || !this.request) return; // Not playing
 		if (!this.timer) {
 			if (this.sentTimerReq && Date.now() - this.sentTimerReq < MIN_TIME_LOCK) return; // Do not spam timer commands
@@ -139,7 +157,7 @@ var Battle = exports.Battle = (function () {
 		}
 	};
 
-	Battle.prototype.leave = function () {
+	leave = function () {
 		if (!this.leaveInterval) {
 			this.leaveInterval = setInterval(function () {
 				this.send("/leave");
@@ -148,7 +166,7 @@ var Battle = exports.Battle = (function () {
 		this.send('/leave');
 	};
 
-	Battle.prototype.start = function () {
+	start = function () {
 		if (!this.self || !this.request) return; // Not playing
 		var wmsg = Config.initBattleMsg;
 		if (wmsg && wmsg.length) {
@@ -159,7 +177,7 @@ var Battle = exports.Battle = (function () {
 		}
 	};
 
-	Battle.prototype.win = function (winner) {
+	win = function (winner) {
 		if (!this.self) return; // Not playing
 		var win = (toId(winner) === toId(Bot.status.nickName));
 		if (win) {
@@ -181,7 +199,7 @@ var Battle = exports.Battle = (function () {
 		}
 	};
 
-	Battle.prototype.message = function (type, player, poke) {
+	message = function (type, player, poke) {
 		if (!this.self) return; // Not playing
 		if (!Config.battleMessages || !Config.battleMessages[type]) return;
 
@@ -211,7 +229,7 @@ var Battle = exports.Battle = (function () {
 		}
 	};
 
-	Battle.prototype.makeDecision = function (forced) {
+	makeDecision = function (forced) {
 		if (!this.self) return; // Not playing
 		debug(this.id + "->MakeDecision");
 		if (!forced && this.lastSend.rqid >= 0 && this.lastSend.rqid === this.rqid) {
@@ -226,7 +244,7 @@ var Battle = exports.Battle = (function () {
 		debug("Making decisions - " + this.id);
 		var decisions, mod;
 		try {
-			decisions = decisionMaker.getDecisions(this);
+			decisions = getDecisions(this);
 		} catch (e) {
 			debug(e.stack);
 			debug("Decision maker crashed: " + sys.inspect(e));
@@ -240,7 +258,7 @@ var Battle = exports.Battle = (function () {
 			return;
 		}
 		try {
-			mod = modules.choose(this);
+			mod = choose(this);
 			if (mod) {
 				var decision = mod.decide(this, decisions);
 				if (decision instanceof Array) {
@@ -259,18 +277,18 @@ var Battle = exports.Battle = (function () {
 		this.sendDecision(decisions[Math.floor(Math.random() * decisions.length)]);
 	};
 
-	Battle.prototype.log = function (line) {
+	log = function (line) {
 		if (this.stream) {
 			this.stream.write(line + "\n");
 		}
 	};
 
-	Battle.prototype.add = function (line, isIntro) {
+	add = function (line, isIntro) {
 		this.run(line, isIntro);
 		this.log(line);
 	};
 
-	Battle.prototype.run = function (str, isIntro) {
+	run = function (str, isIntro) {
 		if (!str) return;
 		if (str.charAt(0) !== '|' || str.substr(0, 2) === '||') {
 			return;
@@ -294,7 +312,7 @@ var Battle = exports.Battle = (function () {
 		}
 	};
 
-	Battle.prototype.runMinor = function (args, kwargs, isIntro) {
+	runMinor = function (args, kwargs, isIntro) {
 		if (args) {
 			if (args[2] === 'Sturdy' && args[0] === '-activate') args[2] = 'ability: Sturdy';
 		}
@@ -319,7 +337,7 @@ var Battle = exports.Battle = (function () {
 		}
 	};
 
-	Battle.prototype.runMajor = function (args, kwargs, isIntro) {
+	runMajor = function (args, kwargs, isIntro) {
 		if (majors[args[0]]) {
 			var major = majors[args[0]];
 			var r = 0;
@@ -341,7 +359,7 @@ var Battle = exports.Battle = (function () {
 		}
 	};
 
-	Battle.prototype.parseDetails = function (str) {
+	parseDetails = function (str) {
 		if (!str) return null;
 		var details = str.split(",");
 		for (var d = 0; d < details.length; d++)
@@ -369,12 +387,12 @@ var Battle = exports.Battle = (function () {
 		return poke;
 	};
 
-	Battle.prototype.parseSlot = function (id) {
+	parseSlot = function (id) {
 		var slots = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5 };
 		return slots[id] || 0;
 	};
 
-	Battle.prototype.parseStatus = function (str) {
+	parseStatus = function (str) {
 		var status = {
 			hp: 100,
 			status: false
@@ -393,7 +411,7 @@ var Battle = exports.Battle = (function () {
 		return status;
 	};
 
-	Battle.prototype.parseHealth = function (str) {
+	parseHealth = function (str) {
 		var hp = 100;
 		var sp = str.split(" ");
 		sp = sp[0].split("/");
@@ -408,13 +426,13 @@ var Battle = exports.Battle = (function () {
 		return hp;
 	};
 
-	Battle.prototype.getSide = function (str) {
+	getSide = function (str) {
 		if (!str) return null;
 		str = str.split(":")[0];
 		return this.players[str];
 	};
 
-	Battle.prototype.getActive = function (str) {
+	getActive = function (str) {
 		if (!str) return null;
 		var side = str.substr(0, 2);
 		str = str.substr(2);
@@ -429,7 +447,7 @@ var Battle = exports.Battle = (function () {
 		return null;
 	};
 
-	Battle.prototype.parsePokemonIdent = function (str) {
+	parsePokemonIdent = function (str) {
 		if (!str) return null;
 		var side = str.substr(0, 2);
 		str = str.substr(2);
@@ -444,7 +462,7 @@ var Battle = exports.Battle = (function () {
 		};
 	};
 
-	Battle.prototype.getCalcRequestPokemon = function (sideId, forceMega) {
+	getCalcRequestPokemon = function (sideId, forceMega) {
 		var p = this.request.side.pokemon[sideId];
 		var details = this.parseDetails(p.details);
 		var condition = this.parseStatus(p.condition);
@@ -452,26 +470,26 @@ var Battle = exports.Battle = (function () {
 		let side = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
 		let pokeId = p.ident.split(': ')[1] + '|' + details.species;
 
-		var pokeA = new Calc.Pokemon(
-			battleData.getPokemon(details.species, this.gen, this.id),
+		var pokeA = new Pokemon(
+			getPokemon(details.species, this.gen, this.id),
 			{ level: details.level, shiny: details.shiny, gender: details.gender, helpers: (this.helpers[side][pokeId] || {}) },
 		);
-		pokeA.item = battleData.getItem(p.item, this.gen);
-		pokeA.ability = battleData.getAbility(p.baseAbility, this.gen);
+		pokeA.item = getItem(p.item, this.gen);
+		pokeA.ability = getAbility(p.baseAbility, this.gen);
 		pokeA.status = condition.status;
 		pokeA.hp = condition.hp;
 		pokeA.stats = p.stats;
 		if (forceMega && (p.canMegaEvo || (this.request.active && this.request.active[sideId] && this.request.active[sideId].canMegaEvo))) {
 			if (pokeA.item.megaStone) {
-				pokeA.template = battleData.getPokemon(pokeA.item.megaStone, this.gen, this.id);
+				pokeA.template = getPokemon(pokeA.item.megaStone, this.gen, this.id);
 				pokeA.species = pokeA.template.species;
-				pokeA.ability = battleData.getAbility(pokeA.template.abilities[0]);
+				pokeA.ability = getAbility(pokeA.template.abilities[0]);
 			}
 		}
 		return pokeA;
 	};
 
-	Battle.prototype.destroy = function () {
+	destroy = function () {
 		if (this.stream) {
 			this.stream.close();
 			this.stream = null;
@@ -481,6 +499,4 @@ var Battle = exports.Battle = (function () {
 			this.leaveInterval = null;
 		}
 	};
-
-	return Battle;
-})();
+};

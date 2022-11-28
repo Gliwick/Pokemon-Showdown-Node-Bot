@@ -2,12 +2,36 @@
  * Pokemon Showdown Bot - Damage calculator
 */
 
-var TypeChart = require('./typechart.ts');
+import { getMultipleEff, getEffectiveness } from "./typechart";
 
-const CurrentGen = 9;
+import { CurrentGen, Type } from "./battle-data";
 
-var Pokemon = exports.Pokemon = (function () {
-	function Pokemon(template, properties) {
+interface StatsTable {
+	atk?: number;
+	def?: number;
+	spa?: number;
+	spd?: number;
+	spe?: number;
+};
+
+export class Pokemon {
+	name: string;
+	species: string;
+	gender = false;
+	item = null;
+	stats: StatsTable = {};
+	evs: StatsTable = {};
+	ivs: StatsTable = {};
+	dvs: StatsTable = {};
+	nature: StatsTable = {};
+	ability: string | null = null;
+	level: number = 100;
+	shiny: boolean = false;
+	happiness: number | null = null;
+	status: string | null = null;
+	hp: number = 100;
+
+	constructor(template, properties) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
 		this.template = template;
 		if (properties.helpers && properties.helpers.template) {
@@ -19,19 +43,6 @@ var Pokemon = exports.Pokemon = (function () {
 
 		this.name = this.template.species;
 		this.species = this.template.species;
-		this.gender = false;
-		this.item = null;
-		this.stats = {};
-		this.evs = {};
-		this.ivs = {};
-		this.dvs = {};
-		this.nature = {};
-		this.ability = null;
-		this.level = 100;
-		this.shiny = false;
-		this.happiness = null;
-		this.status = false;
-		this.hp = 100;
 
 		for (var i in properties) {
 			if (typeof this[i] === 'undefined' || typeof this[i] === 'function') continue;
@@ -40,19 +51,19 @@ var Pokemon = exports.Pokemon = (function () {
 		}
 	}
 
-	Pokemon.prototype.getEV = function (ev, gen) {
+	getEV = function (ev, gen) {
 		return this.evs[ev] || (gen <= 2 ? 252 : 84);
 	};
 
-	Pokemon.prototype.getIV = function (iv) {
+	getIV = function (iv) {
 		return this.ivs[iv] || 31;
 	};
 
-	Pokemon.prototype.getDV = function (dv) {
+	getDV = function (dv) {
 		return this.dvs[dv] || 15;
 	};
 
-	Pokemon.prototype.getBaseStat = function (stat) {
+	getBaseStat = function (stat) {
 		if (this.template && this.template.baseStats) {
 			if (this.template.species === 'Aegislash' && this.hasAbility('stancechange') && stat in { 'atk': 1, 'spa': 1 }) return (this.gen >= 8 ? 140 : 150);
 			else return this.template.baseStats[stat] || 0;
@@ -61,7 +72,7 @@ var Pokemon = exports.Pokemon = (function () {
 		}
 	};
 
-	Pokemon.prototype.getStat = function (stat, gen) {
+	getStat = function (stat, gen) {
 		if (this.stats[stat]) return this.stats[stat];
 		if (stat === 'hp' && this.getBaseStat(stat) === 1) return 1;
 
@@ -81,7 +92,7 @@ var Pokemon = exports.Pokemon = (function () {
 		}
 	};
 
-	Pokemon.prototype.getStats = function (gen) {
+	getStats = function (gen) {
 		if (!gen) gen = CurrentGen;
 		let stats = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 		let res = {};
@@ -91,7 +102,7 @@ var Pokemon = exports.Pokemon = (function () {
 		return res;
 	};
 
-	Pokemon.prototype.getBoostedStat = function (stat, statValue, boosts) {
+	getBoostedStat = function (stat, statValue, boosts) {
 		if (boosts[stat]) {
 			let muxOff = 1 + (0.5) * Math.abs(boosts[stat]);
 			if (boosts[stat] < 0) muxOff = 1 / muxOff;
@@ -100,7 +111,7 @@ var Pokemon = exports.Pokemon = (function () {
 		return statValue;
 	};
 
-	Pokemon.prototype.getTypes = function (conditions) {
+	getTypes = function (conditions) {
 		let types = [...this.template.types];
 		if (conditions && conditions.volatiles) {
 			if (conditions.volatiles.terastallize) return [conditions.volatiles.terastallize];
@@ -112,7 +123,7 @@ var Pokemon = exports.Pokemon = (function () {
 		return types;
 	}
 
-	Pokemon.prototype.hasType = function (type_s, conditions) {
+	hasType = function (type_s, conditions) {
 		let pokemonTypes = this.getTypes(conditions);
 		if (typeof type_s === 'string') return pokemonTypes.includes(type_s);
 
@@ -122,19 +133,19 @@ var Pokemon = exports.Pokemon = (function () {
 		return false;
 	}
 
-	Pokemon.prototype.hasAbility = function (ability) {
+	hasAbility = function (ability) {
 		return (this.ability && !this.supressedAbility && (this.ability.id === ability || (typeof ability !== 'string' && this.ability.id in ability)));
 	}
 
-	Pokemon.prototype.hasItem = function (item) {
+	hasItem = function (item) {
 		return (this.item && (this.item.id === item || (typeof item !== 'string' && this.item.id in item)) && !this.hasAbility('klutz'));
 	}
 
-	Pokemon.prototype.isGrounded = function (conditions) {
+	isGrounded = function (conditions) {
 		return !(this.hasType('Flying', conditions) || this.hasAbility('levitate') || this.hasItem('airballoon'));
 	}
 
-	Pokemon.prototype.getFullSpe = function (battle, conditions, ignoreBoost) {
+	getFullSpe = function (battle, conditions, ignoreBoost) {
 		let gen = battle.gen || CurrentGen;
 
 		let spe = Math.floor(this.getStat('spe', gen));
@@ -163,12 +174,15 @@ var Pokemon = exports.Pokemon = (function () {
 
 		return spe;
 	};
+};
 
-	return Pokemon;
-})();
+export class Conditions {
+	volatiles = {};
+	boosts = {};
+	side = {};
+	immediate = {};
 
-var Conditions = exports.Conditions = (function () {
-	function Conditions(data) {
+	constructor(data) {
 		if (typeof data !== 'object') throw new Error('Invalid conditions data');
 		this.volatiles = {};
 		this.boosts = {};
@@ -179,26 +193,27 @@ var Conditions = exports.Conditions = (function () {
 			this[i] = { ...data[i] };
 		}
 	}
+};
 
-	return Conditions;
-})();
-
-var getRolls = exports.getRolls = function (n, pmin, pmax) {
+export function getRolls(n: number, pmin: number = 0.85, pmax: number = 1): number[] {
 	if (n === 0) return [0];
 
-	if (!pmin) pmin = 0.85;
-	if (!pmax) pmax = 1;
-	let rolls = [];
+	let rolls: number[] = [];
 	for (var m = pmin; m <= pmax; m += 0.01) {
 		rolls.push(Math.floor(m * n) || 1);
 	}
 	return rolls;
 };
 
-var Damage = exports.Damage = (function () {
-	function Damage(hp, rolls) {
+export class Damage {
+	rolls: number[];
+	hp: number;
+	percents: number[] = [];
+
+	constructor(hp: number, rolls?: number[]) {
 		this.rolls = rolls || [];
 		this.hp = hp || 1;
+
 		this.percents = [];
 		for (var i = 0; i < this.rolls.length; i++) {
 			if (hp === 0) {
@@ -210,7 +225,7 @@ var Damage = exports.Damage = (function () {
 		this.percents.sort();
 	}
 
-	Damage.prototype.getChance = function (p) {
+	getChance = function (p) {
 		if (!this.percents || this.percents.length) return 0;
 		if (!this.hp || this.hp <= 0) return 100;
 		let s = 0;
@@ -220,23 +235,21 @@ var Damage = exports.Damage = (function () {
 		return (s * 100 / this.percents.length);
 	};
 
-	Damage.prototype.getMax = function () {
+	getMax = function () {
 		return this.percents[0] || 0;
 	};
 
-	Damage.prototype.getMin = function () {
+	getMin = function () {
 		return this.percents[0] || 0;
 	};
 
-	Damage.prototype.getAvg = function () {
+	getAvg = function () {
 		if (!this.percents.length) return 0;
 		return this.percents[Math.ceil(this.percents.length / 2) - 1];
 	};
+};
 
-	return Damage;
-})();
-
-exports.getHazardsDamage = function (poke, conditions, gconditions, gen, battleId) {
+export function getHazardsDamage(poke, conditions, gconditions, gen, battleId): number {
 	if ((gen >= 3 && poke.hasAbility('magicguard')) || poke.hasItem('heavydutyboots')) return 0;
 
 	let side = conditions.side;
@@ -246,19 +259,19 @@ exports.getHazardsDamage = function (poke, conditions, gconditions, gen, battleI
 	let dmg = 0;
 
 	if (side['stealthrock']) {
-		dmg += (100 * TypeChart.getMultipleEff('Rock', poke.getTypes(conditions), gen, false, !!gconditions.inversebattle, battleId)) / 8.0;
+		dmg += (100 * getMultipleEff('Rock', poke.getTypes(conditions), gen, false, !!gconditions.inversebattle, battleId)) / 8.0;
 	}
 	if (side['spikes']) {
 		if (gconditions['gravity'] || !poke.isGrounded(conditions)) dmg += (100 * side['spikes']) / 24.0;
 	}
 	if (side['gmaxsteelsurge']) {
-		dmg += (100 * TypeChart.getMultipleEff('Steel', poke.getTypes(conditions), gen, false, !!gconditions.inversebattle, battleId)) / 8.0;
+		dmg += (100 * getMultipleEff('Steel', poke.getTypes(conditions), gen, false, !!gconditions.inversebattle, battleId)) / 8.0;
 	}
 
 	return dmg;
 };
 
-var getMoveType = exports.getMoveType = function (poke, move, conditions, gconditions, gen) {
+export function getMoveType(poke, move, conditions, gconditions, gen): Type {
 	switch (move.id) {
 		case 'aurawheel':
 			if (poke.template.species === 'Morpeko-Hangry') return 'Dark';
@@ -311,7 +324,7 @@ var getMoveType = exports.getMoveType = function (poke, move, conditions, gcondi
 	return move.type;
 }
 
-var getDamage = function (level, bp, atk, def, modifier, typesMux) {
+function getDamage(level: number, bp: number, atk: number, def: number, modifier: number, typesMux: number): number {
 	if (bp === 0) return 0;
 	return Math.floor((Math.floor(Math.floor((Math.floor(2 * level / 5.0) + 2) * bp * atk / def) / 50.0) + 2) * modifier * typesMux) || 1;
 };
@@ -331,7 +344,7 @@ var getDamage = function (level, bp, atk, def, modifier, typesMux) {
  *  - gen (6 by default)
 */
 
-exports.calculate = function (attacker, defender, move, globalConditions, battle, transformation) {
+export function calculate(attacker, defender, move, globalConditions, battle, transformation?: any): Damage {
 	const attackerPoke = attacker.poke;
 	const attackerConditions = new Conditions(attacker.conditions || {});
 	const defenderPoke = defender.poke;
@@ -475,9 +488,9 @@ exports.calculate = function (attacker, defender, move, globalConditions, battle
 	if (moveType in { 'Fighting': 1, 'Normal': 1 } && (defenderConditions.volatiles['foresight'] || attackerPoke.hasAbility('scrappy'))) notImmune = true;
 	if (moveType === 'Ground' && (move.id === 'thousandarrows' || globalConditions['gravity'])) notImmune = true;
 	let defTypes = defenderPoke.getTypes(defenderConditions).slice();
-	let typesMux = TypeChart.getMultipleEff(moveType, defTypes, gen, notImmune, !!globalConditions.inversebattle, battleId);
-	if (move.id === 'flyingpress') typesMux *= TypeChart.getMultipleEff('Flying', defTypes, gen, notImmune, !!globalConditions.inversebattle, battleId);
-	if (move.id === 'freezedry' && defTypes.indexOf('Water') >= 0 && !globalConditions.inversebattle) typesMux *= (2 / TypeChart.getEffectiveness(moveType, 'Water', gen, !!globalConditions.inversebattle, battleId));
+	let typesMux = getMultipleEff(moveType, defTypes, gen, notImmune, !!globalConditions.inversebattle, battleId);
+	if (move.id === 'flyingpress') typesMux *= getMultipleEff('Flying', defTypes, gen, notImmune, !!globalConditions.inversebattle, battleId);
+	if (move.id === 'freezedry' && defTypes.indexOf('Water') >= 0 && !globalConditions.inversebattle) typesMux *= (2 / getEffectiveness(moveType, 'Water', gen, !!globalConditions.inversebattle, battleId));
 
 	let immune = false;
 
@@ -602,7 +615,7 @@ exports.calculate = function (attacker, defender, move, globalConditions, battle
 			if (bp > 150) bp = 150;
 			break;
 		case 'electroball':
-			if (speA, speB) {
+			if (speA && speB) {
 				if (speA / speB >= 4) {
 					bp = 150;
 				} else if (speA / speB >= 3) {
@@ -1053,7 +1066,7 @@ exports.calculate = function (attacker, defender, move, globalConditions, battle
 
 	let hitsBP = [bp];
 	if (move.id in { 'tripleaxel': 1, 'triplekick': 1 }) {
-		if (this.gen === 2) hitsBP = [bp, bp, bp];
+		if (this.gen === 2) hitsBP = [bp, bp + 10, bp + 20];
 		else hitsBP = [bp, 2 * bp, 3 * bp];
 	} else if (move.multihit) {
 		let numberOfHits = (typeof move.multihit === 'number' ? move.multihit : (move.multihit[1] || 1));

@@ -2,8 +2,11 @@
  * Random Decision
  */
 
-exports.id = "random";
+import { Battle } from "../battle";
+import { Decision } from "../decision";
 
-exports.decide = function (battle, decisions) {
+export const ID = "random";
+
+export function decide(battle: Battle, decisions: Decision[][]): Decision[] {
 	return decisions[Math.floor(Math.random() * decisions.length)];
 };

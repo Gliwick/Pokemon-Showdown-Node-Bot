@@ -1,7 +1,6 @@
 'use strict';
 
-/**@type {{[k: string]: PureEffectData}} */
-let BattleStatuses = {
+export const BattleStatuses: { [k: string]: { [k: string]: any } } = {
 	brn: {
 		name: 'brn',
 		id: 'brn',
@@ -191,7 +190,7 @@ let BattleStatuses = {
 			this.activeTarget = pokemon;
 			let damage = this.getDamage(pokemon, pokemon, 40);
 			if (typeof damage !== 'number') throw new Error("Confusion damage not dealt");
-			this.damage(damage, pokemon, pokemon, /** @type {ActiveMove} */ ({
+			this.damage(damage, pokemon, pokemon, /** @type {ActiveMove} */({
 				id: 'confused',
 				effectType: 'Move',
 				type: '???',
@@ -816,5 +815,3 @@ let BattleStatuses = {
 		},
 	},
 };
-
-exports.BattleStatuses = BattleStatuses;

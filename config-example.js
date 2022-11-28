@@ -32,7 +32,7 @@ exports.crashguard = true;
 * Security log
 */
 
-exports.securityLog = {ageOfLogs: 7};
+exports.securityLog = { ageOfLogs: 7 };
 
 /*
 * Watch Config
@@ -243,9 +243,9 @@ exports.moderation = {
 
 	zeroToleranceDefaultLevel: 'h',
 	zeroToleranceLevels: {
-		'l': {name: 'Low', value: 1},
-		'n': {name: 'Normal', value: 2},
-		'h': {name: 'High', value: 3}
+		'l': { name: 'Low', value: 1 },
+		'n': { name: 'Normal', value: 2 },
+		'h': { name: 'High', value: 3 }
 	}
 };
 
@@ -280,8 +280,8 @@ exports.formatMods = {
 
 exports.battleModules = {
 	/* Algorithms for use in battles */
-	"gen8challengecup1v1": "ingame-nostatus",
-	"gen81v1": "ingame-nostatus",
+	"gen9challengecup1v1": "ingame-nostatus",
+	"gen91v1": "ingame-nostatus",
 };
 
 //exports.battleLog = {ageOfLogs: 1}; // Days
@@ -345,7 +345,7 @@ exports.youtube = {
 
 exports.chatLogger = {
 	rooms: [],
-	ignore: {'tournament': ['update', 'updateEnd'], 'formats': true, 'challstr': true, 'updateuser': true, 'queryresponse': true},
+	ignore: { 'tournament': ['update', 'updateEnd'], 'formats': true, 'challstr': true, 'updateuser': true, 'queryresponse': true },
 	logIntroMessages: true,
 	ageOfLogs: 7 //in days (max age of logs, 0 to keep logs infinitely)
 };

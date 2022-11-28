@@ -10,10 +10,10 @@ var tourData = exports.tourData = {};
 
 var Leaderboards = exports.Leaderboards = require('./leaderboards.js');
 
-const CurrentGen = 8;
+const CurrentGen = 9;
 
 var Tournament = exports.Tournament = (function () {
-	function Tournament (room, details) {
+	function Tournament(room, details) {
 		this.format = details.format || 'gen' + CurrentGen + 'randombattle';
 		this.type = details.type || 'elimination';
 		this.eliminationCount = details.eliminationCount || 1;
@@ -68,7 +68,7 @@ exports.init = function () {
 	for (var i in tournaments) {
 		try {
 			if (tournaments[i].startTimer) clearTimeout(tournaments[i].startTimer);
-		} catch (e) {}
+		} catch (e) { }
 		delete tournaments[i];
 	}
 	for (var i in tourData)
@@ -107,7 +107,7 @@ exports.parse = function (room, message, isIntro, spl) {
 				var data = JSON.parse(spl[2]);
 				for (var i in data)
 					tourData[room][i] = data[i];
-			} catch (e){}
+			} catch (e) { }
 			break;
 		case 'updateEnd':
 			if (!tournaments[room]) break;
@@ -120,7 +120,7 @@ exports.parse = function (room, message, isIntro, spl) {
 				var data = JSON.parse(spl[2]);
 				for (var i in data)
 					tourData[room][i] = data[i];
-			} catch (e){}
+			} catch (e) { }
 			Leaderboards.onTournamentEnd(room, tourData[room]);
 			delete tourData[room];
 			if (tournaments[room] && tournaments[room].startTimer) clearTimeout(tournaments[room].startTimer);

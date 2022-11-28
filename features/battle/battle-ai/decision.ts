@@ -2,57 +2,68 @@
 * Decision maker
 */
 
-var Data = require('./battle-data.ts');
+import { Battle } from "./battle";
 
-var MoveDecision = exports.MoveDecision = (function () {
-	function MoveDecision(moveId, target, transformation, move, movePP) {
-		this.type = "move";
+type DecisionType = 'move' | 'switch' | 'team' | 'pass' | 'shift';
+
+export abstract class Decision {
+	type: DecisionType;
+
+	constructor(type: DecisionType) {
+		this.type = type;
+	}
+}
+
+export class MoveDecision extends Decision {
+	moveId: number;
+	target;
+	move: string;
+	movePP: number;
+	transformation;
+
+	constructor(moveId: number, target, transformation, move: string, movePP: number) {
+		super('move');
 		this.moveId = moveId || 0;
 		this.target = target;
 		this.move = move || "struggle";
 		this.movePP = movePP || 1;
 		this.transformation = transformation;
 	}
+};
 
-	return MoveDecision;
-})();
+export class SwitchDecision extends Decision {
+	poke: string;
+	pokeId: number;
 
-var SwitchDecision = exports.SwitchDecision = (function () {
-	function SwitchDecision(pokeId, poke) {
-		this.type = "switch";
+	constructor(pokeId: number, poke: string) {
+		super('switch');
 		this.poke = poke || "pikachu";
 		this.pokeId = pokeId || 0;
 	}
+}
 
-	return SwitchDecision;
-})();
+export class TeamDecision extends Decision {
+	team: number[];
 
-var TeamDecision = exports.TeamDecision = (function () {
-	function TeamDecision(team) {
-		this.type = "team";
+	constructor(team) {
+		super('team');
 		this.team = team || [0, 1, 2, 3, 4, 5];
 	}
+};
 
-	return TeamDecision;
-})();
-
-var PassDecision = exports.PassDecision = (function () {
-	function PassDecision() {
-		this.type = "pass";
+export class PassDecision extends Decision {
+	constructor() {
+		super('pass');
 	}
+};
 
-	return PassDecision;
-})();
-
-var ShiftDecision = exports.ShiftDecision = (function () {
-	function ShiftDecision() {
-		this.type = "shift";
+export class ShiftDecision extends Decision {
+	constructor() {
+		super('shift');
 	}
+}
 
-	return ShiftDecision;
-})();
-
-function isTooFar(battle, a, b) {
+function isTooFar(battle, a, b): boolean {
 	if (battle.gametype === 'triples') {
 		return ((a === 0 && b === 0) || (a === 2 && b === 2));
 	} else {
@@ -130,8 +141,8 @@ function cartesianProduct(tables) {
 	return comb;
 }
 
-function getTargets(battle, activeIndex, move) {
-	let targets = [];
+function getTargets(battle, activeIndex, move): (number | null)[] {
+	let targets: (number | null)[] = [];
 	if (move.target in { 'any': 1, 'normal': 1, 'adjacentAlly': 1, 'adjacentAllyOrSelf': 1, 'adjacentFoe': 1 }) {
 		if (!move.target.startsWith('adjacentAlly')) {
 			let auxHasTarget = false;
@@ -161,8 +172,8 @@ function getTargets(battle, activeIndex, move) {
 	return targets;
 }
 
-exports.getDecisions = function (battle) {
-	var res = [];
+export function getDecisions(battle: Battle): Decision[][] | null {
+	const res: Decision[][] = [];
 	var req = battle.request;
 	if (!req) return null;
 	if (req.wait) return null; // Nothing to do
