@@ -19,7 +19,7 @@ import { Pokemon, Conditions, calculate } from "./../calc";
 
 import { getAbility, getMove, getPokemon } from "./../battle-data";
 import { Battle } from "../battle";
-import { Decision } from "../decision";
+import { Decision, MoveDecision, SwitchDecision, TeamDecision } from "../decision";
 
 export const ID = "ingame-nostatus";
 
@@ -31,13 +31,13 @@ const BadMoves = ['focuspunch', 'shelltrap', 'explosion', 'selfdestruct', 'lastr
 /*
  * Moves which require 2 turs without any protection
  */
-const DoubleTurnMoves = ['iceburn', 'freezeshock', 'meteorbeam', 'razorwind', 'skyattack', 'solarbeam', 'solarblade'];
+const DoubleTurnMoves = ['iceburn', 'freezeshock', 'meteorbeam', 'razorwind', 'skullbash', 'skyattack', 'solarbeam', 'solarblade'];
 
 /*
  * Team and Switch Decisions
  */
 
-function getPokemonAverage(battle, s) {
+function getPokemonAverage(battle: Battle, s: number): number {
 	if (!battle.foe.teamPv.length) return 0;
 
 	var p = battle.request.side.pokemon[s];
@@ -46,7 +46,7 @@ function getPokemonAverage(battle, s) {
 
 	var final = 0;
 	var conditions = new Conditions({});
-	for (var i = 0; i < battle.foe.teamPv.length; i++) {
+	for (let i = 0; i < battle.foe.teamPv.length; i++) {
 		var pokeView = battle.foe.teamPv[i];
 		var template = getPokemon(pokeView.species, battle.gen);
 		var poke = new Pokemon(template, {
@@ -72,9 +72,9 @@ function getPokemonAverage(battle, s) {
 	return 0 + final;
 }
 
-function evaluateTeamDecision(battle, des) {
+function evaluateTeamDecision(battle: Battle, des: TeamDecision): number {
 	var final = 0;
-	for (var i = 0; i < des.team.length; i++) {
+	for (let i = 0; i < des.team.length; i++) {
 		final += getPokemonAverage(battle, des.team[i]);
 	}
 	return final;
@@ -84,17 +84,17 @@ function evaluateTeamDecision(battle, des) {
  * Switch Decisions
  */
 
-function getSwitchAverage(battle, s) {
+function getSwitchAverage(battle: Battle, pokeId: number): number {
 	var final = 0;
-	var p = battle.request.side.pokemon[s];
-	var pokeA = battle.getCalcRequestPokemon(s, true);
+	var p = battle.request.side.pokemon[pokeId];
+	var pokeA = battle.getCalcRequestPokemon(pokeId, true);
 	if (toId(battle.tier).indexOf("challengecup") >= 0) pokeA.happiness = 100;
 	var conditionsA = new Conditions({
 		side: battle.self.side,
 		volatiles: {},
 		boosts: {}
 	});
-	for (var i = 0; i < p.moves.length; i++) {
+	for (let i = 0; i < p.moves.length; i++) {
 		var move = getMove(p.moves[i], battle.gen);
 		var targets = battle.foe.active;
 		for (var j = 0; j < targets.length; j++) {
@@ -135,7 +135,7 @@ function getSwitchAverage(battle, s) {
 	return final / p.moves.length;
 }
 
-function evaluateSwitchDecision(battle, des) {
+function evaluateSwitchDecision(battle: Battle, des: SwitchDecision): number {
 	var final = -1000;
 	final += getSwitchAverage(battle, des.pokeId);
 	return final;
@@ -145,7 +145,7 @@ function evaluateSwitchDecision(battle, des) {
  * Move Decisions
  */
 
-function evaluateMoveDecision(battle, desEnv, des, act) {
+function evaluateMoveDecision(battle: Battle, desEnv: Decision[], des: MoveDecision, act: number): number {
 	var final = 0;
 	var p = battle.request.side.pokemon[act];
 	var a = battle.request.active[act];
@@ -174,7 +174,7 @@ function evaluateMoveDecision(battle, desEnv, des, act) {
 		targets = battle.foe.active;
 	}
 
-	for (var i = 0; i < targets.length; i++) {
+	for (let i = 0; i < targets.length; i++) {
 		if (!targets[i]) continue;
 		var conditionsB = new Conditions({
 			side: battle.foe.side,
@@ -215,13 +215,13 @@ function evaluateMoveDecision(battle, desEnv, des, act) {
  * Swapper
  */
 
-function getDecisionValue(battle, decisions, desEnv, des, act) {
+function getDecisionValue(battle: Battle, decisions: Decision[][], desEnv: Decision[], des: Decision, act: number): number {
 	if (des.type === "team") {
-		return evaluateTeamDecision(battle, des);
+		return evaluateTeamDecision(battle, des as TeamDecision);
 	} else if (des.type === "move") {
-		return evaluateMoveDecision(battle, desEnv, des, act);
+		return evaluateMoveDecision(battle, desEnv, des as MoveDecision, act);
 	} else if (des.type === "switch") {
-		return evaluateSwitchDecision(battle, des);
+		return evaluateSwitchDecision(battle, des as SwitchDecision);
 	} else {
 		return -1000; // Pass, Shift
 	}
@@ -233,7 +233,7 @@ export function decide(battle: Battle, decisions: Decision[][]): Decision[] {
 	maxP = null;
 	for (var d = 0; d < decisions.length; d++) {
 		p = 0;
-		for (var i = 0; i < decisions[d].length; i++) {
+		for (let i = 0; i < decisions[d].length; i++) {
 			p += getDecisionValue(battle, decisions, decisions[d], decisions[d][i], i);
 		}
 		dTable.push({ des: d, val: p });

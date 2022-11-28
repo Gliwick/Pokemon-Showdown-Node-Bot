@@ -358,7 +358,7 @@ export class Move {
 	};
 };
 
-type Gender = "M" | "F" | "N";
+export type Gender = "M" | "F" | "N";
 
 export class Pokemon {
 	template;

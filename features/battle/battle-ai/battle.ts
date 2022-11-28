@@ -42,8 +42,8 @@ export class Battle {
 	};
 	users = {};
 
-	self = null;
-	foe = null;
+	self: { [key: string]: any } | null = null;
+	foe: { [key: string]: any } | null = null;
 
 	gametype: string = "singles";
 	gen: number = CurrentGen;
@@ -55,7 +55,7 @@ export class Battle {
 	timer: boolean = false;
 	sentTimerReq: number = 0;
 	turn: number = 0;
-	request = null;
+	request: { [key: string]: any } | null = null;
 	rqid: number = 0;
 	teamPreview: number = 1;
 

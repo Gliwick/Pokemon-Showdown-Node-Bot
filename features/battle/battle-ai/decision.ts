@@ -3,6 +3,7 @@
 */
 
 import { Battle } from "./battle";
+import { Type } from "./battle-data";
 
 type DecisionType = 'move' | 'switch' | 'team' | 'pass' | 'shift';
 
@@ -14,14 +15,16 @@ export abstract class Decision {
 	}
 }
 
+type Transformation = { terastallize: Type } | string;
+
 export class MoveDecision extends Decision {
 	moveId: number;
 	target;
 	move: string;
 	movePP: number;
-	transformation;
+	transformation: Transformation | null;
 
-	constructor(moveId: number, target, transformation, move: string, movePP: number) {
+	constructor(moveId: number, target, transformation: Transformation | null, move: string, movePP: number) {
 		super('move');
 		this.moveId = moveId || 0;
 		this.target = target;
@@ -191,7 +194,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 
 	if (req.forceSwitch) {
 		var fw = req.forceSwitch;
-		var tables = [];
+		const tables: Decision[][] = [];
 		var toSw, canSw;
 		toSw = 0;
 		for (var i = 0; i < fw.length; i++) if (fw[i]) toSw++;
@@ -216,7 +219,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 	}
 
 	if (req.active) {
-		var tables = [];
+		const tables: Decision[][] = [];
 		for (var i = 0; i < req.active.length; i++) {
 			tables.push([]);
 			if (req.side.pokemon[i].condition === "0 fnt") {
@@ -240,7 +243,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 					for (let target of targets) {
 						tables[i].push(new MoveDecision(j, target, null, move.move, move.pp));
 						if (mega) tables[i].push(new MoveDecision(j, target, 'mega', move.move, move.pp));
-						if (active.canTerastallize) tables[i].push(new MoveDecision(j, target, { terastallize: active.canTerastallize }, move.move, move.pp));;
+						if (active.canTerastallize) tables[i].push(new MoveDecision(j, target, { terastallize: active.canTerastallize as Type }, move.move, move.pp));;
 					}
 
 					if (active.canZMove && active.canZMove[j]) {
