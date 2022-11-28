@@ -2,10 +2,10 @@
 	Battle commands (challenges, tours, ladder)
 */
 
-import { LADDER_MANAGER } from '../';
-import { BATTLE_BOT } from '../features/battle/battle-ai';
-import { TEAM_BUILDER } from '../features/battle/teambuilder';
-import { TOUR_MANAGER } from '../features/battle/tournaments';
+const LADDER_MANAGER = Features['battle'].LADDER_MANAGER;
+const BATTLE_BOT = Features['battle'].BATTLE_BOT;
+const TEAM_BUILDER = Features['battle'].TEAM_BUILDER;
+const TOUR_MANAGER = Features['battle'].TOUR_MANAGER;
 
 Settings.addPermissions(['challenge', 'searchbattle', 'jointour']);
 

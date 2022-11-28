@@ -2,26 +2,26 @@
 	Battle Feature
 */
 
-export const id = 'battle';
-export const desc = 'Automated battle bot';
+exports.id = 'battle';
+exports.desc = 'Automated battle bot';
 
-import { BATTLE_BOT } from './battle-ai/index';
+const BATTLE_BOT = exports.BATTLE_BOT = require('./battle-ai/index').BATTLE_BOT;
 
-import { TEAM_BUILDER } from './teambuilder';
+const TEAM_BUILDER = exports.TEAM_BUILDER = require('./teambuilder').TEAM_BUILDER;
 
-import { CHALLENGE_MANAGER } from './challenges';
+const CHALLENGE_MANAGER = exports.CHALLENGE_MANAGER = require('./challenges').CHALLENGE_MANAGER;
 
-import { TOUR_MANAGER } from './tournaments';
+const TOUR_MANAGER = exports.TOUR_MANAGER = require('./tournaments').TOUR_MANAGER;
 
-import { LADDER_MANAGER } from './ladder';
+const LADDER_MANAGER = exports.LADDER_MANAGER = require('./ladder').LADDER_MANAGER;
 
-export function init() {
+exports.init = function () {
 	BATTLE_BOT.init();
 	TOUR_MANAGER.clearData();
 	TEAM_BUILDER.loadTeamList();
 };
 
-export function parse(room, message, isIntro, spl) {
+exports.parse = function (room, message, isIntro, spl) {
 	switch (spl[0]) {
 		case 'tournament':
 			TourManager.parse(room, message, isIntro, spl);
@@ -47,16 +47,16 @@ export function parse(room, message, isIntro, spl) {
 	}
 };
 
-export function getInitCmds() {
+exports.getInitCmds = function () {
 	return BATTLE_BOT.tryJoinAbandonedBattles();
 };
 
-export function readyToDie() {
+exports.readyToDie = function () {
 	var battles = Object.keys(BATTLE_BOT.battles);
 	if (battles.length) return ("There are " + battles.length + " battles in progress");
 };
 
-export function destroy() {
+exports.destroy = function () {
 	LADDER_MANAGER.destroy();
 	BATTLE_BOT.destroy();
 	if (Features[exports.id]) delete Features[exports.id];

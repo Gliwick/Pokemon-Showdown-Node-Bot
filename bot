@@ -1,12 +1,31 @@
 #!/usr/bin/env node
 
+function installDependencies() {
+	console.log(`Installing dependencies...`);
+	require('child_process').execSync('npm install --production', { stdio: 'inherit' });
+}
+
+function registerTSNode() {
+	require('ts-node').register({ project: './tsconfig.json', files: true, transpileOnly: true, transpiler: 'ts-node/transpilers/swc-experimental' });
+}
+
+function setupTSNode() {
+	try {
+		registerTSNode();
+	} catch (e) {
+		installDependencies();
+		registerTSNode();
+	}
+}
+
 try {
+	setupTSNode();
 	require('sugar');
 	require('colors');
 	require('websocket')
 } catch (e) {
 	console.log('Installing dependencies...');
-	require('child_process').spawnSync('sh', ['-c', 'npm install --production'], {stdio: 'inherit'});
+	require('child_process').spawnSync('sh', ['-c', 'npm install --production'], { stdio: 'inherit' });
 }
 
 // Start the Bot

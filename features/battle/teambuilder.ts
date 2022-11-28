@@ -10,7 +10,7 @@ export class TeamBuilder {
 
 	constructor() { };
 
-	loadTeamList(reloading) {
+	loadTeamList(reloading?: boolean) {
 		try {
 			if (reloading) Tools.uncacheTree('./features/battle/teams.js');
 			this.staticTeams = require('./teams.js').teams;
