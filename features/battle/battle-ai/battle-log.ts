@@ -43,7 +43,7 @@ export function createStream(battle) {
 		errlog(e.message);
 	}
 	this.sweep(LOGS_PATH + "battle-log/");
-},
+};
 
 export function sweep(dir) {
 	//delete previous logs
@@ -70,4 +70,4 @@ export function sweep(dir) {
 		errlog(e.message);
 		errlog(e.stack);
 	}
-}
+};

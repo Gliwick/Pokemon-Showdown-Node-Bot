@@ -17,23 +17,11 @@
         "esModuleInterop": true
     },
     "types": ["node"],
-    "exclude": [
-        "./.*-dist/**/*",
-        "./server/chat-plugins/private/*/*.d.ts"
-    ],
     "include": [
-        "./config/*.ts",
-        "./data/*",
-        "./data/text/*",
-        "./data/mods/*/*",
-        "./dev-tools/*.ts",
-        "./lib/*.ts",
-        "./server/**/*.ts",
-        "./server/**/*.tsx",
-        "./sim/**/*",
-        "./tools/set-import/*.ts",
-        "./tools/modlog/*.ts",
-        "./translations/**/*.ts",
+        "./features/battle/*.ts",
+        "./features/battle/battle-ai/*.ts",
+        "./features/battle/battle-ai/modules/*.ts",
+        "./features/battle/data/*.ts",
     ],
     "ts-node": {
         "files": true,

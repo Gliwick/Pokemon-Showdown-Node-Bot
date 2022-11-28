@@ -173,11 +173,11 @@ function getTargets(battle, activeIndex, move): (number | null)[] {
 }
 
 export function getDecisions(battle: Battle): Decision[][] | null {
-	const res: Decision[][] = [];
 	var req = battle.request;
 	if (!req) return null;
 	if (req.wait) return null; // Nothing to do
 	if (req.teamPreview) {
+		const res: Decision[][] = [];
 		/* Team required */
 		var n = 1;
 		if (battle.gametype === 'doubles') n = 2;
@@ -186,7 +186,10 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 		for (var i = 0; i < comb.length; i++) {
 			res.push([new TeamDecision(comb[i])]);
 		}
-	} else if (req.forceSwitch) {
+		return res;
+	}
+
+	if (req.forceSwitch) {
 		var fw = req.forceSwitch;
 		var tables = [];
 		var toSw, canSw;
@@ -209,8 +212,10 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 				}
 			}
 		}
-		res = cartesianProduct(tables);
-	} else if (req.active) {
+		return cartesianProduct(tables);
+	}
+
+	if (req.active) {
 		var tables = [];
 		for (var i = 0; i < req.active.length; i++) {
 			tables.push([]);
@@ -277,7 +282,8 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 			}
 
 		}
-		res = cartesianProduct(tables);
+		return cartesianProduct(tables);
 	}
-	return res;
+
+	return [];
 };

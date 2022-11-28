@@ -2,7 +2,7 @@
 	Tournaments parser
 */
 
-import { TEAM_BUILDER } from "./teambuilder";
+import { teamBuilder } from "./teambuilder";
 
 const ACTION_INTERVAL = 1500;
 
@@ -41,18 +41,18 @@ export class TourManager {
 					if (Formats[format] && !Formats[format].team) {
 						Bot.say(room, '/tour join');
 					} else {
-						if (TEAM_BUILDER.hasTeam(this.tourData[room].format)) Bot.say(room, '/tour join');
+						if (teamBuilder.hasTeam(this.tourData[room].format)) Bot.say(room, '/tour join');
 					}
 				}
 				if (!Settings.lockdown && this.tourData[room].challenges && this.tourData[room].challenges.length) {
 					if (this.canSendCommands(room)) {
-						var team = TEAM_BUILDER.getTeam(this.tourData[room].format);
+						var team = teamBuilder.getTeam(this.tourData[room].format);
 						if (team) Bot.say(room, '/useteam ' + team);
 						for (var i = 0; i < this.tourData[room].challenges.length; i++) Bot.say(room, '/tour challenge ' + this.tourData[room].challenges[i]);
 					}
 				} else if (!Settings.lockdown && this.tourData[room].challenged) {
 					if (this.canSendCommands(room)) {
-						var team = TEAM_BUILDER.getTeam(this.tourData[room].format);
+						var team = teamBuilder.getTeam(this.tourData[room].format);
 						if (team) Bot.say(room, '/useteam ' + team);
 						Bot.say(room, '/tour acceptchallenge');
 					}
@@ -66,4 +66,4 @@ export class TourManager {
 	};
 };
 
-export const TOUR_MANAGER = new TourManager();
+export const tourManager = new TourManager();

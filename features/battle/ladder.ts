@@ -1,5 +1,5 @@
-import { BATTLE_BOT } from "./battle-ai";
-import { TEAM_BUILDER } from "./teambuilder";
+import { battleBot } from "./battle-ai";
+import { teamBuilder } from "./teambuilder";
 
 export class LadderManager {
 	reportsRoom: boolean = false;
@@ -25,12 +25,12 @@ export class LadderManager {
 			var counter = 0;
 			var maxBattles = 1;
 			if (Config.ladderNumberOfBattles) maxBattles = Config.ladderNumberOfBattles;
-			for (let battle in BATTLE_BOT.battles) {
-				if (BATTLE_BOT.battles[battle].tier && toId(BATTLE_BOT.battles[battle].tier) === format && BATTLE_BOT.battles[battle].rated) counter++;
+			for (let battle in battleBot.battles) {
+				if (battleBot.battles[battle].tier && toId(battleBot.battles[battle].tier) === format && battleBot.battles[battle].rated) counter++;
 			}
 			if (counter >= maxBattles) return;
 			var cmds = [];
-			var team = TEAM_BUILDER.getTeam(format);
+			var team = teamBuilder.getTeam(format);
 			if (team) cmds.push('|/useteam ' + team);
 			cmds.push('|/search ' + format);
 			Bot.send(cmds);
@@ -56,4 +56,4 @@ export class LadderManager {
 	};
 };
 
-export const LADDER_MANAGER = new LadderManager();
+export const ladderManager = new LadderManager();

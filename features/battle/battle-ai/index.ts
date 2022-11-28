@@ -98,4 +98,4 @@ export class BattleBot {
 	}
 };
 
-export const BATTLE_BOT = new BattleBot();
+export const battleBot = new BattleBot();

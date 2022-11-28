@@ -16,12 +16,11 @@ export const modules: { [key: string]: Module } = {};
 const modFiles = ['singles-eff.ts', 'ingame-nostatus.ts', 'random.ts'];
 
 modFiles.forEach((file) => {
-	var mod;
 	try {
-		mod = require("./modules/" + file) as Module | undefined;
+		const mod = require("./modules/" + file) as Module | undefined;
 		if (!mod?.ID) return;
-		modules[mod.id] = mod;
-		debug("Loaded battle module: " + mod.id + (mod.desc ? (" [" + mod.desc + "]") : ""));
+		modules[mod.ID] = mod;
+		debug("Loaded battle module: " + mod.ID + (mod.desc ? (" [" + mod.desc + "]") : ""));
 	} catch (e) {
 		errlog(e.stack);
 		error("Could not import battle module: " + file + " | " + sys.inspect(e));

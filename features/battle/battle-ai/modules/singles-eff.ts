@@ -406,7 +406,6 @@ function evaluatePokemon(battle, sideId) {
 	}
 
 	if (conditionsB.volatiles.dynamax) {
-		const maxMovesB = [];
 		const typeMaxMove = {
 			'Bug': 'maxflutterby',
 			'Dark': 'maxdarkness',
@@ -427,7 +426,7 @@ function evaluatePokemon(battle, sideId) {
 			'Steel': 'maxsteelspike',
 			'Water': 'maxgeyser',
 		};
-		maxMovesB = [];
+		const maxMovesB = [];
 		for (let move of movesB) {
 			maxMovesB.push(getMove(typeMaxMove[move.type], battle.gen, battle.id));
 		}
@@ -2209,7 +2208,7 @@ var getBestSwitch = exports.getBestSwitch = function (battle, decisions) {
 			if (pk.helpers.hasNoViableMoves === battle.foe.active[0].name) continue;
 		}
 
-		switchOption = {
+		const switchOption = {
 			decision: decisions[i],
 			ev: evaluatePokemon(battle, decisions[i][0].pokeId),
 		};

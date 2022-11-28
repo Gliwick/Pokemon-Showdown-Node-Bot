@@ -1,5 +1,5 @@
-import { BATTLE_BOT } from "./battle-ai";
-import { TEAM_BUILDER } from "./teambuilder";
+import { battleBot } from "./battle-ai";
+import { teamBuilder } from "./teambuilder";
 
 export class ChallengeManager {
 	challenges: string[] = [];
@@ -16,24 +16,24 @@ export class ChallengeManager {
 
 	parse(room, message, isIntro, spl) {
 		if (!spl[3].startsWith('/challenge ')) return;
-		var nBattles = Object.keys(BATTLE_BOT.battles).length;
+		var nBattles = Object.keys(battleBot.battles).length;
 		this.challenges = [spl[4]];
 		if (this.challenges) {
 			for (var format of this.challenges) {
 				const player = spl[1];
-				if (canChallenge(nBattles)) {
+				if (this.canChallenge(nBattles)) {
 					if (Settings.lockdown || !(format in Formats) || !Formats[format].chall) {
 						Bot.say('', '/reject ' + player);
 						debug("rejected battle: " + format);
 						continue;
 					}
-					if (Formats[format].team && !TEAM_BUILDER.hasTeam(format)) {
+					if (Formats[format].team && !teamBuilder.hasTeam(format)) {
 						Bot.say('', '/reject ' + player);
 						debug("rejected battle (no team) : " + format);
 						continue;
 					}
 
-					var team = TEAM_BUILDER.getTeam(format);
+					var team = teamBuilder.getTeam(format);
 					Bot.say(spl[1], '/useteam ' + (team || 'null'));
 					Bot.say('', '/accept ' + player);
 					nBattles++;
@@ -48,4 +48,4 @@ export class ChallengeManager {
 	};
 };
 
-export const CHALLENGE_MANAGER = new ChallengeManager();
+export const challengeManager = new ChallengeManager();

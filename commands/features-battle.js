@@ -2,16 +2,12 @@
 	Battle commands (challenges, tours, ladder)
 */
 
-const LADDER_MANAGER = Features['battle'].LADDER_MANAGER;
-const BATTLE_BOT = Features['battle'].BATTLE_BOT;
-const TEAM_BUILDER = Features['battle'].TEAM_BUILDER;
-const TOUR_MANAGER = Features['battle'].TOUR_MANAGER;
-
 Settings.addPermissions(['challenge', 'searchbattle', 'jointour']);
 
 exports.commands = {
 	jsbattle: 'evalbattle',
 	eb: 'evalbattle',
+
 	evalbattle: function (arg, by, room, cmd) {
 		if (!this.isExcepted) return false;
 		this.sclog();
@@ -21,11 +17,11 @@ exports.commands = {
 			arg = tarObj.arg;
 			tarRoom = tarObj.room;
 		}
-		if (!Features['battle'] || !BATTLE_BOT || !BATTLE_BOT.battles) return false;
-		if (!BATTLE_BOT.battles[tarRoom]) return this.reply('Battle "' + tarRoom + '" not found');
+		if (!Features['battle'] || !Features['battle'].battleBot || !Features['battle'].battleBot.battles) return false;
+		if (!Features['battle'].battleBot.battles[tarRoom]) return this.reply('Battle "' + tarRoom + '" not found');
 		var result;
 		try {
-			result = BATTLE_BOT.battles[tarRoom].eval(arg);
+			result = Features['battle'].battleBot.battles[tarRoom].eval(arg);
 			this.say(room, '``' + JSON.stringify(result) + '``');
 		} catch (e) {
 			this.say(room, e.name + ": " + e.message);
@@ -35,7 +31,7 @@ exports.commands = {
 	reloadteams: function (arg, by, room, cmd) {
 		if (!this.isExcepted) return false;
 		this.sclog();
-		if (TEAM_BUILDER.loadTeamList(true)) {
+		if (Features['battle'].teamBuilder.loadTeamList(true)) {
 			this.reply(this.trad('s'));
 		} else {
 			this.reply(this.trad('e'));
@@ -46,12 +42,11 @@ exports.commands = {
 		if (!this.isExcepted) return false;
 		this.sclog();
 		try {
-			var data = BATTLE_BOT.data;
-			Tools.uncacheTree('./features/battle/battle-bot.js');
-			BATTLE_BOT = require('./../features/battle/battle-bot.js');
-			BATTLE_BOT.init();
-			BATTLE_BOT.data = data;
-			BATTLE_BOT.battlesCount = Object.keys(data).length;
+			var data = Features['battle'].battleBot.data;
+			Features['battle'].battleBot = new Features['battle'].BattleBot();
+			Features['battle'].battleBot.init();
+			Features['battle'].battleBot.data = data;
+			Features['battle'].battleBot.battlesCount = Object.keys(data).length;
 			this.reply("Battle modules hotpatched");
 		} catch (e) {
 			this.reply("Error: " + sys.inspect(e));
@@ -75,7 +70,7 @@ exports.commands = {
 		this.sclog();
 		if (this.roomType !== 'battle') return this.reply(this.trad('notbattle'));
 		try {
-			BATTLE_BOT.battles[room].makeDecision(true);
+			Features['battle'].battleBot.battles[room].makeDecision(true);
 		} catch (e) {
 			this.reply('Error: ' + sys.inspect(e));
 		}
@@ -115,10 +110,10 @@ exports.commands = {
 		if (!arg || !arg.length) return this.reply(this.trad('e1'));
 		var format = Tools.parseAliases(arg);
 		if (!Formats[format] || !Formats[format].ladder) return this.reply(this.trad('e21') + ' ' + format + ' ' + this.trad('e22'));
-		if (Formats[format].team && !TEAM_BUILDER.hasTeam(format)) return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
-		LADDER_MANAGER.reportsRoom = room;
+		if (Formats[format].team && !Features['battle'].teamBuilder.hasTeam(format)) return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
+		Features['battle'].ladderManager.reportsRoom = room;
 		var cmds = [];
-		var team = TEAM_BUILDER.getTeam(format);
+		var team = Features['battle'].teamBuilder.getTeam(format);
 		if (team) cmds.push('|/useteam ' + team);
 		cmds.push('|/search ' + arg);
 		this.send(cmds);
@@ -129,13 +124,13 @@ exports.commands = {
 		if (!this.isRanked(Tools.getGroup('admin'))) return false;
 		if (cmd === 'ladderstop') {
 			this.sclog();
-			if (LADDER_MANAGER.stop()) this.reply(this.trad('stop'));
+			if (Features['battle'].ladderManager.stop()) this.reply(this.trad('stop'));
 			return;
 		}
 		var format = Tools.parseAliases(arg);
 		if (!Formats[format] || !Formats[format].ladder) return this.reply(this.trad('e21') + ' ' + format + ' ' + this.trad('e22'));
-		if (Formats[format].team && !TEAM_BUILDER.hasTeam(format)) return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
-		if (LADDER_MANAGER.start(format)) {
+		if (Formats[format].team && !Features['battle'].teamBuilder.hasTeam(format)) return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
+		if (Features['battle'].ladderManager.start(format)) {
 			this.reply(this.trad('start') + ' ' + format);
 			this.sclog();
 		}
@@ -154,9 +149,9 @@ exports.commands = {
 		if (args.length < 2) return this.reply(this.trad('e11') + ': ' + this.cmdToken + cmd + " " + this.trad('e12'));
 		var format = Tools.parseAliases(args[1]);
 		if (!format || !Formats[format] || !Formats[format].chall) return this.reply(this.trad('e21') + ' "' + format + '" ' + this.trad('e22'));
-		if (Formats[format].team && !TEAM_BUILDER.hasTeam(format)) return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
+		if (Formats[format].team && !Features['battle'].teamBuilder.hasTeam(format)) return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
 		var cmds = [];
-		var team = TEAM_BUILDER.getTeam(format);
+		var team = Features['battle'].teamBuilder.getTeam(format);
 		if (team) cmds.push('|/useteam ' + team);
 		cmds.push('|/challenge ' + toId(args[0]) + ", " + format);
 		this.send(cmds);
@@ -169,22 +164,22 @@ exports.commands = {
 		if (!this.can('jointour')) return false;
 		if (Settings.lockdown) return;
 		if (this.roomType !== 'chat') return this.reply(this.trad('notchat'));
-		if (!TOUR_MANAGER.tourData[room] || !Features['battle'].TourManager.tourData[room].format) return this.reply(this.trad('e1'));
+		if (!Features['battle'].tourManager.tourData[room] || !Features['battle'].tourManager.tourData[room].format) return this.reply(this.trad('e1'));
 		if (cmd === 'checktour') {
 			return this.say(room, '/tour getupdate');
 		}
-		if (Features['battle'].TourManager.tourData[room].isJoined) return this.reply(this.trad('e2'));
-		if (Features['battle'].TourManager.tourData[room].isStarted) return this.reply(this.trad('e3'));
-		var format = toId(Features['battle'].TourManager.tourData[room].format);
-		if (Formats[format] && Formats[format].team && !TEAM_BUILDER.hasTeam(format)) return this.reply(this.trad('e41') + ' ' + format + '. ' + this.trad('e42'));
+		if (Features['battle'].tourManager.tourData[room].isJoined) return this.reply(this.trad('e2'));
+		if (Features['battle'].tourManager.tourData[room].isStarted) return this.reply(this.trad('e3'));
+		var format = toId(Features['battle'].tourManager.tourData[room].format);
+		if (Formats[format] && Formats[format].team && !Features['battle'].teamBuilder.hasTeam(format)) return this.reply(this.trad('e41') + ' ' + format + '. ' + this.trad('e42'));
 		this.reply("/tour join");
 	},
 
 	leavetour: function (arg, by, room, cmd) {
 		if (!this.can('jointour')) return false;
 		if (this.roomType !== 'chat') return this.reply(this.trad('notchat'));
-		if (!Features['battle'].TourManager.tourData[room] || !Features['battle'].TourManager.tourData[room].format) return this.reply(this.trad('e1'));
-		if (!Features['battle'].TourManager.tourData[room].isJoined) return this.reply(this.trad('e2'));
+		if (!Features['battle'].tourManager.tourData[room] || !Features['battle'].tourManager.tourData[room].format) return this.reply(this.trad('e1'));
+		if (!Features['battle'].tourManager.tourData[room].isJoined) return this.reply(this.trad('e2'));
 		this.reply("/tour leave");
 	},
 
@@ -229,7 +224,7 @@ exports.commands = {
 							this.reply(this.trad('err2'));
 							return;
 						}
-						if (TEAM_BUILDER.addTeam(name, format, packed)) {
+						if (Features['battle'].teamBuilder.addTeam(name, format, packed)) {
 							this.sclog();
 							this.reply(this.trad('team') + " __" + name + "__ " + this.trad('added'));
 						} else {
@@ -246,9 +241,9 @@ exports.commands = {
 			case 'get':
 				if (arg.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u5'));
 				id = toId(arg[1]);
-				if (!TEAM_BUILDER.dynTeams[id]) return this.reply(this.trad('team') + " __" + name + "__ " + this.trad('notexists'));
+				if (!Features['battle'].teamBuilder.dynTeams[id]) return this.reply(this.trad('team') + " __" + name + "__ " + this.trad('notexists'));
 				try {
-					var data = Tools.exportTeam(TEAM_BUILDER.dynTeams[id].packed);
+					var data = Tools.exportTeam(Features['battle'].teamBuilder.dynTeams[id].packed);
 					Tools.uploadToHastebin(data, function (r, link) {
 						if (r) return this.pmReply(id + ': ' + link);
 						else this.pmReply(this.trad('err'));
@@ -261,11 +256,11 @@ exports.commands = {
 			case 'check':
 				if (arg.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u6'));
 				id = toId(arg[1]);
-				if (!TEAM_BUILDER.dynTeams[id]) return this.reply(this.trad('team') + " __" + name + "__ " + this.trad('notexists'));
+				if (!Features['battle'].teamBuilder.dynTeams[id]) return this.reply(this.trad('team') + " __" + name + "__ " + this.trad('notexists'));
 				var cmds = [];
-				var team = TEAM_BUILDER.dynTeams[id].packed;
+				var team = Features['battle'].teamBuilder.dynTeams[id].packed;
 				if (team) cmds.push('|/useteam ' + team);
-				cmds.push('|/challenge ' + toId(arg[2] || by) + ", " + TEAM_BUILDER.dynTeams[id].format);
+				cmds.push('|/challenge ' + toId(arg[2] || by) + ", " + Features['battle'].teamBuilder.dynTeams[id].format);
 				this.sclog();
 				this.send(cmds);
 				break;
@@ -273,7 +268,7 @@ exports.commands = {
 			case 'remove':
 				if (arg.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u4'));
 				name = toId(arg[1]);
-				if (TEAM_BUILDER.removeTeam(name)) {
+				if (Features['battle'].teamBuilder.removeTeam(name)) {
 					this.sclog();
 					this.reply(this.trad('team') + " __" + name + "__ " + this.trad('removed'));
 				} else {
@@ -291,7 +286,7 @@ exports.commands = {
 	teamlist: function (arg, by, room, cmd) {
 		if (!this.isRanked(Tools.getGroup('admin'))) return false;
 		var teamsStr = this.trad('list') + ':\n\n';
-		var teams = TEAM_BUILDER.staticTeams;
+		var teams = Features['battle'].teamBuilder.staticTeams;
 		var nTeams = 0;
 		for (var i in teams) {
 			teamsStr += this.trad('id') + ': ' + i + ' | ' + this.trad('format') + ': ' + teams[i].format + ' | ' + this.trad('pokemon') + ': ' + Tools.teamOverview(teams[i].packed) + '\n';
@@ -307,7 +302,7 @@ exports.commands = {
 	formatlist: function (arg, by, room, cmd) {
 		if (!this.isRanked(Tools.getGroup('admin'))) return false;
 		var teamsStr = this.trad('list') + ':\n\n';
-		var teams = TEAM_BUILDER.staticTeams;
+		var teams = Features['battle'].teamBuilder.staticTeams;
 		genToFormats = {};
 		for (let format in teams) {
 			let gen = format.substr(3, 1);

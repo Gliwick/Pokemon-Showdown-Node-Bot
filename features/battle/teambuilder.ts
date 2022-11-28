@@ -143,4 +143,4 @@ export class TeamBuilder {
 	}
 };
 
-export const TEAM_BUILDER = new TeamBuilder();
+export const teamBuilder = new TeamBuilder();

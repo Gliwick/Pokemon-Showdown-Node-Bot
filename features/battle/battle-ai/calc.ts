@@ -745,7 +745,7 @@ export function calculate(attacker, defender, move, globalConditions, battle, tr
 			break;
 		case 'terrainpulse':
 			if (attackerPoke.isGrounded(attackerConditions)) {
-				for (gcondition in globalConditions) {
+				for (let gcondition in globalConditions) {
 					if (gcondition.endsWith('terrain')) bp *= 2;
 				}
 			}
