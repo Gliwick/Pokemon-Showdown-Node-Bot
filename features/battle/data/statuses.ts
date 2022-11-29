@@ -1,4 +1,98 @@
-export const Conditions: {[k: string]: ConditionData} = {
+type Nonstandard = 'Past' | 'Future' | 'Unobtainable' | 'CAP' | 'LGPE' | 'Custom' | 'Gigantamax';
+
+interface EffectData {
+	name?: string;
+	desc?: string;
+	duration?: number;
+	effectType?: string;
+	infiltrates?: boolean;
+	isNonstandard?: Nonstandard | null;
+	shortDesc?: string;
+}
+
+type ID = '' | string & { __isID: true };
+
+type EffectType =
+	'Condition' | 'Pokemon' | 'Move' | 'Item' | 'Ability' | 'Format' |
+	'Nature' | 'Ruleset' | 'Weather' | 'Status' | 'Terastal' | 'Rule' | 'ValidatorRule';
+
+export interface BasicEffect extends EffectData {
+	/**
+	 * ID. This will be a lowercase version of the name with all the
+	 * non-alphanumeric characters removed. So, for instance, "Mr. Mime"
+	 * becomes "mrmime", and "Basculin-Blue-Striped" becomes
+	 * "basculinbluestriped".
+	 */
+	id: ID;
+	/**
+	 * Name. Currently does not support Unicode letters, so "Flabébé"
+	 * is "Flabebe" and "Nidoran♀" is "Nidoran-F".
+	 */
+	name: string;
+	/**
+	 * Full name. Prefixes the name with the effect type. For instance,
+	 * Leftovers would be "item: Leftovers", confusion the status
+	 * condition would be "confusion", etc.
+	 */
+	fullname: string;
+	/** Effect type. */
+	effectType: EffectType;
+	/**
+	 * Does it exist? For historical reasons, when you use an accessor
+	 * for an effect that doesn't exist, you get a dummy effect that
+	 * doesn't do anything, and this field set to false.
+	 */
+	exists: boolean;
+	/**
+	 * Dex number? For a Pokemon, this is the National Dex number. For
+	 * other effects, this is often an internal ID (e.g. a move
+	 * number). Not all effects have numbers, this will be 0 if it
+	 * doesn't. Nonstandard effects (e.g. CAP effects) will have
+	 * negative numbers.
+	 */
+	num: number;
+	/**
+	 * The generation of Pokemon game this was INTRODUCED (NOT
+	 * necessarily the current gen being simulated.) Not all effects
+	 * track generation; this will be 0 if not known.
+	 */
+	gen: number;
+	/**
+	 * A shortened form of the description of this effect.
+	 * Not all effects have this.
+	 */
+	shortDesc: string;
+	/** The full description for this effect. */
+	desc: string;
+	/**
+	 * Is this item/move/ability/pokemon nonstandard? Specified for effects
+	 * that have no use in standard formats: made-up pokemon (CAP),
+	 * glitches (MissingNo etc), Pokestar pokemon, etc.
+	 */
+	isNonstandard: Nonstandard | null;
+	/** The duration of the condition - only for pure conditions. */
+	duration?: number;
+	/** Whether or not the condition is ignored by Baton Pass - only for pure conditions. */
+	noCopy: boolean;
+	/** Whether or not the condition affects fainted Pokemon. */
+	affectsFainted: boolean;
+	/** Moves only: what status does it set? */
+	status?: ID;
+	/** Moves only: what weather does it set? */
+	weather?: ID;
+	/** ??? */
+	sourceEffect: string;
+}
+
+type EventMethod = `on${string}`;
+export type Condition = BasicEffect & { [key in EventMethod]?: any } & {
+	readonly effectType: 'Condition' | 'Weather' | 'Status' | 'Terastal';
+	readonly counterMax?: number;
+}
+
+export type ConditionData = Partial<Condition>;
+
+export const Conditions: { [k: string]: ConditionData } = {
 	brn: {
 		name: 'brn',
 		effectType: 'Status',
@@ -186,7 +280,7 @@ export const Conditions: {[k: string]: ConditionData} = {
 			this.activeTarget = pokemon;
 			const damage = this.actions.getConfusionDamage(pokemon, 40);
 			if (typeof damage !== 'number') throw new Error("Confusion damage not dealt");
-			const activeMove = {id: this.toID('confused'), effectType: 'Move', type: '???'};
+			const activeMove = { id: this.toID('confused'), effectType: 'Move', type: '???' };
 			this.damage(damage, pokemon, pokemon, activeMove as ActiveMove);
 			return false;
 		},
@@ -791,7 +885,7 @@ export const Conditions: {[k: string]: ConditionData} = {
 		name: "Commanded",
 		noCopy: true,
 		onStart(target) {
-			this.boost({atk: 2, def: 2, spa: 2, spd: 2, spe: 2}, target);
+			this.boost({ atk: 2, def: 2, spa: 2, spd: 2, spe: 2 }, target);
 		},
 		// Prevents Shed Shell allowing a swap
 		onTrapPokemonPriority: -11,

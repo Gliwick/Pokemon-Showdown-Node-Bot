@@ -2,7 +2,7 @@
 	Battle data
 */
 
-import { BattleStatuses } from "../data/statuses";
+import { Conditions } from "../data/statuses";
 
 const BATTLE_DATA_DIR = './../data/';
 const MODS_DATA_DIR = BATTLE_DATA_DIR + 'mods/';
@@ -28,7 +28,7 @@ export function getEffect(effect, gen) {
 		const pMove = getMove(id, gen);
 		const pAbility = getAbility(id, gen);
 		const pItem = getItem(id, gen);
-		const statuses = BattleStatuses;
+		const statuses = Conditions;
 
 		if (id && statuses && statuses[id]) {
 			effect = statuses[id];

@@ -1202,7 +1202,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			else multihitRolls = (gen > 2 ? [1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3] : [1, 2, 3]);
 		} else if (move.id === 'populationbomb' && !atkPoke.hasItem({ 'widelens': 1, 'zoomlens': 1 })) {
 			if (atkPoke.hasItem('loadeddice')) multihitRolls = [4, 5, 6, 7, 8, 9, 10];
-			else multihitRolls = [1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10, 10, 10];
+			else multihitRolls = [1, 1, 2, 2, 3, 3, 4, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10, 10, 10];
 		} else {
 			multihitRolls = [];
 			for (let numberOfHits = move.multihit[0]; numberOfHits <= move.multihit[1]; numberOfHits++) {
