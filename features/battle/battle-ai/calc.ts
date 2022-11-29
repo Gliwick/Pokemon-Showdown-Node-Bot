@@ -109,9 +109,10 @@ export class Pokemon {
 	};
 
 	getTypes(conditions: Conditions): PokemonType[] {
+		if (this.terastallize) return [this.terastallize];
+
 		let types = [...(this.template.types || [])];
 		if (conditions && conditions.volatiles) {
-			if (conditions.volatiles.terastallize) return [conditions.volatiles.terastallize];
 			if (conditions.volatiles.typechange?.length) types = [...conditions.volatiles.typechange];
 			if (conditions.volatiles.typeadd) {
 				types.push(conditions.volatiles.typeadd);
@@ -305,7 +306,7 @@ export function getMoveType(poke: Pokemon, move, conditions: Conditions, globalC
 			if (globalConditions.psychicterrain) return 'Psychic';
 			return move.type;
 		case 'terablast':
-			return conditions.volatiles.terastallize || move.type;
+			return poke.terastallize || move.type;
 	}
 
 	if (gen >= 3 && poke.ability && !poke.supressedAbility) {
@@ -354,13 +355,13 @@ interface PokemonWithConditions {
 };
 
 export function calculate(attacker: PokemonWithConditions, defender: PokemonWithConditions, move, globalConditions, battle: Battle, transformation?: any): Damage {
-	const atkPoke = attacker.poke;
+	const atkPoke = new Pokemon(attacker.poke.template, attacker.poke);
 	const atkConditions = new Conditions(attacker.conditions || {});
-	const defPoke = defender.poke;
+	const defPoke = new Pokemon(defender.poke.template, defender.poke);
 	const defConditions = new Conditions(defender.conditions || {});
 
 	if (typeof transformation === 'object' && transformation?.terastallize) {
-		atkConditions.volatiles.terastallize = transformation.terastallize;
+		atkPoke.terastallize = transformation.terastallize;
 	}
 
 	const gen = battle.gen || CurrentGen;
@@ -1062,9 +1063,9 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 
 	/* STAB */
 	let stab;
-	if (atkConditions.volatiles.terastallize) {
+	if (atkPoke.terastallize) {
 		let originalStab = (atkPoke.template.types.includes(moveType) >= 0 || atkPoke.hasAbility({ 'libero': 1, 'protean': 1 }));
-		let teraStab = (move.type === atkConditions.volatiles.terastallize);
+		let teraStab = (move.type === atkPoke.terastallize);
 		if (originalStab && teraStab) {
 			debug('applying double ' + move.type + ' stab from terastallization');
 			stab = 2;
