@@ -16,7 +16,7 @@ export class ChallengeManager {
 
 	parse(room, message, isIntro, spl) {
 		if (!spl[3].startsWith('/challenge ')) return;
-		const nBattles = Object.keys(battleBot.battles).length;
+		let nBattles = Object.keys(battleBot.battles).length;
 		this.challenges = [spl[4]];
 		if (this.challenges) {
 			for (let format of this.challenges) {

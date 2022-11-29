@@ -185,7 +185,7 @@ export function getMove(move, gen: number = CurrentGen, battleId?: string) {
 	return moveData;
 };
 
-const TypeAliases: { [key in PokemonType]: string[] } = {
+const TypeAliases: { [key in PokemonType]?: string[] } = {
 	'Bug': ['bug'],
 	'Dark': ['dark'],
 	'Dragon': ['dragon'],
@@ -204,7 +204,6 @@ const TypeAliases: { [key in PokemonType]: string[] } = {
 	'Rock': ['rock', 'stone'],
 	'Steel': ['steel', 'iron', 'metal'],
 	'Water': ['water', 'aqua', 'bubble', 'hydro'],
-	'???': [],
 };
 
 function evaluateMoveType(name: string): PokemonType {
@@ -216,7 +215,7 @@ function evaluateMoveType(name: string): PokemonType {
 	}
 
 	for (moveType in TypeAliases) {
-		for (let typeAlias of TypeAliases[moveType]) {
+		for (let typeAlias of (TypeAliases[moveType] || [])) {
 			if (name.indexOf(typeAlias) >= 0) {
 				return moveType;
 			}
