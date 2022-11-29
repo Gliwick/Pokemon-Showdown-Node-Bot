@@ -91,6 +91,7 @@ function getSwitchAverage(battle: Battle, pokeId: number): number {
 	if (toId(battle.tier).indexOf("challengecup") >= 0) pokeA.happiness = 100;
 	const conditionsA = new Conditions({
 		side: battle.self.side,
+		pokemon: battle.self.pokemon,
 		volatiles: {},
 		boosts: {}
 	});
@@ -101,6 +102,7 @@ function getSwitchAverage(battle: Battle, pokeId: number): number {
 			if (!targets[j]) continue;
 			const conditionsB = new Conditions({
 				side: battle.foe.side,
+				pokemon: battle.foe.pokemon,
 				volatiles: targets[j].volatiles,
 				boosts: targets[j].boosts
 			});
@@ -163,6 +165,7 @@ function evaluateMoveDecision(battle: Battle, desEnv: Decision[], des: MoveDecis
 	if (toId(battle.tier || "").indexOf("challengecup") >= 0) pokeA.happiness = 100; // Random
 	const conditionsA = new Conditions({
 		side: battle.self.side,
+		pokemon: battle.self.pokemon,
 		volatiles: battle.self.active[act].volatiles,
 		boosts: battle.self.active[act].boosts
 	});
@@ -178,6 +181,7 @@ function evaluateMoveDecision(battle: Battle, desEnv: Decision[], des: MoveDecis
 		if (!targets[i]) continue;
 		const conditionsB = new Conditions({
 			side: battle.foe.side,
+			pokemon: battle.foe.pokemon,
 			volatiles: targets[i].volatiles,
 			boosts: targets[i].boosts
 		});

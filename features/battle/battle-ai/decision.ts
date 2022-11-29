@@ -48,7 +48,7 @@ export class SwitchDecision extends Decision {
 export class TeamDecision extends Decision {
 	team: number[];
 
-	constructor(team) {
+	constructor(team?: number[]) {
 		super('team');
 		this.team = team || [0, 1, 2, 3, 4, 5];
 	}
@@ -66,7 +66,7 @@ export class ShiftDecision extends Decision {
 	}
 }
 
-function isTooFar(battle, a, b): boolean {
+function isTooFar(battle: Battle, a: number, b: number): boolean {
 	if (battle.gametype === 'triples') {
 		return ((a === 0 && b === 0) || (a === 2 && b === 2));
 	} else {
@@ -76,10 +76,10 @@ function isTooFar(battle, a, b): boolean {
 
 function combinateTeamPreview(array, i, values, solutions) {
 	if (i >= array.length) {
-		solutions.push(array.slice());
+		solutions.push([...array]);
 		return;
 	}
-	for (var j = 0; j < values.length; j++) {
+	for (let j = 0; j < values.length; j++) {
 		if (array.indexOf(values[j]) >= 0) continue; //Repeated
 		array[i] = values[j];
 		combinateTeamPreview(array, i + 1, values, solutions);
@@ -87,31 +87,34 @@ function combinateTeamPreview(array, i, values, solutions) {
 	}
 }
 
-function generateTeamCombinations(sideLength, requiredLength) {
-	var comb = [];
-	var values = [];
-	var array = [];
-	for (var i = 0; i < sideLength; i++)
+function generateTeamCombinations(sideLength: number, requiredLength: number) {
+	const comb = [];
+	const values: number[] = [];
+	const array: number[] = [];
+	for (let i = 0; i < sideLength; i++) {
 		values.push(i);
-	for (var i = 0; i < requiredLength; i++)
+	}
+	for (let i = 0; i < requiredLength; i++) {
 		array.push(-1);
+	}
 	combinateTeamPreview(array, 0, values, comb);
 	return comb;
 }
 
-function validateDecision(des) {
-	var megaConsumed = false;
-	var shiftConsumed = false;
-	var passed = true;
-	var switched = [];
-	for (var i = 0; i < des.length; i++) {
-		if (des[i].mega) {
-			if (megaConsumed) return false; // 2 mega evolutions at the same time
-			megaConsumed = true;
+function validateDecision(des: Decision[]) {
+	let transformed = false;
+	let shiftConsumed = false;
+	let passed = true;
+	const switched: number[] = [];
+	for (let i = 0; i < des.length; i++) {
+		if (des[i].transformation) {
+			if (transformed) return false; // 2 mega evolutions at the same time
+			transformed = true;
 		}
 		if (des[i].type === "switch") {
-			if (switched.indexOf(des[i].pokeId) >= 0) return false; // Switch to the same pokemon
-			switched.push(des[i].pokeId);
+			const pokeId = (des[i] as SwitchDecision).pokeId;
+			if (switched.indexOf(pokeId) >= 0) return false; // Switch to the same pokemon
+			switched.push(pokeId);
 		} else if (des[i].type === "shift") {
 			if (shiftConsumed) return false; // 2 shifts at the same time
 			shiftConsumed = true;
@@ -122,7 +125,7 @@ function validateDecision(des) {
 	return true;
 }
 
-function nextCombinationDecision(array, i, tables, solutions) {
+function nextCombinationDecision(array, i: number, tables, solutions) {
 	if (i >= array.length) {
 		//validate combinational decision
 		if (!validateDecision(array)) return;
@@ -130,38 +133,40 @@ function nextCombinationDecision(array, i, tables, solutions) {
 		solutions.push(array.slice());
 		return;
 	}
-	for (var j = 0; j < tables[i].length; j++) {
+	for (let j = 0; j < tables[i].length; j++) {
 		array[i] = tables[i][j];
 		nextCombinationDecision(array, i + 1, tables, solutions);
 	}
 }
 
 function cartesianProduct(tables) {
-	var array = [];
-	var comb = [];
-	for (var i = 0; i < tables.length; i++) array.push(null);
+	const array = [];
+	const comb = [];
+	for (let i = 0; i < tables.length; i++) {
+		array.push(null)
+	};
 	nextCombinationDecision(array, 0, tables, comb);
 	return comb;
 }
 
-function getTargets(battle, activeIndex, move): (number | null)[] {
-	let targets: (number | null)[] = [];
+function getTargets(battle: Battle, activeIndex: number, move): (number | null)[] {
+	const targets: (number | null)[] = [];
 	if (['any', 'normal', 'adjacentAlly', 'adjacentAllyOrSelf', 'adjacentFoe'].includes(move.target)) {
 		if (!move.target.startsWith('adjacentAlly')) {
 			let auxHasTarget = false;
-			for (var tar = 0; tar < battle.foe.active.length; tar++) {
+			for (let tar = 0; tar < battle.foe.active.length; tar++) {
 				if (!battle.foe.active[tar] || battle.foe.active[tar].fainted) continue; // Target not found
 				if (move.target !== 'any' && isTooFar(battle, tar, activeIndex)) continue; // Target too far
 				auxHasTarget = true;
 			}
-			for (var tar = 0; tar < battle.foe.active.length; tar++) {
+			for (let tar = 0; tar < battle.foe.active.length; tar++) {
 				if (auxHasTarget && (!battle.foe.active[tar] || battle.foe.active[tar].fainted)) continue; // Target not found
 				if (move.target !== 'any' && isTooFar(battle, tar, activeIndex)) continue; // Target too far
 				targets.push(tar);
 			}
 		}
 		if (move.target !== 'adjacentFoe') {
-			for (var tar = 0; tar < battle.self.active.length; tar++) {
+			for (let tar = 0; tar < battle.self.active.length; tar++) {
 				if (move.target !== 'adjacentAllyOrSelf' && tar === activeIndex) continue; // Not self target allowed
 				if (!battle.self.active[tar] || battle.self.active[tar].fainted) continue; // Target not found
 				if (move.target !== 'any' && isTooFar(battle, tar, activeIndex)) continue; // Target too far
@@ -176,35 +181,34 @@ function getTargets(battle, activeIndex, move): (number | null)[] {
 }
 
 export function getDecisions(battle: Battle): Decision[][] | null {
-	var req = battle.request;
+	const req = battle.request;
 	if (!req) return null;
 	if (req.wait) return null; // Nothing to do
 	if (req.teamPreview) {
 		const res: Decision[][] = [];
 		/* Team required */
-		var n = 1;
+		let n = 1;
 		if (battle.gametype === 'doubles') n = 2;
 		else if (battle.gametype === 'triples') n = 3;
-		var comb = generateTeamCombinations(req.side.pokemon.length, n);
-		for (var i = 0; i < comb.length; i++) {
+		const comb = generateTeamCombinations(req.side.pokemon.length, n);
+		for (let i = 0; i < comb.length; i++) {
 			res.push([new TeamDecision(comb[i])]);
 		}
 		return res;
 	}
 
 	if (req.forceSwitch) {
-		var fw = req.forceSwitch;
+		const fw = req.forceSwitch;
 		const tables: Decision[][] = [];
-		var toSw, canSw;
-		toSw = 0;
-		for (var i = 0; i < fw.length; i++) if (fw[i]) toSw++;
-		for (var i = 0; i < fw.length; i++) {
+		let canSw;
+		const toSw = fw.filter(i => !!i).reduce((acc: number) => acc++, 0);
+		for (let i = 0; i < fw.length; i++) {
 			tables.push([]);
 			if (!fw[i]) {
 				tables[i].push(new PassDecision());
 			} else {
 				canSw = 0;
-				for (var k = 0; k < req.side.pokemon.length; k++) {
+				for (let k = 0; k < req.side.pokemon.length; k++) {
 					if (req.side.pokemon[k].condition === "0 fnt") continue; // Fainted
 					if (req.side.pokemon[k].active) continue; // Active
 					canSw++;
@@ -220,14 +224,14 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 
 	if (req.active) {
 		const tables: Decision[][] = [];
-		for (var i = 0; i < req.active.length; i++) {
+		for (let i = 0; i < req.active.length; i++) {
 			tables.push([]);
 			if (req.side.pokemon[i].condition === "0 fnt") {
 				//fainted, pass
 				tables[i].push(new PassDecision());
 				continue;
 			}
-			var active = req.active[i];
+			const active = req.active[i];
 
 			// moves
 			const dynamax = !!(battle.self.active[0].volatiles.dynamax);
@@ -272,7 +276,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 
 			// switches
 			if (!active.trapped) {
-				for (var k = 0; k < req.side.pokemon.length; k++) {
+				for (let k = 0; k < req.side.pokemon.length; k++) {
 					if (req.side.pokemon[k].condition === "0 fnt") continue; // Fainted
 					if (req.side.pokemon[k].active) continue; // Active
 					tables[i].push(new SwitchDecision(k, req.side.pokemon[k].ident));

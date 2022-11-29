@@ -10,7 +10,7 @@ import { majors } from './battle-majors';
 import { minors } from './battle-minors';
 
 import { choose } from './modules';
-import { getDecisions } from './decision';
+import { Decision, getDecisions } from './decision';
 
 
 import { Player, getPokemon, getItem, getAbility, CurrentGen } from './battle-data';
@@ -33,21 +33,23 @@ interface Helpers {
 	foe: any;
 }
 
+type BattleType = 'singles' | 'doubles' | 'triples';
+
 export class Battle {
 	id: string;
-	title: string = "";
+	title: string = '';
 	players: Players = {
-		p1: new Player("p1"),
-		p2: new Player("p2")
+		p1: new Player('p1'),
+		p2: new Player('p2'),
 	};
 	users = {};
 
 	self: { [key: string]: any } | null = null;
 	foe: { [key: string]: any } | null = null;
 
-	gametype: string = "singles";
+	gametype: BattleType = 'singles';
 	gen: number = CurrentGen;
-	tier: string = "gen8ou";
+	tier: string = 'gen9ou';
 	rules = [];
 	variations = [];
 
@@ -73,7 +75,7 @@ export class Battle {
 
 	helpers: Helpers = { self: {}, foe: {} };
 
-	constructor(id) {
+	constructor(id: string) {
 		this.id = id;
 	}
 
@@ -87,27 +89,29 @@ export class Battle {
 		Bot.sendRoom(this.id, data, 2000);
 	};
 
-	eval = function (str) {
+	eval = function (str: string) {
 		return eval(str);
 	};
 
-	sendDecision = function (decision) {
-		if (!decision || !decision.length) return;
+	sendDecision = function (decision: Decision[]) {
+		if (!decision?.length) return;
 		debug("Send Decision: ".cyan + JSON.stringify(decision));
-		var str = "/choose ";
-		for (var i = 0; i < decision.length; i++) {
+		let str = "/choose ";
+		for (let i = 0; i < decision.length; i++) {
 			switch (decision[i].type) {
 				case "team":
-					var team = [];
-					for (var j = 0; j < decision[i].team.length; j++) team.push(decision[i].team[j] + 1);
-					var first = team[0] || 1;
-					for (var j = first - 1; j > 0; j--) {
+					const team: number[] = [];
+					for (let j = 0; j < decision[i].team.length; j++) {
+						team.push(decision[i].team[j] + 1);
+					}
+					const first = team[0] || 1;
+					for (let j = first - 1; j > 0; j--) {
 						if (team.indexOf(j) === -1) {
 							team.push(j);
 						}
 					}
 					if (this.request?.side?.pokemon) {
-						for (var j = 1; j <= this.request.side.pokemon.length; j++) {
+						for (let j = 1; j <= this.request.side.pokemon.length; j++) {
 							if (team.indexOf(j) === -1) {
 								team.push(j);
 							}
@@ -168,9 +172,9 @@ export class Battle {
 
 	start = function () {
 		if (!this.self || !this.request) return; // Not playing
-		var wmsg = Config.initBattleMsg;
-		if (wmsg && wmsg.length) {
-			var msg = wmsg[Math.floor(Math.random() * wmsg.length)];
+		const wmsg = Config.initBattleMsg;
+		if (wmsg?.length) {
+			let msg = wmsg[Math.floor(Math.random() * wmsg.length)];
 			msg = msg.replace(/#date/g, (new Date()).toString().split(' GMT')[0]);
 			msg = msg.replace(/#battleid/g, 'battle-' + this.id.split('-')[2]);
 			this.send(msg);
@@ -179,19 +183,19 @@ export class Battle {
 
 	win = function (winner) {
 		if (!this.self) return; // Not playing
-		var win = (toId(winner) === toId(Bot.status.nickName));
+		const win = (toId(winner) === toId(Bot.status.nickName));
 		if (win) {
-			var winmsg = Config.winmsg;
-			if (winmsg && winmsg.length) {
-				var msg = winmsg[Math.floor(Math.random() * winmsg.length)];
+			const winmsg = Config.winmsg;
+			if (winmsg?.length) {
+				let msg = winmsg[Math.floor(Math.random() * winmsg.length)];
 				msg = msg.replace(/#date/g, (new Date()).toString().split(' GMT')[0]);
 				msg = msg.replace(/#battleid/g, 'battle-' + this.id.split('-')[2]);
 				this.send(msg);
 			}
 		} else {
-			var losemsg = Config.losemsg;
-			if (losemsg && losemsg.length) {
-				var msg = losemsg[Math.floor(Math.random() * losemsg.length)];
+			const losemsg = Config.losemsg;
+			if (losemsg?.length) {
+				let msg = losemsg[Math.floor(Math.random() * losemsg.length)];
 				msg = msg.replace(/#date/g, (new Date()).toString().split(' GMT')[0]);
 				msg = msg.replace(/#battleid/g, 'battle-' + this.id.split('-')[2]);
 				this.send(msg);
@@ -212,19 +216,19 @@ export class Battle {
 			return;
 		}
 
-		var side = (player === this.self.id) ? "self" : "foe";
+		const side = (player === this.self.id) ? "self" : "foe";
 		if (Config.battleMessages[type][side]) {
 			if (type === 'faint') {
 				const lost = this.self.pokemon.all(poke => poke.fainted);
 				if (lost) return;
 			}
-			var msg = Config.battleMessages[type][side][Math.floor(Math.random() * Config.battleMessages[type][side].length)];
+			let msg = Config.battleMessages[type][side][Math.floor(Math.random() * Config.battleMessages[type][side].length)];
 			if (poke) msg = msg.replace(/#poke/g, poke);
 			this.send(msg);
 		}
 	};
 
-	makeDecision = function (forced) {
+	makeDecision = function (forced?: boolean) {
 		if (!this.self) return; // Not playing
 		debug(this.id + "->MakeDecision");
 		if (!forced && this.lastSend.rqid >= 0 && this.lastSend.rqid === this.rqid) {
@@ -237,7 +241,7 @@ export class Battle {
 		if (this.lock) return;
 		this.lock = true;
 		debug("Making decisions - " + this.id);
-		var decisions, mod;
+		let decisions, mod;
 		try {
 			decisions = getDecisions(this);
 		} catch (e) {
@@ -255,7 +259,7 @@ export class Battle {
 		try {
 			mod = choose(this);
 			if (mod) {
-				var decision = mod.decide(this, decisions);
+				const decision = mod.decide(this, decisions);
 				if (decision instanceof Array) {
 					this.lock = false;
 					this.sendDecision(decision);
@@ -272,30 +276,31 @@ export class Battle {
 		this.sendDecision(decisions[Math.floor(Math.random() * decisions.length)]);
 	};
 
-	log = function (line) {
+	log = function (line?: string) {
 		if (this.stream) {
 			this.stream.write(line + "\n");
 		}
 	};
 
-	add = function (line, isIntro) {
+	add = function (line?: string, isIntro?: boolean) {
 		this.run(line, isIntro);
 		this.log(line);
 	};
 
-	run = function (str, isIntro) {
+	run = function (str?: string, isIntro?: boolean) {
 		if (!str) return;
 		if (str.charAt(0) !== '|' || str.substr(0, 2) === '||') {
 			return;
 		} else {
-			var args = ['done'], kwargs = {};
+			let args = ['done'];
+			const kwargs = {};
 			if (str !== '|') {
 				args = str.substr(1).split('|');
 			}
 			while (args[args.length - 1] && args[args.length - 1].substr(0, 1) === '[') {
-				var bracketPos = args[args.length - 1].indexOf(']');
+				const bracketPos = args[args.length - 1].indexOf(']');
 				if (bracketPos <= 0) break;
-				var argstr = args.pop();
+				const argstr = args.pop();
 				// default to '.' so it evaluates to boolean true
 				kwargs[argstr.substr(1, bracketPos - 1)] = ((argstr.substr(bracketPos + 1)).trim() || '.');
 			}
@@ -307,13 +312,13 @@ export class Battle {
 		}
 	};
 
-	runMinor = function (args, kwargs, isIntro) {
+	runMinor = function (args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) {
 		if (args) {
 			if (args[2] === 'Sturdy' && args[0] === '-activate') args[2] = 'ability: Sturdy';
 		}
 		if (minors[args[0]]) {
-			var minor = minors[args[0]];
-			var r = 0;
+			let minor = minors[args[0]];
+			let r = 0;
 			while (typeof minor === "string" && r <= MAX_RECURSIVE) {
 				minor = minors[minor];
 			}
@@ -332,10 +337,10 @@ export class Battle {
 		}
 	};
 
-	runMajor = function (args, kwargs, isIntro) {
+	runMajor = function (args, kwargs, isIntro?: boolean) {
 		if (majors[args[0]]) {
-			var major = majors[args[0]];
-			var r = 0;
+			let major = majors[args[0]];
+			let r = 0;
 			while (typeof major === "string" && r <= MAX_RECURSIVE) {
 				major = majors[major];
 			}
@@ -354,16 +359,17 @@ export class Battle {
 		}
 	};
 
-	parseDetails = function (str) {
+	parseDetails = function (str?: string) {
 		if (!str) return null;
-		var details = str.split(",");
-		for (var d = 0; d < details.length; d++)
+		const details = str.split(",");
+		for (let d = 0; d < details.length; d++) {
 			details[d] = details[d].trim();
-		var poke = {
-			species: "",
+		}
+		const poke = {
+			species: '',
 			level: 100,
 			shiny: false,
-			gender: false
+			gender: null,
 		};
 		if (details[details.length - 1] === "shiny") {
 			poke.shiny = true;
@@ -382,21 +388,21 @@ export class Battle {
 		return poke;
 	};
 
-	parseSlot = function (id) {
-		var slots = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5 };
+	parseSlot = function (id: string) {
+		const slots: { [key: string]: number } = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5 };
 		return slots[id] || 0;
 	};
 
-	parseStatus = function (str) {
-		var status = {
+	parseStatus = function (str: string) {
+		const status = {
 			hp: 100,
-			status: false
+			status: false,
 		};
-		var sp = str.split(" ");
+		let sp = str.split(" ");
 		if (sp[1]) status.status = toId(sp[1]);
 		sp = sp[0].split("/");
 		if (sp.length === 2) {
-			var d = parseInt(sp[1]);
+			const d = parseInt(sp[1]);
 			if (d) {
 				status.hp = parseInt(sp[0]) * 100 / d;
 			}
@@ -406,12 +412,12 @@ export class Battle {
 		return status;
 	};
 
-	parseHealth = function (str) {
-		var hp = 100;
-		var sp = str.split(" ");
+	parseHealth = function (str: string) {
+		let hp = 100;
+		let sp = str.split(" ");
 		sp = sp[0].split("/");
 		if (sp.length === 2) {
-			var d = parseInt(sp[1]);
+			const d = parseInt(sp[1]);
 			if (d) {
 				hp = parseInt(sp[0]) * 100 / d;
 			}
@@ -421,20 +427,20 @@ export class Battle {
 		return hp;
 	};
 
-	getSide = function (str) {
+	getSide = function (str?: string) {
 		if (!str) return null;
 		str = str.split(":")[0];
 		return this.players[str];
 	};
 
-	getActive = function (str) {
+	getActive = function (str?: string) {
 		if (!str) return null;
-		var side = str.substr(0, 2);
+		const side = str.substr(0, 2);
 		str = str.substr(2);
-		var pokeId = str.substr(0, 1);
-		var slot = this.parseSlot(pokeId);
+		const pokeId = str.substr(0, 1);
+		const slot = this.parseSlot(pokeId);
 		str = str.substr(1);
-		var name = Tools.toName(str.substr(1));
+		const name = Tools.toName(str.substr(1));
 		if (this.players[side]?.active?.[slot]) {
 			this.players[side].active[slot].name = name;
 			return this.players[side].active[slot];
@@ -442,14 +448,14 @@ export class Battle {
 		return null;
 	};
 
-	parsePokemonIdent = function (str) {
+	parsePokemonIdent = function (str?: string) {
 		if (!str) return null;
-		var side = str.substr(0, 2);
+		const side = str.substr(0, 2);
 		str = str.substr(2);
-		var pokeId = str.substr(0, 1);
-		var slot = this.parseSlot(pokeId);
+		const pokeId = str.substr(0, 1);
+		const slot = this.parseSlot(pokeId);
 		str = str.substr(1);
-		var name = Tools.toName(str.substr(1));
+		const name = Tools.toName(str.substr(1));
 		return {
 			side: side,
 			slot: slot,
@@ -457,15 +463,15 @@ export class Battle {
 		};
 	};
 
-	getCalcRequestPokemon = function (sideId, forceMega) {
-		var p = this.request.side.pokemon[sideId];
-		var details = this.parseDetails(p.details);
-		var condition = this.parseStatus(p.condition);
+	getCalcRequestPokemon = function (sideId: number, forceMega?: boolean) {
+		const p = this.request.side.pokemon[sideId];
+		const details = this.parseDetails(p.details);
+		const condition = this.parseStatus(p.condition);
 
 		let side = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
 		let pokeId = p.ident.split(': ')[1] + '|' + details.species;
 
-		var pokeA = new Pokemon(
+		const pokeA = new Pokemon(
 			getPokemon(details.species, this.gen, this.id),
 			{ level: details.level, shiny: details.shiny, gender: details.gender, helpers: (this.helpers[side][pokeId] || {}) },
 		);
@@ -474,7 +480,11 @@ export class Battle {
 		pokeA.status = condition.status;
 		pokeA.hp = condition.hp;
 		pokeA.stats = p.stats;
-		if (forceMega && (p.canMegaEvo || (this.request.active?.[sideId]?.canMegaEvo))) {
+		const active = this.request.active?.[sideId];
+		if (active) {
+			pokeA.terastallize = active?.terastallize;
+		}
+		if (forceMega && (p.canMegaEvo || (active?.canMegaEvo))) {
 			if (pokeA.item.megaStone) {
 				pokeA.template = getPokemon(pokeA.item.megaStone, this.gen, this.id);
 				pokeA.species = pokeA.template.species;

@@ -4,14 +4,10 @@
 
 import { getMultipleEff, getEffectiveness } from "./typechart";
 
-import { CurrentGen, PokemonType, Gender } from "./battle-data";
+import { CurrentGen, PokemonType, Gender, Stat, StatsTable } from "./battle-data";
 import { Battle } from "./battle";
 
-type Stat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
-
 const Stats: Stat[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
-
-type StatsTable = { [key in Stat]?: number };
 
 export class Pokemon {
 	template;
@@ -31,6 +27,7 @@ export class Pokemon {
 	shiny: boolean = false;
 	happiness: number | null = null;
 	status: string | null = null;
+	terastallize: PokemonType | null = null;
 	hp: number = 100;
 
 	constructor(template, properties: Partial<Pokemon> & { helpers?: { [key: string]: any } }) {
@@ -115,7 +112,7 @@ export class Pokemon {
 		let types = [...(this.template.types || [])];
 		if (conditions && conditions.volatiles) {
 			if (conditions.volatiles.terastallize) return [conditions.volatiles.terastallize];
-			if (conditions.volatiles.typechange && conditions.volatiles.typechange[0]) types = conditions.volatiles.typechange[0].split('/');
+			if (conditions.volatiles.typechange?.length) types = [...conditions.volatiles.typechange];
 			if (conditions.volatiles.typeadd) {
 				types.push(conditions.volatiles.typeadd);
 			}
@@ -161,7 +158,8 @@ export class Pokemon {
 		if (this.hasItem('choicescarf')) spe = Math.floor(spe * 1.5);
 		if (this.hasItem('quickpowder') && this.template.species === 'Ditto') spe = Math.floor(spe * 2);
 		if (conditions.tailwind) spe *= 2;
-		if (conditions.volatiles['unburden']) spe *= 2;
+		if (conditions.volatiles.unburden) spe *= 2;
+		if (conditions.volatiles.protosynthesis === 'spe' || conditions.volatiles.quarkdrive === 'spe') spe = Math.floor(spe * 1.5);
 
 		const gconditions = battle.conditions;
 		if (gconditions.weather && !gconditions.supressedWeather) {
@@ -384,7 +382,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	*******************************/
 
 	if (move.isMax && move.basePower <= 10 && atkPoke.template.baseStats.spa > atkPoke.template.baseStats.atk) {
-		move = Object.assign({}, move);
+		move = { ...move };
 		move.category = 'Special';
 	}
 
@@ -462,9 +460,9 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				}
 				break;
 			case 'protosynthesis':
-				if (!supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
-					const maxStat = Object.values(atkStats).reduce((acc, v) => Math.max(acc, v), 0);
-					const maxStatName = Stats.filter(stat => atkStats[stat] === maxStat)[0];
+				if (!atkConditions.volatiles.protosynthesis && !supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
+					const maxStat = Object.entries(atkStats).filter(([stat]) => stat !== 'hp').reduce((acc, v) => Math.max(acc, v[1]), 0);
+					const maxStatName = Stats.filter(stat => stat !== 'hp' && atkStats[stat] === maxStat)[0];
 					if (atkStat === maxStatName) atk = Math.floor(atk * 1.3);
 				}
 				break;
@@ -474,9 +472,9 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				}
 				break;
 			case 'quarkdrive':
-				if (globalConditions.electricterrain) {
-					const maxStat = Object.values(atkStats).reduce((acc, v) => Math.max(acc, v), 0);
-					const maxStatName = Stats.filter(stat => atkStats[stat] === maxStat)[0];
+				if (!atkConditions.volatiles.quarkdrive && globalConditions.electricterrain) {
+					const maxStat = Object.entries(atkStats).filter(([stat]) => stat !== 'hp').reduce((acc, v) => Math.max(acc, v[1]), 0);
+					const maxStatName = Stats.filter(stat => stat !== 'hp' && atkStats[stat] === maxStat)[0];
 					if (atkStat === maxStatName) atk = Math.floor(atk * 1.3);
 				}
 				break;
@@ -1068,7 +1066,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		let originalStab = (atkPoke.template.types.includes(moveType) >= 0 || atkPoke.hasAbility({ 'libero': 1, 'protean': 1 }));
 		let teraStab = (move.type === atkConditions.volatiles.terastallize);
 		if (originalStab && teraStab) {
-			debug('applying double stab to ' + move.type + 'from terastallization');
+			debug('applying double ' + move.type + ' stab from terastallization');
 			stab = 2;
 		} else if (originalStab || teraStab) {
 			stab = 1.5;
@@ -1122,6 +1120,13 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 
 	if (atkConditions.immediate.helpinghand) modifier *= 1.5;
 
+	/* Volatiles */
+
+	if (atkStat === atkConditions.volatiles.protosynthesis || atkStat === atkConditions.volatiles.quarkdrive) atk = Math.floor(atk * 1.3);
+	if (defStat === defConditions.volatiles.protosynthesis || defStat === defConditions.volatiles.quarkdrive) def = Math.floor(def * 1.3);
+
+	if (defConditions.volatiles.magnetrise && moveType === 'Ground') modifier = 0;
+
 	/* Side */
 
 	const screenModifier = ['doubles', 'triples'].includes(globalConditions.gametype) ? 0.66 : 0.5;
@@ -1130,8 +1135,6 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		if ((defConditions.side.reflect || defConditions.side.auroraveil) && category === 'Physical') modifier *= screenModifier;
 		if ((defConditions.side.lightscreen || defConditions.side.auroraveil) && category === 'Special') modifier *= screenModifier;
 	}
-
-	if (defConditions.volatiles.magnetrise && moveType === 'Ground') modifier = 0;
 
 	/* Field */
 

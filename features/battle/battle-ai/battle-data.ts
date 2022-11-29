@@ -359,6 +359,10 @@ export class Move {
 
 export type Gender = "M" | "F" | "N";
 
+export type Stat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
+
+export type StatsTable = { [key in Stat]?: number };
+
 export class Pokemon {
 	template;
 	species;
@@ -390,24 +394,26 @@ export class Pokemon {
 	fainted: boolean = false;
 	status: string | null = null;
 	volatiles = {};
-	boosts = {};
+	boosts: Omit<StatsTable, 'hp'> = {};
+	terastallize: PokemonType | null = null;
 
 	passing: boolean = false;
 	prepared = null;
 
 	helpers = {};
 
-	constructor(template, properties) {
-		if (!template || typeof template !== "object") throw new Error("Invalid pokemon template");
+	constructor(template, properties: Partial<Pokemon>) {
+		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
 
 		this.template = template;
 		this.species = this.template.species;
 		this.name = this.template.species;
 
 		for (let i in properties) {
-			if (typeof this[i] === "undefined" || typeof this[i] === "function") continue;
-			if (i === "template") continue;
-			this[i] = properties[i];
+			if (typeof this[i] === 'undefined' || typeof this[i] === 'function') continue;
+			if (i === 'template') continue;
+			const prop = properties[i];
+			this[i] = typeof prop === 'object' ? { ...prop } : prop;
 		}
 	}
 

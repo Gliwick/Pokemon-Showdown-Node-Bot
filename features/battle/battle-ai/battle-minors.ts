@@ -4,14 +4,16 @@
 
 import { getPokemon, getMove, getEffect, getItem, getAbility } from './battle-data';
 
-export const minors = {
+type Minor = `-${string}`;
+
+export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) => void) | Minor } = {
 	"-damage": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var hp = this.parseHealth(args[2]);
+		const poke = this.getActive(args[1]);
+		const hp = this.parseHealth(args[2]);
 		poke.hp = hp;
 		if (kwargs.from) {
-			var effect = getEffect(kwargs.from, this.gen);
-			var ofpoke = this.getActive(kwargs.of);
+			const effect = getEffect(kwargs.from, this.gen);
+			const ofpoke = this.getActive(kwargs.of);
 			if (effect.effectType === 'Ability' && ofpoke) {
 				ofpoke.markAbility(effect.name);
 			}
@@ -56,13 +58,12 @@ export const minors = {
 	},
 
 	"-heal": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var det = this.parsePokemonIdent(args[1]);
-		var hp = this.parseHealth(args[2]);
+		const poke = this.getActive(args[1]);
+		const det = this.parsePokemonIdent(args[1]);
+		const hp = this.parseHealth(args[2]);
 		poke.hp = hp;
 		if (kwargs.from) {
-			var effect = getEffect(kwargs.from, this.gen);
-			var ofpoke = this.getActive(kwargs.of);
+			const effect = getEffect(kwargs.from, this.gen);
 			if (effect.effectType === 'Ability') {
 				poke.markAbility(effect.name);
 			}
@@ -72,7 +73,7 @@ export const minors = {
 				case 'drain':
 					break;
 				case 'lunardance':
-					for (var i = 0; i < poke.moves.length; i++) {
+					for (let i = 0; i < poke.moves.length; i++) {
 						poke.moves[i].restorePP();
 					}
 					this.players[det.side].side.wish = null;
@@ -91,8 +92,8 @@ export const minors = {
 	},
 
 	"-sethp": function (args, kwargs) {
-		var poke, hp;
-		for (var i = 1; i < args.length - 1; i += 2) {
+		let poke, hp;
+		for (let i = 1; i < args.length - 1; i += 2) {
 			poke = this.getActive(args[i]);
 			hp = this.parseHealth(args[i + 1]);
 			poke.hp = hp;
@@ -100,13 +101,13 @@ export const minors = {
 	},
 
 	"-boost": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var stat = args[2];
-		var n = parseInt(args[3]) || 0;
+		const poke = this.getActive(args[1]);
+		const stat = args[2];
+		const n = parseInt(args[3]) || 0;
 		poke.addBoost(stat, n);
 		if (kwargs.from) {
-			var effect = getEffect(kwargs.from, this.gen);
-			var ofpoke = this.getActive(kwargs.of);
+			const effect = getEffect(kwargs.from, this.gen);
+			const ofpoke = this.getActive(kwargs.of);
 			if (effect.effectType === 'Ability' && !(effect.id === 'weakarmor' && stat === 'spe')) {
 				(ofpoke || poke).markAbility(effect.name);
 			}
@@ -114,13 +115,13 @@ export const minors = {
 	},
 
 	"-unboost": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var stat = args[2];
-		var n = parseInt(args[3]) || 0;
+		const poke = this.getActive(args[1]);
+		const stat = args[2];
+		const n = parseInt(args[3]) || 0;
 		poke.addBoost(stat, (-1) * n);
 		if (kwargs.from) {
-			var effect = getEffect(kwargs.from, this.gen);
-			var ofpoke = this.getActive(kwargs.of);
+			const effect = getEffect(kwargs.from, this.gen);
+			const ofpoke = this.getActive(kwargs.of);
 			if (effect.effectType === 'Ability') {
 				(ofpoke || poke).markAbility(effect.name);
 			}
@@ -128,12 +129,12 @@ export const minors = {
 	},
 
 	"-setboost": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var stat = args[2];
-		var n = parseInt(args[3]) || 0;
+		const poke = this.getActive(args[1]);
+		const stat = args[2];
+		const n = parseInt(args[3]) || 0;
 		poke.setBoost(stat, (-1) * n);
 		if (kwargs.from) {
-			var effect = getEffect(kwargs.from, this.gen);
+			const effect = getEffect(kwargs.from, this.gen);
 			switch (effect.id) {
 				case 'bellydrum':
 					break;
@@ -145,12 +146,12 @@ export const minors = {
 	},
 
 	"-swapboost": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var poke2 = this.getActive(args[2]);
+		const poke = this.getActive(args[1]);
+		const poke2 = this.getActive(args[2]);
 		if (args[3]) {
-			var stats = args[3].split(",");
-			var stat, tmp;
-			for (var i = 0; i < stats.length; i++) {
+			const stats = args[3].split(",");
+			let stat, tmp;
+			for (let i = 0; i < stats.length; i++) {
 				stat = toId(stats[i]);
 				tmp = poke.boosts[stat];
 				poke.boosts[stat] = poke2.boosts[stat];
@@ -159,7 +160,7 @@ export const minors = {
 				if (!poke2.boosts[stat]) delete poke2.boosts[stat];
 			}
 		} else {
-			var tmp = poke.boosts;
+			const tmp = poke.boosts;
 			poke.boosts = poke2.boosts;
 			poke2.boosts = tmp;
 		}
@@ -173,12 +174,12 @@ export const minors = {
 	},
 
 	"-copyboost": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var poke2 = this.getActive(args[2]);
+		const poke = this.getActive(args[1]);
+		const poke2 = this.getActive(args[2]);
 		if (args[3]) {
-			var stats = args[3].split(",");
-			var stat;
-			for (var i = 0; i < stats.length; i++) {
+			const stats = args[3].split(",");
+			let stat;
+			for (let i = 0; i < stats.length; i++) {
 				stat = toId(stats[i]);
 				poke.boosts[stat] = poke2.boosts[stat];
 				if (!poke.boosts[stat]) delete poke.boosts[stat];
@@ -193,12 +194,12 @@ export const minors = {
 	},
 
 	"-clearboost": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
+		const poke = this.getActive(args[1]);
 		poke.removeAllBoosts();
 	},
 
 	"-invertboost": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
+		const poke = this.getActive(args[1]);
 		poke.invertAllBoosts();
 	},
 
@@ -213,17 +214,17 @@ export const minors = {
 	"-miss": "-crit",
 	"-supereffective": "-crit",
 	"-resisted": "-crit",
-	"-crit": function (args, kwargs, isIntro) {
+	"-crit": function (args, kwargs, isIntro?: boolean) {
 		// Not real information - message minors
 		if (isIntro) return;
-		var ident = this.parsePokemonIdent(args[1]);
+		const ident = this.parsePokemonIdent(args[1]);
 		this.message(args[0].substr(1), ident.side, ident.name);
 	},
 
 	"-immune": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var effect = getEffect(args[2], this.gen);
-		var fromeffect = getEffect(kwargs.from, this.gen);
+		const poke = this.getActive(args[1]);
+		const effect = getEffect(args[2], this.gen);
+		const fromeffect = getEffect(kwargs.from, this.gen);
 		switch (effect.id) {
 			case 'confusion':
 				break;
@@ -235,10 +236,10 @@ export const minors = {
 	},
 
 	"-fail": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var effect = getEffect(args[2], this.gen);
-		var fromeffect = getEffect(kwargs.from, this.gen);
-		var ofpoke = this.getActive(kwargs.of);
+		const poke = this.getActive(args[1]);
+		const effect = getEffect(args[2], this.gen);
+		const fromeffect = getEffect(kwargs.from, this.gen);
+		const ofpoke = this.getActive(kwargs.of);
 		if (fromeffect.id === 'skydrop') {
 			return;
 		}
@@ -270,44 +271,44 @@ export const minors = {
 	},
 
 	"-prepare": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var move = args[2];
-		var target = this.parsePokemonIdent(args[3]);
+		const poke = this.getActive(args[1]);
+		const move = args[2];
+		const target = this.parsePokemonIdent(args[3]);
 		poke.prepareMove(move, target.slot);
 	},
 
-	"-status": function (args, kwargs, isIntro) {
-		var poke = this.getActive(args[1]);
+	"-status": function (args, kwargs, isIntro?: boolean) {
+		const poke = this.getActive(args[1]);
 		poke.status = args[2];
 		poke.helpers.statusCounter = 0;
 		if (poke.status === "slp") {
 			poke.helpers.sleepCounter = 0;
 		}
-		var det = this.parsePokemonIdent(args[1]);
+		const det = this.parsePokemonIdent(args[1]);
 		if (!isIntro) this.message("start-" + poke.status, det.side, poke.name); // hax
 	},
 
 	"-curestatus": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
+		const poke = this.getActive(args[1]);
 		poke.status = '';
 		if (!args[2] || args[2] === "confusion") poke.removeVolatile('confusion');
 	},
 
 	"-cureteam": function (args, kwargs) {
-		var ident = this.parsePokemonIdent(args[1]);
+		const ident = this.parsePokemonIdent(args[1]);
 		if (this.players[ident.side]) {
-			var pokes = this.players[ident.side].pokemon;
-			for (var i = 0; i < pokes.length; i++) {
+			const pokes = this.players[ident.side].pokemon;
+			for (let i = 0; i < pokes.length; i++) {
 				pokes[i].status = '';
 			}
 		}
 	},
 
 	"-item": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var item = getItem(args[2], this.gen, this.id);
-		var effect = getEffect(kwargs.from, this.gen);
-		var ofpoke = this.getActive(kwargs.of);
+		const poke = this.getActive(args[1]);
+		const item = getItem(args[2], this.gen, this.id);
+		const effect = getEffect(kwargs.from, this.gen);
+		const ofpoke = this.getActive(kwargs.of);
 		poke.item = item;
 		poke.itemEffect = '';
 		poke.removeVolatile('airballoon');
@@ -351,10 +352,9 @@ export const minors = {
 	},
 
 	"-enditem": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var item = getItem(args[2], this.gen, this.id);
-		var effect = getEffect(kwargs.from, this.gen);
-		var ofpoke = this.getActive(kwargs.of);
+		const poke = this.getActive(args[1]);
+		const item = getItem(args[2], this.gen, this.id);
+		const effect = getEffect(kwargs.from, this.gen);
 		poke.item = '';
 		poke.itemEffect = '';
 		poke.prevItem = item;
@@ -410,22 +410,22 @@ export const minors = {
 	},
 
 	"-ability": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var ability = getAbility(args[2], this.gen, this.id);
-		var effect = getEffect(kwargs.from, this.gen);
+		const poke = this.getActive(args[1]);
+		const ability = getAbility(args[2], this.gen, this.id);
+		const effect = getEffect(kwargs.from, this.gen);
 		poke.markAbility(ability.name, effect.id && !kwargs.fail);
 		poke.supressedAbility = false;
 	},
 
 	"-endability": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
+		const poke = this.getActive(args[1]);
 		poke.supressedAbility = true;
 	},
 
 	"-transform": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var tpoke = this.getActive(args[2]);
-		var effect = getEffect(kwargs.from, this.gen);
+		const poke = this.getActive(args[1]);
+		const tpoke = this.getActive(args[2]);
+		const effect = getEffect(kwargs.from, this.gen);
 		if (effect.effectType === 'Ability') {
 			poke.markAbility(effect.name);
 		}
@@ -433,9 +433,9 @@ export const minors = {
 	},
 
 	"-formechange": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var template = getPokemon(args[2], this.gen, this.id);
-		var fromeffect = getEffect(kwargs.from, this.gen);
+		const poke = this.getActive(args[1]);
+		const template = getPokemon(args[2], this.gen, this.id);
+		const fromeffect = getEffect(kwargs.from, this.gen);
 		poke.removeVolatile('typeadd');
 		poke.removeVolatile('typechange');
 		if (fromeffect.effectType === 'Ability') {
@@ -446,53 +446,58 @@ export const minors = {
 	},
 
 	"-mega": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var item = getItem(args[3], this.gen, this.id);
+		const poke = this.getActive(args[1]);
+		const item = getItem(args[3], this.gen, this.id);
 		if (args[2] !== 'Rayquaza') {
 			poke.item = item;
-			var template = getPokemon(item.megaStone, this.gen, this.id);
+			const template = getPokemon(item.megaStone, this.gen, this.id);
 			poke.markAbility(template.abilities[0]);
 		}
 	},
 
 	"-terastallize": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		poke.volatiles.terastallize = args[2];
+		const poke = this.getActive(args[1]);
+		poke.terastallize = args[2];
 	},
 
 	"-start": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var ident = this.parsePokemonIdent(args[1]);
-		var effect = getEffect(args[2], this.gen);
-		var ofpoke = this.getActive(kwargs.of);
-		var fromeffect = getEffect(kwargs.from, this.gen);
-		poke.addVolatile(effect.id);
+		const poke = this.getActive(args[1]);
+		const ident = this.parsePokemonIdent(args[1]);
+		const effect = getEffect(args[2], this.gen);
+		const ofpoke = this.getActive(kwargs.of);
+		const fromeffect = getEffect(kwargs.from, this.gen);
+		if (effect.id.startsWith('protosynthesis') || effect.id.startsWith('quarkdrive')) {
+			const volatile = effect.id.substr(0, effect.id.length - 3);
+			poke.addVolatile(volatile);
+			poke.volatiles[volatile] = effect.id.substr(effect.id.length - 3);
+		} else {
+			poke.addVolatile(effect.id);
+		}
 		switch (effect.id) {
 			case 'typechange':
 				poke.removeVolatile('typeadd');
-				if (fromeffect.id) {
-					if (fromeffect.id === 'colorchange') {
-						poke.markAbility('Color Change');
-					} else if (fromeffect.id === 'libero') {
-						poke.markAbility('Libero');
-					} else if (fromeffect.id === 'protean') {
-						poke.markAbility('Protean');
-					}
-					if (fromeffect.id === 'reflecttype') {
-						poke.volatiles.typechange = ofpoke.template.types.slice();
-					} else {
-						poke.volatiles.typechange = args[3] ? [args[3]] : true;
-					}
 
+				if (fromeffect.id === 'colorchange') {
+					poke.markAbility('Color Change');
+				} else if (fromeffect.id === 'libero') {
+					poke.markAbility('Libero');
+				} else if (fromeffect.id === 'protean') {
+					poke.markAbility('Protean');
+				}
+
+				if (fromeffect.id === 'reflecttype') {
+					poke.volatiles.typechange = [...ofpoke.template.types];
 				} else {
-					poke.volatiles.typechange = args[3] ? [args[3]] : true;
+					poke.volatiles.typechange = args[3] ? args[3].split('/') : ['???'];
+				}
 
-					let side = args[1].substr(0, 2);
-					let helpers = (toId(this.players[side].name) === toId(Bot.status.nickName)) ? this.helpers.self : this.helpers.foe;
-					let pokeId = poke.name + '|' + poke.species;
+				if (!fromeffect?.id) {
+					const side = args[1].substr(0, 2);
+					const helpers = (toId(this.players[side].name) === toId(Bot.status.nickName)) ? this.helpers.self : this.helpers.foe;
+					const pokeId = poke.name + '|' + poke.species;
 					if (!helpers[pokeId]) helpers[pokeId] = {};
 					if (!helpers[pokeId].template) helpers[pokeId].template = {};
-					helpers[pokeId].template.types = poke.volatiles.typechange[0].split('/');
+					helpers[pokeId].template.types = poke.volatiles.typechange;
 				}
 				break;
 			case 'typeadd':
@@ -530,10 +535,14 @@ export const minors = {
 	},
 
 	"-end": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var effect = getEffect(args[2], this.gen);
-		var fromeffect = getEffect(kwargs.from, this.gen);
-		poke.removeVolatile(effect.id);
+		const poke = this.getActive(args[1]);
+		const effect = getEffect(args[2], this.gen);
+		const fromeffect = getEffect(kwargs.from, this.gen);
+		if (effect.id.startsWith('protosynthesis') || effect.id.startsWith('quarkdrive')) {
+			poke.removeVolatile(effect.id.substr(0, effect.id.length - 3));
+		} else {
+			poke.removeVolatile(effect.id);
+		}
 		switch (effect.id) {
 			case 'perishsong':
 				poke.removeVolatile('perish3');
@@ -549,17 +558,16 @@ export const minors = {
 	/*"-singleturn": function (args, kwargs) {
 		// Code here
 	},
-
+	
 	"-singlemove": function (args, kwargs) {
 		// Code here
 	},*/
 
 	"-activate": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var ident = this.parsePokemonIdent(args[1]);
-		var effect = getEffect(args[2], this.gen);
-		var ofpoke = this.getActive(kwargs.of);
-		var ofIdent = this.parsePokemonIdent(kwargs.of);
+		const poke = this.getActive(args[1]);
+		const effect = getEffect(args[2], this.gen);
+		const ofpoke = this.getActive(kwargs.of);
+		const ofIdent = this.parsePokemonIdent(kwargs.of);
 		if (effect.effectType === 'Ability') {
 			poke.markAbility(effect.name);
 		}
@@ -571,8 +579,8 @@ export const minors = {
 				this.players[ofIdent.side].removeSideCondition('AuroraVeil');
 				break;
 			case 'spite':
-				var move = getMove(args[3], this.gen, this.id).name;
-				var pp = args[4];
+				const move = getMove(args[3], this.gen, this.id).name;
+				const pp = args[4];
 				poke.markMove(move, Number(pp) * (-1));
 				break;
 			case 'gravity':
@@ -581,8 +589,8 @@ export const minors = {
 				break;
 			case 'skillswap':
 				if (this.gen <= 4) break;
-				var pokeability = args[3] ? getAbility(args[3], this.gen, this.id) : ofpoke.ability;
-				var ofpokeability = args[4] ? getAbility(args[4], this.gen, this.id) : poke.ability;
+				const pokeability = args[3] ? getAbility(args[3], this.gen, this.id) : ofpoke.ability;
+				const ofpokeability = args[4] ? getAbility(args[4], this.gen, this.id) : poke.ability;
 				if (pokeability) {
 					poke.ability = pokeability;
 					if (!ofpoke.baseAbility) ofpoke.baseAbility = pokeability;
@@ -605,21 +613,21 @@ export const minors = {
 	},
 
 	"-sidestart": function (args, kwargs) {
-		var side = this.getSide(args[1]);
-		var effect = getEffect(args[2], this.gen);
+		const side = this.getSide(args[1]);
+		const effect = getEffect(args[2], this.gen);
 		side.addSideCondition(effect.name);
 	},
 
 	"-sideend": function (args, kwargs) {
-		var side = this.getSide(args[1]);
-		var effect = getEffect(args[2], this.gen);
+		const side = this.getSide(args[1]);
+		const effect = getEffect(args[2], this.gen);
 		side.removeSideCondition(effect.name);
 	},
 
 	"-weather": function (args, kwargs) {
-		var effect = getEffect(args[1], this.gen);
-		var poke = this.getActive(kwargs.of);
-		var ability = getEffect(kwargs.from, this.gen);
+		const effect = getEffect(args[1], this.gen);
+		const poke = this.getActive(kwargs.of);
+		const ability = getEffect(kwargs.from, this.gen);
 		this.conditions.weather = toId(effect.name);
 		this.conditions.turnSetWeather = this.turn;
 		this.conditions.upkeepWeather = !!kwargs.upkeep;
@@ -627,14 +635,14 @@ export const minors = {
 	},
 
 	"-fieldstart": function (args, kwargs) {
-		var effect = getEffect(args[1], this.gen);
-		var pw = toId(effect.name);
+		const effect = getEffect(args[1], this.gen);
+		const pw = toId(effect.name);
 		this.conditions[pw] = { turn: this.turn };
 	},
 
 	"-fieldend": function (args, kwargs) {
-		var effect = getEffect(args[1], this.gen);
-		var pw = toId(effect.name);
+		const effect = getEffect(args[1], this.gen);
+		const pw = toId(effect.name);
 		if (this.conditions[pw]) delete this.conditions[pw];
 	},
 

@@ -17,10 +17,11 @@ function supposeActiveFoe(battle: Battle): Pokemon {
 	let target = battle.foe.active[0];
 	let pokeBId = target.name + '|' + target.species;
 	let pokeB = new Pokemon(target.template, {
-		level: target.level,
 		gender: target.gender,
-		shiny: target.shiny,
 		evs: {},
+		level: target.level,
+		shiny: target.shiny,
+		terastallize: target.terastallize,
 		helpers: (battle.helpers.foe[pokeBId] || {}),
 	});
 	pokeB.hp = target.hp;
@@ -1717,13 +1718,12 @@ function getMovesData(battle: Battle, decisions: Decision[][], pokeA: Pokemon, p
 		if (des.type !== 'move') continue;
 
 		let baseMoveName = battle.request.side.pokemon[0].moves[des.moveId];
-		des.moveData = Object.assign({}, getMove(des.move, battle.gen, battle.id));
+		des.moveData = { ...getMove(des.move, battle.gen, battle.id) };
 
 		if (des.moveData.category !== 'Status') {
 			if (des.transformation === 'zmove') {
 				let baseMove = getMove(baseMoveName, battle.gen, battle.id);
 				if (pokeA.item && pokeA.item.zMoveType && pokeA.item.zMoveType === baseMove.type) {
-					des.moveData = Object.assign({}, des.moveData);
 					des.moveData.category = baseMove.category;
 					if (baseMove.zMovePower) {
 						des.moveData.basePower = baseMove.zMovePower;
@@ -1753,7 +1753,7 @@ function getMovesData(battle: Battle, decisions: Decision[][], pokeA: Pokemon, p
 
 			if (des.moveData.isMax) {
 				let baseMove = getMove(baseMoveName, battle.gen, battle.id);
-				des.moveData = Object.assign({}, des.moveData);
+				des.moveData = { ...des.moveData };
 				des.moveData.category = baseMove.category;
 				if (baseMove.gmaxPower) {
 					des.moveData.basePower = baseMove.gmaxPower;

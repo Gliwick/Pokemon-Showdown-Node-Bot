@@ -4,7 +4,7 @@
 
 import { Move, Pokemon, getPokemon, getMove, getEffect } from './battle-data';
 
-export const majors = {
+export const majors: { [key: string]: ((args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) => void) | string } = {
 	rated: function (args, kwargs) {
 		this.rated = true;
 	},
@@ -93,9 +93,9 @@ export const majors = {
 	},
 
 	player: function (args, kwargs) {
-		var id = args[1];
-		var name = args[2];
-		var avatar = args[3];
+		const id = args[1];
+		const name = args[2];
+		const avatar = args[3];
 		if (this.players[id]) {
 			this.players[id].setName(name || "");
 			this.players[id].avatar = avatar || 0;
@@ -109,13 +109,13 @@ export const majors = {
 		}
 	},
 
-	win: function (args, kwargs, isIntro) {
+	win: function (args, kwargs, isIntro?: boolean) {
 		if (!isIntro) this.win(args[1]);
 		this.ended = true;
 		this.leave();
 	},
 
-	tie: function (args, kwargs, isIntro) {
+	tie: function (args, kwargs, isIntro?: boolean) {
 		this.ended = true;
 		if (!isIntro) this.message("tie");
 		this.leave();
@@ -136,14 +136,14 @@ export const majors = {
 	},
 
 	poke: function (args, kwargs) {
-		var p = args[1];
+		const p = args[1];
 		if (!this.players[p]) return;
 		this.players[p].teamPv.push(this.parseDetails(args[2]));
 	},
 
 	detailschange: function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var details = this.parseDetails(args[2]);
+		const poke = this.getActive(args[1]);
+		const details = this.parseDetails(args[2]);
 		poke.removeVolatile('formechange');
 		poke.removeVolatile('typeadd');
 		poke.removeVolatile('typechange');
@@ -160,17 +160,16 @@ export const majors = {
 	drag: "switch",
 	"replace": "switch",
 	"switch": function (args, kwargs) {
-		var spl = args[1].split(": ");
-		var p = spl[0].substr(0, 2);
-		var slot = this.parseSlot(spl[0].substr(2, 1));
-		var name = Tools.toName(spl[1]);
-		var details = this.parseDetails(args[2]);
-		var health = this.parseStatus(args[3]);
+		const spl = args[1].split(": ");
+		const p = spl[0].substr(0, 2);
+		const slot = this.parseSlot(spl[0].substr(2, 1));
+		const name = Tools.toName(spl[1]);
+		const details = this.parseDetails(args[2]);
+		const health = this.parseStatus(args[3]);
 		/* Get the pokemon or create a new one */
-		var poke: Pokemon | null = null;
+		let poke: Pokemon | null = null;
 		for (let i = 0; i < this.players[p].pokemon.length; i++) {
-			if (this.players[p].pokemon[i].name === name)
-				poke = this.players[p].pokemon[i];
+			if (this.players[p].pokemon[i].name === name) poke = this.players[p].pokemon[i];
 		}
 		if (!poke) {
 			poke = new Pokemon(getPokemon(details.species, this.gen, this.id), { name: name });
@@ -178,12 +177,14 @@ export const majors = {
 		}
 		poke.active = true;
 		poke.slot = slot;
-		for (let attr in details) poke[attr] = details[attr];
+		for (let attr in details) {
+			poke[attr] = details[attr];
+		}
 		poke.hp = health.hp;
 		poke.status = health.status;
 		poke.helpers.sw = this.turn;
 		/* Get the active */
-		var active = this.players[p].active[slot];
+		const active = this.players[p].active[slot];
 		if (!active) {
 			/* Forced switch */
 			this.players[p].active[slot] = poke;
@@ -221,9 +222,9 @@ export const majors = {
 		}
 	},
 
-	faint: function (args, kwargs, isIntro) {
-		var poke = this.getActive(args[1]);
-		var det = this.parsePokemonIdent(args[1]);
+	faint: function (args, kwargs, isIntro?: boolean) {
+		const poke = this.getActive(args[1]);
+		const det = this.parsePokemonIdent(args[1]);
 		poke.fainted = true;
 		poke.active = false;
 		poke.passing = false;
@@ -232,21 +233,21 @@ export const majors = {
 	},
 
 	swap: function (args, kwargs) {
-		var poke = this.parsePokemonIdent(args[1]);
-		var to = parseInt(args[2]) || 0;
-		var player = this.players[poke.side];
-		var temp = player.active[poke.slot];
+		const poke = this.parsePokemonIdent(args[1]);
+		const to = parseInt(args[2]) || 0;
+		const player = this.players[poke.side];
+		const temp = player.active[poke.slot];
 		player.active[poke.slot] = player.active[to];
 		player.active[to] = temp;
 	},
 
 	move: function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		var det = this.parsePokemonIdent(args[1]);
-		var poke2 = this.getActive(args[3]);
-		var moveTemplate = getMove(args[2], this.gen, this.id);
-		var fromeffect = null;
-		var noDeductPP = false;
+		const poke = this.getActive(args[1]);
+		const det = this.parsePokemonIdent(args[1]);
+		const poke2 = this.getActive(args[3]);
+		const moveTemplate = getMove(args[2], this.gen, this.id);
+		let fromeffect = null;
+		let noDeductPP = false;
 		if (kwargs.from) fromeffect = getEffect(kwargs.from, this.gen);
 		if (fromeffect) {
 			switch (fromeffect.id) {
@@ -262,7 +263,7 @@ export const majors = {
 					break;
 			}
 		}
-		var move: Move | null = null;
+		let move: Move | null = null;
 		for (let i = 0; i < poke.moves.length; i++) {
 			if (poke.moves[i].id === moveTemplate.id) {
 				move = poke.moves[i];
@@ -297,11 +298,11 @@ export const majors = {
 		poke.helpers.lastMoveTurn = this.turn;
 	},
 
-	cant: function (args, kwargs, isIntro) {
-		var poke = this.getActive(args[1]);
-		var effect = getEffect(args[2], this.gen);
-		var moveTemplate = getMove(args[3] || "", this.gen, this.id);
-		var det = this.parsePokemonIdent(args[1]);
+	cant: function (args, kwargs, isIntro?: boolean) {
+		const poke = this.getActive(args[1]);
+		const effect = getEffect(args[2], this.gen);
+		const moveTemplate = getMove(args[3] || "", this.gen, this.id);
+		const det = this.parsePokemonIdent(args[1]);
 		switch (effect.id) {
 			case 'taunt':
 			case 'gravity':
@@ -324,7 +325,7 @@ export const majors = {
 				if (!isIntro) this.message(effect.id, det.side, poke.name); // hax
 				return; // No move
 		}
-		var move: Move | null = null;
+		let move: Move | null = null;
 		for (let i = 0; i < poke.moves.length; i++) {
 			if (poke.moves[i].id === moveTemplate.id) {
 				move = poke.moves[i];
@@ -348,8 +349,8 @@ export const majors = {
 
 	callback: function (args, kwargs) {
 		args.shift();
-		var pokemon = isNaN(Number(args[1])) ? this.getActive(args[1]) : this.self.active[args[1]];
-		var requestData = this.request.active[pokemon.slot];
+		const pokemon = isNaN(Number(args[1])) ? this.getActive(args[1]) : this.self.active[args[1]];
+		const requestData = this.request.active[pokemon.slot];
 		switch (args[0]) {
 			case 'trapped':
 				requestData.trapped = true;
