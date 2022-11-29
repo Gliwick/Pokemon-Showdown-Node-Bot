@@ -1,16 +1,13 @@
-'use strict';
-
-exports.BattleItems = {
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); const Items = {
 	aguavberry: {
 		inherit: true,
-		desc: "Restores 1/8 max HP at 1/2 max HP or less; confuses if -SpD Nature. Single use.",
-		onUpdate: function (pokemon) {
+		onUpdate(pokemon) {
 			if (pokemon.hp <= pokemon.maxhp / 2) {
 				pokemon.eatItem();
 			}
 		},
-		onEat: function (pokemon) {
-			this.heal(pokemon.maxhp / 8);
+		onEat(pokemon) {
+			this.heal(pokemon.baseMaxhp / 8);
 			if (pokemon.getNature().minus === 'spd') {
 				pokemon.addVolatile('confusion');
 			}
@@ -18,53 +15,47 @@ exports.BattleItems = {
 	},
 	belueberry: {
 		inherit: true,
-		isUnreleased: false,
-	},
-	bigroot: {
-		inherit: true,
-		desc: "Holder gains 1.3x HP from draining moves, Aqua Ring, Ingrain, and Leech Seed.",
+		isNonstandard: null,
 	},
 	cornnberry: {
 		inherit: true,
-		isUnreleased: false,
-	},
-	custapberry: {
-		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	durinberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
-	enigmaberry: {
+	fastball: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: "Unobtainable",
 	},
 	figyberry: {
 		inherit: true,
-		desc: "Restores 1/8 max HP at 1/2 max HP or less; confuses if -Atk Nature. Single use.",
-		onUpdate: function (pokemon) {
+		onUpdate(pokemon) {
 			if (pokemon.hp <= pokemon.maxhp / 2) {
 				pokemon.eatItem();
 			}
 		},
-		onEat: function (pokemon) {
-			this.heal(pokemon.maxhp / 8);
+		onEat(pokemon) {
+			this.heal(pokemon.baseMaxhp / 8);
 			if (pokemon.getNature().minus === 'atk') {
 				pokemon.addVolatile('confusion');
 			}
 		},
 	},
+	heavyball: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
 	iapapaberry: {
 		inherit: true,
-		desc: "Restores 1/8 max HP at 1/2 max HP or less; confuses if -Def Nature. Single use.",
-		onUpdate: function (pokemon) {
+		onUpdate(pokemon) {
 			if (pokemon.hp <= pokemon.maxhp / 2) {
 				pokemon.eatItem();
 			}
 		},
-		onEat: function (pokemon) {
-			this.heal(pokemon.maxhp / 8);
+		onEat(pokemon) {
+			this.heal(pokemon.baseMaxhp / 8);
 			if (pokemon.getNature().minus === 'def') {
 				pokemon.addVolatile('confusion');
 			}
@@ -72,41 +63,47 @@ exports.BattleItems = {
 	},
 	jabocaberry: {
 		inherit: true,
-		isUnreleased: false,
-		onAfterDamage: function (damage, target, source, move) {
-			if (source && source !== target && move && move.category === 'Physical') {
+		onDamagingHit(damage, target, source, move) {
+			if (move.category === 'Physical' && !source.hasAbility('magicguard')) {
 				if (target.eatItem()) {
-					this.damage(source.maxhp / 8, source, target, null, true);
+					this.damage(source.baseMaxhp / 8, source, target, null, true);
 				}
 			}
 		},
 	},
+	levelball: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
 	lifeorb: {
 		inherit: true,
-		onAfterMoveSecondarySelf: function (source, target, move) {
+		onAfterMoveSecondarySelf(source, target, move) {
 			if (source && source !== target && move && move.category !== 'Status' && !move.ohko) {
-				this.damage(source.maxhp / 10, source, source, this.getItem('lifeorb'));
+				this.damage(source.baseMaxhp / 10, source, source, this.dex.items.get('lifeorb'));
 			}
 		},
 	},
-	lightclay: {
+	loveball: {
 		inherit: true,
-		desc: "Holder's use of Light Screen or Reflect lasts 8 turns instead of 5.",
+		isNonstandard: "Unobtainable",
+	},
+	lureball: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
 	},
 	machobrace: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	magoberry: {
 		inherit: true,
-		desc: "Restores 1/8 max HP at 1/2 max HP or less; confuses if -Spe Nature. Single use.",
-		onUpdate: function (pokemon) {
+		onUpdate(pokemon) {
 			if (pokemon.hp <= pokemon.maxhp / 2) {
 				pokemon.eatItem();
 			}
 		},
-		onEat: function (pokemon) {
-			this.heal(pokemon.maxhp / 8);
+		onEat(pokemon) {
+			this.heal(pokemon.baseMaxhp / 8);
 			if (pokemon.getNature().minus === 'spe') {
 				pokemon.addVolatile('confusion');
 			}
@@ -114,93 +111,96 @@ exports.BattleItems = {
 	},
 	magostberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
-	micleberry: {
+	moonball: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: "Unobtainable",
 	},
 	nanabberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	nomelberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
+	},
+	oldamber: {
+		inherit: true,
+		isNonstandard: null,
 	},
 	pamtreberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	rabutaberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	razzberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	rockyhelmet: {
 		inherit: true,
-		onAfterDamage: function (damage, target, source, move) {
-			if (source && source !== target && move && move.flags['contact']) {
-				this.damage(source.maxhp / 6, source, target, null, true);
+		onDamagingHit(damage, target, source, move) {
+			if (move.flags['contact']) {
+				this.damage(source.baseMaxhp / 6, source, target, null, true);
 			}
 		},
 	},
 	rowapberry: {
 		inherit: true,
-		isUnreleased: false,
-		onAfterDamage: function (damage, target, source, move) {
-			if (source && source !== target && move && move.category === 'Special') {
+		onDamagingHit(damage, target, source, move) {
+			if (move.category === 'Special' && !source.hasAbility('magicguard')) {
 				if (target.eatItem()) {
-					this.damage(source.maxhp / 8, source, target, null, true);
+					this.damage(source.baseMaxhp / 8, source, target, null, true);
 				}
 			}
 		},
 	},
 	spelonberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	souldew: {
 		inherit: true,
-		desc: "If held by a Latias or a Latios, its Sp. Atk and Sp. Def are 1.5x.",
-		onBasePower: function () {},
+		onBasePower() {},
 		onModifySpAPriority: 1,
-		onModifySpA: function (spa, pokemon) {
-			if (pokemon.baseTemplate.num === 380 || pokemon.baseTemplate.num === 381) {
+		onModifySpA(spa, pokemon) {
+			if (pokemon.baseSpecies.num === 380 || pokemon.baseSpecies.num === 381) {
 				return this.chainModify(1.5);
 			}
 		},
 		onModifySpDPriority: 2,
-		onModifySpD: function (spd, pokemon) {
-			if (pokemon.baseTemplate.num === 380 || pokemon.baseTemplate.num === 381) {
+		onModifySpD(spd, pokemon) {
+			if (pokemon.baseSpecies.num === 380 || pokemon.baseSpecies.num === 381) {
 				return this.chainModify(1.5);
 			}
 		},
 	},
 	watmelberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	wepearberry: {
 		inherit: true,
-		isUnreleased: false,
+		isNonstandard: null,
 	},
 	wikiberry: {
 		inherit: true,
-		desc: "Restores 1/8 max HP at 1/2 max HP or less; confuses if -SpA Nature. Single use.",
-		onUpdate: function (pokemon) {
+		onUpdate(pokemon) {
 			if (pokemon.hp <= pokemon.maxhp / 2) {
 				pokemon.eatItem();
 			}
 		},
-		onEat: function (pokemon) {
-			this.heal(pokemon.maxhp / 8);
+		onEat(pokemon) {
+			this.heal(pokemon.baseMaxhp / 8);
 			if (pokemon.getNature().minus === 'spa') {
 				pokemon.addVolatile('confusion');
 			}
 		},
 	},
-};
+}; exports.Items = Items;
+
+ //# sourceMappingURL=sourceMaps/items.js.map

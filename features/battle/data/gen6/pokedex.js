@@ -1,6 +1,4 @@
-'use strict';
-
-exports.BattlePokedex = {
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); const Pokedex = {
 	charizardmegax: {
 		inherit: true,
 		color: "Red",
@@ -8,6 +6,10 @@ exports.BattlePokedex = {
 	arbok: {
 		inherit: true,
 		baseStats: {hp: 60, atk: 85, def: 69, spa: 65, spd: 79, spe: 80},
+	},
+	pikachu: {
+		inherit: true,
+		formeOrder: ["Pikachu", "Pikachu-Rock-Star", "Pikachu-Belle", "Pikachu-Pop-Star", "Pikachu-PhD", "Pikachu-Libre", "Pikachu-Cosplay"],
 	},
 	dugtrio: {
 		inherit: true,
@@ -63,15 +65,18 @@ exports.BattlePokedex = {
 	},
 	raikou: {
 		inherit: true,
-		abilities: {0: "Pressure"},
+		abilities: {0: "Pressure", H: "Volt Absorb"},
+		unreleasedHidden: true,
 	},
 	entei: {
 		inherit: true,
-		abilities: {0: "Pressure"},
+		abilities: {0: "Pressure", H: "Flash Fire"},
+		unreleasedHidden: true,
 	},
 	suicune: {
 		inherit: true,
-		abilities: {0: "Pressure"},
+		abilities: {0: "Pressure", H: "Water Absorb"},
+		unreleasedHidden: true,
 	},
 	swellow: {
 		inherit: true,
@@ -159,13 +164,94 @@ exports.BattlePokedex = {
 		inherit: true,
 		color: "Pink",
 	},
-	heatran: {
-		inherit: true,
-		abilities: {0: "Flash Fire"},
-	},
 	arceus: {
 		inherit: true,
 		color: "Gray",
+	},
+	arceusbug: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Insect Plate"],
+	},
+	arceusdark: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Dread Plate"],
+	},
+	arceusdragon: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Draco Plate"],
+	},
+	arceuselectric: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Zap Plate"],
+	},
+	arceusfairy: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Pixie Plate"],
+	},
+	arceusfighting: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Fist Plate"],
+	},
+	arceusfire: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Flame Plate"],
+	},
+	arceusflying: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Sky Plate"],
+	},
+	arceusghost: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Spooky Plate"],
+	},
+	arceusgrass: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Meadow Plate"],
+	},
+	arceusground: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Earth Plate"],
+	},
+	arceusice: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Icicle Plate"],
+	},
+	arceuspoison: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Toxic Plate"],
+	},
+	arceuspsychic: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Mind Plate"],
+	},
+	arceusrock: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Stone Plate"],
+	},
+	arceussteel: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Iron Plate"],
+	},
+	arceuswater: {
+		inherit: true,
+		color: "Gray",
+		requiredItems: ["Splash Plate"],
 	},
 	roggenrola: {
 		inherit: true,
@@ -236,25 +322,13 @@ exports.BattlePokedex = {
 		inherit: true,
 		color: "White",
 	},
-	pumpkaboosmall: {
-		inherit: true,
-		abilities: {0: "Pickup", 1: "Frisk"},
-	},
-	pumpkaboolarge: {
-		inherit: true,
-		abilities: {0: "Pickup", 1: "Frisk"},
-	},
-	gourgeistsmall: {
-		inherit: true,
-		abilities: {0: "Pickup", 1: "Frisk"},
-	},
-	gourgeistlarge: {
-		inherit: true,
-		abilities: {0: "Pickup", 1: "Frisk"},
-	},
 	zygarde: {
 		inherit: true,
 		abilities: {0: "Aura Break"},
+	},
+	necturna: {
+		inherit: true,
+		baseStats: {hp: 64, atk: 120, def: 100, spa: 85, spd: 120, spe: 81},
 	},
 	aurumoth: {
 		inherit: true,
@@ -267,6 +341,10 @@ exports.BattlePokedex = {
 	naviathan: {
 		inherit: true,
 		abilities: {0: "Water Veil", 1: "Heatproof", H: "Light Metal"},
+	},
+	crucibellemega: {
+		inherit: true,
+		baseStats: {hp: 106, atk: 135, def: 75, spa: 85, spd: 125, spe: 114},
 	},
 	syclant: {
 		inherit: true,
@@ -312,4 +390,6 @@ exports.BattlePokedex = {
 		inherit: true,
 		abilities: {0: "Volt Absorb", 1: "Lightning Rod"},
 	},
-};
+}; exports.Pokedex = Pokedex;
+
+ //# sourceMappingURL=sourceMaps/pokedex.js.map

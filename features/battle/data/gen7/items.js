@@ -1,6 +1,4 @@
-'use strict';
-
-exports.BattleItems = {
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); const Items = {
 	abomasite: {
 		inherit: true,
 		isNonstandard: null,
@@ -19,7 +17,6 @@ exports.BattleItems = {
 	},
 	aguavberry: {
 		inherit: true,
-		desc: "Restores 1/2 max HP at 1/4 max HP or less; confuses if -SpD Nature. Single use.",
 		onEat(pokemon) {
 			this.heal(pokemon.baseMaxhp / 2);
 			if (pokemon.getNature().minus === 'spd') {
@@ -59,6 +56,10 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
+	belueberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
 	blastoisinite: {
 		inherit: true,
 		isNonstandard: null,
@@ -73,14 +74,9 @@ exports.BattleItems = {
 	},
 	buggem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	buginiumz: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	burndrive: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -96,26 +92,21 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	chilldrive: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	clawfossil: {
 		inherit: true,
 		isNonstandard: null,
+	},
+	cornnberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
 	},
 	coverfossil: {
 		inherit: true,
 		isNonstandard: null,
 	},
-	custapberry: {
-		inherit: true,
-		isUnreleased: false,
-	},
 	darkgem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	darkiniumz: {
 		inherit: true,
@@ -133,27 +124,33 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	dousedrive: {
+	dracoplate: {
 		inherit: true,
 		isNonstandard: null,
 	},
 	dragongem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	dragoniumz: {
 		inherit: true,
 		isNonstandard: null,
 	},
+	dreadplate: {
+		inherit: true,
+		isNonstandard: null,
+	},
 	dreamball: {
-		id: "dreamball",
-		name: "Dream Ball",
-		spritenum: 111,
-		num: 576,
-		gen: 5,
-		isPokeball: true,
-		desc: "A special Poke Ball that appears out of nowhere in a bag at the Entree Forest.",
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
+	durinberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
+	earthplate: {
+		inherit: true,
+		isNonstandard: null,
 	},
 	eeviumz: {
 		inherit: true,
@@ -161,8 +158,7 @@ exports.BattleItems = {
 	},
 	electricgem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	electriumz: {
 		inherit: true,
@@ -174,13 +170,11 @@ exports.BattleItems = {
 	},
 	fairygem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	fightinggem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	fightiniumz: {
 		inherit: true,
@@ -188,7 +182,6 @@ exports.BattleItems = {
 	},
 	figyberry: {
 		inherit: true,
-		desc: "Restores 1/2 max HP at 1/4 max HP or less; confuses if -Atk Nature. Single use.",
 		onEat(pokemon) {
 			this.heal(pokemon.baseMaxhp / 2);
 			if (pokemon.getNature().minus === 'atk') {
@@ -198,17 +191,23 @@ exports.BattleItems = {
 	},
 	firegem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	firiumz: {
 		inherit: true,
 		isNonstandard: null,
 	},
-	flyinggem: {
+	fistplate: {
 		inherit: true,
 		isNonstandard: null,
-		isUnreleased: true,
+	},
+	flameplate: {
+		inherit: true,
+		isNonstandard: null,
+	},
+	flyinggem: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
 	},
 	flyiniumz: {
 		inherit: true,
@@ -232,8 +231,7 @@ exports.BattleItems = {
 	},
 	ghostgem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	ghostiumz: {
 		inherit: true,
@@ -245,8 +243,7 @@ exports.BattleItems = {
 	},
 	grassgem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	grassiumz: {
 		inherit: true,
@@ -254,8 +251,7 @@ exports.BattleItems = {
 	},
 	groundgem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	groundiumz: {
 		inherit: true,
@@ -279,7 +275,6 @@ exports.BattleItems = {
 	},
 	iapapaberry: {
 		inherit: true,
-		desc: "Restores 1/2 max HP at 1/4 max HP or less; confuses if -Def Nature. Single use.",
 		onEat(pokemon) {
 			this.heal(pokemon.baseMaxhp / 2);
 			if (pokemon.getNature().minus === 'def') {
@@ -289,12 +284,11 @@ exports.BattleItems = {
 	},
 	icegem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
-	icestone: {
+	icicleplate: {
 		inherit: true,
-		desc: "Evolves Alolan Sandshrew into Alolan Sandslash and Alolan Vulpix into Alolan Ninetales when used.",
+		isNonstandard: null,
 	},
 	iciumz: {
 		inherit: true,
@@ -304,9 +298,13 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	jabocaberry: {
+	insectplate: {
 		inherit: true,
-		isUnreleased: undefined,
+		isNonstandard: null,
+	},
+	ironplate: {
+		inherit: true,
+		isNonstandard: null,
 	},
 	jawfossil: {
 		inherit: true,
@@ -328,15 +326,15 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	leafstone: {
-		inherit: true,
-		desc: "Evolves Gloom into Vileplume, Weepinbell into Victreebel, Exeggcute into Exeggutor or Alolan Exeggutor, Nuzleaf into Shiftry, and Pansage into Simisage when used.",
-	},
 	lopunnite: {
 		inherit: true,
 		isNonstandard: null,
 	},
 	lucarionite: {
+		inherit: true,
+		isNonstandard: null,
+	},
+	luckypunch: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -350,11 +348,10 @@ exports.BattleItems = {
 	},
 	machobrace: {
 		inherit: true,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	magoberry: {
 		inherit: true,
-		desc: "Restores 1/2 max HP at 1/4 max HP or less; confuses if -Spe Nature. Single use.",
 		onEat(pokemon) {
 			this.heal(pokemon.baseMaxhp / 2);
 			if (pokemon.getNature().minus === 'spe') {
@@ -362,10 +359,13 @@ exports.BattleItems = {
 			}
 		},
 	},
+	magostberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
 	mail: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	manectite: {
 		inherit: true,
@@ -376,6 +376,10 @@ exports.BattleItems = {
 		isNonstandard: null,
 	},
 	mawilite: {
+		inherit: true,
+		isNonstandard: null,
+	},
+	meadowplate: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -399,17 +403,29 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	micleberry: {
-		inherit: true,
-		isUnreleased: undefined,
-	},
 	mimikiumz: {
 		inherit: true,
 		isNonstandard: null,
 	},
+	mindplate: {
+		inherit: true,
+		isNonstandard: null,
+	},
+	nanabberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
+	nomelberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
 	normaliumz: {
 		inherit: true,
 		isNonstandard: null,
+	},
+	pamtreberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
 	},
 	pidgeotite: {
 		inherit: true,
@@ -433,8 +449,7 @@ exports.BattleItems = {
 	},
 	poisongem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	poisoniumz: {
 		inherit: true,
@@ -446,12 +461,23 @@ exports.BattleItems = {
 	},
 	psychicgem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	psychiumz: {
 		inherit: true,
 		isNonstandard: null,
+	},
+	rabutaberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
+	razorfang: {
+		inherit: true,
+		isNonstandard: null,
+	},
+	razzberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
 	},
 	redorb: {
 		inherit: true,
@@ -459,8 +485,7 @@ exports.BattleItems = {
 	},
 	rockgem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	rockiumz: {
 		inherit: true,
@@ -470,13 +495,13 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	rowapberry: {
-		inherit: true,
-		isUnreleased: undefined,
-	},
 	sablenite: {
 		inherit: true,
 		isNonstandard: null,
+	},
+	safariball: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
 	},
 	sailfossil: {
 		inherit: true,
@@ -498,11 +523,11 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	shockdrive: {
+	skullfossil: {
 		inherit: true,
 		isNonstandard: null,
 	},
-	skullfossil: {
+	skyplate: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -518,10 +543,25 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	steelgem: {
+	spelonberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
+	splashplate: {
 		inherit: true,
 		isNonstandard: null,
-		isUnreleased: true,
+	},
+	spookyplate: {
+		inherit: true,
+		isNonstandard: null,
+	},
+	sportball: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
+	steelgem: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
 	},
 	steeliumz: {
 		inherit: true,
@@ -535,6 +575,10 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
+	stoneplate: {
+		inherit: true,
+		isNonstandard: null,
+	},
 	swampertite: {
 		inherit: true,
 		isNonstandard: null,
@@ -543,9 +587,9 @@ exports.BattleItems = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	thunderstone: {
+	toxicplate: {
 		inherit: true,
-		desc: "Evolves Pikachu into Raichu or Alolan Raichu, Eevee into Jolteon, and Eelektrik into Eelektross when used.",
+		isNonstandard: null,
 	},
 	tyranitarite: {
 		inherit: true,
@@ -561,17 +605,23 @@ exports.BattleItems = {
 	},
 	watergem: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	wateriumz: {
 		inherit: true,
 		isNonstandard: null,
 	},
+	watmelberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
+	wepearberry: {
+		inherit: true,
+		isNonstandard: "Unobtainable",
+	},
 	wikiberry: {
 		inherit: true,
 		isNonstandard: null,
-		desc: "Restores 1/2 max HP at 1/4 max HP or less; confuses if -SpA Nature. Single use.",
 		onEat(pokemon) {
 			this.heal(pokemon.baseMaxhp / 2);
 			if (pokemon.getNature().minus === 'spa') {
@@ -579,5 +629,10 @@ exports.BattleItems = {
 			}
 		},
 	},
-};
-exports.BattleItems = BattleItems;
+	zapplate: {
+		inherit: true,
+		isNonstandard: null,
+	},
+}; exports.Items = Items;
+
+ //# sourceMappingURL=sourceMaps/items.js.map

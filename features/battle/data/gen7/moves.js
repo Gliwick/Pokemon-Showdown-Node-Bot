@@ -1,6 +1,4 @@
-'use strict';
-
-exports.BattleMovedex = {
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } const Moves = {
 	"10000000voltthunderbolt": {
 		inherit: true,
 		isNonstandard: null,
@@ -13,10 +11,6 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	aeroblast: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	assist: {
 		inherit: true,
 		isNonstandard: null,
@@ -25,10 +19,6 @@ exports.BattleMovedex = {
 		inherit: true,
 		accuracy: 100,
 		basePower: 90,
-	},
-	banefulbunker: {
-		inherit: true,
-		desc: "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon making contact with the user become poisoned. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn.",
 	},
 	barrage: {
 		inherit: true,
@@ -59,10 +49,6 @@ exports.BattleMovedex = {
 		isNonstandard: null,
 	},
 	boneclub: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	bonemerang: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -124,51 +110,37 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	conversion: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	conversion2: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	coreenforcer: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	corkscrewcrash: {
 		inherit: true,
 		isNonstandard: null,
 	},
-	crushgrip: {
+	curse: {
 		inherit: true,
-		isNonstandard: null,
+		target: "normal",
 	},
 	darkvoid: {
 		inherit: true,
 		isNonstandard: null,
-	},
-	detect: {
-		inherit: true,
-		desc: "The user is protected from most attacks made by other Pokemon during this turn. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn.",
 	},
 	defog: {
 		inherit: true,
 		onHit(target, source, move) {
 			let success = false;
 			if (!target.volatiles['substitute'] || move.infiltrates) success = !!this.boost({evasion: -1});
-			let removeTarget = ['reflect', 'lightscreen', 'auroraveil', 'safeguard', 'mist', 'spikes', 'toxicspikes', 'stealthrock', 'stickyweb'];
-			let removeAll = ['spikes', 'toxicspikes', 'stealthrock', 'stickyweb'];
+			const removeTarget = [
+				'reflect', 'lightscreen', 'auroraveil', 'safeguard', 'mist', 'spikes', 'toxicspikes', 'stealthrock', 'stickyweb',
+			];
+			const removeAll = ['spikes', 'toxicspikes', 'stealthrock', 'stickyweb'];
 			for (const targetCondition of removeTarget) {
 				if (target.side.removeSideCondition(targetCondition)) {
 					if (!removeAll.includes(targetCondition)) continue;
-					this.add('-sideend', target.side, this.dex.getEffect(targetCondition).name, '[from] move: Defog', '[of] ' + source);
+					this.add('-sideend', target.side, this.dex.conditions.get(targetCondition).name, '[from] move: Defog', '[of] ' + source);
 					success = true;
 				}
 			}
 			for (const sideCondition of removeAll) {
 				if (source.side.removeSideCondition(sideCondition)) {
-					this.add('-sideend', source.side, this.dex.getEffect(sideCondition).name, '[from] move: Defog', '[of] ' + source);
+					this.add('-sideend', source.side, this.dex.conditions.get(sideCondition).name, '[from] move: Defog', '[of] ' + source);
 					success = true;
 				}
 			}
@@ -179,9 +151,9 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	diamondstorm: {
+	dive: {
 		inherit: true,
-		isNonstandard: null,
+		flags: {contact: 1, charge: 1, protect: 1, mirror: 1, nonsky: 1},
 	},
 	dizzypunch: {
 		inherit: true,
@@ -195,14 +167,6 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	dragonascent: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	dragonhammer: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	dragonrage: {
 		inherit: true,
 		isNonstandard: null,
@@ -213,18 +177,17 @@ exports.BattleMovedex = {
 	},
 	electricterrain: {
 		inherit: true,
-		desc: "For 5 turns, the terrain becomes Electric Terrain. During the effect, the power of Electric-type attacks made by grounded Pokemon is multiplied by 1.5 and grounded Pokemon cannot fall asleep; Pokemon already asleep do not wake up. Camouflage transforms the user into an Electric type, Nature Power becomes Thunderbolt, and Secret Power has a 30% chance to cause paralysis. Fails if the current terrain is Electric Terrain.",
-		effect: {
+		condition: {
 			duration: 5,
 			durationCallback(source, effect) {
-				if (source && source.hasItem('terrainextender')) {
+				if (_optionalChain([source, 'optionalAccess', _ => _.hasItem, 'call', _2 => _2('terrainextender')])) {
 					return 8;
 				}
 				return 5;
 			},
 			onSetStatus(status, target, source, effect) {
 				if (status.id === 'slp' && target.isGrounded() && !target.isSemiInvulnerable()) {
-					if (effect.effectType === 'Move' && !effect.secondaries) {
+					if (effect.id === 'yawn' || (effect.effectType === 'Move' && !effect.secondaries)) {
 						this.add('-activate', target, 'move: Electric Terrain');
 					}
 					return false;
@@ -243,16 +206,16 @@ exports.BattleMovedex = {
 					return this.chainModify(1.5);
 				}
 			},
-			onStart(battle, source, effect) {
+			onFieldStart(field, source, effect) {
 				if (effect && effect.effectType === 'Ability') {
 					this.add('-fieldstart', 'move: Electric Terrain', '[from] ability: ' + effect, '[of] ' + source);
 				} else {
 					this.add('-fieldstart', 'move: Electric Terrain');
 				}
 			},
-			onResidualOrder: 21,
-			onResidualSubOrder: 2,
-			onEnd() {
+			onFieldResidualOrder: 27,
+			onFieldResidualSubOrder: 7,
+			onFieldEnd() {
 				this.add('-fieldend', 'move: Electric Terrain');
 			},
 		},
@@ -261,19 +224,11 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	endure: {
-		inherit: true,
-		desc: "The user will survive attacks made by other Pokemon during this turn with at least 1 HP. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn.",
-	},
 	extremeevoboost: {
 		inherit: true,
 		isNonstandard: null,
 	},
 	feintattack: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	fierydance: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -285,13 +240,38 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	fleurcannon: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	floralhealing: {
 		inherit: true,
-		isNonstandard: null,
+		onHit(target, source) {
+			let success = false;
+			if (this.field.isTerrain('grassyterrain')) {
+				success = !!this.heal(this.modify(target.baseMaxhp, 0.667));
+			} else {
+				success = !!this.heal(Math.ceil(target.baseMaxhp * 0.5));
+			}
+			if (success && !target.isAlly(source)) {
+				target.staleness = 'external';
+			}
+			if (!success) {
+				this.add('-fail', target, 'heal');
+				return null;
+			}
+			return success;
+		},
+	},
+	fly: {
+		inherit: true,
+		onTryMove(attacker, defender, move) {
+			if (attacker.removeVolatile(move.id)) {
+				return;
+			}
+			this.add('-prepare', attacker, move.name);
+			if (!this.runEvent('ChargeMove', attacker, defender, move)) {
+				return;
+			}
+			attacker.addVolatile('twoturnmove', defender);
+			return null;
+		},
 	},
 	foresight: {
 		inherit: true,
@@ -308,10 +288,6 @@ exports.BattleMovedex = {
 		isNonstandard: null,
 	},
 	genesissupernova: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	geomancy: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -334,18 +310,17 @@ exports.BattleMovedex = {
 	},
 	grassyterrain: {
 		inherit: true,
-		desc: "For 5 turns, the terrain becomes Grassy Terrain. During the effect, the power of Grass-type attacks used by grounded Pokemon is multiplied by 1.5, the power of Bulldoze, Earthquake, and Magnitude used against grounded Pokemon is multiplied by 0.5, and grounded Pokemon have 1/16 of their maximum HP, rounded down, restored at the end of each turn, including the last turn. Camouflage transforms the user into a Grass type, Nature Power becomes Energy Ball, and Secret Power has a 30% chance to cause sleep. Fails if the current terrain is Grassy Terrain.",
-		effect: {
+		condition: {
 			duration: 5,
 			durationCallback(source, effect) {
-				if (source && source.hasItem('terrainextender')) {
+				if (_optionalChain([source, 'optionalAccess', _3 => _3.hasItem, 'call', _4 => _4('terrainextender')])) {
 					return 8;
 				}
 				return 5;
 			},
 			onBasePower(basePower, attacker, defender, move) {
-				let weakenedMoves = ['earthquake', 'bulldoze', 'magnitude'];
-				if (weakenedMoves.includes(move.id)) {
+				const weakenedMoves = ['earthquake', 'bulldoze', 'magnitude'];
+				if (weakenedMoves.includes(move.id) && defender.isGrounded() && !defender.isSemiInvulnerable()) {
 					this.debug('move weakened by grassy terrain');
 					return this.chainModify(0.5);
 				}
@@ -354,7 +329,7 @@ exports.BattleMovedex = {
 					return this.chainModify(1.5);
 				}
 			},
-			onStart(battle, source, effect) {
+			onFieldStart(field, source, effect) {
 				if (effect && effect.effectType === 'Ability') {
 					this.add('-fieldstart', 'move: Grassy Terrain', '[from] ability: ' + effect, '[of] ' + source);
 				} else {
@@ -362,49 +337,51 @@ exports.BattleMovedex = {
 				}
 			},
 			onResidualOrder: 5,
-			onResidualSubOrder: 3,
-			onResidual() {
-				this.eachEvent('Terrain');
-			},
-			onTerrain(pokemon) {
+			onResidualSubOrder: 2,
+			onResidual(pokemon) {
 				if (pokemon.isGrounded() && !pokemon.isSemiInvulnerable()) {
-					this.debug('Pokemon is grounded, healing through Grassy Terrain.');
 					this.heal(pokemon.baseMaxhp / 16, pokemon, pokemon);
+				} else {
+					this.debug(`Pokemon semi-invuln or not grounded; Grassy Terrain skipped`);
 				}
 			},
-			onEnd() {
-				if (!this.effectData.duration) this.eachEvent('Terrain');
+			onFieldResidualOrder: 27,
+			onFieldResidualSubOrder: 7,
+			onFieldEnd() {
 				this.add('-fieldend', 'move: Grassy Terrain');
 			},
 		},
-	},
-	growth: {
-		inherit: true,
-		desc: "Raises the user's Attack and Special Attack by 1 stage. If the weather is Sunny Day or Desolate Land, this move raises the user's Attack and Special Attack by 2 stages.",
 	},
 	guardianofalola: {
 		inherit: true,
 		isNonstandard: null,
 	},
-	headcharge: {
+	healbell: {
 		inherit: true,
-		isNonstandard: null,
+		onHit(target, source) {
+			this.add('-activate', source, 'move: Heal Bell');
+			let success = false;
+			const allies = [...target.side.pokemon, ..._optionalChain([target, 'access', _5 => _5.side, 'access', _6 => _6.allySide, 'optionalAccess', _7 => _7.pokemon]) || []];
+			for (const ally of allies) {
+				if (ally.hasAbility('soundproof')) continue;
+				if (ally.cureStatus()) success = true;
+			}
+			return success;
+		},
 	},
 	healblock: {
 		inherit: true,
 		isNonstandard: null,
 	},
-	"healingwish": {
+	healingwish: {
 		inherit: true,
-		desc: "The user faints and the Pokemon brought out to replace it has its HP fully restored along with having any major status condition cured. The new Pokemon is sent out at the end of the turn, and the healing happens before hazards take effect. Fails if the user is the last unfainted Pokemon in its party.",
-		shortDesc: "User faints. Replacement is fully healed.",
-		effect: {
+		condition: {
 			duration: 2,
 			onSwitchInPriority: 1,
 			onSwitchIn(target) {
 				if (!target.fainted) {
 					target.heal(target.maxhp);
-					target.setStatus('');
+					target.clearStatus();
 					this.add('-heal', target, target.getHealth, '[from] move: Healing Wish');
 					target.side.removeSlotCondition(target, 'healingwish');
 				}
@@ -414,6 +391,25 @@ exports.BattleMovedex = {
 	healorder: {
 		inherit: true,
 		isNonstandard: null,
+	},
+	healpulse: {
+		inherit: true,
+		onHit(target, source) {
+			let success = false;
+			if (source.hasAbility('megalauncher')) {
+				success = !!this.heal(this.modify(target.baseMaxhp, 0.75));
+			} else {
+				success = !!this.heal(Math.ceil(target.baseMaxhp * 0.5));
+			}
+			if (success && !target.isAlly(source)) {
+				target.staleness = 'external';
+			}
+			if (!success) {
+				this.add('-fail', target, 'heal');
+				return null;
+			}
+			return success;
+		},
 	},
 	heartstamp: {
 		inherit: true,
@@ -430,10 +426,6 @@ exports.BattleMovedex = {
 	heavyslam: {
 		inherit: true,
 		onTryHit() {},
-	},
-	hurricane: {
-		inherit: true,
-		desc: "Has a 30% chance to confuse the target. This move can hit a target using Bounce, Fly, or Sky Drop, or is under the effect of Sky Drop. If the weather is Primordial Sea or Rain Dance, this move does not check accuracy. If the weather is Desolate Land or Sunny Day, this move's accuracy is 50%.",
 	},
 	hiddenpower: {
 		inherit: true,
@@ -505,8 +497,7 @@ exports.BattleMovedex = {
 	},
 	howl: {
 		inherit: true,
-		desc: "Raises the user's Attack by 1 stage.",
-		shortDesc: "Raises the user's Attack by 1.",
+		flags: {snatch: 1},
 		boosts: {
 			atk: 1,
 		},
@@ -556,15 +547,9 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	kinesis: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	kingsshield: {
 		inherit: true,
-		desc: "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon trying to make contact with the user have their Attack lowered by 2 stages. Non-damaging moves go through this protection. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn.",
-		shortDesc: "Protects from damaging attacks. Contact: -2 Atk.",
-		effect: {
+		condition: {
 			duration: 1,
 			onStart(target) {
 				this.add('-singleturn', target, 'Protect');
@@ -576,32 +561,24 @@ exports.BattleMovedex = {
 					return;
 				}
 				this.add('-activate', target, 'move: Protect');
-				let lockedmove = source.getVolatile('lockedmove');
+				const lockedmove = source.getVolatile('lockedmove');
 				if (lockedmove) {
 					// Outrage counter is reset
 					if (source.volatiles['lockedmove'].duration === 2) {
 						delete source.volatiles['lockedmove'];
 					}
 				}
-				if (move.flags['contact']) {
+				if (this.checkMoveMakesContact(move, source, target)) {
 					this.boost({atk: -2}, source, target, this.dex.getActiveMove("King's Shield"));
 				}
 				return this.NOT_FAIL;
 			},
 			onHit(target, source, move) {
-				if (move.isZPowered && move.flags['contact']) {
+				if (move.isZOrMaxPowered && this.checkMoveMakesContact(move, source, target)) {
 					this.boost({atk: -2}, source, target, this.dex.getActiveMove("King's Shield"));
 				}
 			},
 		},
-	},
-	knockoff: {
-		inherit: true,
-		desc: "If the target is holding an item that can be removed from it, ignoring the Sticky Hold Ability, this move's power is multiplied by 1.5. If the user has not fainted, the target loses its held item. This move cannot remove Z-Crystals, cause Pokemon with the Sticky Hold Ability to lose their held item, cause Pokemon that can Mega Evolve to lose the Mega Stone for their species, or cause a Kyogre, a Groudon, a Giratina, an Arceus, a Genesect, or a Silvally to lose their Blue Orb, Red Orb, Griseous Orb, Plate, Drive, or Memory respectively. Items lost to this move cannot be regained with Recycle or the Harvest Ability.",
-	},
-	landswrath: {
-		inherit: true,
-		isNonstandard: null,
 	},
 	letssnuggleforever: {
 		inherit: true,
@@ -609,14 +586,9 @@ exports.BattleMovedex = {
 	},
 	lightofruin: {
 		inherit: true,
-		isNonstandard: null,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	lightthatburnsthesky: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	lovelykiss: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -630,15 +602,21 @@ exports.BattleMovedex = {
 	},
 	lunardance: {
 		inherit: true,
-		isNonstandard: null,
-	},
-	lusterpurge: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	magmastorm: {
-		inherit: true,
-		isNonstandard: null,
+		condition: {
+			duration: 2,
+			onSwitchInPriority: 1,
+			onSwitchIn(target) {
+				if (!target.fainted) {
+					target.heal(target.maxhp);
+					target.clearStatus();
+					for (const moveSlot of target.moveSlots) {
+						moveSlot.pp = moveSlot.maxpp;
+					}
+					this.add('-heal', target, target.getHealth, '[from] move: Lunar Dance');
+					target.side.removeSlotCondition(target, 'lunardance');
+				}
+			},
+		},
 	},
 	magnetbomb: {
 		inherit: true,
@@ -664,13 +642,11 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	milkdrink: {
+	metronome: {
 		inherit: true,
-		isNonstandard: null,
-	},
-	mindblown: {
-		inherit: true,
-		isNonstandard: null,
+		noMetronome: [
+			"After You", "Assist", "Baneful Bunker", "Beak Blast", "Belch", "Bestow", "Celebrate", "Chatter", "Copycat", "Counter", "Covet", "Crafty Shield", "Destiny Bond", "Detect", "Diamond Storm", "Dragon Ascent", "Endure", "Feint", "Fleur Cannon", "Focus Punch", "Follow Me", "Freeze Shock", "Helping Hand", "Hold Hands", "Hyperspace Fury", "Hyperspace Hole", "Ice Burn", "Instruct", "King's Shield", "Light of Ruin", "Mat Block", "Me First", "Metronome", "Mimic", "Mind Blown", "Mirror Coat", "Mirror Move", "Nature Power", "Origin Pulse", "Photon Geyser", "Plasma Fists", "Precipice Blades", "Protect", "Quash", "Quick Guard", "Rage Powder", "Relic Song", "Secret Sword", "Shell Trap", "Sketch", "Sleep Talk", "Snarl", "Snatch", "Snore", "Spectral Thief", "Spiky Shield", "Spotlight", "Steam Eruption", "Struggle", "Switcheroo", "Techno Blast", "Thief", "Thousand Arrows", "Thousand Waves", "Transform", "Trick", "V-create", "Wide Guard",
+		],
 	},
 	miracleeye: {
 		inherit: true,
@@ -684,17 +660,53 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	mistball: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	moonlight: {
 		inherit: true,
-		desc: "The user restores 1/2 of its maximum HP if Delta Stream or no weather conditions are in effect, 2/3 of its maximum HP if the weather is Desolate Land or Sunny Day, and 1/4 of its maximum HP if the weather is Hail, Primordial Sea, Rain Dance, or Sandstorm, all rounded half down.",
+		onHit(pokemon) {
+			let factor = 0.5;
+			switch (pokemon.effectiveWeather()) {
+			case 'sunnyday':
+			case 'desolateland':
+				factor = 0.667;
+				break;
+			case 'raindance':
+			case 'primordialsea':
+			case 'sandstorm':
+			case 'hail':
+				factor = 0.25;
+				break;
+			}
+			const success = !!this.heal(this.modify(pokemon.maxhp, factor));
+			if (!success) {
+				this.add('-fail', pokemon, 'heal');
+				return null;
+			}
+			return success;
+		},
 	},
 	morningsun: {
 		inherit: true,
-		desc: "The user restores 1/2 of its maximum HP if Delta Stream or no weather conditions are in effect, 2/3 of its maximum HP if the weather is Desolate Land or Sunny Day, and 1/4 of its maximum HP if the weather is Hail, Primordial Sea, Rain Dance, or Sandstorm, all rounded half down.",
+		onHit(pokemon) {
+			let factor = 0.5;
+			switch (pokemon.effectiveWeather()) {
+			case 'sunnyday':
+			case 'desolateland':
+				factor = 0.667;
+				break;
+			case 'raindance':
+			case 'primordialsea':
+			case 'sandstorm':
+			case 'hail':
+				factor = 0.25;
+				break;
+			}
+			const success = !!this.heal(this.modify(pokemon.maxhp, factor));
+			if (!success) {
+				this.add('-fail', pokemon, 'heal');
+				return null;
+			}
+			return success;
+		},
 	},
 	mudbomb: {
 		inherit: true,
@@ -712,10 +724,6 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	naturesmadness: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	needlearm: {
 		inherit: true,
 		isNonstandard: null,
@@ -725,10 +733,6 @@ exports.BattleMovedex = {
 		isNonstandard: null,
 	},
 	nightmare: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	oblivionwing: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -744,9 +748,17 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	originpulse: {
+	pollenpuff: {
 		inherit: true,
-		isNonstandard: null,
+		flags: {bullet: 1, protect: 1, mirror: 1},
+		onHit(target, source) {
+			if (source.isAlly(target)) {
+				if (!this.heal(Math.floor(target.baseMaxhp * 0.5))) {
+					this.add('-immune', target);
+					return null;
+				}
+			}
+		},
 	},
 	powder: {
 		inherit: true,
@@ -756,25 +768,27 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	protect: {
-		inherit: true,
-		desc: "The user is protected from most attacks made by other Pokemon during this turn. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn.",
-	},
 	psychicterrain: {
 		inherit: true,
-		desc: "For 5 turns, the terrain becomes Psychic Terrain. During the effect, the power of Psychic-type attacks made by grounded Pokemon is multiplied by 1.5 and grounded Pokemon cannot be hit by moves with priority greater than 0, unless the target is an ally. Camouflage transforms the user into a Psychic type, Nature Power becomes Psychic, and Secret Power has a 30% chance to lower the target's Speed by 1 stage. Fails if the current terrain is Psychic Terrain.",
-		effect: {
+		condition: {
 			duration: 5,
 			durationCallback(source, effect) {
-				if (source && source.hasItem('terrainextender')) {
+				if (_optionalChain([source, 'optionalAccess', _8 => _8.hasItem, 'call', _9 => _9('terrainextender')])) {
 					return 8;
 				}
 				return 5;
 			},
 			onTryHitPriority: 4,
 			onTryHit(target, source, effect) {
-				if (!target.isGrounded() || target.isSemiInvulnerable() || target.side === source.side) return;
 				if (effect && (effect.priority <= 0.1 || effect.target === 'self')) {
+					return;
+				}
+				if (target.isSemiInvulnerable() || target.isAlly(source)) return;
+				if (!target.isGrounded()) {
+					const baseMove = this.dex.moves.get(effect.id);
+					if (baseMove.priority > 0) {
+						this.hint("Psychic Terrain doesn't affect Pokémon immune to Ground.");
+					}
 					return;
 				}
 				this.add('-activate', target, 'move: Psychic Terrain');
@@ -786,16 +800,16 @@ exports.BattleMovedex = {
 					return this.chainModify(1.5);
 				}
 			},
-			onStart(battle, source, effect) {
+			onFieldStart(field, source, effect) {
 				if (effect && effect.effectType === 'Ability') {
 					this.add('-fieldstart', 'move: Psychic Terrain', '[from] ability: ' + effect, '[of] ' + source);
 				} else {
 					this.add('-fieldstart', 'move: Psychic Terrain');
 				}
 			},
-			onResidualOrder: 21,
-			onResidualSubOrder: 2,
-			onEnd() {
+			onFieldResidualOrder: 27,
+			onFieldResidualSubOrder: 7,
+			onFieldEnd() {
 				this.add('-fieldend', 'move: Psychic Terrain');
 			},
 		},
@@ -816,6 +830,13 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
+	purify: {
+		inherit: true,
+		onHit(target, source) {
+			if (!target.cureStatus()) return false;
+			this.heal(Math.ceil(source.maxhp * 0.5), source);
+		},
+	},
 	pursuit: {
 		inherit: true,
 		isNonstandard: null,
@@ -823,24 +844,20 @@ exports.BattleMovedex = {
 	quash: {
 		inherit: true,
 		onHit(target) {
-			if (target.side.active.length < 2) return false; // fails in singles
-			let action = this.queue.willMove(target);
+			if (this.activePerHalf === 1) return false; // fails in singles
+			const action = this.queue.willMove(target);
 			if (!action) return false;
 
 			action.priority = -7.1;
 			this.queue.cancelMove(target);
-			for (let i = this.queue.length - 1; i >= 0; i--) {
-				if (this.queue[i].choice === 'residual') {
-					this.queue.splice(i, 0, action);
+			for (let i = this.queue.list.length - 1; i >= 0; i--) {
+				if (this.queue.list[i].choice === 'residual') {
+					this.queue.list.splice(i, 0, action);
 					break;
 				}
 			}
 			this.add('-activate', target, 'move: Quash');
 		},
-	},
-	quickguard: {
-		inherit: true,
-		desc: "The user and its party members are protected from attacks with original or altered priority greater than 0 made by other Pokemon, including allies, during this turn. This move modifies the same 1/X chance of being successful used by other protection moves, where X starts at 1 and triples each time this move is successfully used, but does not use the chance to check for failure. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn or if this move is already in effect for the user's side.",
 	},
 	rage: {
 		inherit: true,
@@ -849,8 +866,6 @@ exports.BattleMovedex = {
 	rapidspin: {
 		inherit: true,
 		basePower: 20,
-		desc: "If this move is successful and the user has not fainted, the effects of Leech Seed and binding moves end for the user, and all hazards are removed from the user's side of the field.",
-		shortDesc: "Frees user from hazards, binding, Leech Seed.",
 		secondary: null,
 	},
 	razorwind: {
@@ -873,10 +888,6 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	roaroftime: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	rockclimb: {
 		inherit: true,
 		isNonstandard: null,
@@ -889,10 +900,6 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	sacredfire: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	sappyseed: {
 		inherit: true,
 		accuracy: 100,
@@ -900,10 +907,6 @@ exports.BattleMovedex = {
 		pp: 15,
 	},
 	savagespinout: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	searingshot: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -919,14 +922,6 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	shadowbone: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	shadowforce: {
-		inherit: true,
-		isNonstandard: null,
-	},
 	sharpen: {
 		inherit: true,
 		isNonstandard: null,
@@ -937,7 +932,18 @@ exports.BattleMovedex = {
 	},
 	shoreup: {
 		inherit: true,
-		isNonstandard: null,
+		onHit(pokemon) {
+			let factor = 0.5;
+			if (this.field.isWeather('sandstorm')) {
+				factor = 0.667;
+			}
+			const success = !!this.heal(this.modify(pokemon.maxhp, factor));
+			if (!success) {
+				this.add('-fail', pokemon, 'heal');
+				return null;
+			}
+			return success;
+		},
 	},
 	signalbeam: {
 		inherit: true,
@@ -976,23 +982,11 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	solarbeam: {
-		inherit: true,
-		desc: "This attack charges on the first turn and executes on the second. Power is halved if the weather is Hail, Primordial Sea, Rain Dance, or Sandstorm and the user is not holding Utility Umbrella. If the user is holding a Power Herb or the weather is Desolate Land or Sunny Day, the move completes in one turn.",
-	},
-	solarblade: {
-		inherit: true,
-		desc: "This attack charges on the first turn and executes on the second. Power is halved if the weather is Hail, Primordial Sea, Rain Dance, or Sandstorm and the user is not holding Utility Umbrella. If the user is holding a Power Herb or the weather is Desolate Land or Sunny Day, the move completes in one turn.",
-	},
 	sonicboom: {
 		inherit: true,
 		isNonstandard: null,
 	},
 	soulstealing7starstrike: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	spacialrend: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -1010,19 +1004,11 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	spikyshield: {
-		inherit: true,
-		desc: "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon making contact with the user lose 1/8 of their maximum HP, rounded down. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn.",
-	},
 	splinteredstormshards: {
 		inherit: true,
 		isNonstandard: null,
 	},
 	spotlight: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	steameruption: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -1042,19 +1028,78 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
+	swallow: {
+		inherit: true,
+		onHit(pokemon) {
+			const healAmount = [0.25, 0.5, 1];
+			const success = !!this.heal(this.modify(pokemon.maxhp, healAmount[(pokemon.volatiles['stockpile'].layers - 1)]));
+			if (!success) this.add('-fail', pokemon, 'heal');
+			pokemon.removeVolatile('stockpile');
+			return success || null;
+		},
+	},
+	switcheroo: {
+		inherit: true,
+		onHit(target, source, move) {
+			const yourItem = target.takeItem(source);
+			const myItem = source.takeItem();
+			if (target.item || source.item || (!yourItem && !myItem)) {
+				if (yourItem) target.item = yourItem.id;
+				if (myItem) source.item = myItem.id;
+				return false;
+			}
+			if (
+				(myItem && !this.singleEvent('TakeItem', myItem, source.itemState, target, source, move, myItem)) ||
+				(yourItem && !this.singleEvent('TakeItem', yourItem, target.itemState, source, target, move, yourItem))
+			) {
+				if (yourItem) target.item = yourItem.id;
+				if (myItem) source.item = myItem.id;
+				return false;
+			}
+			this.add('-activate', source, 'move: Trick', '[of] ' + target);
+			if (myItem) {
+				target.setItem(myItem);
+				this.add('-item', target, myItem, '[from] move: Switcheroo');
+			} else {
+				this.add('-enditem', target, yourItem, '[silent]', '[from] move: Switcheroo');
+			}
+			if (yourItem) {
+				source.setItem(yourItem);
+				this.add('-item', source, yourItem, '[from] move: Switcheroo');
+			} else {
+				this.add('-enditem', source, myItem, '[silent]', '[from] move: Switcheroo');
+			}
+		},
+	},
 	synchronoise: {
 		inherit: true,
 		isNonstandard: null,
 	},
 	synthesis: {
 		inherit: true,
-		desc: "The user restores 1/2 of its maximum HP if Delta Stream or no weather conditions are in effect, 2/3 of its maximum HP if the weather is Desolate Land or Sunny Day, and 1/4 of its maximum HP if the weather is Hail, Primordial Sea, Rain Dance, or Sandstorm, all rounded half down.",
+		onHit(pokemon) {
+			let factor = 0.5;
+			switch (pokemon.effectiveWeather()) {
+			case 'sunnyday':
+			case 'desolateland':
+				factor = 0.667;
+				break;
+			case 'raindance':
+			case 'primordialsea':
+			case 'sandstorm':
+			case 'hail':
+				factor = 0.25;
+				break;
+			}
+			const success = !!this.heal(this.modify(pokemon.maxhp, factor));
+			if (!success) {
+				this.add('-fail', pokemon, 'heal');
+				return null;
+			}
+			return success;
+		},
 	},
 	tailglow: {
-		inherit: true,
-		isNonstandard: null,
-	},
-	technoblast: {
 		inherit: true,
 		isNonstandard: null,
 	},
@@ -1068,31 +1113,67 @@ exports.BattleMovedex = {
 	},
 	teleport: {
 		inherit: true,
-		desc: "Fails when used.",
-		shortDesc: "Fails when used.",
 		priority: 0,
 		selfSwitch: false,
-		onTryHit: false,
+		onTry: false,
 	},
-	thousandarrows: {
+	toxic: {
 		inherit: true,
-		isNonstandard: null,
-	},
-	thousandwaves: {
-		inherit: true,
-		isNonstandard: null,
+		onPrepareHit(target, source, move) {
+			if (source.hasType('Poison')) source.addVolatile('toxic');
+		},
+		condition: {
+			noCopy: true,
+			duration: 1,
+			onSourceInvulnerabilityPriority: 1,
+			onSourceInvulnerability(target, source, move) {
+				if (move && source === this.effectState.target) return 0;
+			},
+			onSourceAccuracy(accuracy, target, source, move) {
+				if (move && source === this.effectState.target) return true;
+			},
+		},
 	},
 	toxicthread: {
 		inherit: true,
 		isNonstandard: null,
 	},
+	trick: {
+		inherit: true,
+		onHit(target, source, move) {
+			const yourItem = target.takeItem(source);
+			const myItem = source.takeItem();
+			if (target.item || source.item || (!yourItem && !myItem)) {
+				if (yourItem) target.item = yourItem.id;
+				if (myItem) source.item = myItem.id;
+				return false;
+			}
+			if (
+				(myItem && !this.singleEvent('TakeItem', myItem, source.itemState, target, source, move, myItem)) ||
+				(yourItem && !this.singleEvent('TakeItem', yourItem, target.itemState, source, target, move, yourItem))
+			) {
+				if (yourItem) target.item = yourItem.id;
+				if (myItem) source.item = myItem.id;
+				return false;
+			}
+			this.add('-activate', source, 'move: Trick', '[of] ' + target);
+			if (myItem) {
+				target.setItem(myItem);
+				this.add('-item', target, myItem, '[from] move: Trick');
+			} else {
+				this.add('-enditem', target, yourItem, '[silent]', '[from] move: Trick');
+			}
+			if (yourItem) {
+				source.setItem(yourItem);
+				this.add('-item', source, yourItem, '[from] move: Trick');
+			} else {
+				this.add('-enditem', source, myItem, '[silent]', '[from] move: Trick');
+			}
+		},
+	},
 	trumpcard: {
 		inherit: true,
 		isNonstandard: null,
-	},
-	thunder: {
-		inherit: true,
-		desc: "Has a 30% chance to paralyze the target. This move can hit a target using Bounce, Fly, or Sky Drop, or is under the effect of Sky Drop. If the weather is Primordial Sea or Rain Dance, this move does not check accuracy. If the weather is Desolate Land or Sunny Day, this move's accuracy is 50%.",
 	},
 	twineedle: {
 		inherit: true,
@@ -1110,10 +1191,6 @@ exports.BattleMovedex = {
 		inherit: true,
 		isNonstandard: null,
 	},
-	wideguard: {
-		inherit: true,
-		desc: "The user and its party members are protected from moves made by other Pokemon, including allies, during this turn that target all adjacent foes or all adjacent Pokemon. This move modifies the same 1/X chance of being successful used by other protection moves, where X starts at 1 and triples each time this move is successfully used, but does not use the chance to check for failure. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn or if this move is already in effect for the user's side.",
-	},
 	wringout: {
 		inherit: true,
 		isNonstandard: null,
@@ -1121,12 +1198,10 @@ exports.BattleMovedex = {
 	zippyzap: {
 		inherit: true,
 		basePower: 50,
-		desc: "Will always result in a critical hit.",
-		shortDesc: "Nearly always goes first. Always crits.",
 		pp: 15,
 		willCrit: true,
 		secondary: null,
 	},
-};
+}; exports.Moves = Moves;
 
-exports.BattleMovedex = BattleMovedex;
+ //# sourceMappingURL=sourceMaps/moves.js.map

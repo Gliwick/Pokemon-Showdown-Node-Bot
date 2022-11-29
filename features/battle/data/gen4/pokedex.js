@@ -1,24 +1,29 @@
-'use strict';
-
-exports.BattlePokedex = {
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); const Pokedex = {
+	milotic: {
+		inherit: true,
+		evoType: 'levelExtra',
+		evoCondition: 'with high Beauty',
+	},
 	rotomheat: {
 		inherit: true,
-		types: ["Electric","Ghost"]
+		types: ["Electric", "Ghost"],
 	},
 	rotomwash: {
 		inherit: true,
-		types: ["Electric","Ghost"]
+		types: ["Electric", "Ghost"],
 	},
 	rotomfrost: {
 		inherit: true,
-		types: ["Electric","Ghost"]
+		types: ["Electric", "Ghost"],
 	},
 	rotomfan: {
 		inherit: true,
-		types: ["Electric","Ghost"]
+		types: ["Electric", "Ghost"],
 	},
 	rotommow: {
 		inherit: true,
-		types: ["Electric","Ghost"]
-	}
-};
+		types: ["Electric", "Ghost"],
+	},
+}; exports.Pokedex = Pokedex;
+
+ //# sourceMappingURL=sourceMaps/pokedex.js.map

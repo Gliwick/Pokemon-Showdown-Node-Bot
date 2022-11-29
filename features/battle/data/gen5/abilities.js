@@ -1,56 +1,78 @@
-'use strict';
-
-exports.BattleAbilities = {
-	"frisk": {
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } const Abilities = {
+	anticipation: {
 		inherit: true,
-		desc: "When this Pokemon enters the field, it identifies the opponent's held item; in double battles, the held item of an unrevealed, randomly selected opponent is identified.",
-		shortDesc: "On switch-in, this Pokemon identifies a random foe's held item.",
-		onStart: function (pokemon) {
-			var target = pokemon.side.foe.randomActive();
-			if (target && target.item) {
+		onStart(pokemon) {
+			for (const target of pokemon.foes()) {
+				for (const moveSlot of target.moveSlots) {
+					const move = this.dex.moves.get(moveSlot.move);
+					if (move.category !== 'Status' && (
+						this.dex.getImmunity(move.type, pokemon) && this.dex.getEffectiveness(move.type, pokemon) > 0 ||
+						move.ohko
+					)) {
+						this.add('-ability', pokemon, 'Anticipation');
+						return;
+					}
+				}
+			}
+		},
+	},
+	frisk: {
+		inherit: true,
+		onStart(pokemon) {
+			const target = pokemon.side.randomFoe();
+			if (_optionalChain([target, 'optionalAccess', _ => _.item])) {
 				this.add('-item', target, target.getItem().name, '[from] ability: Frisk', '[of] ' + pokemon);
 			}
-		}
+		},
 	},
-	"keeneye": {
+	infiltrator: {
 		inherit: true,
-		onModifyMove: function () {}
+		rating: 1.5,
 	},
-	"oblivious": {
+	keeneye: {
 		inherit: true,
-		desc: "This Pokemon cannot be infatuated (by Attract or Cute Charm). Gaining this Ability while infatuated cures it.",
-		shortDesc: "This Pokemon cannot be infatuated. Gaining this Ability while infatuated cures it.",
-		onUpdate: function (pokemon) {
+		onModifyMove() {},
+	},
+	oblivious: {
+		inherit: true,
+		onUpdate(pokemon) {
 			if (pokemon.volatiles['attract']) {
 				pokemon.removeVolatile('attract');
 				this.add('-end', pokemon, 'move: Attract', '[from] ability: Oblivious');
 			}
 		},
-		onTryHit: function (pokemon, target, move) {
+		onTryHit(pokemon, target, move) {
 			if (move.id === 'captivate') {
-				this.add('-immune', pokemon, '[msg]', '[from] Oblivious');
+				this.add('-immune', pokemon, '[from] Oblivious');
 				return null;
 			}
-		}
+		},
+		rating: 0.5,
 	},
-	"overcoat": {
+	overcoat: {
 		inherit: true,
-		onTryHit: function () {}
+		onTryHit() {},
+		rating: 0.5,
 	},
-	"sapsipper": {
+	sapsipper: {
 		inherit: true,
-		desc: "This Pokemon is immune to Grass moves. If hit by a Grass move, its Attack is increased by one stage (once for each hit of Bullet Seed). Does not affect Aromatherapy.",
-		onAllyTryHitSide: function () {}
+		onAllyTryHitSide() {},
 	},
-	"serenegrace": {
+	serenegrace: {
 		inherit: true,
-		onModifyMove: function (move) {
+		onModifyMove(move) {
 			if (move.secondaries && move.id !== 'secretpower') {
 				this.debug('doubling secondary chance');
-				for (var i = 0; i < move.secondaries.length; i++) {
-					move.secondaries[i].chance *= 2;
+				for (const secondary of move.secondaries) {
+					if (secondary.chance) secondary.chance *= 2;
 				}
 			}
-		}
-	}
-};
+		},
+	},
+	soundproof: {
+		inherit: true,
+		onAllyTryHitSide() {},
+	},
+}; exports.Abilities = Abilities;
+
+ //# sourceMappingURL=sourceMaps/abilities.js.map

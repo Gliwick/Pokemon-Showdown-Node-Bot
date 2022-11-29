@@ -1,50 +1,22 @@
-'use strict';
-
-exports.BattleMovedex = {
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } const Moves = {
 	allyswitch: {
 		inherit: true,
-		desc: "The user swaps positions with its ally on the opposite side of the field. Fails if there is no Pokemon at that position, if the user is the only Pokemon on its side, or if the user is in the middle.",
-		shortDesc: "Switches position with the ally on the far side.",
 		priority: 1,
-	},
-	bestow: {
-		inherit: true,
-		desc: "The target receives the user's held item. Fails if the user has no item or is holding a Mail, if the target is already holding an item, if the user is a Kyogre holding a Blue Orb, a Groudon holding a Red Orb, a Giratina holding a Griseous Orb, an Arceus holding a Plate, a Genesect holding a Drive, a Pokemon that can Mega Evolve holding the Mega Stone for its species, or if the target is one of those Pokemon and the user is holding the respective item.",
-	},
-	brickbreak: {
-		inherit: true,
-		desc: "If this attack does not miss, the effects of Reflect and Light Screen end for the target's side of the field before damage is calculated.",
-	},
-	covet: {
-		inherit: true,
-		desc: "If this attack was successful and the user has not fainted, it steals the target's held item if the user is not holding one. The target's item is not stolen if it is a Mail, or if the target is a Kyogre holding a Blue Orb, a Groudon holding a Red Orb, a Giratina holding a Griseous Orb, an Arceus holding a Plate, a Genesect holding a Drive, or a Pokemon that can Mega Evolve holding the Mega Stone for its species. Items lost to this move cannot be regained with Recycle or the Ability Harvest.",
 	},
 	darkvoid: {
 		inherit: true,
-		desc: "Causes the target to fall asleep.",
-		shortDesc: "Puts the foe(s) to sleep.",
 		accuracy: 80,
-		onTryMove: function () {},
-	},
-	defog: {
-		inherit: true,
-		desc: "Lowers the target's evasiveness by 1 stage. If this move is successful and whether or not the target's evasiveness was affected, the effects of Reflect, Light Screen, Safeguard, Mist, Spikes, Toxic Spikes, Stealth Rock, and Sticky Web end for the target's side, and the effects of Spikes, Toxic Spikes, Stealth Rock, and Sticky Web end for the user's side. Ignores a target's substitute, although a substitute will still block the lowering of evasiveness.",
+		onTry() {},
 	},
 	destinybond: {
 		inherit: true,
-		desc: "Until the user's next turn, if an opposing Pokemon's attack knocks the user out, that Pokemon faints as well, unless the attack was Doom Desire or Future Sight.",
-		onPrepareHit: function (pokemon) {
+		onPrepareHit(pokemon) {
 			pokemon.removeVolatile('destinybond');
 		},
 	},
-	detect: {
-		inherit: true,
-		desc: "The user is protected from most attacks made by other Pokemon during this turn. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails or if the user's last move used is not Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard. Fails if the user moves last this turn.",
-	},
 	diamondstorm: {
 		inherit: true,
-		desc: "Has a 50% chance to raise the user's Defense by 1 stage.",
-		shortDesc: "50% chance to raise user's Def by 1 for each hit.",
+		self: null,
 		secondary: {
 			chance: 50,
 			self: {
@@ -56,62 +28,54 @@ exports.BattleMovedex = {
 	},
 	encore: {
 		inherit: true,
-		desc: "For 3 turns, the target is forced to repeat its last move used. If the affected move runs out of PP, the effect ends. Fails if the target is already under this effect, if it has not made a move, if the move has 0 PP, or if the move is Encore, Mimic, Mirror Move, Sketch, Struggle, or Transform.",
-		effect: {
+		condition: {
 			duration: 3,
-			onStart: function (target) {
-				let noEncore = ['encore', 'mimic', 'mirrormove', 'sketch', 'struggle', 'transform'];
-				let moveIndex = target.lastMove ? target.moves.indexOf(target.lastMove.id) : -1;
-				if (!target.lastMove || noEncore.includes(target.lastMove.id) || !target.moveSlots[moveIndex] || target.moveSlots[moveIndex].pp <= 0) {
+			onStart(target) {
+				const noEncore = ['encore', 'mimic', 'mirrormove', 'sketch', 'struggle', 'transform'];
+				const moveIndex = target.lastMove ? target.moves.indexOf(target.lastMove.id) : -1;
+				if (
+					!target.lastMove || noEncore.includes(target.lastMove.id) ||
+					!target.moveSlots[moveIndex] || target.moveSlots[moveIndex].pp <= 0
+				) {
 					// it failed
-					delete target.volatiles['encore'];
 					return false;
 				}
-				this.effectData.move = target.lastMove.id;
+				this.effectState.move = target.lastMove.id;
 				this.add('-start', target, 'Encore');
-				if (!this.willMove(target)) {
-					this.effectData.duration++;
+				if (!this.queue.willMove(target)) {
+					this.effectState.duration++;
 				}
 			},
-			onOverrideAction: function (pokemon, target, move) {
-				if (move.id !== this.effectData.move) return this.effectData.move;
+			onOverrideAction(pokemon, target, move) {
+				if (move.id !== this.effectState.move) return this.effectState.move;
 			},
-			onResidualOrder: 13,
-			onResidual: function (target) {
-				if (target.moves.includes(this.effectData.move) && target.moveSlots[target.moves.indexOf(this.effectData.move)].pp <= 0) { // early termination if you run out of PP
-					delete target.volatiles.encore;
-					this.add('-end', target, 'Encore');
+			onResidualOrder: 16,
+			onResidual(target) {
+				const lockedMoveIndex = target.moves.indexOf(this.effectState.move);
+				if (lockedMoveIndex >= 0 && target.moveSlots[lockedMoveIndex].pp <= 0) {
+					// Encore ends early if you run out of PP
+					target.removeVolatile('encore');
 				}
 			},
-			onEnd: function (target) {
+			onEnd(target) {
 				this.add('-end', target, 'Encore');
 			},
-			onDisableMove: function (pokemon) {
-				if (!this.effectData.move || !pokemon.hasMove(this.effectData.move)) {
+			onDisableMove(pokemon) {
+				if (!this.effectState.move || !pokemon.hasMove(this.effectState.move)) {
 					return;
 				}
 				for (const moveSlot of pokemon.moveSlots) {
-					if (moveSlot.id !== this.effectData.move) {
+					if (moveSlot.id !== this.effectState.move) {
 						pokemon.disableMove(moveSlot.id);
 					}
 				}
 			},
 		},
 	},
-	endure: {
-		inherit: true,
-		desc: "The user will survive attacks made by other Pokemon during this turn with at least 1 HP. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails or if the user's last move used is not Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard. Fails if the user moves last this turn.",
-	},
-	feint: {
-		inherit: true,
-		desc: "If this move is successful, it breaks through the target's Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally.",
-	},
 	fellstinger: {
 		inherit: true,
-		desc: "Raises the user's Attack by 2 stages if this move knocks out the target.",
-		shortDesc: "Raises user's Attack by 2 if this KOes the target.",
 		basePower: 30,
-		onAfterMoveSecondarySelf: function (pokemon, target, move) {
+		onAfterMoveSecondarySelf(pokemon, target, move) {
 			if (!target || target.fainted || target.hp <= 0) this.boost({atk: 2}, pokemon, pokemon, move);
 		},
 	},
@@ -119,52 +83,28 @@ exports.BattleMovedex = {
 		inherit: true,
 		basePower: 80,
 	},
-	heavyslam: {
-		inherit: true,
-		desc: "The power of this move depends on (user's weight / target's weight), rounded down. Power is equal to 120 if the result is 5 or more, 100 if 4, 80 if 3, 60 if 2, and 40 if 1 or less.",
-	},
-	hyperspacefury: {
-		inherit: true,
-		desc: "Lowers the user's Defense by 1 stage. This move cannot be used successfully unless the user's current form, while considering Transform, is Hoopa Unbound. If this move is successful, it breaks through the target's Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally.",
-	},
-	hyperspacehole: {
-		inherit: true,
-		desc: "If this move is successful, it breaks through the target's Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally.",
-	},
-	kingsshield: {
-		inherit: true,
-		desc: "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon trying to make contact with the user have their Attack lowered by 2 stages. Non-damaging moves go through this protection. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails or if the user's last move used is not Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard. Fails if the user moves last this turn.",
-	},
-	knockoff: {
-		inherit: true,
-		desc: "If the target is holding an item that can be removed from it, ignoring the Ability Sticky Hold, this move's power is multiplied by 1.5. If the user has not fainted, the target loses its held item. This move cannot cause Pokemon with the Ability Sticky Hold to lose their held item, cause Pokemon that can Mega Evolve to lose the Mega Stone for their species, or cause a Kyogre, a Groudon, a Giratina, an Arceus, or a Genesect to lose their Blue Orb, Red Orb, Griseous Orb, Plate, or Drive, respectively. Items lost to this move cannot be regained with Recycle or the Ability Harvest.",
-	},
 	leechlife: {
 		inherit: true,
 		basePower: 20,
-		isViable: false,
 		pp: 15,
-	},
-	lightscreen: {
-		inherit: true,
-		desc: "For 5 turns, the user and its party members take 0.5x damage from special attacks, or 0.66x damage if in a Double or Triple Battle. Critical hits ignore this protection. It is removed from the user's side if the user or an ally is successfully hit by Brick Break or Defog. Lasts for 8 turns if the user is holding Light Clay.",
-	},
-	metronome: {
-		inherit: true,
-		desc: "A random move is selected for use, other than After You, Assist, Belch, Bestow, Celebrate, Chatter, Copycat, Counter, Covet, Crafty Shield, Destiny Bond, Detect, Diamond Storm, Dragon Ascent, Endure, Feint, Focus Punch, Follow Me, Freeze Shock, Helping Hand, Hold Hands, Hyperspace Fury, Hyperspace Hole, Ice Burn, King's Shield, Light of Ruin, Mat Block, Me First, Metronome, Mimic, Mirror Coat, Mirror Move, Nature Power, Origin Pulse, Precipice Blades, Protect, Quash, Quick Guard, Rage Powder, Relic Song, Secret Sword, Sketch, Sleep Talk, Snarl, Snatch, Snore, Spiky Shield, Steam Eruption, Struggle, Switcheroo, Techno Blast, Thief, Thousand Arrows, Thousand Waves, Transform, Trick, V-create, or Wide Guard.",
 	},
 	minimize: {
 		inherit: true,
-		desc: "Raises the user's evasiveness by 2 stages. Whether or not the user's evasiveness was changed, Body Slam, Dragon Rush, Flying Press, Heat Crash, Phantom Force, Shadow Force, Steamroller, and Stomp will not check accuracy and have their damage doubled if used against the user while it is active.",
-		effect: {
+		condition: {
 			noCopy: true,
-			onSourceModifyDamage: function (damage, source, target, move) {
-				if (['stomp', 'steamroller', 'bodyslam', 'flyingpress', 'dragonrush', 'phantomforce', 'heatcrash', 'shadowforce'].includes(move.id)) {
+			onSourceModifyDamage(damage, source, target, move) {
+				const boostedMoves = [
+					'stomp', 'steamroller', 'bodyslam', 'flyingpress', 'dragonrush', 'phantomforce', 'heatcrash', 'shadowforce',
+				];
+				if (boostedMoves.includes(move.id)) {
 					return this.chainModify(2);
 				}
 			},
-			onAccuracy: function (accuracy, target, source, move) {
-				if (['stomp', 'steamroller', 'bodyslam', 'flyingpress', 'dragonrush', 'phantomforce', 'heatcrash', 'shadowforce'].includes(move.id)) {
+			onAccuracy(accuracy, target, source, move) {
+				const boostedMoves = [
+					'stomp', 'steamroller', 'bodyslam', 'flyingpress', 'dragonrush', 'phantomforce', 'heatcrash', 'shadowforce',
+				];
+				if (boostedMoves.includes(move.id)) {
 					return true;
 				}
 				return accuracy;
@@ -173,38 +113,37 @@ exports.BattleMovedex = {
 	},
 	mistyterrain: {
 		inherit: true,
-		desc: "For 5 turns, the terrain becomes Misty Terrain. During the effect, the power of Dragon-type attacks used against grounded Pokemon is multiplied by 0.5 and grounded Pokemon cannot be inflicted with a major status condition. Camouflage transforms the user into a Fairy type, Nature Power becomes Moonblast, and Secret Power has a 30% chance to lower Special Attack by 1 stage. Fails if the current terrain is Misty Terrain.",
-		effect: {
+		condition: {
 			duration: 5,
-			durationCallback: function (source, effect) {
-				if (source && source.hasItem('terrainextender')) {
+			durationCallback(source, effect) {
+				if (_optionalChain([source, 'optionalAccess', _ => _.hasItem, 'call', _2 => _2('terrainextender')])) {
 					return 8;
 				}
 				return 5;
 			},
-			onSetStatus: function (status, target, source, effect) {
+			onSetStatus(status, target, source, effect) {
 				if (!target.isGrounded() || target.isSemiInvulnerable()) return;
-				if (effect.id === 'synchronize' || (effect.effectType === 'Move' && !effect.secondaries)) {
+				if (effect && ((effect ).status || effect.id === 'yawn')) {
 					this.add('-activate', target, 'move: Misty Terrain');
 				}
 				return false;
 			},
-			onBasePower: function (basePower, attacker, defender, move) {
+			onBasePower(basePower, attacker, defender, move) {
 				if (move.type === 'Dragon' && defender.isGrounded() && !defender.isSemiInvulnerable()) {
 					this.debug('misty terrain weaken');
 					return this.chainModify(0.5);
 				}
 			},
-			onStart: function (battle, source, effect) {
-				if (effect && effect.effectType === 'Ability') {
+			onFieldStart(field, source, effect) {
+				if (_optionalChain([effect, 'optionalAccess', _3 => _3.effectType]) === 'Ability') {
 					this.add('-fieldstart', 'move: Misty Terrain', '[from] ability: ' + effect, '[of] ' + source);
 				} else {
 					this.add('-fieldstart', 'move: Misty Terrain');
 				}
 			},
-			onResidualOrder: 21,
-			onResidualSubOrder: 2,
-			onEnd: function (side) {
+			onFieldResidualOrder: 27,
+			onFieldResidualSubOrder: 7,
+			onFieldEnd() {
 				this.add('-fieldend', 'Misty Terrain');
 			},
 		},
@@ -217,61 +156,60 @@ exports.BattleMovedex = {
 		inherit: true,
 		basePower: 50,
 	},
-	phantomforce: {
+	partingshot: {
 		inherit: true,
-		desc: "If this move is successful, it breaks through the target's Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally. This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks. If the user is holding a Power Herb, the move completes in one turn. Damage doubles and no accuracy check is done if the target has used Minimize while active.",
+		onHit(target, source) {
+			this.boost({atk: -1, spa: -1}, target, source);
+		},
 	},
 	powder: {
 		inherit: true,
-		desc: "If the target uses a Fire-type move this turn, it is prevented from executing and the target loses 1/4 of its maximum HP, rounded half up. This effect happens before the Fire-type move would be prevented by Primordial Sea.",
-		effect: {
+		condition: {
 			duration: 1,
-			onStart: function (target) {
+			onStart(target) {
 				this.add('-singleturn', target, 'Powder');
 			},
 			onTryMovePriority: 1,
-			onTryMove: function (pokemon, target, move) {
+			onTryMove(pokemon, target, move) {
 				if (move.type === 'Fire') {
 					this.add('-activate', pokemon, 'move: Powder');
 					this.damage(this.clampIntRange(Math.round(pokemon.maxhp / 4), 1));
+					this.attrLastMove('[still]');
 					return false;
 				}
 			},
 		},
 	},
-	protect: {
-		inherit: true,
-		desc: "The user is protected from most attacks made by other Pokemon during this turn. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails or if the user's last move used is not Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard. Fails if the user moves last this turn.",
-	},
-	quickguard: {
-		inherit: true,
-		desc: "The user and its party members are protected from attacks with original or altered priority greater than 0 made by other Pokemon, including allies, during this turn. This move modifies the same 1/X chance of being successful used by other protection moves, where X starts at 1 and triples each time this move is successfully used, but does not use the chance to check for failure. X resets to 1 if this move fails or if the user's last move used is not Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard. Fails if the user moves last this turn or if this move is already in effect for the user's side.",
-	},
-	reflect: {
-		inherit: true,
-		desc: "For 5 turns, the user and its party members take 0.5x damage from physical attacks, or 0.66x damage if in a Double or Triple Battle. Critical hits ignore this protection. It is removed from the user's side if the user or an ally is successfully hit by Brick Break or Defog. Brick Break removes the effect before damage is calculated. Lasts for 8 turns if the user is holding Light Clay.",
-	},
-	reflecttype: {
-		inherit: true,
-		desc: "Causes the user's types to become the same as the current types of the target. Fails if the user is an Arceus.",
-	},
 	rockblast: {
 		inherit: true,
 		flags: {protect: 1, mirror: 1},
 	},
-	shadowforce: {
-		inherit: true,
-		desc: "If this move is successful, it breaks through the target's Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally. This attack charges on the first turn and executes on the second. On the first turn, the user avoids all attacks. If the user is holding a Power Herb, the move completes in one turn. Damage doubles and no accuracy check is done if the target has used Minimize while active.",
-	},
 	sheercold: {
 		inherit: true,
-		desc: "Deals damage to the target equal to the target's maximum HP. Ignores accuracy and evasiveness modifiers. This attack's accuracy is equal to (user's level - target's level + 30)%, and fails if the target is at a higher level. Pokemon with the Ability Sturdy are immune.",
-		shortDesc: "OHKOs the target. Fails if user is a lower level.",
 		ohko: true,
 	},
-	spikyshield: {
+	stockpile: {
 		inherit: true,
-		desc: "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon making contact with the user lose 1/8 of their maximum HP, rounded down. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails or if the user's last move used is not Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard. Fails if the user moves last this turn.",
+		condition: {
+			noCopy: true,
+			onStart(target) {
+				this.effectState.layers = 1;
+				this.add('-start', target, 'stockpile' + this.effectState.layers);
+				this.boost({def: 1, spd: 1}, target, target);
+			},
+			onRestart(target) {
+				if (this.effectState.layers >= 3) return false;
+				this.effectState.layers++;
+				this.add('-start', target, 'stockpile' + this.effectState.layers);
+				this.boost({def: 1, spd: 1}, target, target);
+			},
+			onEnd(target) {
+				const layers = this.effectState.layers * -1;
+				this.effectState.layers = 0;
+				this.boost({def: layers, spd: layers}, target, target);
+				this.add('-end', target, 'Stockpile');
+			},
+		},
 	},
 	suckerpunch: {
 		inherit: true,
@@ -281,56 +219,44 @@ exports.BattleMovedex = {
 		inherit: true,
 		accuracy: 90,
 	},
-	switcheroo: {
-		inherit: true,
-		desc: "The user swaps its held item with the target's held item. Fails if either the user or the target is holding a Mail, if neither is holding an item, if the user is trying to give or take a Mega Stone to or from the species that can Mega Evolve with it, or if the user is trying to give or take a Blue Orb, a Red Orb, a Griseous Orb, a Plate, or a Drive to or from a Kyogre, a Groudon, a Giratina, an Arceus, or a Genesect, respectively. Pokemon with the Ability Sticky Hold are immune.",
-	},
 	tackle: {
 		inherit: true,
 		basePower: 50,
 	},
-	thief: {
-		inherit: true,
-		desc: "If this attack was successful and the user has not fainted, it steals the target's held item if the user is not holding one. The target's item is not stolen if it is a Mail, or if the target is a Kyogre holding a Blue Orb, a Groudon holding a Red Orb, a Giratina holding a Griseous Orb, an Arceus holding a Plate, a Genesect holding a Drive, or a Pokemon that can Mega Evolve holding the Mega Stone for its species. Items lost to this move cannot be regained with Recycle or the Ability Harvest.",
-	},
 	thousandarrows: {
 		inherit: true,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	thousandwaves: {
 		inherit: true,
-		isUnreleased: true,
+		isNonstandard: "Unobtainable",
 	},
 	thunderwave: {
 		inherit: true,
 		accuracy: 100,
 	},
-	trick: {
-		inherit: true,
-		desc: "The user swaps its held item with the target's held item. Fails if either the user or the target is holding a Mail, if neither is holding an item, if the user is trying to give or take a Mega Stone to or from the species that can Mega Evolve with it, or if the user is trying to give or take a Blue Orb, a Red Orb, a Griseous Orb, a Plate, or a Drive to or from a Kyogre, a Groudon, a Giratina, an Arceus, or a Genesect, respectively. Pokemon with the Ability Sticky Hold are immune.",
-	},
 	watershuriken: {
 		inherit: true,
-		desc: "Hits two to five times. Has a 1/3 chance to hit two or three times, and a 1/6 chance to hit four or five times. If one of the hits breaks the target's substitute, it will take damage for the remaining hits. If the user has the Ability Skill Link, this move will always hit five times.",
 		category: "Physical",
 	},
 	wideguard: {
 		inherit: true,
-		desc: "The user and its party members are protected from damaging attacks made by other Pokemon, including allies, during this turn that target all adjacent foes or all adjacent Pokemon. This move modifies the same 1/X chance of being successful used by other protection moves, where X starts at 1 and triples each time this move is successfully used, but does not use the chance to check for failure. X resets to 1 if this move fails or if the user's last move used is not Detect, Endure, King's Shield, Protect, Quick Guard, Spiky Shield, or Wide Guard. Fails if the user moves last this turn or if this move is already in effect for the user's side.",
-		shortDesc: "Protects allies from multi-target hits this turn.",
-		effect: {
+		condition: {
 			duration: 1,
-			onStart: function (target, source) {
+			onSideStart(target, source) {
 				this.add('-singleturn', source, 'Wide Guard');
 			},
 			onTryHitPriority: 4,
-			onTryHit: function (target, source, effect) {
+			onTryHit(target, source, effect) {
 				// Wide Guard blocks damaging spread moves
-				if (effect && (effect.category === 'Status' || (effect.target !== 'allAdjacent' && effect.target !== 'allAdjacentFoes'))) {
+				if (
+					effect &&
+					(effect.category === 'Status' || (effect.target !== 'allAdjacent' && effect.target !== 'allAdjacentFoes'))
+				) {
 					return;
 				}
 				this.add('-activate', target, 'move: Wide Guard');
-				let lockedmove = source.getVolatile('lockedmove');
+				const lockedmove = source.getVolatile('lockedmove');
 				if (lockedmove) {
 					// Outrage counter is reset
 					if (source.volatiles['lockedmove'].duration === 2) {
@@ -341,4 +267,6 @@ exports.BattleMovedex = {
 			},
 		},
 	},
-};
+}; exports.Moves = Moves;
+
+ //# sourceMappingURL=sourceMaps/moves.js.map

@@ -1,123 +1,121 @@
-/**
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }/**
  * A lot of Gen 1 moves have to be updated due to different mechanics.
  * Some moves have had major changes, such as Bite's typing.
  */
 
-'use strict';
-
-exports.BattleMovedex = {
+ const Moves = {
 	acid: {
 		inherit: true,
-		target: "normal"
+		secondary: {
+			chance: 33,
+			boosts: {
+				def: -1,
+			},
+		},
+		target: "normal",
 	},
 	amnesia: {
 		inherit: true,
-		desc: "Raises the user's Special by 2 stages.",
-		shortDesc: "Boosts the user's Special by 2.",
 		boosts: {
 			spd: 2,
-			spa: 2
-		}
+			spa: 2,
+		},
 	},
 	aurorabeam: {
 		inherit: true,
 		secondary: {
-			chance: 10,
+			chance: 33,
 			boosts: {
-				atk: -1
-			}
-		}
+				atk: -1,
+			},
+		},
 	},
 	bide: {
 		inherit: true,
 		priority: 0,
 		accuracy: true,
 		ignoreEvasion: true,
-		effect: {
+		condition: {
 			duration: 2,
-			durationCallback: function (target, source, effect) {
-				return this.random(3, 4);
+			durationCallback(target, source, effect) {
+				return this.random(3, 5);
 			},
-			onStart: function (pokemon) {
-				this.effectData.totalDamage = 0;
-				this.effectData.lastDamage = 0;
+			onStart(pokemon) {
+				this.effectState.totalDamage = 0;
+				this.effectState.lastDamage = 0;
 				this.add('-start', pokemon, 'Bide');
 			},
-			onHit: function (target, source, move) {
+			onHit(target, source, move) {
 				if (source && source !== target && move.category !== 'Physical' && move.category !== 'Special') {
-					var damage = this.effectData.totalDamage;
-					this.effectData.totalDamage += damage;
-					this.effectData.lastDamage = damage;
-					this.effectData.sourcePosition = source.position;
-					this.effectData.sourceSide = source.side;
+					const damage = this.effectState.totalDamage;
+					this.effectState.totalDamage += damage;
+					this.effectState.lastDamage = damage;
+					this.effectState.sourceSlot = source.getSlot();
 				}
 			},
-			onDamage: function (damage, target, source, move) {
-				if (!source || source.side === target.side) return;
+			onDamage(damage, target, source, move) {
+				if (!source || source.isAlly(target)) return;
 				if (!move || move.effectType !== 'Move') return;
-				if (!damage && this.effectData.lastDamage > 0) {
-					damage = this.effectData.totalDamage;
+				if (!damage && this.effectState.lastDamage > 0) {
+					damage = this.effectState.totalDamage;
 				}
-				this.effectData.totalDamage += damage;
-				this.effectData.lastDamage = damage;
-				this.effectData.sourcePosition = source.position;
-				this.effectData.sourceSide = source.side;
+				this.effectState.totalDamage += damage;
+				this.effectState.lastDamage = damage;
+				this.effectState.sourceSlot = source.getSlot();
 			},
-			onAfterSetStatus: function (status, pokemon) {
+			onAfterSetStatus(status, pokemon) {
 				// Sleep, freeze, and partial trap will just pause duration.
 				if (pokemon.volatiles['flinch']) {
-					this.effectData.duration++;
+					this.effectState.duration++;
 				} else if (pokemon.volatiles['partiallytrapped']) {
-					this.effectData.duration++;
+					this.effectState.duration++;
 				} else {
 					switch (status.id) {
 					case 'slp':
 					case 'frz':
-						this.effectData.duration++;
+						this.effectState.duration++;
 						break;
 					}
 				}
 			},
-			onBeforeMove: function (pokemon) {
-				if (this.effectData.duration === 1) {
-					if (!this.effectData.totalDamage) {
+			onBeforeMove(pokemon, t, move) {
+				if (this.effectState.duration === 1) {
+					this.add('-end', pokemon, 'Bide');
+					if (!this.effectState.totalDamage) {
+						this.debug("Bide failed because no damage was taken");
 						this.add('-fail', pokemon);
 						return false;
 					}
-					this.add('-end', pokemon, 'Bide');
-					var target = this.effectData.sourceSide.active[this.effectData.sourcePosition];
-					this.moveHit(target, pokemon, 'bide', {damage: this.effectData.totalDamage * 2});
+					const target = this.getAtSlot(this.effectState.sourceSlot);
+					this.actions.moveHit(target, pokemon, move, {damage: this.effectState.totalDamage * 2} );
+					pokemon.removeVolatile('bide');
 					return false;
 				}
 				this.add('-activate', pokemon, 'Bide');
 				return false;
 			},
-			onDisableMove: function (pokemon) {
+			onDisableMove(pokemon) {
 				if (!pokemon.hasMove('bide')) {
 					return;
 				}
-				var moves = pokemon.moveset;
-				for (var i = 0; i < moves.length; i++) {
-					if (moves[i].id !== 'bide') {
-						pokemon.disableMove(moves[i].id);
+				for (const moveSlot of pokemon.moveSlots) {
+					if (moveSlot.id !== 'bide') {
+						pokemon.disableMove(moveSlot.id);
 					}
 				}
-			}
+			},
 		},
-		type: "???" // Will look as Normal but it's STAB-less
+		type: "???", // Will look as Normal but it's STAB-less
 	},
 	bind: {
 		inherit: true,
 		ignoreImmunity: true,
 		volatileStatus: 'partiallytrapped',
 		self: {
-			volatileStatus: 'partialtrappinglock'
+			volatileStatus: 'partialtrappinglock',
 		},
-		onBeforeMove: function (pokemon, target, move) {
-			// Removes must recharge volatile even if it misses
-			target.removeVolatile('mustrecharge');
-		},
-		onHit: function (target, source) {
+		// FIXME: onBeforeMove(pokemon, target) {target.removeVolatile('mustrecharge')}
+		onHit(target, source) {
 			/**
 			 * The duration of the partially trapped must be always renewed to 2
 			 * so target doesn't move on trapper switch out as happens in gen 1.
@@ -129,24 +127,40 @@ exports.BattleMovedex = {
 					target.volatiles['partiallytrapped'].duration = 2;
 				}
 			}
-		}
+		},
 	},
 	bite: {
 		inherit: true,
+		category: "Physical",
 		secondary: {
 			chance: 10,
-			volatileStatus: 'flinch'
+			volatileStatus: 'flinch',
 		},
-		type: "Normal"
+		type: "Normal",
 	},
 	blizzard: {
 		inherit: true,
 		accuracy: 90,
-		target: "normal"
+		target: "normal",
 	},
 	bubble: {
 		inherit: true,
-		target: "normal"
+		secondary: {
+			chance: 33,
+			boosts: {
+				spe: -1,
+			},
+		},
+		target: "normal",
+	},
+	bubblebeam: {
+		inherit: true,
+		secondary: {
+			chance: 33,
+			boosts: {
+				spe: -1,
+			},
+		},
 	},
 	clamp: {
 		inherit: true,
@@ -154,13 +168,10 @@ exports.BattleMovedex = {
 		pp: 10,
 		volatileStatus: 'partiallytrapped',
 		self: {
-			volatileStatus: 'partialtrappinglock'
+			volatileStatus: 'partialtrappinglock',
 		},
-		onBeforeMove: function (pokemon, target, move) {
-			// Removes must recharge volatile even if it misses
-			target.removeVolatile('mustrecharge');
-		},
-		onHit: function (target, source) {
+		// FIXME: onBeforeMove(pokemon, target) {target.removeVolatile('mustrecharge')}
+		onHit(target, source) {
 			/**
 			 * The duration of the partially trapped must be always renewed to 2
 			 * so target doesn't move on trapper switch out as happens in gen 1.
@@ -172,145 +183,165 @@ exports.BattleMovedex = {
 					target.volatiles['partiallytrapped'].duration = 2;
 				}
 			}
-		}
+		},
+	},
+	constrict: {
+		inherit: true,
+		secondary: {
+			chance: 33,
+			boosts: {
+				spe: -1,
+			},
+		},
 	},
 	conversion: {
 		inherit: true,
-		volatileStatus: 'conversion',
-		accuracy: true,
 		target: "normal",
-		effect: {
-			noCopy: true,
-			onStart: function (target, source) {
-				this.effectData.typesData = [];
-				for (var i = 0, l = target.typesData.length; i < l; i++) {
-					this.effectData.typesData.push(Object.clone(target.typesData[i]));
-				}
-				this.add('-start', source, 'typechange', target.getTypes(true).join(', '), '[from] move: Conversion', '[of] ' + target);
-			},
-			onRestart: function (target, source) {
-				this.effectData.typesData = [];
-				for (var i = 0, l = target.typesData.length; i < l; i++) {
-					this.effectData.typesData.push(Object.clone(target.typesData[i]));
-				}
-				this.add('-start', source, 'typechange', target.getTypes(true).join(', '), '[from] move: Conversion', '[of] ' + target);
-			},
-			onModifyPokemon: function (pokemon) {
-				pokemon.typesData = this.effectData.typesData;
-			}
-		}
+		onHit(target, source) {
+			source.setType(target.getTypes(true));
+			this.add('-start', source, 'typechange', source.types.join('/'), '[from] move: Conversion', '[of] ' + target);
+		},
 	},
 	counter: {
 		inherit: true,
 		ignoreImmunity: true,
 		willCrit: false,
-		damageCallback: function (pokemon, target) {
-			// Counter mechanics on gen 1 might be hard to understand.
-			// It will fail if the last move selected by the opponent has base power 0 or is not Normal or Fighting Type.
-			// If both are true, counter will deal twice the last damage dealt in battle, no matter what was the move.
-			// That means that, if opponent switches, counter will use last counter damage * 2.
-			var lastUsedMove = this.getMove(target.side.lastMove);
-			if (lastUsedMove && lastUsedMove.basePower > 0 && lastUsedMove.type in {'Normal': 1, 'Fighting': 1} && target.battle.lastDamage > 0) {
-				return 2 * target.battle.lastDamage;
+		basePower: 1,
+		damageCallback(pokemon, target) {
+			// Counter mechanics in gen 1:
+			// - a move is Counterable if it is Normal or Fighting type, has nonzero Base Power, and is not Counter
+			// - if Counter is used by the player, it will succeed if the opponent's last used move is Counterable
+			// - if Counter is used by the opponent, it will succeed if the player's last selected move is Counterable
+			// - (Counter will thus desync if the target's last used move is not as counterable as the target's last selected move)
+			// - if Counter succeeds it will deal twice the last move damage dealt in battle (even if it's from a different pokemon because of a switch)
+
+			const lastMove = target.side.lastMove && this.dex.moves.get(target.side.lastMove.id);
+			const lastMoveIsCounterable = lastMove && lastMove.basePower > 0 &&
+				['Normal', 'Fighting'].includes(lastMove.type) && lastMove.id !== 'counter';
+
+			const lastSelectedMove = target.side.lastSelectedMove && this.dex.moves.get(target.side.lastSelectedMove);
+			const lastSelectedMoveIsCounterable = lastSelectedMove && lastSelectedMove.basePower > 0 &&
+				['Normal', 'Fighting'].includes(lastSelectedMove.type) && lastSelectedMove.id !== 'counter';
+
+			if (!lastMoveIsCounterable && !lastSelectedMoveIsCounterable) {
+				this.debug("Gen 1 Counter: last move was not Counterable");
+				this.add('-fail', pokemon);
+				return false;
 			}
-			this.add('-fail', pokemon);
-			return false;
-		}
+			if (this.lastDamage <= 0) {
+				this.debug("Gen 1 Counter: no previous damage exists");
+				this.add('-fail', pokemon);
+				return false;
+			}
+			if (!lastMoveIsCounterable || !lastSelectedMoveIsCounterable) {
+				this.hint("Desync Clause Mod activated!");
+				this.add('-fail', pokemon);
+				return false;
+			}
+
+			return 2 * this.lastDamage;
+		},
 	},
 	crabhammer: {
 		inherit: true,
-		critRatio: 2
+		critRatio: 2,
 	},
 	dig: {
 		inherit: true,
 		basePower: 100,
-		effect: {
+		condition: {
 			duration: 2,
 			onLockMove: 'dig',
-			onAccuracy: function (accuracy, target, source, move) {
-				if (move.id === 'swift') return true;
+			onInvulnerability(target, source, move) {
+				if (move.id === 'swift' || move.id === 'transform') return true;
 				this.add('-message', 'The foe ' + target.name + ' can\'t be hit underground!');
-				return null;
+				return false;
 			},
-			onDamage: function (damage, target, source, move) {
+			onDamage(damage, target, source, move) {
 				if (!move || move.effectType !== 'Move') return;
 				if (!source) return;
 				if (move.id === 'earthquake') {
 					this.add('-message', 'The foe ' + target.name + ' can\'t be hit underground!');
 					return null;
 				}
-			}
-		}
+			},
+		},
 	},
 	disable: {
-		inherit: true,
-		desc: "The target cannot choose a random move for 0-6 turns. Disable only works on one move at a time and fails if the target has not yet used a move or if its move has run out of PP. The target does nothing if it is about to use a move that becomes disabled.",
-		effect: {
-			duration: 4,
-			durationCallback: function (target, source, effect) {
-				var duration = this.random(1, 7);
-				return duration;
+		num: 50,
+		accuracy: 55,
+		basePower: 0,
+		category: "Status",
+		name: "Disable",
+		pp: 20,
+		priority: 0,
+		flags: {protect: 1, mirror: 1, bypasssub: 1},
+		volatileStatus: 'disable',
+		onTryHit(target) {
+			// This function should not return if the checks are met. Adding && undefined ensures this happens.
+			return target.moveSlots.some(ms => ms.pp > 0) &&
+				!('disable' in target.volatiles) &&
+				undefined;
+		},
+		condition: {
+			onStart(pokemon) {
+				// disable can only select moves that have pp > 0, hence the onTryHit modification
+				const moveSlot = this.sample(pokemon.moveSlots.filter(ms => ms.pp > 0));
+				this.add('-start', pokemon, 'Disable', moveSlot.move);
+				this.effectState.move = moveSlot.id;
+				// 1-8 turns (which will in effect translate to 0-7 missed turns for the target)
+				this.effectState.time = this.random(1, 9);
 			},
-			onStart: function (pokemon) {
-				if (!this.willMove(pokemon)) {
-					this.effectData.duration++;
-				}
-				var moves = pokemon.moves;
-				var move = this.getMove(moves[this.random(moves.length)]);
-				this.add('-start', pokemon, 'Disable', move.name);
-				this.effectData.move = move.id;
-				return;
-			},
-			onResidualOrder: 14,
-			onEnd: function (pokemon) {
+			onEnd(pokemon) {
 				this.add('-end', pokemon, 'Disable');
 			},
-			onBeforeMove: function (attacker, defender, move) {
-				if (move.id === this.effectData.move) {
-					this.add('cant', attacker, 'Disable', move);
+			onBeforeMovePriority: 7,
+			onBeforeMove(pokemon, target, move) {
+				pokemon.volatiles['disable'].time--;
+				if (!pokemon.volatiles['disable'].time) {
+					pokemon.removeVolatile('disable');
+					return;
+				}
+				if (move.id === this.effectState.move) {
+					this.add('cant', pokemon, 'Disable', move);
 					return false;
 				}
 			},
-			onDisableMove: function (pokemon) {
-				var moves = pokemon.moveset;
-				for (var i = 0; i < moves.length; i++) {
-					if (moves[i].id === this.effectData.move) {
-						pokemon.disableMove(moves[i].id);
+			onDisableMove(pokemon) {
+				for (const moveSlot of pokemon.moveSlots) {
+					if (moveSlot.id === this.effectState.move) {
+						pokemon.disableMove(moveSlot.id);
 					}
 				}
-			}
-		}
+			},
+		},
+		secondary: null,
+		target: "normal",
+		type: "Normal",
 	},
 	dizzypunch: {
 		inherit: true,
-		desc: "Deals damage to the target.",
-		shortDesc: "Deals damage.",
-		secondary: false
+		secondary: null,
 	},
 	doubleedge: {
 		inherit: true,
 		basePower: 100,
-		desc: "Deals damage to the target. If the target lost HP, the user takes recoil damage equal to 25% that HP, rounded half up, but not less than 1HP.",
-		shortDesc: "Has 25% recoil.",
-		recoil: [25, 100]
 	},
 	dragonrage: {
 		inherit: true,
-		basePower: 1
+		basePower: 1,
 	},
 	explosion: {
 		inherit: true,
 		basePower: 170,
-		target: "normal"
+		target: "normal",
 	},
 	fireblast: {
 		inherit: true,
-		desc: "Deals damage to the target with a 30% chance to burn it.",
-		shortDesc: "30% chance to burn the target.",
 		secondary: {
 			chance: 30,
-			status: 'brn'
-		}
+			status: 'brn',
+		},
 	},
 	firespin: {
 		inherit: true,
@@ -318,13 +349,10 @@ exports.BattleMovedex = {
 		basePower: 15,
 		volatileStatus: 'partiallytrapped',
 		self: {
-			volatileStatus: 'partialtrappinglock'
+			volatileStatus: 'partialtrappinglock',
 		},
-		onBeforeMove: function (pokemon, target, move) {
-			// Removes must recharge volatile even if it misses
-			target.removeVolatile('mustrecharge');
-		},
-		onHit: function (target, source) {
+		// FIXME: onBeforeMove(pokemon, target) {target.removeVolatile('mustrecharge')}
+		onHit(target, source) {
 			/**
 			 * The duration of the partially trapped must be always renewed to 2
 			 * so target doesn't move on trapper switch out as happens in gen 1.
@@ -336,543 +364,552 @@ exports.BattleMovedex = {
 					target.volatiles['partiallytrapped'].duration = 2;
 				}
 			}
-		}
+		},
 	},
 	fly: {
 		inherit: true,
-		desc: "Deals damage to target. This attack charges on the first turn and strikes on the second. The user cannot make a move between turns. (Field: Can be used to fly to a previously visited area.)",
-		shortDesc: "Flies up on first turn, then strikes the next turn.",
-		effect: {
+		condition: {
 			duration: 2,
 			onLockMove: 'fly',
-			onAccuracy: function (accuracy, target, source, move) {
-				if (move.id === 'swift') return true;
+			onInvulnerability(target, source, move) {
+				if (move.id === 'swift' || move.id === 'transform') return true;
 				this.add('-message', 'The foe ' + target.name + ' can\'t be hit while flying!');
-				return null;
+				return false;
 			},
-			onDamage: function (damage, target, source, move) {
+			onDamage(damage, target, source, move) {
 				if (!move || move.effectType !== 'Move') return;
-				if (!source || source.side === target.side) return;
+				if (!source || source.isAlly(target)) return;
 				if (move.id === 'gust' || move.id === 'thunder') {
 					this.add('-message', 'The foe ' + target.name + ' can\'t be hit while flying!');
 					return null;
 				}
-			}
-		}
+			},
+		},
 	},
 	focusenergy: {
 		inherit: true,
-		desc: "If the attack deals critical hits sometimes, then the chance of its happening is quartered. If a move has a high chance of dealing a critical hit, if the user iis currently faster than the opposing Pokemon its critical hit ratio is not decreased. If it's slower, its chances of dealing a critical hit is cut by 50%. If the user is significantly slower than the opposing Pokemon, then the user will be unable to deal critical hits to the opposing Pokemon.",
-		shortDesc: "Reduces the user's chance for a critical hit.",
-		effect: {
-			onStart: function (pokemon) {
+		condition: {
+			onStart(pokemon) {
 				this.add('-start', pokemon, 'move: Focus Energy');
 			},
 			// This does nothing as it's dealt with on critical hit calculation.
-			onModifyMove: function () {}
-		}
+			onModifyMove() {},
+		},
 	},
 	glare: {
 		inherit: true,
-		ignoreImmunity: true
+		ignoreImmunity: true,
 	},
 	growth: {
 		inherit: true,
-		desc: "Raises the user's Special by 1 stage.",
-		shortDesc: "Boosts the user's Special by 1.",
 		boosts: {
 			spa: 1,
-			spd: 1
-		}
+			spd: 1,
+		},
 	},
 	gust: {
 		inherit: true,
-		type: "Normal"
+		type: "Normal",
 	},
 	haze: {
 		inherit: true,
-		desc: "Eliminates any stat stage changes and status from all active Pokemon.",
-		shortDesc: "Eliminates all stat changes and status.",
-		onHit: function (target, source) {
-			this.add('-clearallboost');
-			for (var i = 0; i < this.sides.length; i++) {
-				for (var j = 0; j < this.sides[i].active.length; j++) {
-					var pokemon = this.sides[i].active[j];
-					pokemon.clearBoosts();
-
-					if (pokemon !== source) {
-						// Clears the status from the opponent
-						pokemon.clearStatus();
+		onHit(target, source) {
+			this.add('-activate', target, 'move: Haze');
+			this.add('-clearallboost', '[silent]');
+			for (const pokemon of this.getAllActive()) {
+				pokemon.clearBoosts();
+				if (pokemon !== source) {
+					pokemon.cureStatus(true);
+				}
+				if (pokemon.status === 'tox') {
+					pokemon.setStatus('psn');
+				}
+				// should only clear a specific set of volatiles and does not clear the toxic counter
+				const silentHack = '|[silent]';
+				const silentHackVolatiles = ['disable', 'confusion'];
+				const hazeVolatiles = {
+					'disable': '',
+					'confusion': '',
+					'mist': 'Mist',
+					'focusenergy': 'move: Focus Energy',
+					'leechseed': 'move: Leech Seed',
+					'lightscreen': 'Light Screen',
+					'reflect': 'Reflect',
+				};
+				for (const v in hazeVolatiles) {
+					if (!pokemon.removeVolatile(v)) {
+						continue;
 					}
-					if (pokemon.status === 'tox') {
-						pokemon.setStatus('psn');
-					}
-					var volatiles = Object.keys(pokemon.volatiles);
-					for (var n = 0; n < volatiles.length; n++) {
-						var id = volatiles[n];
-						if (id === 'residualdmg') {
-							pokemon.volatiles[id].counter = 0;
-						} else {
-							pokemon.removeVolatile(id);
-							this.add('-end', pokemon, id);
-						}
+					if (silentHackVolatiles.includes(v)) {
+						// these volatiles have their own onEnd method that prints, so to avoid
+						// double printing and ensure they are still silent, we need to tack on a
+						// silent attribute at the end
+						this.log[this.log.length - 1] += silentHack;
+					} else {
+						this.add('-end', pokemon, hazeVolatiles[v], '[silent]');
 					}
 				}
 			}
 		},
-		target: "self"
+		target: "self",
 	},
 	highjumpkick: {
 		inherit: true,
-		desc: "If this attack misses the target, the user takes 1 HP of damage.",
-		shortDesc: "User takes 1 HP damage it would have dealt if miss.",
-		onMoveFail: function (target, source, move) {
-			if (target.type !== 'ghost') {
-				this.directDamage(1, source);
-			}
-		}
-	},
-	hyperbeam: {
-		inherit: true,
-		desc: "Deals damage to a target. If this move is successful, the user must recharge on the following turn and cannot make a move, unless the opponent faints or a Substitute is destroyed.",
-		shortDesc: "User cannot move next turn unless target or substitute faints."
+		onMoveFail(target, source, move) {
+			this.directDamage(1, source, target);
+		},
 	},
 	jumpkick: {
 		inherit: true,
-		desc: "If this attack misses the target, the user 1HP of damage.",
-		shortDesc: "User takes 1 HP damage if miss.",
-		onMoveFail: function (target, source, move) {
-			this.damage(1, source);
-		}
+		onMoveFail(target, source, move) {
+			this.directDamage(1, source, target);
+		},
 	},
 	karatechop: {
 		inherit: true,
 		critRatio: 2,
-		type: "Normal"
+		type: "Normal",
 	},
 	leechseed: {
 		inherit: true,
-		onHit: function () {},
-		effect: {
-			onStart: function (target) {
+		onHit() {},
+		condition: {
+			onStart(target) {
 				this.add('-start', target, 'move: Leech Seed');
 			},
 			onAfterMoveSelfPriority: 1,
-			onAfterMoveSelf: function (pokemon) {
-				var leecher = pokemon.side.foe.active[pokemon.volatiles['leechseed'].sourcePosition];
+			onAfterMoveSelf(pokemon) {
+				const leecher = this.getAtSlot(pokemon.volatiles['leechseed'].sourceSlot);
 				if (!leecher || leecher.fainted || leecher.hp <= 0) {
 					this.debug('Nothing to leech into');
 					return;
 				}
 				// We check if leeched Pokémon has Toxic to increase leeched damage.
-				var toxicCounter = 1;
-				if (pokemon.volatiles['residualdmg']) {
-					pokemon.volatiles['residualdmg'].counter++;
-					toxicCounter = pokemon.volatiles['residualdmg'].counter;
+				let toxicCounter = 1;
+				const residualdmg = pokemon.volatiles['residualdmg'];
+				if (residualdmg) {
+					residualdmg.counter++;
+					toxicCounter = residualdmg.counter;
 				}
-				var toLeech = this.clampIntRange(Math.floor(pokemon.maxhp / 16), 1) * toxicCounter;
-				var damage = this.damage(toLeech, pokemon, leecher);
-				if (damage) this.heal(damage, leecher, pokemon);
-			}
-		}
+				const toLeech = this.clampIntRange(Math.floor(pokemon.baseMaxhp / 16), 1) * toxicCounter;
+				const damage = this.damage(toLeech, pokemon, leecher);
+				if (residualdmg) this.hint("In Gen 1, Leech Seed's damage is affected by Toxic's counter.", true);
+				if (!damage || toLeech > damage) {
+					this.hint("In Gen 1, Leech Seed recovery is not limited by the remaining HP of the seeded Pokemon.", true);
+				}
+				this.heal(toLeech, leecher, pokemon);
+			},
+		},
 	},
 	lightscreen: {
 		num: 113,
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		desc: "For 5 turns, the user has double Special when attacked. Removed by Haze.",
-		shortDesc: "For 5 turns, user's Special is 2x when attacked.",
-		id: "lightscreen",
-		isViable: true,
 		name: "Light Screen",
 		pp: 30,
 		priority: 0,
 		flags: {},
 		volatileStatus: 'lightscreen',
-		onTryHit: function (pokemon) {
+		onTryHit(pokemon) {
 			if (pokemon.volatiles['lightscreen']) {
 				return false;
 			}
 		},
-		effect: {
-			onStart: function (pokemon) {
+		condition: {
+			onStart(pokemon) {
 				this.add('-start', pokemon, 'Light Screen');
-			}
+			},
 		},
 		target: "self",
-		type: "Psychic"
+		type: "Psychic",
 	},
 	metronome: {
 		inherit: true,
-		onHit: function (target) {
-			var moves = [];
-			for (var i in exports.BattleMovedex) {
-				var move = exports.BattleMovedex[i];
-				if (i !== move.id) continue;
-				if (move.isNonstandard) continue;
-				var noMetronome = {
-					metronome:1, struggle:1
-				};
-				if (!noMetronome[move.id] && move.num <= 165) {
-					moves.push(move.id);
-				}
-			}
-			var randomMove = '';
-			if (moves.length) randomMove = moves[this.random(moves.length)];
-			if (!randomMove) return false;
-			this.useMove(randomMove, target);
-		},
-		secondary: false,
-		target: "self",
-		type: "Normal"
+		noMetronome: ["Metronome", "Struggle"],
 	},
 	mimic: {
 		inherit: true,
-		desc: "This move is replaced by a random move on target's moveset. The copied move has the maximum PP for that move. Ignores a target's Substitute.",
-		shortDesc: "A random target's move replaces this one.",
-		onHit: function (target, source) {
-			var moveslot = source.moves.indexOf('mimic');
+		onHit(target, source) {
+			const moveslot = source.moves.indexOf('mimic');
 			if (moveslot < 0) return false;
-			var moves = target.moves;
-			var move = moves[this.random(moves.length)];
-			if (!move) return false;
-			move = this.getMove(move);
-			source.moveset[moveslot] = {
+			const moves = target.moves;
+			const moveid = this.sample(moves);
+			if (!moveid) return false;
+			const move = this.dex.moves.get(moveid);
+			source.moveSlots[moveslot] = {
 				move: move.name,
 				id: move.id,
-				pp: source.moveset[moveslot].pp,
+				pp: source.moveSlots[moveslot].pp,
 				maxpp: move.pp * 8 / 5,
 				target: move.target,
 				disabled: false,
 				used: false,
-				virtual: true
+				virtual: true,
 			};
-			source.moves[moveslot] = toId(move.name);
 			this.add('-start', source, 'Mimic', move.name);
-		}
+		},
 	},
 	mirrormove: {
 		inherit: true,
-		onHit: function (pokemon) {
-			var foe = pokemon.side.foe.active[0];
-			if (!foe || !foe.lastMove || foe.lastMove === 'mirrormove') {
+		onHit(pokemon) {
+			const foe = pokemon.side.foe.active[0];
+			if (!_optionalChain([foe, 'optionalAccess', _ => _.lastMove]) || foe.lastMove.id === 'mirrormove') {
 				return false;
 			}
-			this.useMove(foe.lastMove, pokemon);
-		}
+			this.actions.useMove(foe.lastMove.id, pokemon);
+		},
+	},
+	mist: {
+		inherit: true,
+		condition: {
+			onStart(pokemon) {
+				this.add('-start', pokemon, 'Mist');
+			},
+			onBoost(boost, target, source, effect) {
+				if (effect.effectType === 'Move' && effect.category !== 'Status') return;
+				if (source && target !== source) {
+					let showMsg = false;
+					let i;
+					for (i in boost) {
+						if (boost[i] < 0) {
+							delete boost[i];
+							showMsg = true;
+						}
+					}
+					if (showMsg && !(effect ).secondaries) {
+						this.add('-activate', target, 'move: Mist');
+					}
+				}
+			},
+		},
 	},
 	nightshade: {
 		inherit: true,
 		ignoreImmunity: true,
-		basePower: 1
+		basePower: 1,
 	},
 	poisonsting: {
 		inherit: true,
 		secondary: {
 			chance: 20,
-			status: 'psn'
-		}
+			status: 'psn',
+		},
 	},
 	psychic: {
 		inherit: true,
-		desc: "Deals damage to one target with a 30% chance to lower its Special by 1 stage.",
-		shortDesc: "30% chance to lower the target's Special by 1.",
 		secondary: {
 			chance: 33,
 			boosts: {
 				spd: -1,
-				spa: -1
-			}
-		}
+				spa: -1,
+			},
+		},
 	},
 	psywave: {
 		inherit: true,
-		basePower: 1
+		basePower: 1,
+		damageCallback(pokemon) {
+			const psywaveDamage = (this.random(0, this.trunc(1.5 * pokemon.level)));
+			if (psywaveDamage <= 0) {
+				this.hint("Desync Clause Mod activated!");
+				return false;
+			}
+			return psywaveDamage;
+		},
 	},
 	rage: {
 		inherit: true,
 		self: {
-			volatileStatus: 'rage'
+			volatileStatus: 'rage',
 		},
-		effect: {
+		condition: {
 			// Rage lock
 			duration: 255,
-			onStart: function (target, source, effect) {
-				this.effectData.move = 'rage';
+			onStart(target, source, effect) {
+				this.effectState.move = 'rage';
 			},
 			onLockMove: 'rage',
-			onTryHit: function (target, source, move) {
-				if (target.boosts.atk < 6 && move.id === 'disable') {
-					this.boost({atk:1});
+			onHit(target, source, move) {
+				// Disable and exploding moves boost Rage even if they miss/fail, so they are dealt with separately.
+				if (target.boosts.atk < 6 && (move.category !== 'Status' && !move.selfdestruct)) {
+					this.boost({atk: 1});
 				}
 			},
-			onHit: function (target, source, move) {
-				if (target.boosts.atk < 6 && move.category !== 'Status') {
-					this.boost({atk:1});
-				}
-			}
-		}
+		},
 	},
 	razorleaf: {
 		inherit: true,
 		critRatio: 2,
-		target: "normal"
+		target: "normal",
 	},
 	razorwind: {
 		inherit: true,
 		critRatio: 1,
-		target: "normal"
+		target: "normal",
 	},
 	recover: {
 		inherit: true,
 		heal: null,
-		onHit: function (target) {
+		onHit(target) {
+			if (target.hp === target.maxhp) return false;
 			// Fail when health is 255 or 511 less than max
 			if (target.hp === (target.maxhp - 255) || target.hp === (target.maxhp - 511) || target.hp === target.maxhp) {
+				this.hint("In Gen 1, recovery moves fail if (user's maximum HP - user's current HP + 1) is divisible by 256.");
 				return false;
 			}
 			this.heal(Math.floor(target.maxhp / 2), target, target);
-		}
+		},
 	},
 	reflect: {
 		num: 115,
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		desc: "The user has doubled Defense. Critical hits ignore this protection. It is removed from the user if it is successfully hit by Haze.",
-		shortDesc: "User's Defense is 2x.",
-		id: "reflect",
-		isViable: true,
 		name: "Reflect",
 		pp: 20,
 		priority: 0,
 		flags: {},
 		volatileStatus: 'reflect',
-		onTryHit: function (pokemon) {
+		onTryHit(pokemon) {
 			if (pokemon.volatiles['reflect']) {
 				return false;
 			}
 		},
-		effect: {
-			onStart: function (pokemon) {
+		condition: {
+			onStart(pokemon) {
 				this.add('-start', pokemon, 'Reflect');
-			}
+			},
 		},
-		secondary: false,
+		secondary: null,
 		target: "self",
-		type: "Psychic"
+		type: "Psychic",
 	},
 	rest: {
 		inherit: true,
-		onHit: function (target) {
-			// Fails if the difference between
-			// max HP and current HP is 0, 255, or 511
-			if (target.hp >= target.maxhp ||
-			target.hp === (target.maxhp - 255) ||
-			target.hp === (target.maxhp - 511)) return false;
-			if (!target.setStatus('slp')) return false;
-			target.statusData.time = 2;
-			target.statusData.startTime = 2;
-			this.heal(target.maxhp); // Aeshetic only as the healing happens after you fall asleep in-game
-			this.add('-status', target, 'slp', '[from] move: Rest');
-		}
+		onTry() {},
+		onHit(target, source, move) {
+			if (target.hp === target.maxhp) return false;
+			// Fail when health is 255 or 511 less than max
+			if (target.hp === (target.maxhp - 255) || target.hp === (target.maxhp - 511)) {
+				this.hint("In Gen 1, recovery moves fail if (user's maximum HP - user's current HP + 1) is divisible by 256.");
+				return false;
+			}
+			if (!target.setStatus('slp', source, move)) return false;
+			target.statusState.time = 2;
+			target.statusState.startTime = 2;
+			this.heal(target.maxhp); // Aesthetic only as the healing happens after you fall asleep in-game
+		},
 	},
 	roar: {
 		inherit: true,
-		desc: "Does nothing.",
-		shortDesc: "Does nothing.",
-		isViable: false,
 		forceSwitch: false,
-		onTryHit: function () {},
-		priority: 0
+		onTryHit() {},
+		priority: 0,
 	},
 	rockslide: {
 		inherit: true,
-		desc: "Deals damage to a foe.",
-		shortDesc: "Deals damage.",
-		secondary: false,
-		target: "normal"
+		secondary: null,
+		target: "normal",
 	},
 	rockthrow: {
 		inherit: true,
-		accuracy: 65
+		accuracy: 65,
 	},
 	sandattack: {
 		inherit: true,
 		ignoreImmunity: true,
-		type: "Normal"
+		type: "Normal",
 	},
 	seismictoss: {
 		inherit: true,
 		ignoreImmunity: true,
-		basePower: 1
+		basePower: 1,
 	},
 	selfdestruct: {
 		inherit: true,
 		basePower: 130,
-		target: "normal"
+		target: "normal",
 	},
 	skullbash: {
 		inherit: true,
-		onTry: function (attacker, defender, move) {
+		onTryMove(attacker, defender, move) {
 			if (attacker.removeVolatile(move.id)) {
 				return;
 			}
-			this.add('-prepare', attacker, move.name, defender);
+			this.add('-prepare', attacker, move.name);
 			if (!this.runEvent('ChargeMove', attacker, defender, move)) {
-				this.add('-anim', attacker, move.name, defender);
-				attacker.removeVolatile(move.id);
 				return;
 			}
 			attacker.addVolatile('twoturnmove', defender);
 			return null;
-		}
+		},
 	},
 	slash: {
 		inherit: true,
-		critRatio: 2
+		critRatio: 2,
+	},
+	sludge: {
+		inherit: true,
+		secondary: {
+			chance: 40,
+			status: 'psn',
+		},
+	},
+	sonicboom: {
+		inherit: true,
+		ignoreImmunity: true,
 	},
 	softboiled: {
 		inherit: true,
 		heal: null,
-		onHit: function (target) {
+		onHit(target) {
+			if (target.hp === target.maxhp) return false;
 			// Fail when health is 255 or 511 less than max
 			if (target.hp === (target.maxhp - 255) || target.hp === (target.maxhp - 511) || target.hp === target.maxhp) {
+				this.hint("In Gen 1, recovery moves fail if (user's maximum HP - user's current HP + 1) is divisible by 256.");
 				return false;
 			}
 			this.heal(Math.floor(target.maxhp / 2), target, target);
-		}
+		},
 	},
 	struggle: {
 		inherit: true,
-		onModifyMove: function () {}
+		pp: 10,
+		recoil: [1, 2],
+		onModifyMove() {},
 	},
 	substitute: {
 		num: 164,
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		desc: "The user takes 1/4 of its maximum HP, rounded down, and puts it into a substitute to take its place in battle. The substitute is removed once enough damage is inflicted on it, or if the user switches out or faints. Until the substitute is broken, it receives damage from all attacks made by other Pokemon and shields the user from poison status and some stat stage changes caused by other Pokemon. The user still takes normal damage from status effects while behind its substitute. If the substitute breaks during a multi-hit attack, the user will take damage from any remaining hits. This move fails if the user already has a substitute.",
-		shortDesc: "User takes 1/4 its max HP to put in a Substitute.",
-		id: "substitute",
-		isViable: true,
 		name: "Substitute",
 		pp: 10,
 		priority: 0,
-		volatileStatus: 'Substitute',
-		onTryHit: function (target) {
+		volatileStatus: 'substitute',
+		onTryHit(target) {
 			if (target.volatiles['substitute']) {
 				this.add('-fail', target, 'move: Substitute');
 				return null;
 			}
 			// We only prevent when hp is less than one quarter.
 			// If you use substitute at exactly one quarter, you faint.
-			if (target.hp === target.maxhp / 4) target.faint();
 			if (target.hp < target.maxhp / 4) {
 				this.add('-fail', target, 'move: Substitute', '[weak]');
 				return null;
 			}
 		},
-		onHit: function (target) {
+		onHit(target) {
 			// If max HP is 3 or less substitute makes no damage
 			if (target.maxhp > 3) {
 				this.directDamage(target.maxhp / 4, target, target);
 			}
 		},
-		effect: {
-			onStart: function (target) {
+		condition: {
+			onStart(target) {
 				this.add('-start', target, 'Substitute');
-				this.effectData.hp = Math.floor(target.maxhp / 4);
+				this.effectState.hp = Math.floor(target.maxhp / 4) + 1;
 				delete target.volatiles['partiallytrapped'];
 			},
 			onTryHitPriority: -1,
-			onTryHit: function (target, source, move) {
+			onTryHit(target, source, move) {
 				if (move.category === 'Status') {
 					// In gen 1 it only blocks:
 					// poison, confusion, secondary effect confusion, stat reducing moves and Leech Seed.
-					var SubBlocked = {
-						lockon:1, meanlook:1, mindreader:1, nightmare:1
-					};
-					if (move.status === 'psn' || move.status === 'tox' || (move.boosts && target !== source) || move.volatileStatus === 'confusion' || SubBlocked[move.id]) {
+					const SubBlocked = ['lockon', 'meanlook', 'mindreader', 'nightmare'];
+					if (
+						move.status === 'psn' || move.status === 'tox' || (move.boosts && target !== source) ||
+						move.volatileStatus === 'confusion' || SubBlocked.includes(move.id)
+					) {
 						return false;
 					}
 					return;
 				}
 				if (move.volatileStatus && target === source) return;
-				var damage = this.getDamage(source, target, move);
-				if (!damage) return null;
-				damage = this.runEvent('SubDamage', target, source, move, damage);
-				if (!damage) return damage;
-				target.volatiles['substitute'].hp -= damage;
-				source.lastDamage = damage;
+				// NOTE: In future generations the damage is capped to the remaining HP of the
+				// Substitute, here we deliberately use the uncapped damage when tracking lastDamage etc.
+				// Also, multi-hit moves must always deal the same damage as the first hit for any subsequent hits
+				let uncappedDamage = move.hit > 1 ? source.lastDamage : this.actions.getDamage(source, target, move);
+				if (!uncappedDamage && uncappedDamage !== 0) return null;
+				uncappedDamage = this.runEvent('SubDamage', target, source, move, uncappedDamage);
+				if (!uncappedDamage && uncappedDamage !== 0) return uncappedDamage;
+				source.lastDamage = uncappedDamage;
+				this.lastDamage = uncappedDamage;
+				target.volatiles['substitute'].hp -= uncappedDamage > target.volatiles['substitute'].hp ?
+					target.volatiles['substitute'].hp : uncappedDamage;
 				if (target.volatiles['substitute'].hp <= 0) {
 					target.removeVolatile('substitute');
 					target.subFainted = true;
 				} else {
 					this.add('-activate', target, 'Substitute', '[damage]');
 				}
-				if (move.recoil) {
-					this.damage(Math.round(damage * move.recoil[0] / move.recoil[1]), source, target, 'recoil');
+				// Drain/recoil/secondary effect confusion do not happen if the substitute breaks
+				if (target.volatiles['substitute']) {
+					if (move.recoil) {
+						this.damage(Math.round(uncappedDamage * move.recoil[0] / move.recoil[1]), source, target, 'recoil');
+					}
+					if (move.drain) {
+						this.heal(Math.ceil(uncappedDamage * move.drain[0] / move.drain[1]), source, target, 'drain');
+					}
+					if (_optionalChain([move, 'access', _2 => _2.secondary, 'optionalAccess', _3 => _3.volatileStatus]) === 'confusion') {
+						const secondary = move.secondary;
+						if (secondary.chance === undefined || this.randomChance(Math.ceil(secondary.chance * 256 / 100) - 1, 256)) {
+							target.addVolatile(move.secondary.volatileStatus, source, move);
+							this.hint(
+								"In Gen 1, moves that inflict confusion as a secondary effect can confuse targets with a Substitute, " +
+								"as long as the move does not break the Substitute."
+							);
+						}
+					}
 				}
-				// Attacker does not heal from drain if substitute breaks
-				if (move.drain && target.volatiles['substitute'] && target.volatiles['substitute'].hp > 0) {
-					this.heal(Math.ceil(damage * move.drain[0] / move.drain[1]), source, target, 'drain');
-				}
-				this.runEvent('AfterSubDamage', target, source, move, damage);
+				this.runEvent('AfterSubDamage', target, source, move, uncappedDamage);
 				// Add here counter damage
-				if (!target.lastAttackedBy) target.lastAttackedBy = {pokemon: source, thisTurn: true};
-				target.lastAttackedBy.move = move.id;
-				target.lastAttackedBy.damage = damage;
+				const lastAttackedBy = target.getLastAttackedBy();
+				if (!lastAttackedBy) {
+					target.attackedBy.push({source: source, move: move.id, damage: uncappedDamage, slot: source.getSlot(), thisTurn: true});
+				} else {
+					lastAttackedBy.move = move.id;
+					lastAttackedBy.damage = uncappedDamage;
+				}
 				return 0;
 			},
-			onEnd: function (target) {
+			onEnd(target) {
 				this.add('-end', target, 'Substitute');
-			}
+			},
 		},
-		secondary: false,
+		secondary: null,
 		target: "self",
-		type: "Normal"
+		type: "Normal",
+		flags: {},
 	},
 	superfang: {
 		inherit: true,
 		ignoreImmunity: true,
-		basePower: 1
+		basePower: 1,
 	},
 	thunder: {
 		inherit: true,
 		secondary: {
 			chance: 10,
-			status: 'par'
-		}
-	},
-	thunderwave: {
-		inherit: true,
-		accuracy: 100,
-		onTryHit: function (target) {
-			if (target.hasType('Ground')) {
-				this.add('-immune', target, '[msg]');
-				return null;
-			}
-		}
+			status: 'par',
+		},
 	},
 	triattack: {
 		inherit: true,
-		secondary: false
+		onHit() {},
+		secondary: null,
 	},
 	whirlwind: {
 		inherit: true,
 		accuracy: 85,
-		desc: "Does nothing.",
-		shortDesc: "Does nothing.",
-		isViable: false,
 		forceSwitch: false,
-		onTryHit: function () {},
-		priority: 0
+		onTryHit() {},
+		priority: 0,
 	},
 	wingattack: {
 		inherit: true,
-		basePower: 35
+		basePower: 35,
 	},
 	wrap: {
 		inherit: true,
@@ -880,13 +917,10 @@ exports.BattleMovedex = {
 		ignoreImmunity: true,
 		volatileStatus: 'partiallytrapped',
 		self: {
-			volatileStatus: 'partialtrappinglock'
+			volatileStatus: 'partialtrappinglock',
 		},
-		onBeforeMove: function (pokemon, target, move) {
-			// Removes must recharge volatile even if it misses
-			target.removeVolatile('mustrecharge');
-		},
-		onHit: function (target, source) {
+		// FIXME: onBeforeMove(pokemon, target) {target.removeVolatile('mustrecharge')}
+		onHit(target, source) {
 			/**
 			 * The duration of the partially trapped must be always renewed to 2
 			 * so target doesn't move on trapper switch out as happens in gen 1.
@@ -898,6 +932,8 @@ exports.BattleMovedex = {
 					target.volatiles['partiallytrapped'].duration = 2;
 				}
 			}
-		}
-	}
-};
+		},
+	},
+}; exports.Moves = Moves;
+
+ //# sourceMappingURL=sourceMaps/moves.js.map
