@@ -413,7 +413,7 @@ export class Pokemon {
 			if (typeof this[i] === 'undefined' || typeof this[i] === 'function') continue;
 			if (i === 'template') continue;
 			const prop = properties[i];
-			this[i] = typeof prop === 'object' ? { ...prop } : prop;
+			this[i] = typeof prop === 'object' && !Array.isArray(prop) ? { ...prop } : prop;
 		}
 	}
 

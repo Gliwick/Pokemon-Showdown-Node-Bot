@@ -36,7 +36,7 @@ export class Pokemon {
 		if (properties.helpers?.template) {
 			for (let attr in properties.helpers.template) {
 				const prop = properties.helpers.template[attr];
-				this.template[attr] = typeof prop === 'object' ? { ...prop } : prop;
+				this.template[attr] = typeof prop === 'object' && !Array.isArray(prop) ? { ...prop } : prop;
 			}
 		}
 
@@ -47,7 +47,7 @@ export class Pokemon {
 			if (typeof this[attr] === 'undefined' || typeof this[attr] === 'function') continue;
 			if (['helpers', 'template'].includes(attr)) continue;
 			const prop = properties[attr];
-			this[attr] = typeof prop === 'object' ? { ...prop } : prop;
+			this[attr] = typeof prop === 'object' && !Array.isArray(prop) ? { ...prop } : prop;
 		}
 	}
 
@@ -191,7 +191,7 @@ export class Conditions {
 		this.immediate = {};
 		for (let attr in data) {
 			if (typeof this[attr] === 'undefined' || typeof this[attr] === 'function') continue;
-			this[attr] = { ...data[attr] };
+			this[attr] = Array.isArray(data[attr]) ? [...data[attr]] : { ...data[attr] };
 		}
 	}
 };

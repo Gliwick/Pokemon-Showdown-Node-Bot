@@ -156,7 +156,7 @@ function isWeatherSupressed(pokeA: Pokemon, pokeB: Pokemon): boolean {
 function getConditionsAfterSwitchIn(battle: Battle, pokeA: Pokemon, pokeB: Pokemon, conditionsB: Conditions, gconditions = {}) {
 	const conditionsA = new Conditions({
 		side: { ...battle.self.side },
-		pokemon: { ...battle.self.pokemon },
+		pokemon: [...battle.self.pokemon],
 		volatiles: {},
 		boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
 	});
@@ -245,7 +245,7 @@ function evaluatePokemon(battle: Battle, sideId: number): { [key: string]: numbe
 	let conditionsA = {};
 	let conditionsB = new Conditions({
 		side: { ...battle.foe.side },
-		pokemon: { ...battle.foe.pokemon },
+		pokemon: [...battle.foe.pokemon],
 		volatiles: { ...battle.foe.active[0].volatiles },
 		boosts: { ...battle.foe.active[0].boosts },
 	});
