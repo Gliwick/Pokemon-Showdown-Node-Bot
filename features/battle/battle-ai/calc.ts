@@ -38,17 +38,19 @@ export class Pokemon {
 		this.template = { ...template };
 		if (properties.helpers?.template) {
 			for (let attr in properties.helpers.template) {
-				this.template[attr] = { ...properties.helpers.template[attr] };
+				const prop = properties.helpers.template[attr];
+				this.template[attr] = typeof prop === 'object' ? { ...prop } : prop;
 			}
 		}
 
 		this.name = this.template.species;
 		this.species = this.template.species;
 
-		for (let prop in properties) {
-			if (typeof this[prop] === 'undefined' || typeof this[prop] === 'function') continue;
-			if (['helpers', 'template'].includes(prop)) continue;
-			this[prop] = { ...properties[prop] };
+		for (let attr in properties) {
+			if (typeof this[attr] === 'undefined' || typeof this[attr] === 'function') continue;
+			if (['helpers', 'template'].includes(attr)) continue;
+			const prop = properties[attr];
+			this[attr] = typeof prop === 'object' ? { ...prop } : prop;
 		}
 	}
 
@@ -77,7 +79,6 @@ export class Pokemon {
 		if (this.stats[stat]) return this.stats[stat];
 		if (stat === 'hp' && this.getBaseStat(stat) === 1) return 1;
 
-		if (!gen) gen = CurrentGen;
 		if (gen <= 2) {
 			if (stat === 'hp') {
 				return Math.floor(((this.getBaseStat(stat) + this.getDV(stat)) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level / 100) + 10 + this.level;
@@ -111,7 +112,7 @@ export class Pokemon {
 	};
 
 	getTypes(conditions: Conditions): PokemonType[] {
-		let types = [...this.template.types];
+		let types = [...(this.template.types || [])];
 		if (conditions && conditions.volatiles) {
 			if (conditions.volatiles.terastallize) return [conditions.volatiles.terastallize];
 			if (conditions.volatiles.typechange && conditions.volatiles.typechange[0]) types = conditions.volatiles.typechange[0].split('/');
@@ -199,7 +200,7 @@ export class Conditions {
 export function getRolls(n: number, pmin: number = 0.85, pmax: number = 1): number[] {
 	if (n === 0) return [0];
 
-	let rolls: number[] = [];
+	const rolls: number[] = [];
 	for (let m = pmin; m <= pmax; m += 0.01) {
 		rolls.push(Math.floor(m * n) || 1);
 	}
