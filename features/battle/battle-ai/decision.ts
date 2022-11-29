@@ -3,7 +3,7 @@
 */
 
 import { Battle } from "./battle";
-import { Type } from "./battle-data";
+import { PokemonType } from "./battle-data";
 
 type DecisionType = 'move' | 'switch' | 'team' | 'pass' | 'shift';
 
@@ -15,7 +15,7 @@ export abstract class Decision {
 	}
 }
 
-type Transformation = { terastallize: Type } | string;
+type Transformation = { terastallize: PokemonType } | string;
 
 export class MoveDecision extends Decision {
 	moveId: number;
@@ -146,7 +146,7 @@ function cartesianProduct(tables) {
 
 function getTargets(battle, activeIndex, move): (number | null)[] {
 	let targets: (number | null)[] = [];
-	if (move.target in { 'any': 1, 'normal': 1, 'adjacentAlly': 1, 'adjacentAllyOrSelf': 1, 'adjacentFoe': 1 }) {
+	if (['any', 'normal', 'adjacentAlly', 'adjacentAllyOrSelf', 'adjacentFoe'].includes(move.target)) {
 		if (!move.target.startsWith('adjacentAlly')) {
 			let auxHasTarget = false;
 			for (var tar = 0; tar < battle.foe.active.length; tar++) {
@@ -243,7 +243,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 					for (let target of targets) {
 						tables[i].push(new MoveDecision(j, target, null, move.move, move.pp));
 						if (mega) tables[i].push(new MoveDecision(j, target, 'mega', move.move, move.pp));
-						if (active.canTerastallize) tables[i].push(new MoveDecision(j, target, { terastallize: active.canTerastallize as Type }, move.move, move.pp));;
+						if (active.canTerastallize) tables[i].push(new MoveDecision(j, target, { terastallize: active.canTerastallize as PokemonType }, move.move, move.pp));;
 					}
 
 					if (active.canZMove && active.canZMove[j]) {

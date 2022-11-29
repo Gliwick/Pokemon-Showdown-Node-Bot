@@ -40,28 +40,28 @@ const DoubleTurnMoves = ['iceburn', 'freezeshock', 'meteorbeam', 'razorwind', 's
 function getPokemonAverage(battle: Battle, s: number): number {
 	if (!battle.foe.teamPv.length) return 0;
 
-	var p = battle.request.side.pokemon[s];
-	var pokeA = battle.getCalcRequestPokemon(s, true);
+	const p = battle.request.side.pokemon[s];
+	const pokeA = battle.getCalcRequestPokemon(s, true);
 	if (toId(battle.tier || "").indexOf("challengecup") >= 0) pokeA.happiness = 100;
 
-	var final = 0;
-	var conditions = new Conditions({});
+	let final = 0;
+	const conditions = new Conditions({});
 	for (let i = 0; i < battle.foe.teamPv.length; i++) {
-		var pokeView = battle.foe.teamPv[i];
-		var template = getPokemon(pokeView.species, battle.gen);
-		var poke = new Pokemon(template, {
+		const pokeView = battle.foe.teamPv[i];
+		const template = getPokemon(pokeView.species, battle.gen);
+		const poke = new Pokemon(template, {
 			level: pokeView.level,
 			gender: pokeView.gender,
 			evs: { hp: 192, def: 124, spd: 124 }
 		});
 		if (toId(battle.tier || "").indexOf("challengecup") >= 0) poke.happiness = 100;
 		if (template.abilities) poke.ability = getAbility(template.abilities[0], battle.gen);
-		var calcVal = 0;
-		for (var j = 0; j < p.moves.length; j++) {
-			var move = getMove(p.moves[j], battle.gen);
+		let calcVal = 0;
+		for (let j = 0; j < p.moves.length; j++) {
+			const move = getMove(p.moves[j], battle.gen);
 			if (move.category === "Status") continue;
 			if (BadMoves.indexOf(move.id) >= 0) continue;
-			var dmg = calculate({ poke: pokeA, conditions: conditions }, { poke: poke, conditions: conditions },
+			const dmg = calculate({ poke: pokeA, conditions: conditions }, { poke: poke, conditions: conditions },
 				move, battle.conditions, battle);
 			debug("DMG [" + pokeA.species + ", " + poke.species + ", " + move.name + "] = " + dmg.getMax());
 			if (DoubleTurnMoves.indexOf(move.id) >= 0) calcVal += dmg.getMax() * 0.5;
@@ -73,7 +73,7 @@ function getPokemonAverage(battle: Battle, s: number): number {
 }
 
 function evaluateTeamDecision(battle: Battle, des: TeamDecision): number {
-	var final = 0;
+	let final = 0;
 	for (let i = 0; i < des.team.length; i++) {
 		final += getPokemonAverage(battle, des.team[i]);
 	}
@@ -85,26 +85,26 @@ function evaluateTeamDecision(battle: Battle, des: TeamDecision): number {
  */
 
 function getSwitchAverage(battle: Battle, pokeId: number): number {
-	var final = 0;
-	var p = battle.request.side.pokemon[pokeId];
-	var pokeA = battle.getCalcRequestPokemon(pokeId, true);
+	let final = 0;
+	const p = battle.request.side.pokemon[pokeId];
+	const pokeA = battle.getCalcRequestPokemon(pokeId, true);
 	if (toId(battle.tier).indexOf("challengecup") >= 0) pokeA.happiness = 100;
-	var conditionsA = new Conditions({
+	const conditionsA = new Conditions({
 		side: battle.self.side,
 		volatiles: {},
 		boosts: {}
 	});
 	for (let i = 0; i < p.moves.length; i++) {
-		var move = getMove(p.moves[i], battle.gen);
-		var targets = battle.foe.active;
-		for (var j = 0; j < targets.length; j++) {
+		const move = getMove(p.moves[i], battle.gen);
+		const targets = battle.foe.active;
+		for (let j = 0; j < targets.length; j++) {
 			if (!targets[j]) continue;
-			var conditionsB = new Conditions({
+			const conditionsB = new Conditions({
 				side: battle.foe.side,
 				volatiles: targets[j].volatiles,
 				boosts: targets[j].boosts
 			});
-			var pokeB = new Pokemon(targets[j].template, {
+			const pokeB = new Pokemon(targets[j].template, {
 				level: targets[j].level,
 				gender: targets[j].gender,
 				shiny: targets[j].shiny,
@@ -124,7 +124,7 @@ function getSwitchAverage(battle: Battle, pokeId: number): number {
 					pokeB.ability = targets[j].ability;
 				}
 			}
-			var dmg = calculate({ poke: pokeA, conditions: conditionsA }, { poke: pokeB, conditions: conditionsB },
+			const dmg = calculate({ poke: pokeA, conditions: conditionsA }, { poke: pokeB, conditions: conditionsB },
 				move, battle.conditions, battle);
 			debug("DMG [" + pokeA.species + ", " + pokeB.species + ", " + move.name + "] = " + dmg.getMax());
 			if (DoubleTurnMoves.indexOf(move.id) >= 0) final += dmg.getMax() * 0.5;
@@ -136,7 +136,7 @@ function getSwitchAverage(battle: Battle, pokeId: number): number {
 }
 
 function evaluateSwitchDecision(battle: Battle, des: SwitchDecision): number {
-	var final = -1000;
+	let final = -1000;
 	final += getSwitchAverage(battle, des.pokeId);
 	return final;
 }
@@ -146,28 +146,28 @@ function evaluateSwitchDecision(battle: Battle, des: SwitchDecision): number {
  */
 
 function evaluateMoveDecision(battle: Battle, desEnv: Decision[], des: MoveDecision, act: number): number {
-	var final = 0;
-	var p = battle.request.side.pokemon[act];
-	var a = battle.request.active[act];
-	var move = getMove(p.moves[des.moveId]);
+	let final = 0;
+	const p = battle.request.side.pokemon[act];
+	const a = battle.request.active[act];
+	const move = getMove(p.moves[des.moveId]);
 
 	if (move.category === "Status") return 0;
 	if (BadMoves.indexOf(move.id) >= 0) return 0;
 	if (des.target < 0) return 0; // Do not kill your own allies
 
 	if (a.canMegaEvo || p.canMegaEvo) {
-		if (!des.mega) return 0; // Mega evolve by default
+		if (!des.transformation) return 0; // Mega evolve by default
 	}
 
-	var pokeA = battle.getCalcRequestPokemon(act, true);
+	const pokeA = battle.getCalcRequestPokemon(act, true);
 	if (toId(battle.tier || "").indexOf("challengecup") >= 0) pokeA.happiness = 100; // Random
-	var conditionsA = new Conditions({
+	const conditionsA = new Conditions({
 		side: battle.self.side,
 		volatiles: battle.self.active[act].volatiles,
 		boosts: battle.self.active[act].boosts
 	});
 
-	var targets = [];
+	let targets = [];
 	if (typeof des.target === "number") {
 		targets = [battle.foe.active[des.target]];
 	} else {
@@ -176,12 +176,12 @@ function evaluateMoveDecision(battle: Battle, desEnv: Decision[], des: MoveDecis
 
 	for (let i = 0; i < targets.length; i++) {
 		if (!targets[i]) continue;
-		var conditionsB = new Conditions({
+		const conditionsB = new Conditions({
 			side: battle.foe.side,
 			volatiles: targets[i].volatiles,
 			boosts: targets[i].boosts
 		});
-		var pokeB = new Pokemon(targets[i].template, {
+		const pokeB = new Pokemon(targets[i].template, {
 			level: targets[i].level,
 			gender: targets[i].gender,
 			shiny: targets[i].shiny,
@@ -201,7 +201,7 @@ function evaluateMoveDecision(battle: Battle, desEnv: Decision[], des: MoveDecis
 				pokeB.ability = targets[i].ability;
 			}
 		}
-		var dmg = calculate({ poke: pokeA, conditions: conditionsA }, { poke: pokeB, conditions: conditionsB },
+		const dmg = calculate({ poke: pokeA, conditions: conditionsA }, { poke: pokeB, conditions: conditionsB },
 			move, battle.conditions, battle);
 		debug("DMG [" + pokeA.species + ", " + pokeB.species + ", " + move.name + "] = " + dmg.getMax());
 		if (DoubleTurnMoves.indexOf(move.id) >= 0) final += dmg.getMax() * 0.5;
@@ -228,10 +228,9 @@ function getDecisionValue(battle: Battle, decisions: Decision[][], desEnv: Decis
 }
 
 export function decide(battle: Battle, decisions: Decision[][]): Decision[] {
-	var dTable = [];
-	var p, maxP;
-	maxP = null;
-	for (var d = 0; d < decisions.length; d++) {
+	const dTable: { des: number, val: number }[] = [];
+	let p = 0, maxP: number | null = null;
+	for (let d = 0; d < decisions.length; d++) {
 		p = 0;
 		for (let i = 0; i < decisions[d].length; i++) {
 			p += getDecisionValue(battle, decisions, decisions[d], decisions[d][i], i);
@@ -239,8 +238,8 @@ export function decide(battle: Battle, decisions: Decision[][]): Decision[] {
 		dTable.push({ des: d, val: p });
 		if (maxP === null || maxP < p) maxP = p;
 	}
-	var chosen = [];
-	for (var j = 0; j < dTable.length; j++) {
+	const chosen: Decision[][] = [];
+	for (let j = 0; j < dTable.length; j++) {
 		if (dTable[j].val === maxP && decisions[dTable[j].des])
 			chosen.push(decisions[dTable[j].des]);
 	}

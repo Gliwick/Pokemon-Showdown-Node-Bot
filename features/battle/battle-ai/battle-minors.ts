@@ -166,8 +166,8 @@ export const minors = {
 	},
 
 	"-restoreboost": function (args, kwargs) {
-		var poke = this.getActive(args[1]);
-		for (var i in poke.boosts) {
+		const poke = this.getActive(args[1]);
+		for (let i in poke.boosts) {
 			if (poke.boosts[i] < 0) delete poke.boosts[i];
 		}
 	},
@@ -185,7 +185,7 @@ export const minors = {
 			}
 		} else {
 			poke.removeAllBoosts();
-			for (var i in poke2.boosts) {
+			for (let i in poke2.boosts) {
 				poke.boosts[i] = poke2.boosts[i];
 				if (!poke.boosts[i]) delete poke.boosts[i];
 			}
@@ -203,8 +203,8 @@ export const minors = {
 	},
 
 	"-clearallboost": function (args, kwargs) {
-		for (var p in this.players) {
-			for (var i = 0; i < this.players[p].active.length; i++) {
+		for (let p in this.players) {
+			for (let i = 0; i < this.players[p].active.length; i++) {
 				this.players[p].active[i].removeAllBoosts();
 			}
 		}

@@ -206,8 +206,8 @@ export const majors = {
 				active.removeVolatile('yawn');
 				active.removeVolatile('transform');
 				active.removeVolatile('formechange');
-				for (var vol in active.volatiles) poke.addVolatile(vol);
-				for (var b in active.boosts) poke.boosts[b] = active.boosts[b];
+				for (let vol in active.volatiles) poke.addVolatile(vol);
+				for (let b in active.boosts) poke.boosts[b] = active.boosts[b];
 				active.passing = false;
 			}
 			active.removeAllVolatiles();

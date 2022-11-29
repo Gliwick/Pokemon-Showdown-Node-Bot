@@ -16,10 +16,10 @@ export class ChallengeManager {
 
 	parse(room, message, isIntro, spl) {
 		if (!spl[3].startsWith('/challenge ')) return;
-		var nBattles = Object.keys(battleBot.battles).length;
+		const nBattles = Object.keys(battleBot.battles).length;
 		this.challenges = [spl[4]];
 		if (this.challenges) {
-			for (var format of this.challenges) {
+			for (let format of this.challenges) {
 				const player = spl[1];
 				if (this.canChallenge(nBattles)) {
 					if (Settings.lockdown || !(format in Formats) || !Formats[format].chall) {
@@ -33,7 +33,7 @@ export class ChallengeManager {
 						continue;
 					}
 
-					var team = teamBuilder.getTeam(format);
+					const team = teamBuilder.getTeam(format);
 					Bot.say(spl[1], '/useteam ' + (team || 'null'));
 					Bot.say('', '/accept ' + player);
 					nBattles++;

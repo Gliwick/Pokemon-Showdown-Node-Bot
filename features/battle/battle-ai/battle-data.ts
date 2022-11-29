@@ -9,7 +9,7 @@ const MODS_DATA_DIR = BATTLE_DATA_DIR + 'mods/';
 
 export const CurrentGen = 9;
 
-export type Type = 'Bug' | 'Dark' | 'Dragon' | 'Electric' | 'Fairy' | 'Fighting' | 'Fire' | 'Flying' | 'Ghost' | 'Grass' | 'Ground' | 'Ice' | 'Normal' | 'Poison' | 'Psychic' | 'Rock' | 'Steel' | 'Water' | '???';
+export type PokemonType = 'Bug' | 'Dark' | 'Dragon' | 'Electric' | 'Fairy' | 'Fighting' | 'Fire' | 'Flying' | 'Ghost' | 'Grass' | 'Ground' | 'Ice' | 'Normal' | 'Poison' | 'Psychic' | 'Rock' | 'Steel' | 'Water' | '???';
 
 export function getEffect(effect, gen) {
 	if (!effect || typeof effect === 'string') {
@@ -176,16 +176,16 @@ export function getMove(move, gen: number = CurrentGen, battleId?: string) {
 		};
 
 
-		const specialTypes = { Fairy: 1, Fire: 1, Water: 1, Grass: 1, Ice: 1, Electric: 1, Dark: 1, Psychic: 1, Dragon: 1 };
-		if (moveData.type in specialTypes) moveData.category = 'Special';
-		if (moveData.category === 'Physical' && !(moveData.type in { 'Ground': 1, 'Rock': 1 })) moveData.flags.contact = 1;
+		const specialTypes = ['Fire', 'Water', 'Grass', 'Ice', 'Electric', 'Dark', 'Psychic', 'Dragon'];
+		if (specialTypes.includes(moveData.type)) moveData.category = 'Special';
+		if (moveData.category === 'Physical' && !['Ground', 'Rock'].includes(moveData.type)) moveData.flags.contact = 1;
 	}
 
 	if (!moveData.effectType) moveData.effectType = 'Move';
 	return moveData;
 };
 
-const TypeAliases: { [key in Type]: string[] } = {
+const TypeAliases: { [key in PokemonType]: string[] } = {
 	'Bug': ['bug'],
 	'Dark': ['dark'],
 	'Dragon': ['dragon'],
@@ -207,8 +207,8 @@ const TypeAliases: { [key in Type]: string[] } = {
 	'???': [],
 };
 
-function evaluateMoveType(name: string): Type {
-	let moveType: Type;
+function evaluateMoveType(name: string): PokemonType {
+	let moveType: PokemonType;
 	for (moveType in TypeAliases) {
 		if (name.indexOf(moveType) >= 0) {
 			return moveType;

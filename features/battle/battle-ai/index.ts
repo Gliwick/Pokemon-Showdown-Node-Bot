@@ -20,7 +20,7 @@ export class BattleBot {
 	};
 
 	init() {
-		for (var room in this.battles) {
+		for (let room in this.battles) {
 			try {
 				this.battles[room].destroy();
 			} catch (e) { }
@@ -35,8 +35,8 @@ export class BattleBot {
 			this.autoJoinData = this.autojoinFFM.readObj();
 		} catch (e) { error(e.stack); }
 		debug(JSON.stringify(this.autoJoinData));
-		var cmds = [];
-		for (var i in this.autoJoinData) {
+		const cmds: string[] = [];
+		for (let i in this.autoJoinData) {
 			if (!this.battles[i]) {
 				cmds.push('|/join ' + i);
 				cmds.push(i + '|/joinbattle');
@@ -49,10 +49,10 @@ export class BattleBot {
 
 	updateBattleAutojoin() {
 		if (!Config.abandonedBattleAutojoin) return;
-		for (var i in this.autoJoinData) {
+		for (let i in this.autoJoinData) {
 			delete this.autoJoinData[i];
 		}
-		for (var room in this.battles) {
+		for (let room in this.battles) {
 			this.autoJoinData[room] = 1;
 		}
 		this.autojoinFFM.writeObj(this.autoJoinData);
@@ -60,7 +60,7 @@ export class BattleBot {
 
 	receive(room, data, isIntro) {
 		if (data.charAt(0) === ">") return;
-		var spl = data.substr(1).split("|");
+		const spl = data.substr(1).split("|");
 		if (spl[0] === 'init') {
 			if (this.battles[room]) {
 				try {
@@ -88,7 +88,7 @@ export class BattleBot {
 	};
 
 	destroy() {
-		for (var room in this.battles) {
+		for (let room in this.battles) {
 			try {
 				this.battles[room].destroy();
 			} catch (e) { }

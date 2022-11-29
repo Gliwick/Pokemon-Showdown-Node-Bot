@@ -31,8 +31,8 @@ export class TeamBuilder {
 		if (this.teams) delete this.teams;
 		this.teams = {};
 		Object.merge(this.teams, this.staticTeams);
-		for (var i in this.dynTeams) {
-			var team = this.dynTeams[i];
+		for (let i in this.dynTeams) {
+			const team = this.dynTeams[i];
 			if (!this.teams[team.format]) this.teams[team.format] = [];
 			this.teams[team.format].push(team.packed);
 		}
@@ -58,8 +58,8 @@ export class TeamBuilder {
 	};
 
 	saveTeams() {
-		var data = JSON.stringify(this.dynTeams);
-		var finishWriting = function () {
+		const data = JSON.stringify(this.dynTeams);
+		const finishWriting = function () {
 			this.writing = false;
 			if (this.writePending) {
 				this.writePending = false;
@@ -84,11 +84,11 @@ export class TeamBuilder {
 	};
 
 	getTeam(format) {
-		var formatId = toId(format);
-		var teamStuff = this.teams[formatId];
+		const formatId = toId(format);
+		const teamStuff = this.teams[formatId];
 		if (!teamStuff || !teamStuff.length) return false;
-		var teamChosen = teamStuff[Math.floor(Math.random() * teamStuff.length)]; //choose team
-		var teamStr = '';
+		const teamChosen = teamStuff[Math.floor(Math.random() * teamStuff.length)]; //choose team
+		let teamStr = '';
 		try {
 			if (typeof teamChosen === 'string') {
 				//already parsed
@@ -96,15 +96,15 @@ export class TeamBuilder {
 			} else if (typeof teamChosen === 'object') {
 				if (teamChosen.maxPokemon && teamChosen.pokemon) {
 					//generate random team
-					var team = [];
-					var hasSpecies = {};
+					const team = [];
+					const hasSpecies: { [key: string]: boolean } = {};
 					if (teamChosen.essentialPokemon) {
 						for (let poke of teamChosen.essentialPokemon) {
 							team.push(poke);
 							hasSpecies[poke.species] = true;
 						}
 					}
-					var pokes = teamChosen.pokemon.randomize();
+					const pokes = teamChosen.pokemon.randomize();
 					for (let i = 0; team.length < teamChosen.maxPokemon; i++) {
 						if (!hasSpecies[pokes[i].species]) {
 							team.push(pokes[i]);
@@ -131,7 +131,7 @@ export class TeamBuilder {
 	};
 
 	hasTeam(format) {
-		var formatId = toId(format);
+		const formatId = toId(format);
 		if (this.teams[formatId]) return true;
 		return false;
 	};

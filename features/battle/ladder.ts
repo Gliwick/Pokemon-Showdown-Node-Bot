@@ -10,7 +10,7 @@ export class LadderManager {
 
 	reportBattle(room) {
 		if (!this.reportsRoom) return;
-		var lang = Config.language || 'english';
+		let lang = Config.language || 'english';
 		if (Settings.settings['language'] && Settings.settings['language'][this.reportsRoom]) lang = Settings.settings['language'][this.reportsRoom];
 		Bot.say(this.reportsRoom, Tools.translateGlobal('battle', 'battlefound', lang) + ": <<" + room + ">>");
 		this.reportsRoom = false;
@@ -20,17 +20,17 @@ export class LadderManager {
 		if (!format) return false;
 		if (this.laddering) return false;
 		format = toId(format);
-		var check = function () {
+		const check = function () {
 			if (Settings.lockdown) return;
-			var counter = 0;
-			var maxBattles = 1;
+			let counter = 0;
+			let maxBattles = 1;
 			if (Config.ladderNumberOfBattles) maxBattles = Config.ladderNumberOfBattles;
 			for (let battle in battleBot.battles) {
 				if (battleBot.battles[battle].tier && toId(battleBot.battles[battle].tier) === format && battleBot.battles[battle].rated) counter++;
 			}
 			if (counter >= maxBattles) return;
-			var cmds = [];
-			var team = teamBuilder.getTeam(format);
+			const cmds: string[] = [];
+			const team = teamBuilder.getTeam(format);
 			if (team) cmds.push('|/useteam ' + team);
 			cmds.push('|/search ' + format);
 			Bot.send(cmds);

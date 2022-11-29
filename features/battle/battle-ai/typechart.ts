@@ -5,9 +5,9 @@
 const DATA_DIR = './../data/';
 const MODS_DATA_DIR = DATA_DIR + 'mods/';
 
-import { CurrentGen, Type } from './battle-data';
+import { CurrentGen, PokemonType } from './battle-data';
 
-export function getMultipleEff(typeA: Type, typesB: Type[], gen: number, notImmune: boolean, inverse: boolean, battleId?: string): number {
+export function getMultipleEff(typeA: PokemonType, typesB: PokemonType[], gen: number, notImmune: boolean, inverse: boolean, battleId?: string): number {
 	let mux = 1;
 	let tmp;
 	for (let i = 0; i < typesB.length; i++) {
@@ -18,7 +18,7 @@ export function getMultipleEff(typeA: Type, typesB: Type[], gen: number, notImmu
 	return mux;
 };
 
-export function getEffectiveness(typeA: Type, typeB: Type, gen: number = CurrentGen, inverse: boolean, battleId?: string): number {
+export function getEffectiveness(typeA: PokemonType, typeB: PokemonType, gen: number = CurrentGen, inverse: boolean, battleId?: string): number {
 	const chart = getChart(gen, battleId);
 
 	if (!chart[typeB] || !chart[typeB][typeA]) return 1;
@@ -49,7 +49,7 @@ function getChart(gen: number = CurrentGen, battleId?: string): TypeChart {
 
 type Gen = `gen${number}`;
 
-type TypeChart = { [key in Type]?: { [key in Type]?: number } };
+type TypeChart = { [key in PokemonType]?: { [key in PokemonType]?: number } };
 
 export const typechart: { [key in Gen]?: TypeChart } = {
 	gen9: {

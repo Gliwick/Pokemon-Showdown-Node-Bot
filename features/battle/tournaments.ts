@@ -13,14 +13,14 @@ export class TourManager {
 	constructor() { };
 
 	canSendCommands(room) {
-		var res = true;
+		let res = true;
 		if (this.lastAction[room] && Date.now() - this.lastAction[room] < ACTION_INTERVAL) res = false;
 		this.lastAction[room] = Date.now();
 		return res;
 	};
 
 	clearData() {
-		for (var i in this.tourData)
+		for (let i in this.tourData)
 			delete this.tourData[i];
 	};
 
@@ -30,14 +30,15 @@ export class TourManager {
 		switch (spl[1]) {
 			case 'update':
 				try {
-					var data = JSON.parse(spl[2]);
-					for (var i in data)
+					const data = JSON.parse(spl[2]);
+					for (let i in data) {
 						this.tourData[room][i] = data[i];
+					}
 				} catch (e) { }
 				break;
 			case 'updateEnd':
 				if (!Settings.lockdown && Settings.settings['jointours'] && Settings.settings['jointours'][room] && this.tourData[room].format && !this.tourData[room].isJoined && !this.tourData[room].isStarted) {
-					var format = toId(this.tourData[room].format);
+					const format = toId(this.tourData[room].format);
 					if (Formats[format] && !Formats[format].team) {
 						Bot.say(room, '/tour join');
 					} else {
@@ -46,13 +47,15 @@ export class TourManager {
 				}
 				if (!Settings.lockdown && this.tourData[room].challenges && this.tourData[room].challenges.length) {
 					if (this.canSendCommands(room)) {
-						var team = teamBuilder.getTeam(this.tourData[room].format);
+						const team = teamBuilder.getTeam(this.tourData[room].format);
 						if (team) Bot.say(room, '/useteam ' + team);
-						for (var i = 0; i < this.tourData[room].challenges.length; i++) Bot.say(room, '/tour challenge ' + this.tourData[room].challenges[i]);
+						for (let i = 0; i < this.tourData[room].challenges.length; i++) {
+							Bot.say(room, '/tour challenge ' + this.tourData[room].challenges[i]);
+						}
 					}
 				} else if (!Settings.lockdown && this.tourData[room].challenged) {
 					if (this.canSendCommands(room)) {
-						var team = teamBuilder.getTeam(this.tourData[room].format);
+						const team = teamBuilder.getTeam(this.tourData[room].format);
 						if (team) Bot.say(room, '/useteam ' + team);
 						Bot.say(room, '/tour acceptchallenge');
 					}
