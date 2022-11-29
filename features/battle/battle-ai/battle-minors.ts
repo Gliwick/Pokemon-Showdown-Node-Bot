@@ -2,7 +2,7 @@
 	Minors
 */
 
-import { getPokemon, getMove, getEffect, getItem } from './battle-data';
+import { getPokemon, getMove, getEffect, getItem, getAbility } from './battle-data';
 
 export const minors = {
 	"-damage": function (args, kwargs) {

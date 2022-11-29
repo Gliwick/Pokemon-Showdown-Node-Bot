@@ -9,7 +9,7 @@ import { getMultipleEff } from "./../typechart";
 import { Pokemon, Conditions, calculate, getMoveType, getHazardsDamage } from "./../calc";
 import { getAbility, getFormatsData, getItem, getMove } from "./../battle-data";
 import { Battle } from "../battle";
-import { Decision } from "../decision";
+import { Decision, MoveDecision } from "../decision";
 
 const SingleTurnMoves = ['protect', 'detect', 'kingsshield', 'quickguard', 'spikyshield', 'wideguard', 'banefulbunker', 'obstruct', 'maxguard', 'endure'];
 
@@ -1397,7 +1397,7 @@ export function getViableDamageMoves(battle: Battle, decisions: Decision[][]): D
 
 	let supressedWeather = isWeatherSupressed(pokeA, pokeB);
 	for (let i = 0; i < decisions.length; i++) {
-		let des = decisions[i][0];
+		let des = decisions[i][0] as MoveDecision;
 		if (des.type !== 'move') continue; // not a move
 
 		if (battle.request.active[0].canMegaEvo || battle.request.side.pokemon[0].canMegaEvo) {
