@@ -97,8 +97,8 @@ if (!AppOptions.testmode) {
 
 	Object.values(Features).forEach((f) => {
 		ok("New feature: " + f.id + ' | ' + f.desc);
-	}
-}
+	});
+};
 
 global.reloadFeatures = function () {
 	Object.values(Features).forEach((f) => {
