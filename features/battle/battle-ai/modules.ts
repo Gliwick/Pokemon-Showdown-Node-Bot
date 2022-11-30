@@ -7,7 +7,7 @@ import { Battle } from './battle';
 import { Decision } from './decision';
 import { IngameNoStatus } from './modules/ingame-nostatus';
 import { Random } from './modules/random';
-import { SinglesEff } from './modules/singles-eff';
+import { SinglesEffective } from './modules/singles-eff';
 
 export interface Module {
 	id: string;
@@ -18,7 +18,7 @@ export interface Module {
 export const modules: { [key: string]: Module } = {
 	'ingame-nostatus': new IngameNoStatus(),
 	'random': new Random(),
-	'singles-eff': new SinglesEff(),
+	'singles-eff': new SinglesEffective(),
 };
 
 Object.values(modules).forEach((mod) => {
