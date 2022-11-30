@@ -2,11 +2,11 @@
 * Pokemon Data translations
 */
 
-exports.translations = {};
+export const translations: { [key: string]: { [key: string]: string } } = {};
 
 /* Battle Abilities */
 
-exports.translations.abilities = {
+translations.abilities = {
 	"adaptability": "Adaptability",
 	"aftermath": "Aftermath",
 	"aerilate": "Aerilate",
@@ -205,7 +205,7 @@ exports.translations.abilities = {
 
 /* Battle Items */
 
-exports.translations.items = {
+translations.items = {
 	"abomasite": "Abomasite",
 	"absolite": "Absolite",
 	"absorbbulb": "Absorb Bulb",
@@ -495,7 +495,7 @@ exports.translations.items = {
 
 /* Battle Moves */
 
-exports.translations.moves = {
+translations.moves = {
 	"absorb": "Absorb",
 	"acid": "Acid",
 	"acidarmor": "Acid Armor",
@@ -1140,7 +1140,7 @@ exports.translations.moves = {
 
 /* Natures */
 
-exports.translations.natures = {
+translations.natures = {
 	"adamant": "Adamant",
 	"bashful": "Bashful",
 	"bold": "Bold",
@@ -1170,7 +1170,7 @@ exports.translations.natures = {
 
 /* Pokemon names */
 
-exports.translations.pokemon = {
+translations.pokemon = {
 	"bulbasaur": "Bulbasaur",
 	"ivysaur": "Ivysaur",
 	"venusaur": "Venusaur",

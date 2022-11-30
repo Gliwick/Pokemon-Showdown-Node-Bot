@@ -1,4 +1,4 @@
-﻿exports.translations = {
+﻿export const translations = {
 	commands: {
 		autopromote: {
 			'notchat': 'This command is only available for chat rooms',

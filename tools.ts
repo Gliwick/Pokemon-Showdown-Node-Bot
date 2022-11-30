@@ -391,8 +391,8 @@ exports.uploadToHastebin = function (toUpload, callback) {
 
 var loadLang = exports.loadLang = function (lang, reloading) {
 	var tradObj = {}, cmdsTra = {}, tempObj = {};
-	fs.readdirSync('./languages/' + lang).forEach(function (file) {
-		if (file.substr(-3) !== '.js') return;
+	fs.readdirSync('./languages/' + lang).forEach((file: string) => {
+		if (!file.endsWith('.ts')) return;
 		if (reloading) Tools.uncacheTree('./languages/' + lang + '/' + file);
 		tempObj = require('./languages/' + lang + '/' + file).translations;
 		for (var t in tempObj) {

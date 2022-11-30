@@ -1,4 +1,4 @@
-exports.translations = {
+export const translations = {
 	commands: {
 		/*
 		* Basic Commands
