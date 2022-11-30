@@ -4,7 +4,7 @@
 
 import { toId } from '../../../tools';
 import { Battle, BattleType, Side } from './battle';
-import { Move, Pokemon, getPokemon, getMove, getEffect, PokemonDetails, BoostedStat } from './battle-data';
+import { Move, Pokemon, getPokemon, getMove, getEffect, BoostedStat } from './battle-data';
 
 export const majors: { [key: string]: ((args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) => void) | string } = {
 	rated: function (this: Battle, args, kwargs) {
