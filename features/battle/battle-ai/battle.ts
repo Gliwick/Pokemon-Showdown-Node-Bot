@@ -13,14 +13,9 @@ import { choose } from './modules';
 import { Decision, getDecisions } from './decision';
 
 
-import { Player, getPokemon, getItem, getAbility, CurrentGen } from './battle-data';
+import { Player, Pokemon, getPokemon, getItem, getAbility, CurrentGen, PokemonDetails, Gender } from './battle-data';
 
-import { Pokemon } from './calc';
-
-interface Players {
-	p1: Player;
-	p2: Player;
-}
+import { Pokemon as CalcRequestPokemon } from './calc';
 
 interface LastSend {
 	rqid: number;
@@ -33,25 +28,37 @@ interface Helpers {
 	foe: any;
 }
 
-type BattleType = 'singles' | 'doubles' | 'triples';
+export type Side = 'p1' | 'p2';
+export enum BattleType { singles = 'singles', doubles = 'doubles', triples = 'triples' };
+
+interface Status {
+	hp: number
+	status: string | null;
+};
+
+interface Ident {
+	side: string;
+	slot: number;
+	name: string;
+};
 
 export class Battle {
 	id: string;
-	title: string = '';
-	players: Players = {
+	title: number | null = null;
+	players: { [key in Side]: Player } = {
 		p1: new Player('p1'),
 		p2: new Player('p2'),
 	};
-	users = {};
+	users: { [key: string]: string } = {};
 
-	self: { [key: string]: any } | null = null;
-	foe: { [key: string]: any } | null = null;
+	self: { [key: string]: any } = {};
+	foe: { [key: string]: any } = {};
 
-	gametype: BattleType = 'singles';
+	gametype: BattleType = BattleType.singles;
 	gen: number = CurrentGen;
 	tier: string = 'gen9ou';
-	rules = [];
-	variations = [];
+	rules: string[] = [];
+	variations: string[] = [];
 
 	started: boolean = false;
 	timer: boolean = false;
@@ -61,7 +68,7 @@ export class Battle {
 	rqid: number = 0;
 	teamPreview: number = 1;
 
-	conditions = {};
+	conditions: { [key: string]: any } = {};
 
 	file = null;
 	stream = null;
@@ -74,6 +81,9 @@ export class Battle {
 	leaveInterval: number | null = null;
 
 	helpers: Helpers = { self: {}, foe: {} };
+
+	rated: boolean = false;
+	ended: boolean = false;
 
 	constructor(id: string) {
 		this.id = id;
@@ -203,7 +213,7 @@ export class Battle {
 		}
 	};
 
-	message(type, player, poke) {
+	message(type: string, player?: string, poke?: string) {
 		if (!this.self) return; // Not playing
 		if (!Config.battleMessages || !Config.battleMessages[type]) return;
 
@@ -219,7 +229,7 @@ export class Battle {
 		const side = (player === this.self.id) ? "self" : "foe";
 		if (Config.battleMessages[type][side]) {
 			if (type === 'faint') {
-				const lost = this.self.pokemon.all(poke => poke.fainted);
+				const lost = this.self.pokemon.all(p => p.fainted);
 				if (lost) return;
 			}
 			let msg = Config.battleMessages[type][side][Math.floor(Math.random() * Config.battleMessages[type][side].length)];
@@ -359,13 +369,13 @@ export class Battle {
 		}
 	};
 
-	parseDetails(str?: string) {
+	parseDetails(str?: string): PokemonDetails | null {
 		if (!str) return null;
 		const details = str.split(",");
 		for (let d = 0; d < details.length; d++) {
 			details[d] = details[d].trim();
 		}
-		const poke = {
+		const poke: PokemonDetails = {
 			species: '',
 			level: 100,
 			shiny: false,
@@ -375,8 +385,9 @@ export class Battle {
 			poke.shiny = true;
 			details.pop();
 		}
-		if (details[details.length - 1] === "M" || details[details.length - 1] === "F") {
-			poke.gender = details[details.length - 1];
+		const gender = details[details.length - 1];
+		if (gender === "M" || gender === "F") {
+			poke.gender = gender;
 			details.pop();
 		}
 		if (details[1]) {
@@ -388,15 +399,15 @@ export class Battle {
 		return poke;
 	};
 
-	parseSlot(id: string) {
+	parseSlot(id: string): number {
 		const slots: { [key: string]: number } = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5 };
 		return slots[id] || 0;
 	};
 
-	parseStatus(str: string) {
-		const status = {
+	parseStatus(str: string): Status {
+		const status: Status = {
 			hp: 100,
-			status: false,
+			status: null,
 		};
 		let sp = str.split(" ");
 		if (sp[1]) status.status = toId(sp[1]);
@@ -433,7 +444,7 @@ export class Battle {
 		return this.players[str];
 	};
 
-	getActive(str?: string) {
+	getActive(str?: string): Pokemon | null {
 		if (!str) return null;
 		const side = str.substr(0, 2);
 		str = str.substr(2);
@@ -441,14 +452,20 @@ export class Battle {
 		const slot = this.parseSlot(pokeId);
 		str = str.substr(1);
 		const name = Tools.toName(str.substr(1));
-		if (this.players[side]?.active?.[slot]) {
-			this.players[side].active[slot].name = name;
-			return this.players[side].active[slot];
+		if (!(side in this.players)) {
+			error('Unknown side: ' + side);
+			return null;
+		}
+		const player = this.players[side as Side];
+		const active = player.active?.[slot];
+		if (active) {
+			active.name = name;
+			return active;
 		}
 		return null;
 	};
 
-	parsePokemonIdent(str?: string) {
+	parsePokemonIdent(str?: string): Ident | null {
 		if (!str) return null;
 		const side = str.substr(0, 2);
 		str = str.substr(2);
@@ -463,7 +480,7 @@ export class Battle {
 		};
 	};
 
-	getCalcRequestPokemon(sideId: number, forceMega?: boolean) {
+	getCalcRequestPokemon(sideId: number, forceMega?: boolean): CalcRequestPokemon {
 		const p = this.request.side.pokemon[sideId];
 		const details = this.parseDetails(p.details);
 		const condition = this.parseStatus(p.condition);
@@ -471,7 +488,7 @@ export class Battle {
 		let side = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
 		let pokeId = p.ident.split(': ')[1] + '|' + details.species;
 
-		const pokeA = new Pokemon(
+		const pokeA = new CalcRequestPokemon(
 			getPokemon(details.species, this.gen, this.id),
 			{ level: details.level, shiny: details.shiny, gender: details.gender, helpers: (this.helpers[side][pokeId] || {}) },
 		);

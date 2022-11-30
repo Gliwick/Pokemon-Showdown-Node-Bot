@@ -2,12 +2,13 @@
 	Minors
 */
 
+import { Battle } from './battle';
 import { getPokemon, getMove, getEffect, getItem, getAbility } from './battle-data';
 
 type Minor = `-${string}`;
 
 export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) => void) | Minor } = {
-	"-damage": function (args, kwargs) {
+	"-damage": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const hp = this.parseHealth(args[2]);
 		poke.hp = hp;
@@ -57,7 +58,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-heal": function (args, kwargs) {
+	"-heal": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const det = this.parsePokemonIdent(args[1]);
 		const hp = this.parseHealth(args[2]);
@@ -91,7 +92,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-sethp": function (args, kwargs) {
+	"-sethp": function (this: Battle, args, kwargs) {
 		let poke, hp;
 		for (let i = 1; i < args.length - 1; i += 2) {
 			poke = this.getActive(args[i]);
@@ -100,7 +101,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-boost": function (args, kwargs) {
+	"-boost": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const stat = args[2];
 		const n = parseInt(args[3]) || 0;
@@ -114,7 +115,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-unboost": function (args, kwargs) {
+	"-unboost": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const stat = args[2];
 		const n = parseInt(args[3]) || 0;
@@ -128,7 +129,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-setboost": function (args, kwargs) {
+	"-setboost": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const stat = args[2];
 		const n = parseInt(args[3]) || 0;
@@ -145,7 +146,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-swapboost": function (args, kwargs) {
+	"-swapboost": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const poke2 = this.getActive(args[2]);
 		if (args[3]) {
@@ -166,14 +167,14 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-restoreboost": function (args, kwargs) {
+	"-restoreboost": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		for (let i in poke.boosts) {
 			if (poke.boosts[i] < 0) delete poke.boosts[i];
 		}
 	},
 
-	"-copyboost": function (args, kwargs) {
+	"-copyboost": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const poke2 = this.getActive(args[2]);
 		if (args[3]) {
@@ -193,17 +194,17 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-clearboost": function (args, kwargs) {
+	"-clearboost": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		poke.removeAllBoosts();
 	},
 
-	"-invertboost": function (args, kwargs) {
+	"-invertboost": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		poke.invertAllBoosts();
 	},
 
-	"-clearallboost": function (args, kwargs) {
+	"-clearallboost": function (this: Battle, args, kwargs) {
 		for (let p in this.players) {
 			for (let i = 0; i < this.players[p].active.length; i++) {
 				this.players[p].active[i].removeAllBoosts();
@@ -214,14 +215,14 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 	"-miss": "-crit",
 	"-supereffective": "-crit",
 	"-resisted": "-crit",
-	"-crit": function (args, kwargs, isIntro?: boolean) {
+	"-crit": function (this: Battle, args, kwargs, isIntro?: boolean) {
 		// Not real information - message minors
 		if (isIntro) return;
 		const ident = this.parsePokemonIdent(args[1]);
 		this.message(args[0].substr(1), ident.side, ident.name);
 	},
 
-	"-immune": function (args, kwargs) {
+	"-immune": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const effect = getEffect(args[2], this.gen);
 		const fromeffect = getEffect(kwargs.from, this.gen);
@@ -235,7 +236,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-fail": function (args, kwargs) {
+	"-fail": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const effect = getEffect(args[2], this.gen);
 		const fromeffect = getEffect(kwargs.from, this.gen);
@@ -270,14 +271,14 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-prepare": function (args, kwargs) {
+	"-prepare": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const move = args[2];
 		const target = this.parsePokemonIdent(args[3]);
 		poke.prepareMove(move, target.slot);
 	},
 
-	"-status": function (args, kwargs, isIntro?: boolean) {
+	"-status": function (this: Battle, args, kwargs, isIntro?: boolean) {
 		const poke = this.getActive(args[1]);
 		poke.status = args[2];
 		poke.helpers.statusCounter = 0;
@@ -288,13 +289,13 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		if (!isIntro) this.message("start-" + poke.status, det.side, poke.name); // hax
 	},
 
-	"-curestatus": function (args, kwargs) {
+	"-curestatus": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		poke.status = '';
 		if (!args[2] || args[2] === "confusion") poke.removeVolatile('confusion');
 	},
 
-	"-cureteam": function (args, kwargs) {
+	"-cureteam": function (this: Battle, args, kwargs) {
 		const ident = this.parsePokemonIdent(args[1]);
 		if (this.players[ident.side]) {
 			const pokes = this.players[ident.side].pokemon;
@@ -304,7 +305,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-item": function (args, kwargs) {
+	"-item": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const item = getItem(args[2], this.gen, this.id);
 		const effect = getEffect(kwargs.from, this.gen);
@@ -351,7 +352,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-enditem": function (args, kwargs) {
+	"-enditem": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const item = getItem(args[2], this.gen, this.id);
 		const effect = getEffect(kwargs.from, this.gen);
@@ -409,7 +410,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-ability": function (args, kwargs) {
+	"-ability": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const ability = getAbility(args[2], this.gen, this.id);
 		const effect = getEffect(kwargs.from, this.gen);
@@ -417,12 +418,12 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		poke.supressedAbility = false;
 	},
 
-	"-endability": function (args, kwargs) {
+	"-endability": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		poke.supressedAbility = true;
 	},
 
-	"-transform": function (args, kwargs) {
+	"-transform": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const tpoke = this.getActive(args[2]);
 		const effect = getEffect(kwargs.from, this.gen);
@@ -432,7 +433,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		poke.transformInto(tpoke);
 	},
 
-	"-formechange": function (args, kwargs) {
+	"-formechange": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const template = getPokemon(args[2], this.gen, this.id);
 		const fromeffect = getEffect(kwargs.from, this.gen);
@@ -445,7 +446,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		poke.volatiles.formechange = template.species;
 	},
 
-	"-mega": function (args, kwargs) {
+	"-mega": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const item = getItem(args[3], this.gen, this.id);
 		if (args[2] !== 'Rayquaza') {
@@ -455,12 +456,12 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-terastallize": function (args, kwargs) {
+	"-terastallize": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		poke.terastallize = args[2];
 	},
 
-	"-start": function (args, kwargs) {
+	"-start": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const ident = this.parsePokemonIdent(args[1]);
 		const effect = getEffect(args[2], this.gen);
@@ -534,7 +535,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-end": function (args, kwargs) {
+	"-end": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const effect = getEffect(args[2], this.gen);
 		const fromeffect = getEffect(kwargs.from, this.gen);
@@ -555,15 +556,15 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	/*"-singleturn": function (args, kwargs) {
+	/*"-singleturn": function (this:Battle,args, kwargs) {
 		// Code here
 	},
 	
-	"-singlemove": function (args, kwargs) {
+	"-singlemove": function (this:Battle,args, kwargs) {
 		// Code here
 	},*/
 
-	"-activate": function (args, kwargs) {
+	"-activate": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const effect = getEffect(args[2], this.gen);
 		const ofpoke = this.getActive(kwargs.of);
@@ -612,19 +613,19 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		}
 	},
 
-	"-sidestart": function (args, kwargs) {
+	"-sidestart": function (this: Battle, args, kwargs) {
 		const side = this.getSide(args[1]);
 		const effect = getEffect(args[2], this.gen);
 		side.addSideCondition(effect.name);
 	},
 
-	"-sideend": function (args, kwargs) {
+	"-sideend": function (this: Battle, args, kwargs) {
 		const side = this.getSide(args[1]);
 		const effect = getEffect(args[2], this.gen);
 		side.removeSideCondition(effect.name);
 	},
 
-	"-weather": function (args, kwargs) {
+	"-weather": function (this: Battle, args, kwargs) {
 		const effect = getEffect(args[1], this.gen);
 		const poke = this.getActive(kwargs.of);
 		const ability = getEffect(kwargs.from, this.gen);
@@ -634,19 +635,19 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 		if (poke && kwargs.from) poke.markAbility(ability.id);
 	},
 
-	"-fieldstart": function (args, kwargs) {
+	"-fieldstart": function (this: Battle, args, kwargs) {
 		const effect = getEffect(args[1], this.gen);
 		const pw = toId(effect.name);
 		this.conditions[pw] = { turn: this.turn };
 	},
 
-	"-fieldend": function (args, kwargs) {
+	"-fieldend": function (this: Battle, args, kwargs) {
 		const effect = getEffect(args[1], this.gen);
 		const pw = toId(effect.name);
 		if (this.conditions[pw]) delete this.conditions[pw];
 	},
 
-	"-message": function (args, kwargs) {
+	"-message": function (this: Battle, args, kwargs) {
 		if (args[1] && args[1].indexOf("NOTE: This is an Inverse Battle") >= 0) {
 			this.conditions["inversebattle"] = true;
 			debug(this.id + ": Changed to inverse Battle");

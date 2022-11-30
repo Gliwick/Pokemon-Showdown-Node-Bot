@@ -61,7 +61,7 @@ export function getEffect(effect, gen) {
 	return effect;
 };
 
-export function getPokemon(poke, gen: number = CurrentGen, battleId?: string) {
+export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: string) {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	poke = toId(poke);
 	const pokemon = {};
@@ -119,7 +119,7 @@ export function getPokemon(poke, gen: number = CurrentGen, battleId?: string) {
 
 export const getTemplate = getPokemon;
 
-export function getMove(move, gen: number = CurrentGen, battleId?: string) {
+export function getMove(move, gen: number = CurrentGen, battleId?: string): Move {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	move = toId(move);
 	if (move.indexOf("hiddenpower") === 0) {
@@ -359,11 +359,15 @@ export class Move {
 
 export type Gender = "M" | "F" | "N";
 
-export type Stat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
+export type BoostedStat = 'atk' | 'def' | 'spa' | 'spd' | 'spe' | 'accuracy' | 'evasion';
 
-export type StatsTable = { [key in Stat]?: number };
+export type StatBoostsTable = { [key in BoostedStat]?: number };
 
-export class Pokemon {
+export type BaseStat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
+
+export type BaseStatsTable = { [key in BaseStat]?: number };
+
+export class Pokemon implements PokemonDetails {
 	template;
 	species;
 	name;
@@ -375,17 +379,17 @@ export class Pokemon {
 	level: number = 100;
 	shiny: boolean = false;
 
-	item: string = "&unknown";
+	item: { [key: string]: string } | "&unknown" = "&unknown";
 	itemEffect = '';
 	prevItem = null;
 	prevItemEffect = '';
 
-	ability: string = "&unknown";
+	ability: { [key: string]: string } | "&unknown" = "&unknown";
 	supressedAbility: boolean = false;
-	baseAbility: string = "&unknown";
+	baseAbility: { [key: string]: string } | "&unknown" = "&unknown";
 	abilityStack = [];
 
-	moves = [];
+	moves: Move[] = [];
 
 	active: boolean = false;
 	slot: number = -1;
@@ -394,13 +398,13 @@ export class Pokemon {
 	fainted: boolean = false;
 	status: string | null = null;
 	volatiles = {};
-	boosts: Omit<StatsTable, 'hp'> = {};
+	boosts: StatBoostsTable = {};
 	terastallize: PokemonType | null = null;
 
-	passing: boolean = false;
+	passing: number | null = null;
 	prepared = null;
 
-	helpers = {};
+	helpers: { [key: string]: any } = {};
 
 	constructor(template, properties: Partial<Pokemon>) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
@@ -417,40 +421,40 @@ export class Pokemon {
 		}
 	}
 
-	addVolatile = function (volatile) {
+	addVolatile(volatile) {
 		volatile = toId(volatile);
 		this.volatiles[volatile] = true;
 	};
 
-	removeVolatile = function (volatile) {
+	removeVolatile(volatile) {
 		volatile = toId(volatile);
 		if (this.volatiles[volatile]) delete this.volatiles[volatile];
 	};
 
-	removeAllVolatiles = function () {
+	removeAllVolatiles() {
 		for (let i in this.volatiles) delete this.volatiles[i];
 	};
 
-	addBoost = function (stat, n) {
+	addBoost(stat, n) {
 		if (!this.boosts[stat]) this.boosts[stat] = 0;
 		this.boosts[stat] += n;
 	};
 
-	setBoost = function (stat, n) {
+	setBoost(stat, n) {
 		this.boosts[stat] = n;
 	};
 
-	invertAllBoosts = function () {
+	invertAllBoosts() {
 		for (let i in this.boosts) {
 			this.boosts[i] = this.boosts[i] * (-1);
 		}
 	};
 
-	removeAllBoosts = function () {
+	removeAllBoosts() {
 		for (let i in this.boosts) delete this.boosts[i];
 	};
 
-	markAbility = function (id, isNotBase) {
+	markAbility(id, isNotBase) {
 		this.ability = getAbility(id);
 		if ((!this.baseAbility || this.baseAbility === "&unknown") && !isNotBase) {
 			this.baseAbility = this.ability;
@@ -469,14 +473,14 @@ export class Pokemon {
 		}
 	};
 
-	prepareMove = function (move, target) {
+	prepareMove(move, target) {
 		this.prepared = {
 			move: move,
 			target: target
 		};
 	};
 
-	markMove = function (id, deduct) {
+	markMove(id, deduct) {
 		id = toId(id);
 		let move = null;
 		for (let i = 0; i < this.moves.length; i++) {
@@ -490,7 +494,7 @@ export class Pokemon {
 		return move;
 	};
 
-	transformInto = function (pokemon) {
+	transformInto(pokemon) {
 		this.transformPrev = {
 			template: this.template,
 			species: this.species,
@@ -521,7 +525,7 @@ export class Pokemon {
 		this.volatiles.formechange = (pokemon.volatiles.formechange ? pokemon.volatiles.formechange : pokemon.species);
 	};
 
-	unTransform = function () {
+	unTransform() {
 		this.transformed = false;
 		if (this.transformPrev) {
 			this.template = this.transformPrev.template;
@@ -536,34 +540,41 @@ export class Pokemon {
 	};
 };
 
+export interface PokemonDetails {
+	species: string,
+	level: number,
+	shiny: boolean,
+	gender: Gender | null,
+}
+
 export class Player {
 	id: string;
 	name: string;
 	userid: string;
 	avatar;
-	active = [];
-	side = {};
-	pokemon = [];
-	teamPv = [];
+	active: (Pokemon | null)[] = [];
+	side: { [key: string]: any } = {};
+	pokemon: Pokemon[] = [];
+	teamPv: (PokemonDetails | null)[] = [];
 
-	constructor(id, name?: string, avatar?: any) {
+	constructor(id: string, name?: string, avatar?: any) {
 		this.id = id || "p0";
 		this.name = name || "";
 		this.userid = toId(name);
 		this.avatar = avatar || 0;
 	}
 
-	setName = function (name) {
+	setName(name) {
 		this.name = name;
 		this.userid = toId(name);
 	};
 
-	removeSideCondition = function (condition) {
+	removeSideCondition(condition) {
 		condition = toId(condition);
 		if (this.side[condition]) delete this.side[condition];
 	};
 
-	addSideCondition = function (condition) {
+	addSideCondition(condition) {
 		condition = toId(condition);
 		if (!this.side[condition]) this.side[condition] = 0;
 		this.side[condition]++;

@@ -4,10 +4,10 @@
 
 import { getMultipleEff, getEffectiveness } from "./typechart";
 
-import { CurrentGen, PokemonType, Gender, Stat, StatsTable } from "./battle-data";
+import { CurrentGen, PokemonType, Gender, BaseStat, BaseStatsTable, StatBoostsTable, BoostedStat } from "./battle-data";
 import { Battle } from "./battle";
 
-const Stats: Stat[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
+const Stats: BaseStat[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 
 export class Pokemon {
 	template;
@@ -16,11 +16,11 @@ export class Pokemon {
 	species: string;
 	gender: Gender | null = null;
 	item: { [key: string]: any } | null = null;
-	stats: StatsTable = {};
-	evs: StatsTable = {};
-	ivs: StatsTable = {};
-	dvs: StatsTable = {};
-	nature: StatsTable = {};
+	stats: BaseStatsTable = {};
+	evs: BaseStatsTable = {};
+	ivs: BaseStatsTable = {};
+	dvs: BaseStatsTable = {};
+	nature: BaseStatsTable = {};
 	ability: { [key: string]: any } | null = null;
 	supressedAbility: boolean = false;
 	level: number = 100;
@@ -51,19 +51,19 @@ export class Pokemon {
 		}
 	}
 
-	getEV(ev: Stat, gen: number = CurrentGen): number {
+	getEV(ev: BaseStat, gen: number = CurrentGen): number {
 		return this.evs[ev] || (gen <= 2 ? 252 : 84);
 	};
 
-	getIV(iv: Stat): number {
+	getIV(iv: BaseStat): number {
 		return this.ivs[iv] || 31;
 	};
 
-	getDV(dv: Stat): number {
+	getDV(dv: BaseStat): number {
 		return this.dvs[dv] || 15;
 	};
 
-	getBaseStat(stat: Stat): number {
+	getBaseStat(stat: BaseStat): number {
 		if (this.template && this.template.baseStats) {
 			if (this.template.species === 'Aegislash' && this.hasAbility('stancechange') && ['atk', 'spa'].includes(stat)) return 140;
 			else return this.template.baseStats[stat] || 0;
@@ -72,8 +72,9 @@ export class Pokemon {
 		}
 	};
 
-	getStat(stat: Stat, gen: number = CurrentGen): number {
-		if (this.stats[stat]) return this.stats[stat];
+	getStat(stat: BaseStat, gen: number = CurrentGen): number {
+		const knownStat = this.stats[stat];
+		if (knownStat) return knownStat;
 		if (stat === 'hp' && this.getBaseStat(stat) === 1) return 1;
 
 		if (gen <= 2) {
@@ -91,18 +92,19 @@ export class Pokemon {
 		}
 	};
 
-	getStats(gen: number = CurrentGen): Required<StatsTable> {
+	getStats(gen: number = CurrentGen): Required<BaseStatsTable> {
 		const res = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
-		for (let stat in res) {
+		let stat: BaseStat;
+		for (stat in res) {
 			res[stat] = this.getStat(stat, gen);
 		}
 		return res;
 	};
 
-	getBoostedStat(stat: Stat, statValue: number, boosts: StatsTable): number {
+	getBoostedStat(stat: BaseStat & BoostedStat, statValue: number, boosts: StatBoostsTable): number {
 		if (boosts[stat]) {
-			let muxOff = 1 + (0.5) * Math.abs(boosts[stat]);
-			if (boosts[stat] < 0) muxOff = 1 / muxOff;
+			let muxOff = 1 + (0.5) * Math.abs(boosts[stat] || 0);
+			if ((boosts[stat] || 0) < 0) muxOff = 1 / muxOff;
 			return Math.floor(statValue * muxOff);
 		}
 		return statValue;
@@ -177,7 +179,7 @@ export class Pokemon {
 
 export class Conditions {
 	volatiles: { [key: string]: any } = {};
-	boosts: StatsTable = {};
+	boosts: StatBoostsTable = {};
 	side: { [key: string]: any } = {};
 	pokemon = [];
 	immediate: { [key: string]: any } = {};
@@ -375,7 +377,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	const atkSpe = atkPoke.getFullSpe({ conditions: globalConditions, gen: gen }, atkConditions, false);
 	const defSpe = defPoke.getFullSpe({ conditions: globalConditions, gen: gen }, defConditions, false);
 
-	let atk, def, atkStat: Stat, defStat: Stat;
+	let atk, def, atkStat: BaseStat, defStat: BaseStat;
 	let category, defCategory;
 
 	/******************************
@@ -802,7 +804,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		case 'storedpower':
 		case 'powertrip':
 			if (atkConditions.boosts) {
-				bp += 20 * Object.values(atkConditions.boosts as StatsTable).filter(stat => stat > 0).reduce((acc, v) => acc + v, 0);
+				bp += 20 * Object.values(atkConditions.boosts).filter(stat => stat > 0).reduce((acc, v) => acc + v, 0);
 			}
 			break;
 		case 'gravapple':
