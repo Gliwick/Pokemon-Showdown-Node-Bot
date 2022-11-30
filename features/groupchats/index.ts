@@ -52,7 +52,7 @@ export class GroupChatsManager implements Feature {
 
 	intervalJoin() {
 		if (!Config.groupchats) return;
-		if (!Bot.statuthis.connected) return;
+		if (!Bot.status.connected) return;
 		var cmds = [];
 		for (var id in Config.groupchats) {
 			if (!Config.groupchats[id].toJoin) continue;
