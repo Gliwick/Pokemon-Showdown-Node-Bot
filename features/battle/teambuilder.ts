@@ -1,3 +1,5 @@
+import { toId } from '../../tools';
+
 const teamsDataFile = AppOptions.data + 'teams.json';
 
 export class TeamBuilder {

@@ -24,7 +24,7 @@ console.log((
 	'-----------------------------------------------\n'
 ).yellow);
 
-global.Tools = require('./tools.js');
+global.Tools = require('./tools.ts');
 var cmdArgs = process.argv.slice(2);
 if (!global.AppOptions) global.AppOptions = Tools.paseArguments(cmdArgs);
 

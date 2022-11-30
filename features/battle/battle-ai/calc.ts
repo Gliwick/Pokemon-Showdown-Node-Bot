@@ -2,6 +2,7 @@
  * Pokemon Showdown Bot - Damage calculator
 */
 
+import { toId } from '../../../tools';
 import { getMultipleEff, getEffectiveness } from "./typechart";
 
 import { CurrentGen, PokemonType, Gender, BaseStat, BaseStatsTable, StatBoostsTable, BoostedStat } from "./battle-data";

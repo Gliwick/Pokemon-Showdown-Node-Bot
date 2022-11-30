@@ -2,6 +2,7 @@
  * Battle modules
  */
 
+import { toId } from '../../../tools';
 import { Battle } from './battle';
 import { Decision } from './decision';
 import { IngameNoStatus } from './modules/ingame-nostatus';

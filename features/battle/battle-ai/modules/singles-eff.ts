@@ -3,6 +3,7 @@
  *
  */
 
+import { toId } from '../../../../tools';
 import { Module } from "../modules";
 
 import { getMultipleEff } from "./../typechart";

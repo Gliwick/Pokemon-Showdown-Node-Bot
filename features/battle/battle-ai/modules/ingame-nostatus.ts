@@ -15,6 +15,8 @@
  *	- Priority -100000 - Moves 0 damage
  */
 
+
+import { toId } from '../../../../tools';
 import { Module } from '../modules';
 
 import { Pokemon, Conditions, calculate } from './../calc';

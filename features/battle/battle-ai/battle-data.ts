@@ -2,6 +2,7 @@
 	Battle data
 */
 
+import { toId } from '../../../tools';
 import { Conditions } from "../data/statuses";
 
 const BATTLE_DATA_DIR = './../data/';

@@ -2,6 +2,7 @@
 	Minors
 */
 
+import { toId } from '../../../tools';
 import { Battle } from './battle';
 import { getPokemon, getMove, getEffect, getItem, getAbility } from './battle-data';
 

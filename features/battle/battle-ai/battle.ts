@@ -3,6 +3,8 @@
  * Battle Bot 2.0
  */
 
+import { toId } from '../../../tools';
+
 const MAX_RECURSIVE = 5;
 const MIN_TIME_LOCK = 3 * 1000; // 3 secods to avoid send spam
 

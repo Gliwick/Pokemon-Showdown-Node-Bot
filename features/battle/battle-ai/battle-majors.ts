@@ -2,6 +2,7 @@
 	Majors
 */
 
+import { toId } from '../../../tools';
 import { Battle, BattleType, Side } from './battle';
 import { Move, Pokemon, getPokemon, getMove, getEffect, PokemonDetails, BoostedStat } from './battle-data';
 

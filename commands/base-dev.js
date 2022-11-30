@@ -173,14 +173,14 @@ exports.commands = {
 			case 'tools':
 				this.sclog();
 				try {
-					Tools.uncacheTree('./tools.js');
-					global.Tools = require('./../tools.js');
-					this.reply('tools.js reloaded');
-					info('tools.js reloaded');
+					Tools.uncacheTree('./tools.ts');
+					global.Tools = require('./../tools.ts');
+					this.reply('tools.ts reloaded');
+					info('tools.ts reloaded');
 					Tools.loadTranslations(true);
 				} catch (e) {
 					errlog(e.stack);
-					this.reply('Error: tools.js has errors');
+					this.reply('Error: tools.ts has errors');
 				}
 				break;
 			case 'data':
@@ -214,7 +214,7 @@ exports.commands = {
 				this.reply('Some languages crashed: ' + _errs.join(", "));
 				break;
 			default:
-				 this.reply('Valid arguments are: commands, feature, features, parser, tools, data, config, languages');
+				this.reply('Valid arguments are: commands, feature, features, parser, tools, data, config, languages');
 		}
 	},
 

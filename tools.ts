@@ -4,10 +4,12 @@
 
 /* String utils */
 
-global.toId = exports.toId = function (text) {
+
+export function toId(text?: string): string {
 	if (!text) return '';
 	return text.toLowerCase().replace(/[^a-z0-9]/g, '');
 };
+global.toId = toId;
 
 global.toRoomid = exports.toRoomid = function (roomid) {
 	return roomid.replace(/[^a-zA-Z0-9-]+/g, '').toLowerCase();

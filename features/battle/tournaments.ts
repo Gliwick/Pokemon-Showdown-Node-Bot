@@ -2,17 +2,22 @@
 	Tournaments parser
 */
 
-import { teamBuilder } from "./teambuilder";
+import { toId } from '../../tools';
+import { TeamBuilder } from "./teambuilder";
 
 const ACTION_INTERVAL = 1500;
 
 export class TourManager {
 	tourData = {};
-	lastAction = {};
+	lastAction: { [key: string]: number } = {};
 
-	constructor() { };
+	teamBuilder: TeamBuilder;
 
-	canSendCommands(room) {
+	constructor(teamBuilder: TeamBuilder) {
+		this.teamBuilder = teamBuilder;
+	};
+
+	canSendCommands(room: string) {
 		let res = true;
 		if (this.lastAction[room] && Date.now() - this.lastAction[room] < ACTION_INTERVAL) res = false;
 		this.lastAction[room] = Date.now();
@@ -42,12 +47,12 @@ export class TourManager {
 					if (Formats[format] && !Formats[format].team) {
 						Bot.say(room, '/tour join');
 					} else {
-						if (teamBuilder.hasTeam(this.tourData[room].format)) Bot.say(room, '/tour join');
+						if (this.teamBuilder.hasTeam(this.tourData[room].format)) Bot.say(room, '/tour join');
 					}
 				}
 				if (!Settings.lockdown && this.tourData[room].challenges && this.tourData[room].challenges.length) {
 					if (this.canSendCommands(room)) {
-						const team = teamBuilder.getTeam(this.tourData[room].format);
+						const team = this.teamBuilder.getTeam(this.tourData[room].format);
 						if (team) Bot.say(room, '/useteam ' + team);
 						for (let i = 0; i < this.tourData[room].challenges.length; i++) {
 							Bot.say(room, '/tour challenge ' + this.tourData[room].challenges[i]);
@@ -55,7 +60,7 @@ export class TourManager {
 					}
 				} else if (!Settings.lockdown && this.tourData[room].challenged) {
 					if (this.canSendCommands(room)) {
-						const team = teamBuilder.getTeam(this.tourData[room].format);
+						const team = this.teamBuilder.getTeam(this.tourData[room].format);
 						if (team) Bot.say(room, '/useteam ' + team);
 						Bot.say(room, '/tour acceptchallenge');
 					}
