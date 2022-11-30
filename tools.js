@@ -501,7 +501,7 @@ var BattleStatNames = exports.BattleStatNames = {
 	spe: 'Spe'
 };
 
-var BattleTypeChart = exports.BattleTypeChart = require('./data/typechart.js');
+var BattleTypeChart = exports.BattleTypeChart = require('./data/typechart.ts').typechart;
 
 /* Teams - Pokemon Showdown format */
 
