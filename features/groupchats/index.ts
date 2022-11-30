@@ -2,6 +2,7 @@
 	Groupchats Tools
 */
 
+import { toId } from '../../tools';
 import { Feature } from '../index';
 
 export class GroupChatsManager implements Feature {

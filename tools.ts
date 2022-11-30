@@ -1005,8 +1005,8 @@ exports.checkConfig = function () {
 
 exports.reloadFeature = function (feature) {
 	try {
-		const f = require('./features/index.ts').init()[feature];
-		if (f.id) {
+		const f = require('./features/index.ts').initFeature(feature);
+		if (f?.id) {
 			if (typeof Features[feature].destroy === "function") Features[feature].destroy();
 			Features[feature] = f;
 			if (typeof f.init === "function") f.init();

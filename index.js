@@ -105,7 +105,7 @@ global.reloadFeatures = function () {
 		if (typeof f.destroy === "function") f.destroy();
 	});
 
-	const features = require('./features/index.ts').init();
+	const features = require('./features/index.ts').initFeatures();
 
 	Object.entries(features).forEach((id, f) => {
 		Features[id] = f;

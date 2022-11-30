@@ -2,6 +2,7 @@
 	Moderation Feature
 */
 
+import { toId } from '../../tools';
 import { Feature } from '../index';
 
 const MOD_CONSTS = {

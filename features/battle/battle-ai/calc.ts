@@ -95,7 +95,10 @@ export class Pokemon {
 	};
 
 	getStats(gen: number = CurrentGen): Required<BaseStatsTable> {
-		return BaseStats.reduce((acc: BaseStatsTable, stat) => Object.assign(acc, { stat: this.getStat(stat, gen) }), {}) as Required<BaseStatsTable>;
+		return BaseStats.reduce((acc: BaseStatsTable, stat) => {
+			acc[stat] = this.getStat(stat, gen);
+			return acc;
+		}, {}) as Required<BaseStatsTable>;
 	};
 
 	getBoostedStat(stat: BaseStat & BoostedStat, statValue: number, boosts: StatBoostsTable): number {

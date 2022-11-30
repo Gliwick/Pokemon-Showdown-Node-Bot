@@ -2,11 +2,15 @@
 * Tournaments points system
 */
 
+import { toId } from '../../tools';
+
 const toursDataFile = AppOptions.data + 'leaderboards.json';
 
 export class LeaderboardsManager {
 	toursFFM;
 	ladder;
+
+	resetCodes = {};
 
 	constructor() {
 		this.toursFFM = new Settings.FlatFileManager(toursDataFile);
@@ -17,12 +21,12 @@ export class LeaderboardsManager {
 		this.toursFFM.writeObj(this.ladder);
 	};
 
-	isConfigured(room) {
+	isConfigured(room: string) {
 		if ((!Config.leaderboards || !Config.leaderboards[room]) && (!Settings.settings.leaderboards || !Settings.settings.leaderboards[room])) return false;
 		return true;
 	};
 
-	filterTier(tier, filter) {
+	filterTier(tier: string, filter: string | string[] | RegExp) {
 		tier = toId(tier || "");
 		if (typeof filter === "string") {
 			return (tier === toId(filter));
@@ -248,8 +252,6 @@ export class LeaderboardsManager {
 		this.save();
 		debug("Leaderboard updated. " + Tools.getDateString());
 	};
-
-	export const resetCodes = {};
 
 	getResetHashCode(room) {
 		if (!this.ladder[room]) return null;
