@@ -9,7 +9,7 @@ import { Battle } from "./battle";
 import { createStream } from "./battle-log";
 
 export class BattleBot {
-	battles = {};
+	battles: { [key: string]: Battle } = {};
 	battlesCount = 0;
 
 	autojoinFFM;
@@ -58,7 +58,7 @@ export class BattleBot {
 		this.autojoinFFM.writeObj(this.autoJoinData);
 	};
 
-	receive(room, data, isIntro) {
+	receive(room, data, isIntro?: boolean) {
 		if (data.charAt(0) === ">") return;
 		const spl = data.substr(1).split("|");
 		if (spl[0] === 'init') {

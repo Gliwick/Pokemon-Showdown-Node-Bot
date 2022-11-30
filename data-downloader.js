@@ -30,7 +30,7 @@ var data = exports.data = [
 		file: "items.js"
 	},
 	{
-		url: "https://play.pokemonshowdown.com/data/learnsets-g6.js?" + datenow,
+		url: "https://play.pokemonshowdown.com/data/learnsets.js?" + datenow,
 		file: "learnsets-g6.js"
 	},
 	{
@@ -71,7 +71,7 @@ var downloadFile = exports.downloadFile = function (url, file, callback) {
 			}
 			try {
 				Tools.uncacheTree('./data/' + file);
-			} catch (e) {}
+			} catch (e) { }
 			debug('Downloaded data file: ' + './data/' + file);
 			if (typeof callback === "function") callback(true);
 		});
@@ -117,5 +117,5 @@ exports.getFormatsData = function () {
 };
 
 exports.getLearnsets = function () {
-	return require("./data/learnsets-g6.js").BattleLearnsets;
+	return require("./data/learnsets.js").BattleLearnsets;
 };

@@ -9,39 +9,41 @@ import { LadderManager } from './ladder';
 import { TeamBuilder } from './teambuilder';
 import { TourManager } from './tournaments';
 
-const battleBot = new BattleBot();
-
-const teamBuilder = new TeamBuilder();
-
-const challengeManager = new ChallengeManager();
-
-const tourManager = new TourManager();
-
-const ladderManager = new LadderManager();
-
 export class BattleManager implements Feature {
 	id = 'battle';
 	desc = 'Automated battle bot';
 
-	constructor() { };
+	battleBot: BattleBot;
+	teamBuilder: TeamBuilder;
+	challengeManager: ChallengeManager;
+	tourManager: TourManager;
+	ladderManager: LadderManager;
 
-	init() {
-		battleBot.init();
-		tourManager.clearData();
-		teamBuilder.loadTeamList();
+	constructor() {
+		this.battleBot = new BattleBot();
+		this.teamBuilder = new TeamBuilder();
+		this.challengeManager = new ChallengeManager();
+		this.tourManager = new TourManager();
+		this.ladderManager = new LadderManager();
 	};
 
-	parse(room, message, isIntro, spl) {
+	init() {
+		this.battleBot.init();
+		this.tourManager.clearData();
+		this.teamBuilder.loadTeamList();
+	};
+
+	parse(room: string, message: string, isIntro: boolean, spl: string) {
 		switch (spl[0]) {
 			case 'tournament':
-				TourManager.parse(room, message, isIntro, spl);
+				this.tourManager.parse(room, message, isIntro, spl);
 				break;
 			case 'rated':
-				ladderManager.reportBattle(room);
+				this.ladderManager.reportBattle(room);
 				break;
 			default:
 				if (spl.length > 3 && spl[3].startsWith('/challenge')) {
-					challengeManager.parse(room, message, isIntro, spl);
+					this.challengeManager.parse(room, message, isIntro, spl);
 				}
 		}
 
@@ -50,7 +52,7 @@ export class BattleManager implements Feature {
 		} else if (Bot.rooms[room].type !== "battle") return;
 
 		try {
-			battleBot.receive(room, message, isIntro);
+			this.battleBot.receive(room, message, isIntro);
 		} catch (e) {
 			errlog(e.stack);
 			error("battleBot crash");
@@ -58,17 +60,17 @@ export class BattleManager implements Feature {
 	};
 
 	getInitCmds() {
-		return battleBot.tryJoinAbandonedBattles();
+		return this.battleBot.tryJoinAbandonedBattles();
 	};
 
 	readyToDie() {
-		var battles = Object.keys(battleBot.battles);
+		const battles = Object.keys(this.battleBot.battles);
 		if (battles.length) return ("There are " + battles.length + " battles in progress");
 	};
 
 	destroy() {
-		ladderManager.destroy();
-		battleBot.destroy();
-		if (Features[id]) delete Features[id];
+		this.ladderManager.destroy();
+		this.battleBot.destroy();
+		if (Features[this.id]) delete Features[this.id];
 	};
 };

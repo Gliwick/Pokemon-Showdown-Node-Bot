@@ -24,7 +24,7 @@ export class TourManager {
 			delete this.tourData[i];
 	};
 
-	parse(room, message, isIntro, spl) {
+	parse(room, message, isIntro: boolean, spl) {
 		if (spl[0] !== 'tournament') return;
 		if (!this.tourData[room]) this.tourData[room] = {};
 		switch (spl[1]) {

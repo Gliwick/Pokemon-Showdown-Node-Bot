@@ -4,7 +4,7 @@
 
 import { Feature } from '../index';
 
-import { onTournamentEnd } from './leaderboards';
+import { LeaderboardsManager } from './leaderboards';
 
 const CurrentGen = 9;
 
@@ -71,10 +71,14 @@ export class TournamentsManager implements Feature {
 	id = 'tours';
 	desc = 'A tool to ease tournaments creation';
 
-	tournaments = {};
+	tournaments: { [key: string]: Tournament } = {};
 	tourData = {};
+	
+	leaderboards: LeaderboardsManager;
 
-	constructor() { }
+	constructor() {
+		this.leaderboards = new LeaderboardsManager();
+	}
 
 	newTour(room, details) {
 		this.tournaments[room] = new Tournament(room, details);
@@ -88,8 +92,9 @@ export class TournamentsManager implements Feature {
 			} catch (e) { }
 			delete this.tournaments[i];
 		}
-		for (var i in this.tourData)
+		for (var i in this.tourData) {
 			delete this.tourData[i];
+		}
 	};
 
 	parse(room, message, isIntro, spl) {
@@ -138,7 +143,7 @@ export class TournamentsManager implements Feature {
 					for (var i in data)
 						this.tourData[room][i] = data[i];
 				} catch (e) { }
-				onTournamentEnd(room, this.tourData[room]);
+				this.leaderboards.onTournamentEnd(room, this.tourData[room]);
 				delete this.tourData[room];
 				if (this.tournaments[room] && this.tournaments[room].startTimer) clearTimeout(this.tournaments[room].startTimer);
 				if (this.tournaments[room]) delete this.tournaments[room];

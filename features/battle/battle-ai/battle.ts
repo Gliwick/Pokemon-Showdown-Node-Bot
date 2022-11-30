@@ -71,7 +71,7 @@ export class Battle {
 		decision: null
 	};
 	lock: boolean = false;
-	leaveInterval = null;
+	leaveInterval: number | null = null;
 
 	helpers: Helpers = { self: {}, foe: {} };
 
@@ -79,21 +79,21 @@ export class Battle {
 		this.id = id;
 	}
 
-	createLogStream = function (file) {
+	createLogStream(file) {
 		fs.writeFileSync(file, ""); // Clear File
 		this.stream = fs.createWriteStream(file, { flags: 'a+' });
 		this.file = file;
 	};
 
-	send = function (data) {
+	send(data) {
 		Bot.sendRoom(this.id, data, 2000);
 	};
 
-	eval = function (str: string) {
+	eval(str: string) {
 		return eval(str);
 	};
 
-	sendDecision = function (decision: Decision[]) {
+	sendDecision(decision: Decision[]) {
 		if (!decision?.length) return;
 		debug("Send Decision: ".cyan + JSON.stringify(decision));
 		let str = "/choose ";
@@ -152,7 +152,7 @@ export class Battle {
 		this.send(str + "|" + this.rqid);
 	};
 
-	checkTimer = function () {
+	checkTimer() {
 		if (!this.self || !this.request) return; // Not playing
 		if (!this.timer) {
 			if (this.sentTimerReq && Date.now() - this.sentTimerReq < MIN_TIME_LOCK) return; // Do not spam timer commands
@@ -161,7 +161,7 @@ export class Battle {
 		}
 	};
 
-	leave = function () {
+	leave() {
 		if (!this.leaveInterval) {
 			this.leaveInterval = setInterval(function () {
 				this.send("/leave");
@@ -170,7 +170,7 @@ export class Battle {
 		this.send('/leave');
 	};
 
-	start = function () {
+	start() {
 		if (!this.self || !this.request) return; // Not playing
 		const wmsg = Config.initBattleMsg;
 		if (wmsg?.length) {
@@ -181,7 +181,7 @@ export class Battle {
 		}
 	};
 
-	win = function (winner) {
+	win(winner) {
 		if (!this.self) return; // Not playing
 		const win = (toId(winner) === toId(Bot.status.nickName));
 		if (win) {
@@ -203,7 +203,7 @@ export class Battle {
 		}
 	};
 
-	message = function (type, player, poke) {
+	message(type, player, poke) {
 		if (!this.self) return; // Not playing
 		if (!Config.battleMessages || !Config.battleMessages[type]) return;
 
@@ -228,7 +228,7 @@ export class Battle {
 		}
 	};
 
-	makeDecision = function (forced?: boolean) {
+	makeDecision(forced?: boolean) {
 		if (!this.self) return; // Not playing
 		debug(this.id + "->MakeDecision");
 		if (!forced && this.lastSend.rqid >= 0 && this.lastSend.rqid === this.rqid) {
@@ -276,18 +276,18 @@ export class Battle {
 		this.sendDecision(decisions[Math.floor(Math.random() * decisions.length)]);
 	};
 
-	log = function (line?: string) {
+	log(line?: string) {
 		if (this.stream) {
 			this.stream.write(line + "\n");
 		}
 	};
 
-	add = function (line?: string, isIntro?: boolean) {
+	add(line?: string, isIntro?: boolean) {
 		this.run(line, isIntro);
 		this.log(line);
 	};
 
-	run = function (str?: string, isIntro?: boolean) {
+	run(str?: string, isIntro?: boolean) {
 		if (!str) return;
 		if (str.charAt(0) !== '|' || str.substr(0, 2) === '||') {
 			return;
@@ -312,7 +312,7 @@ export class Battle {
 		}
 	};
 
-	runMinor = function (args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) {
+	runMinor(args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) {
 		if (args) {
 			if (args[2] === 'Sturdy' && args[0] === '-activate') args[2] = 'ability: Sturdy';
 		}
@@ -337,7 +337,7 @@ export class Battle {
 		}
 	};
 
-	runMajor = function (args, kwargs, isIntro?: boolean) {
+	runMajor(args, kwargs, isIntro?: boolean) {
 		if (majors[args[0]]) {
 			let major = majors[args[0]];
 			let r = 0;
@@ -359,7 +359,7 @@ export class Battle {
 		}
 	};
 
-	parseDetails = function (str?: string) {
+	parseDetails(str?: string) {
 		if (!str) return null;
 		const details = str.split(",");
 		for (let d = 0; d < details.length; d++) {
@@ -388,12 +388,12 @@ export class Battle {
 		return poke;
 	};
 
-	parseSlot = function (id: string) {
+	parseSlot(id: string) {
 		const slots: { [key: string]: number } = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5 };
 		return slots[id] || 0;
 	};
 
-	parseStatus = function (str: string) {
+	parseStatus(str: string) {
 		const status = {
 			hp: 100,
 			status: false,
@@ -412,7 +412,7 @@ export class Battle {
 		return status;
 	};
 
-	parseHealth = function (str: string) {
+	parseHealth(str: string) {
 		let hp = 100;
 		let sp = str.split(" ");
 		sp = sp[0].split("/");
@@ -427,13 +427,13 @@ export class Battle {
 		return hp;
 	};
 
-	getSide = function (str?: string) {
+	getSide(str?: string) {
 		if (!str) return null;
 		str = str.split(":")[0];
 		return this.players[str];
 	};
 
-	getActive = function (str?: string) {
+	getActive(str?: string) {
 		if (!str) return null;
 		const side = str.substr(0, 2);
 		str = str.substr(2);
@@ -448,7 +448,7 @@ export class Battle {
 		return null;
 	};
 
-	parsePokemonIdent = function (str?: string) {
+	parsePokemonIdent(str?: string) {
 		if (!str) return null;
 		const side = str.substr(0, 2);
 		str = str.substr(2);
@@ -463,7 +463,7 @@ export class Battle {
 		};
 	};
 
-	getCalcRequestPokemon = function (sideId: number, forceMega?: boolean) {
+	getCalcRequestPokemon(sideId: number, forceMega?: boolean) {
 		const p = this.request.side.pokemon[sideId];
 		const details = this.parseDetails(p.details);
 		const condition = this.parseStatus(p.condition);
@@ -494,7 +494,7 @@ export class Battle {
 		return pokeA;
 	};
 
-	destroy = function () {
+	destroy() {
 		if (this.stream) {
 			this.stream.close();
 			this.stream = null;
