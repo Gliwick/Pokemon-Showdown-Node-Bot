@@ -34,9 +34,9 @@ export class GroupChatsManager implements Feature {
 	}
 
 	runAutopromote(room, by) {
-		if (!Settings.settingthis.autopromote) return;
-		if (!Settings.settingthis.autopromote[room]) return;
-		var autoPromotion = Settings.settingthis.autopromote[room];
+		if (!Settings.settings.autopromote) return;
+		if (!Settings.settings.autopromote[room]) return;
+		var autoPromotion = Settings.settings.autopromote[room];
 		if (!autoPromotion.enabled) return;
 		var userid = toId(by);
 		if (autoPromotion.users && autoPromotion.users[userid] && !Tools.equalOrHigherRank(by.charAt(0), autoPromotion.users[userid])) return Bot.say(room, '/roompromote ' + userid + "," + autoPromotion.users[userid]);
@@ -44,10 +44,10 @@ export class GroupChatsManager implements Feature {
 	}
 
 	runWelcomeMessage(room, by) {
-		if (!Settings.settingthis.pmwmsg) return;
-		if (!Settings.settingthis.pmwmsg[room]) return;
-		if (!Settings.settingthis.pmwmsg[room].enabled || !Settings.settingthis.pmwmsg[room].msg) return;
-		Bot.say(room, "/pm " + by + "," + Tools.stripCommands(Settings.settingthis.pmwmsg[room].msg));
+		if (!Settings.settings.pmwmsg) return;
+		if (!Settings.settings.pmwmsg[room]) return;
+		if (!Settings.settings.pmwmsg[room].enabled || !Settings.settings.pmwmsg[room].msg) return;
+		Bot.say(room, "/pm " + by + "," + Tools.stripCommands(Settings.settings.pmwmsg[room].msg));
 	}
 
 	intervalJoin() {
