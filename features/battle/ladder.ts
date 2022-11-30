@@ -55,5 +55,3 @@ export class LadderManager {
 		this.ladderTimer = null;
 	};
 };
-
-export const ladderManager = new LadderManager();

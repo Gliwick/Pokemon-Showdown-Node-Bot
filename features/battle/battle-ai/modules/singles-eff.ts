@@ -38,6 +38,8 @@ interface DamageViabilityGroups {
 export class SinglesEff implements Module {
 	id = 'singles-eff';
 
+	constructor() { };
+
 	supposeActiveFoe(battle: Battle): Pokemon {
 		let target = battle.foe.active[0];
 		let pokeBId = target.name + '|' + target.species;

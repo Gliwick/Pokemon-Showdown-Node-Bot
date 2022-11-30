@@ -93,52 +93,32 @@ if (!AppOptions.testmode) Tools.loadTranslations();
 global.Features = {};
 
 if (!AppOptions.testmode) {
-	var featureList = fs.readdirSync('./features/');
+	Features = require('./features/index.ts').features;
 
-	featureList.forEach(function (feature) {
-		if (fs.existsSync('./features/' + feature + '/index.js')) {
-			try {
-				var f = require('./features/' + feature + '/index.js');
-				if (f.id) {
-					Features[f.id] = f;
-					ok("New feature: " + f.id + ' | ' + f.desc);
-				} else {
-					error("Failed to load feature: " + './features/' + feature);
-				}
-			} catch (e) {
-				errlog(e.stack);
-				error("Failed to load feature: " + './features/' + feature);
-			}
-		}
-	});
+	Object.values(Features).forEach((f) => {
+		ok("New feature: " + f.id + ' | ' + f.desc);
+	}
 }
 
 global.reloadFeatures = function () {
-	var featureList = fs.readdirSync('./features/');
-	var errs = [];
-	featureList.forEach(function (feature) {
-		if (fs.existsSync('./features/' + feature + '/index.js')) {
-			try {
-				Tools.uncacheTree('./features/' + feature + '/index.js');
-				var f = require('./features/' + feature + '/index.js');
-				if (f.id) {
-					if (Features[f.id] && typeof Features[f.id].destroy === "function") Features[f.id].destroy();
-					Features[f.id] = f;
-					if (typeof Features[f.id].init === "function") Features[f.id].init();
-				}
-			} catch (e) {
-				errlog(e.stack);
-				errs.push(feature);
-			}
-		}
+	Object.values(Features).forEach((f) => {
+		if (typeof f.destroy === "function") f.destroy();
 	});
-	info('Features reloaded' + (errs.length ? ('. Errors: ' + errs.join(', ')) : ''));
+
+	const features = require('./features/index.ts').init();
+
+	Object.entries(features).forEach((id, f) => {
+		Features[id] = f;
+		if (typeof f.init === "function") f.init();
+	});
+
+	info('Features reloaded');
 	return errs;
 };
 
 /* Bot creation and connection */
 
-function botAfterConnect () {
+function botAfterConnect() {
 	//join rooms
 	if (typeof Config.rooms === "string") {
 		joinByQueryRequest(Config.rooms);
@@ -214,7 +194,7 @@ function joinByQueryRequest(target) {
 				if (target === 'all' || target === 'public') {
 					for (var i = 0; i < publicRooms.length; i++) cmds.push('|/join ' + publicRooms[i]);
 				}
-			} catch (e) {}
+			} catch (e) { }
 			for (var i = 0; i < Config.initCmds.length; i++) {
 				cmds.push(Config.initCmds[i]);
 			}
@@ -277,13 +257,13 @@ Bot.on('formats', function (formats) {
 	for (var i = 0; i < formatsArr.length; i++) {
 		commaIndex = formatsArr[i].indexOf(',');
 		if (commaIndex === -1) {
-			Formats[toId(formatsArr[i])] = {name: formatsArr[i], team: true, ladder: true, chall: true};
+			Formats[toId(formatsArr[i])] = { name: formatsArr[i], team: true, ladder: true, chall: true };
 		} else if (commaIndex === 0) {
 			i++;
 			continue;
 		} else {
 			name = formatsArr[i];
-			formatData = {name: name, team: true, ladder: true, chall: true};
+			formatData = { name: name, team: true, ladder: true, chall: true };
 			code = commaIndex >= 0 ? parseInt(name.substr(commaIndex + 1), 16) : NaN;
 			if (!isNaN(code)) {
 				name = name.substr(0, commaIndex);
@@ -325,7 +305,7 @@ Bot.on('challstr', function (challstr) {
 
 var retryingRename = false;
 Bot.on('renamefailure', function (e) {
-	if (e === -1)  {
+	if (e === -1) {
 		if (!Config.nick) {
 			debug('Login failure - generating another random nickname');
 			Bot.rename('Bot ' + Tools.generateRandomNick(10));

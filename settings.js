@@ -8,7 +8,7 @@ const cacheDataFile = AppOptions.data + '_temp/' + 'http-cache.json';
 var settings = exports.settings = {};
 
 var FlatFileManager = exports.FlatFileManager = (function () {
-	function FlatFileManager (file) {
+	function FlatFileManager(file) {
 		this.file = file;
 		if (!fs.existsSync(file))
 			fs.writeFileSync(file, '{}');
@@ -23,6 +23,15 @@ var FlatFileManager = exports.FlatFileManager = (function () {
 
 	FlatFileManager.prototype.readObj = function () {
 		return JSON.parse(this.read());
+	};
+
+	FlatFileManager.prototype.readObjSafe = function () {
+		try {
+			return this.readObj();
+		} catch (e) {
+			errlog(e.stack);
+			error("Could not import read object: " + sys.inspect(e));
+		}
 	};
 
 	FlatFileManager.prototype.write = function (data) {
@@ -69,7 +78,7 @@ try {
 	error("Could not import settings: " + sys.inspect(e));
 }
 
-var save = exports.save =  function () {
+var save = exports.save = function () {
 	settingsFFM.writeObj(settings);
 };
 
@@ -166,7 +175,7 @@ exports.applyConfig = function () {
 var users = exports.users = {};
 
 var User = exports.User = (function () {
-	function User (name) {
+	function User(name) {
 		this.name = name;
 		this.id = toId(name);
 		this.alts = [];
@@ -246,7 +255,7 @@ exports.userManager = {
 		}
 		var userObj = users[userid];
 		userObj.setOnline();
-		userObj.rooms[room] = {group: user.charAt(0)};
+		userObj.rooms[room] = { group: user.charAt(0) };
 		userObj.reportSeen(room, 'j', []);
 	},
 
@@ -287,7 +296,7 @@ exports.userManager = {
 		if (toId(user) === toId(newName)) {
 			// Just a name change
 			userObj.name = newName.substr(1);
-			userObj.rooms[room] = {group: newName.charAt(0)};
+			userObj.rooms[room] = { group: newName.charAt(0) };
 		} else {
 			// User change
 			var newUserid = toId(newName);
@@ -299,7 +308,7 @@ exports.userManager = {
 			}
 			var newUserObj = users[newUserid];
 			newUserObj.setOnline();
-			newUserObj.rooms[room] = {group: newName.charAt(0)};
+			newUserObj.rooms[room] = { group: newName.charAt(0) };
 			if (!Config.disableAlts) {
 				newUserObj.markAlt(userid);
 				// merge alts
@@ -353,7 +362,7 @@ exports.httpGetAndCache = function (url, callback, onDownload) {
 		} while (httpCache[file]);
 		fs.writeFile(AppOptions.data + '_temp/' + file, data, function (err) {
 			if (!err) {
-				httpCache[file] = {url: url, time: Date.now()};
+				httpCache[file] = { url: url, time: Date.now() };
 				cacheFFM.writeObj(httpCache);
 			}
 			if (typeof callback === "function") callback(data, null);

@@ -4,27 +4,20 @@
 
 const toursDataFile = AppOptions.data + 'leaderboards.json';
 
-var toursFFM = exports.toursFFM = new Settings.FlatFileManager(toursDataFile);
+export const toursFFM = new Settings.FlatFileManager(toursDataFile);
 
-var ladder = exports.ladder = {};
+export const ladder = toursFFM.readObjSafe();
 
-try {
-	ladder = exports.ladder = toursFFM.readObj();
-} catch (e) {
-	errlog(e.stack);
-	error("Could not import tours data: " + sys.inspect(e));
-}
-
-var save = exports.save = function () {
+export function save() {
 	toursFFM.writeObj(ladder);
 };
 
-var isConfigured = exports.isConfigured = function (room) {
+export function isConfigured(room) {
 	if ((!Config.leaderboards || !Config.leaderboards[room]) && (!Settings.settings.leaderboards || !Settings.settings.leaderboards[room])) return false;
 	return true;
 };
 
-var filterTier = exports.filterTier = function (tier, filter) {
+export function filterTier(tier, filter) {
 	tier = toId(tier || "");
 	if (typeof filter === "string") {
 		return (tier === toId(filter));
@@ -43,7 +36,7 @@ var filterTier = exports.filterTier = function (tier, filter) {
 	}
 };
 
-var getConfig = exports.getConfig = function (room) {
+export function getConfig(room) {
 	var res = {
 		tierFilter: null,
 		onlyOfficial: false,
@@ -69,7 +62,7 @@ var getConfig = exports.getConfig = function (room) {
 	return res;
 };
 
-var parseTourTree = exports.parseTourTree = function (tree) {
+export function parseTourTree(tree) {
 	var auxobj = {};
 	var team = tree.team;
 	var state = tree.state;
@@ -90,7 +83,7 @@ var parseTourTree = exports.parseTourTree = function (tree) {
 	return auxobj;
 };
 
-var parseTournamentResults = exports.parseTournamentResults = function (data) {
+export function parseTournamentResults(data) {
 	var generator = toId(data.generator || "");
 	if (generator === "singleelimination") {
 		var res = {};
@@ -126,7 +119,7 @@ var parseTournamentResults = exports.parseTournamentResults = function (data) {
 	}
 };
 
-var getPoints = exports.getPoints = function (room, user) {
+export function getPoints(room, user) {
 	var userid = toId(user);
 	var roomConfig = getConfig(room);
 	var pWin = roomConfig.winnerPoints;
@@ -154,7 +147,7 @@ var getPoints = exports.getPoints = function (room, user) {
 	return res;
 };
 
-var getTop = exports.getTop = function (room) {
+export function getTop(room) {
 	if (!isConfigured(room)) return null;
 	var roomConfig = getConfig(room);
 	var pWin = roomConfig.winnerPoints;
@@ -179,7 +172,7 @@ var getTop = exports.getTop = function (room) {
 	});
 };
 
-var getTable = exports.getTable = function (room, n) {
+export function getTable(room, n) {
 	if (!isConfigured(room)) return null;
 	var top = getTop(room);
 	if (!top) return null;
@@ -193,7 +186,7 @@ var getTable = exports.getTable = function (room, n) {
 	return table;
 };
 
-var addUser = exports.addUser = function (room, user, type, auxData) {
+export function addUser(room, user, type, auxData?: string) {
 	if (!ladder[room]) ladder[room] = {};
 	var userid = toId(user);
 	if (!ladder[room][userid]) ladder[room][userid] = [user, 0, 0, 0, 0, 0];
@@ -212,14 +205,14 @@ var addUser = exports.addUser = function (room, user, type, auxData) {
 			ladder[room][userid][3]++;
 			break;
 		case 'B':
-			var val = parseInt(auxData);
+			const val = auxData && parseInt(auxData);
 			if (!val) return;
 			ladder[room][userid][4] += val;
 			break;
 	}
 };
 
-var writeResults = exports.writeResults = function (room, results) {
+export function writeResults(room, results) {
 	if (!results) return;
 	for (var i = 0; i < results.players.length; i++) addUser(room, results.players[i], 'A');
 	if (results.winner) addUser(room, results.winner, 'W');
@@ -228,7 +221,7 @@ var writeResults = exports.writeResults = function (room, results) {
 	for (var user in results.general) addUser(room, user, 'B', results.general[user]);
 };
 
-exports.onTournamentEnd = function (room, data) {
+export function onTournamentEnd(room, data) {
 	if (!isConfigured(room)) return;
 	if (!data.isOfficialTour) {
 		//debug(JSON.stringify(getConfig(room)));
@@ -251,9 +244,9 @@ exports.onTournamentEnd = function (room, data) {
 	debug("Leaderboard updated. " + Tools.getDateString());
 };
 
-var resetCodes = exports.resetCodes = {};
+export const resetCodes = {};
 
-exports.getResetHashCode = function (room) {
+export function getResetHashCode(room) {
 	if (!ladder[room]) return null;
 	for (var i in resetCodes) {
 		if (resetCodes[i] === room) delete resetCodes[i];
@@ -263,7 +256,7 @@ exports.getResetHashCode = function (room) {
 	return code;
 };
 
-exports.execResetHashCode = function (code) {
+export function execResetHashCode(code) {
 	if (resetCodes[code]) {
 		var room = resetCodes[code];
 		if (ladder[room]) {

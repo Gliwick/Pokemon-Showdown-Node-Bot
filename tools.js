@@ -1003,14 +1003,11 @@ exports.checkConfig = function () {
 
 exports.reloadFeature = function (feature) {
 	try {
-		if (!fs.existsSync('./features/' + feature + '/index.js')) return -1;
-		Tools.uncacheTree('./features/' + feature + '/index.js');
-		var f = require('./features/' + feature + '/index.js');
+		const f = require('./features/index.ts').init()[feature];
 		if (f.id) {
-			if (Features[f.id] && typeof Features[f.id].destroy === "function") Features[f.id].destroy();
-			Features[f.id] = f;
-			if (typeof Features[f.id].init === "function") Features[f.id].init();
-			info("Feature \"" + f.id + '\" reloaded');
+			if (typeof Features[feature].destroy === "function") Features[feature].destroy();
+			Features[feature] = f;
+			if (typeof f.init === "function") f.init();
 		} else {
 			return -1;
 		}

@@ -142,5 +142,3 @@ export class TeamBuilder {
 		return Tools.packTeam(team);
 	}
 };
-
-export const teamBuilder = new TeamBuilder();

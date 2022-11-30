@@ -47,5 +47,3 @@ export class ChallengeManager {
 		}
 	};
 };
-
-export const challengeManager = new ChallengeManager();

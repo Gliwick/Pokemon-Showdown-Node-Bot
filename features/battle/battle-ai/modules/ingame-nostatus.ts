@@ -62,6 +62,8 @@ const DoubleTurnMoves = [
 export class IngameNoStatus implements Module {
   id = 'ingame-nostatus';
 
+  constructor() { };
+
   getPokemonAverage(battle: Battle, s: number): number {
     if (!battle.foe.teamPv.length) return 0;
 
@@ -310,4 +312,4 @@ export class IngameNoStatus implements Module {
     }
     return chosen[Math.floor(Math.random() * chosen.length)];
   }
-}
+};

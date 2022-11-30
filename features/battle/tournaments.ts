@@ -68,5 +68,3 @@ export class TourManager {
 		}
 	};
 };
-
-export const tourManager = new TourManager();

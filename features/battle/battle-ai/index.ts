@@ -13,7 +13,7 @@ export class BattleBot {
 	battlesCount = 0;
 
 	autojoinFFM;
-	autoJoinData: {};
+	autoJoinData = {};
 
 	constructor() {
 		this.autojoinFFM = new Settings.FlatFileManager(battleAutojoinFile);
@@ -97,5 +97,3 @@ export class BattleBot {
 		}
 	}
 };
-
-export const battleBot = new BattleBot();
