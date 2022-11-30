@@ -10,7 +10,7 @@ import { majors } from './battle-majors';
 import { minors } from './battle-minors';
 
 import { choose } from './modules';
-import { Decision, getDecisions } from './decision';
+import { Decision, getDecisions, MoveDecision, SwitchDecision } from './decision';
 
 
 import { Player, Pokemon, getPokemon, getItem, getAbility, CurrentGen, PokemonDetails, Gender } from './battle-data';
@@ -108,50 +108,7 @@ export class Battle {
 		debug("Send Decision: ".cyan + JSON.stringify(decision));
 		let str = "/choose ";
 		for (let i = 0; i < decision.length; i++) {
-			switch (decision[i].type) {
-				case "team":
-					const team: number[] = [];
-					for (let j = 0; j < decision[i].team.length; j++) {
-						team.push(decision[i].team[j] + 1);
-					}
-					const first = team[0] || 1;
-					for (let j = first - 1; j > 0; j--) {
-						if (team.indexOf(j) === -1) {
-							team.push(j);
-						}
-					}
-					if (this.request?.side?.pokemon) {
-						for (let j = 1; j <= this.request.side.pokemon.length; j++) {
-							if (team.indexOf(j) === -1) {
-								team.push(j);
-							}
-						}
-					}
-					str += "team " + team.join("");
-					break;
-				case "move":
-					str += "move " + (decision[i].moveId + 1);
-					const transformation = decision[i].transformation;
-					if (typeof transformation === 'string') {
-						str += (" " + decision[i].transformation);
-					} else if (transformation) {
-						str += (" " + Object.keys(decision[i].transformation)[0]);
-					}
-					if (decision[i].target !== null) {
-						if (decision[i].target >= 0) str += " " + (decision[i].target + 1);
-						else str += (" " + (decision[i].target));
-					}
-					break;
-				case "switch":
-					str += "switch " + (decision[i].pokeId + 1);
-					break;
-				case "pass":
-					str += "pass";
-					break;
-				case "shift":
-					str += "shift";
-					break;
-			}
+			str += decision[i].getDecisionStr();
 			if (i < decision.length - 1) str += ", ";
 		}
 		this.lastSend = {
@@ -173,9 +130,9 @@ export class Battle {
 
 	leave() {
 		if (!this.leaveInterval) {
-			this.leaveInterval = setInterval(function () {
+			this.leaveInterval = setInterval((() => {
 				this.send("/leave");
-			}.bind(this), 5000);
+			}).bind(this), 5000);
 		}
 		this.send('/leave');
 	};
@@ -191,7 +148,7 @@ export class Battle {
 		}
 	};
 
-	win(winner) {
+	win(winner: string) {
 		if (!this.self) return; // Not playing
 		const win = (toId(winner) === toId(Bot.status.nickName));
 		if (win) {

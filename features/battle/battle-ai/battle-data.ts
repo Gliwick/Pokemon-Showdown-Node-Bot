@@ -454,7 +454,7 @@ export class Pokemon implements PokemonDetails {
 		for (let i in this.boosts) delete this.boosts[i];
 	};
 
-	markAbility(id, isNotBase) {
+	markAbility(id, isNotBase: boolean = false) {
 		this.ability = getAbility(id);
 		if ((!this.baseAbility || this.baseAbility === "&unknown") && !isNotBase) {
 			this.baseAbility = this.ability;

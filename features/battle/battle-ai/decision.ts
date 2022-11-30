@@ -13,24 +13,45 @@ export abstract class Decision {
 	constructor(type: DecisionType) {
 		this.type = type;
 	}
+
+	getDecisionStr(battle?: Battle): string {
+		const argsStr = this.getArgsStr(battle);
+		return this.type + (argsStr ? ' ' + argsStr : '');
+	}
+
+	protected abstract getArgsStr(battle?: Battle): string;
 }
 
 type Transformation = { terastallize: PokemonType } | string;
 
 export class MoveDecision extends Decision {
 	moveId: number;
-	target;
+	target: number | null;
 	move: string;
 	movePP: number;
 	transformation: Transformation | null;
 
-	constructor(moveId: number, target, transformation: Transformation | null, move: string, movePP: number) {
+	constructor(moveId: number, target: number | null, transformation: Transformation | null, move: string, movePP: number) {
 		super('move');
 		this.moveId = moveId || 0;
 		this.target = target;
 		this.move = move || "struggle";
 		this.movePP = movePP || 1;
 		this.transformation = transformation;
+	}
+
+	protected getArgsStr(): string {
+		let str = (this.moveId + 1).toString();
+		if (typeof this.transformation === 'string') {
+			str += (" " + this.transformation);
+		} else if (this.transformation) {
+			str += (" " + Object.keys(this.transformation)[0]);
+		}
+		if (this.target !== null) {
+			if (this.target >= 0) str += " " + (this.target + 1);
+			else str += (" " + this.target);
+		}
+		return str;
 	}
 };
 
@@ -43,6 +64,10 @@ export class SwitchDecision extends Decision {
 		this.poke = poke || "pikachu";
 		this.pokeId = pokeId || 0;
 	}
+
+	protected getArgsStr(): string {
+		return (this.pokeId + 1).toString();
+	}
 }
 
 export class TeamDecision extends Decision {
@@ -52,17 +77,46 @@ export class TeamDecision extends Decision {
 		super('team');
 		this.team = team || [0, 1, 2, 3, 4, 5];
 	}
+
+	protected getArgsStr(battle?: Battle): string {
+		const team: number[] = [];
+		for (let j = 0; j < this.team.length; j++) {
+			team.push(this.team[j] + 1);
+		}
+		const first = team[0] || 1;
+		for (let j = first - 1; j > 0; j--) {
+			if (team.indexOf(j) === -1) {
+				team.push(j);
+			}
+		}
+		if (battle?.request?.side?.pokemon) {
+			for (let j = 1; j <= battle.request.side.pokemon.length; j++) {
+				if (team.indexOf(j) === -1) {
+					team.push(j);
+				}
+			}
+		}
+		return team.join("");
+	}
 };
 
 export class PassDecision extends Decision {
 	constructor() {
 		super('pass');
 	}
+
+	protected getArgsStr(): string {
+		return '';
+	}
 };
 
 export class ShiftDecision extends Decision {
 	constructor() {
 		super('shift');
+	}
+
+	protected getArgsStr(): string {
+		return '';
 	}
 }
 
