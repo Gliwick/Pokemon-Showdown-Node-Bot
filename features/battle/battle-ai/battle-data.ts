@@ -4,6 +4,7 @@
 
 import { toId } from '../../../tools';
 import { Conditions } from "../data/statuses";
+import { deepcopy } from '../utils';
 
 const BATTLE_DATA_DIR = './../data/';
 const MODS_DATA_DIR = BATTLE_DATA_DIR + 'mods/';
@@ -417,8 +418,7 @@ export class Pokemon implements PokemonDetails {
 		for (let i in properties) {
 			if (typeof this[i] === 'undefined' || typeof this[i] === 'function') continue;
 			if (i === 'template') continue;
-			const prop = properties[i];
-			this[i] = typeof prop === 'object' && !Array.isArray(prop) ? { ...prop } : prop;
+			this[i] = deepcopy(properties[i]);
 		}
 	}
 

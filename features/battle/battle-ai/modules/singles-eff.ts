@@ -1764,9 +1764,8 @@ export class SinglesEffective implements Module {
 				}
 
 				if (des.moveData.isMax) {
-					let baseMove = getMove(baseMoveName, battle.gen, battle.id);
-					des.moveData = { ...des.moveData };
-					des.moveData.category = baseMove.category;
+					const baseMove = getMove(baseMoveName, battle.gen, battle.id);
+					des.moveData = { ...des.moveData, category: baseMove.category };
 					if (baseMove.gmaxPower) {
 						des.moveData.basePower = baseMove.gmaxPower;
 					} else if (baseMove.isMax) {

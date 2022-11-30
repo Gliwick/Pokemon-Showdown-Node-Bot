@@ -7,6 +7,7 @@ import { getMultipleEff, getEffectiveness } from "./typechart";
 
 import { CurrentGen, PokemonType, Gender, BaseStat, BaseStatsTable, StatBoostsTable, BoostedStat } from "./battle-data";
 import { Battle } from "./battle";
+import { deepcopy } from '../utils';
 
 const BaseStats: BaseStat[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 const BoostedStats: (BaseStat & BoostedStat)[] = ['atk', 'def', 'spa', 'spd', 'spe'];
@@ -37,8 +38,7 @@ export class Pokemon {
 		this.template = { ...template };
 		if (properties.helpers?.template) {
 			for (let attr in properties.helpers.template) {
-				const prop = properties.helpers.template[attr];
-				this.template[attr] = typeof prop === 'object' && !Array.isArray(prop) ? { ...prop } : prop;
+				this.template[attr] = deepcopy(properties.helpers.template[attr]);
 			}
 		}
 
@@ -48,8 +48,7 @@ export class Pokemon {
 		for (let attr in properties) {
 			if (typeof this[attr] === 'undefined' || typeof this[attr] === 'function') continue;
 			if (['helpers', 'template'].includes(attr)) continue;
-			const prop = properties[attr];
-			this[attr] = typeof prop === 'object' && !Array.isArray(prop) ? { ...prop } : prop;
+			this[attr] = deepcopy(properties[attr]);
 		}
 	}
 
@@ -193,7 +192,7 @@ export class Conditions {
 		this.immediate = {};
 		for (let attr in data) {
 			if (typeof this[attr] === 'undefined' || typeof this[attr] === 'function') continue;
-			this[attr] = Array.isArray(data[attr]) ? [...data[attr]] : { ...data[attr] };
+			this[attr] = deepcopy(data[attr]);
 		}
 	}
 };
@@ -363,7 +362,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	const defConditions = new Conditions(defender.conditions || {});
 
 	if (typeof transformation === 'object' && transformation?.terastallize) {
-		atkPoke.terastallize = transformation.terastallize;
+		atkPoke.terastallize = transformation.terastallize as PokemonType;
 	}
 
 	const gen = battle.gen || CurrentGen;
