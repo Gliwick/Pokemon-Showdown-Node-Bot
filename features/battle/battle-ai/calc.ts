@@ -8,7 +8,8 @@ import { getMultipleEff, getEffectiveness } from "./typechart";
 import { CurrentGen, PokemonType, Gender, BaseStat, BaseStatsTable, StatBoostsTable, BoostedStat } from "./battle-data";
 import { Battle } from "./battle";
 
-const Stats: BaseStat[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
+const BaseStats: BaseStat[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
+const BoostedStats: (BaseStat & BoostedStat)[] = ['atk', 'def', 'spa', 'spd', 'spe'];
 
 export class Pokemon {
 	template;
@@ -94,12 +95,7 @@ export class Pokemon {
 	};
 
 	getStats(gen: number = CurrentGen): Required<BaseStatsTable> {
-		const res = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
-		let stat: BaseStat;
-		for (stat in res) {
-			res[stat] = this.getStat(stat, gen);
-		}
-		return res;
+		return BaseStats.reduce((acc: BaseStatsTable, stat) => Object.assign(acc, { stat: this.getStat(stat, gen) }), {}) as Required<BaseStatsTable>;
 	};
 
 	getBoostedStat(stat: BaseStat & BoostedStat, statValue: number, boosts: StatBoostsTable): number {
@@ -465,8 +461,8 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				break;
 			case 'protosynthesis':
 				if (!atkConditions.volatiles.protosynthesis && !supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
-					const maxStat = Object.entries(atkStats).filter(([stat]) => stat !== 'hp').reduce((acc, v) => Math.max(acc, v[1]), 0);
-					const maxStatName = Stats.filter(stat => stat !== 'hp' && atkStats[stat] === maxStat)[0];
+					const maxStat = BoostedStats.reduce((acc, v) => Math.max(acc, atkStats[v]), 0);
+					const maxStatName = BoostedStats.filter(stat => atkStats[stat] === maxStat)[0];
 					if (atkStat === maxStatName) atk = Math.floor(atk * 1.3);
 				}
 				break;
@@ -477,8 +473,8 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				break;
 			case 'quarkdrive':
 				if (!atkConditions.volatiles.quarkdrive && globalConditions.electricterrain) {
-					const maxStat = Object.entries(atkStats).filter(([stat]) => stat !== 'hp').reduce((acc, v) => Math.max(acc, v[1]), 0);
-					const maxStatName = Stats.filter(stat => stat !== 'hp' && atkStats[stat] === maxStat)[0];
+					const maxStat = BoostedStats.reduce((acc, v) => Math.max(acc, atkStats[v]), 0);
+					const maxStatName = BoostedStats.filter(stat => atkStats[stat] === maxStat)[0];
 					if (atkStat === maxStatName) atk = Math.floor(atk * 1.3);
 				}
 				break;
@@ -517,6 +513,20 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			case 'tabletsofruin':
 				if (atkStat === 'atk') atk = Math.floor(atk * 0.75);
 				break;
+			case 'protosynthesis':
+				if (!defConditions.volatiles.protosynthesis && !supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
+					const maxStat = BoostedStats.reduce((acc, v) => Math.max(acc, defStats[v]), 0);
+					const maxStatName = BoostedStats.filter(stat => defStats[stat] === maxStat)[0];
+					if (defStat === maxStatName) def = Math.floor(def * 1.3);
+				}
+				break;
+			case 'quarkdrive':
+				if (!defConditions.volatiles.quarkdrive && globalConditions.electricterrain) {
+					const maxStat = BoostedStats.reduce((acc, v) => Math.max(acc, defStats[v]), 0);
+					const maxStatName = BoostedStats.filter(stat => defStats[stat] === maxStat)[0];
+					if (defStat === maxStatName) def = Math.floor(def * 1.3);
+				}
+				break;
 		}
 		if (!atkPoke.hasAbility({ 'moldbreaker': 1, 'teravolt': 1, 'turboblaze': 1 }) && !move.ignoreAbility) {
 			switch (defPoke.ability.id) {
@@ -528,6 +538,11 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 					break;
 				case 'icescales':
 					if (defStat === 'spd') def = Math.floor(def * 2);
+					break;
+				case 'grasspelt':
+					if (globalConditions.grassyterrain) {
+						if (defStat === 'def') def = Math.floor(def * 1.3);
+					}
 					break;
 			}
 		}
