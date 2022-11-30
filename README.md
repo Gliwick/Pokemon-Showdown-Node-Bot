@@ -16,11 +16,7 @@ Features included in this package:
  - **Chat-Plugins:** This includes a customizable database of jokes and quotes, pokemon informational commands, smogon-related commands and others like regdate or translate (to translate pokemon stuff into different languages).
  - **Moderation:** Automated chat moderation for infractions like spam, flood, caps, stretching, etc  This also includes a blacklist and welcome messages called join-phrases.
  - **Battle:** Automated battle bot for challenges, ladder and tournaments. This also includes teams management commands. Note that this is not an artificial intelligence, so it can't learn stuff and is usually easy to win it.
- - **Chat Logger:** Stores logs of chat rooms and/or pms. This also includes an optional logs server.
  - **Tournaments:** A single command for creating, starting and set auto-dq of a tournament automatically. This also includes an optional tournaments leaderboards system.
- - **Games:** A collection of chat games for your Pokemon Showdown Bot
- - **Auto Invite:** Automatically sends '/invite [room]' to room auth of a private room when they joins other room with a relation. For example if you have a secondary staff room and you want to get invited when you join lobby.
- - **Youtube link recognition:** If this feature is enabled in a room, when an user sends a youtube link, the bot sends a message with the title of the video.
  - **Group Chats:** Some tools for group chats (temporal rooms) such as automated joining and automated roomauth promotion.
  
 
