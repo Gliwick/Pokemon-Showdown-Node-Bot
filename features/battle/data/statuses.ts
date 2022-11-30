@@ -1,3 +1,5 @@
+// copied from https://github.com/smogon/pokemon-showdown/blob/master/data/conditions.ts
+
 export type Nonstandard = 'Past' | 'Future' | 'Unobtainable' | 'CAP' | 'LGPE' | 'Custom' | 'Gigantamax';
 
 interface EffectData {
@@ -84,10 +86,15 @@ interface BasicEffect extends EffectData {
 	sourceEffect: string;
 }
 
+// type stabs to emulate missing types
 type EventMethod = `on${string}`;
-type Condition = BasicEffect & { [key in EventMethod]?: any } & {
+type AnyFunction = (this: { [key: string]: any }, arg1?: any, arg2?: any, arg3?: any, arg4?: any) => void;
+type ActiveMove = { [key: string]: any };
+
+type Condition = BasicEffect & { [key in EventMethod]?: AnyFunction | number | string } & {
 	readonly effectType: 'Condition' | 'Weather' | 'Status' | 'Terastal';
 	readonly counterMax?: number;
+	readonly durationCallback?: (this: { [key: string]: any }, target: { [key: string]: any }, source: { [key: string]: any }, effect: Condition | null) => number;
 }
 
 export type ConditionData = Partial<Condition>;
