@@ -4,27 +4,24 @@
 
 import { Battle } from './battle';
 import { Decision } from './decision';
+import { IngameNoStatus } from './modules/ingame-nostatus';
+import { Random } from './modules/random';
+import { SinglesEff } from './modules/singles-eff';
 
-interface Module {
-	ID: string;
+export interface Module {
+	id: string;
 	desc?: string;
 	decide: (battle: Battle, decisions: Decision[][]) => Decision[];
 }
 
-export const modules: { [key: string]: Module } = {};
+export const modules: { [key: string]: Module } = {
+	'ingame-nostatus': new IngameNoStatus(),
+	'random': new Random(),
+	'singles-eff': new SinglesEff(),
+};
 
-const modFiles = ['singles-eff.ts', 'ingame-nostatus.ts', 'random.ts'];
-
-modFiles.forEach((file) => {
-	try {
-		const mod = require("./modules/" + file) as Module | undefined;
-		if (!mod?.ID) return;
-		modules[mod.ID] = mod;
-		debug("Loaded battle module: " + mod.ID + (mod.desc ? (" [" + mod.desc + "]") : ""));
-	} catch (e) {
-		errlog(e.stack);
-		error("Could not import battle module: " + file + " | " + sys.inspect(e));
-	}
+Object.values(modules).forEach((mod) => {
+	debug("Loaded battle module: " + mod.id + (mod.desc ? (" [" + mod.desc + "]") : ""));
 });
 
 export function choose(battle: Battle): Module | null {

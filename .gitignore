@@ -102,3 +102,6 @@ $RECYCLE.BIN/
 # Linux
 *~
 nohup.out
+
+# VS Code
+.vscode/

@@ -1,4 +1,4 @@
-type Nonstandard = 'Past' | 'Future' | 'Unobtainable' | 'CAP' | 'LGPE' | 'Custom' | 'Gigantamax';
+export type Nonstandard = 'Past' | 'Future' | 'Unobtainable' | 'CAP' | 'LGPE' | 'Custom' | 'Gigantamax';
 
 interface EffectData {
 	name?: string;
@@ -12,11 +12,11 @@ interface EffectData {
 
 type ID = '' | string & { __isID: true };
 
-type EffectType =
+export type EffectType =
 	'Condition' | 'Pokemon' | 'Move' | 'Item' | 'Ability' | 'Format' |
 	'Nature' | 'Ruleset' | 'Weather' | 'Status' | 'Terastal' | 'Rule' | 'ValidatorRule';
 
-export interface BasicEffect extends EffectData {
+interface BasicEffect extends EffectData {
 	/**
 	 * ID. This will be a lowercase version of the name with all the
 	 * non-alphanumeric characters removed. So, for instance, "Mr. Mime"
@@ -85,7 +85,7 @@ export interface BasicEffect extends EffectData {
 }
 
 type EventMethod = `on${string}`;
-export type Condition = BasicEffect & { [key in EventMethod]?: any } & {
+type Condition = BasicEffect & { [key in EventMethod]?: any } & {
 	readonly effectType: 'Condition' | 'Weather' | 'Status' | 'Terastal';
 	readonly counterMax?: number;
 }
