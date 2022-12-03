@@ -41,11 +41,11 @@ export class Tournament {
 		if (!this.timeToStart) return;
 		this.signups = true;
 		if (this.scoutProtect) Bot.say(this.room, '/tournament setscouting disallow');
-		this.startTimer = setTimeout(function () {
+		this.startTimer = setTimeout((() => {
 			this.startTour();
 			this.started = true;
 			this.startTimer = null;
-		}.bind(this), this.timeToStart);
+		}).bind(this), this.timeToStart);
 	};
 
 	startTour() {
@@ -73,7 +73,7 @@ export class TournamentsManager implements Feature {
 
 	tournaments: { [key: string]: Tournament } = {};
 	tourData = {};
-	
+
 	leaderboards: LeaderboardsManager;
 
 	constructor() {
@@ -86,13 +86,13 @@ export class TournamentsManager implements Feature {
 	};
 
 	init() {
-		for (var i in this.tournaments) {
+		for (let i in this.tournaments) {
 			try {
 				if (this.tournaments[i].startTimer) clearTimeout(this.tournaments[i].startTimer);
 			} catch (e) { }
 			delete this.tournaments[i];
 		}
-		for (var i in this.tourData) {
+		for (let i in this.tourData) {
 			delete this.tourData[i];
 		}
 	};
