@@ -316,14 +316,19 @@ export function getMoveType(poke: Pokemon, move, conditions: Conditions, globalC
 				return 'Normal';
 			case 'aerilate':
 				if (move.type === 'Normal') return 'Flying';
+				break;
 			case 'pixilate':
 				if (move.type === 'Normal') return 'Fairy';
+				break;
 			case 'refrigerate':
 				if (move.type === 'Normal') return 'Ice';
+				break;
 			case 'galvanize':
 				if (move.type === 'Normal') return 'Electric';
+				break;
 			case 'liquidvoice':
 				if (move.flags?.sound) return 'Water';
+				break;
 		}
 	}
 
@@ -557,9 +562,9 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	if (['Fighting', 'Normal'].includes(moveType) && (defConditions.volatiles.foresight || atkPoke.hasAbility('scrappy'))) notImmune = true;
 	if (moveType === 'Ground' && (move.id === 'thousandarrows' || globalConditions.gravity)) notImmune = true;
 	let defTypes = defPoke.getTypes(defConditions).slice();
-	let typesMux = getMultipleEff(moveType, defTypes, gen, notImmune, !!globalConditions.inversebattle, battleId);
-	if (move.id === 'flyingpress') typesMux *= getMultipleEff('Flying', defTypes, gen, notImmune, !!globalConditions.inversebattle, battleId);
-	if (move.id === 'freezedry' && defTypes.indexOf('Water') >= 0 && !globalConditions.inversebattle) typesMux *= (2 / getEffectiveness(moveType, 'Water', gen, !!globalConditions.inversebattle, battleId));
+	let typeEffectiveness = getMultipleEff(moveType, defTypes, gen, notImmune, !!globalConditions.inversebattle, battleId);
+	if (move.id === 'flyingpress') typeEffectiveness *= getMultipleEff('Flying', defTypes, gen, notImmune, !!globalConditions.inversebattle, battleId);
+	if (move.id === 'freezedry' && defTypes.indexOf('Water') >= 0 && !globalConditions.inversebattle) typeEffectiveness *= (2 / getEffectiveness(moveType, 'Water', gen, !!globalConditions.inversebattle, battleId));
 
 	let immune = false;
 
@@ -603,12 +608,12 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				if (movePriority > 0) immune = true;
 				break;
 			case 'wonderguard':
-				if (typesMux < 2) immune = true;
+				if (typeEffectiveness < 2) immune = true;
 				break;
 		}
 	}
 
-	if (immune || typesMux === 0) return new Damage(defStats.hp);
+	if (immune || typeEffectiveness === 0) return new Damage(defStats.hp);
 
 	/******************************
 	* Base power
@@ -853,7 +858,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			break;
 		case 'collisioncourse':
 		case 'electrodrift':
-			if (typesMux > 1) bp = Math.floor(bp * 1.3);
+			if (typeEffectiveness > 1) bp = Math.floor(bp * 1.3);
 			break;
 	}
 
@@ -947,10 +952,10 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				if ((!globalConditions.trickroom && atkSpe < defSpe) || (globalConditions.trickroom && atkSpe > defSpe)) bp = Math.floor(bp * 1.3);
 				break;
 			case 'tintedlens':
-				if (typesMux < 1) bp *= 2;
+				if (typeEffectiveness < 1) bp *= 2;
 				break;
 			case 'neuroforce':
-				if (typesMux > 1) bp = Math.floor(bp * 1.25);
+				if (typeEffectiveness > 1) bp = Math.floor(bp * 1.25);
 				break;
 			case 'punkrock':
 				if (move.flags?.sound) bp = Math.floor(bp * 1.3);
@@ -967,7 +972,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	if (gen >= 3 && defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility('neutralizinggas')) {
 		switch (defPoke.ability.id) {
 			case 'prismarmor':
-				if (typesMux > 1) bp = Math.floor(bp * 0.75);
+				if (typeEffectiveness > 1) bp = Math.floor(bp * 0.75);
 				break;
 			case 'shadowshield':
 				if (defPoke.hp >= 100) bp = Math.floor(bp * 0.5);
@@ -1006,7 +1011,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 					break;
 				case 'filter':
 				case 'solidrock':
-					if (typesMux > 1) bp = Math.floor(bp * 0.75);
+					if (typeEffectiveness > 1) bp = Math.floor(bp * 0.75);
 					break;
 				case 'multiscale':
 					if (defPoke.hp >= 100) bp = Math.floor(bp * 0.5);
@@ -1042,7 +1047,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				if (moveType === 'Normal') bp = Math.floor(bp * 1.2);
 				break;
 			case 'expertbelt':
-				if (typesMux > 1) bp = Math.floor(bp * 1.2);
+				if (typeEffectiveness > 1) bp = Math.floor(bp * 1.2);
 				break;
 			case 'punchingglove':
 				if (move.flags?.punch) bp = Math.floor(bp * 1.1);
@@ -1235,7 +1240,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		for (let i = 0; i < multihitRolls.length; i++) {
 			let rollDmg = 0;
 			for (let hitNumber = 0; hitNumber < multihitRolls[i]; hitNumber++) {
-				rollDmg += getDamage(atkPoke.level, hitsBP[hitNumber], atk, def, modifier, typesMux);
+				rollDmg += getDamage(atkPoke.level, hitsBP[hitNumber], atk, def, modifier, typeEffectiveness);
 			}
 			multihitRolls[i] = rollDmg;
 		}
@@ -1245,7 +1250,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 
 	let dmg = 0;
 	for (let hitBP of hitsBP) {
-		dmg += getDamage(atkPoke.level, hitBP, atk, def, modifier, typesMux);
+		dmg += getDamage(atkPoke.level, hitBP, atk, def, modifier, typeEffectiveness);
 	}
 
 	return new Damage(defStats.hp, getRolls(dmg));
