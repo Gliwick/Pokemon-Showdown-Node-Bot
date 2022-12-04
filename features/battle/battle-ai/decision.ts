@@ -3,7 +3,7 @@
 */
 
 import { Battle } from "./battle";
-import { PokemonType } from "./battle-data";
+import { Move, PokemonType } from "./battle-data";
 
 type DecisionType = 'move' | 'switch' | 'team' | 'pass' | 'shift';
 
@@ -30,6 +30,7 @@ export class MoveDecision extends Decision {
 	move: string;
 	movePP: number;
 	transformation: Transformation | null;
+	moveData: Move | null = null;
 
 	constructor(moveId: number, target: number | null, transformation: Transformation | null, move: string, movePP: number) {
 		super('move');

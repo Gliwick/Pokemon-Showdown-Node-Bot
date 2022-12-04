@@ -107,7 +107,9 @@ export class Battle {
 
 	sendDecision(decision: Decision[]) {
 		if (!decision?.length) return;
-		debug("Send Decision: ".cyan + JSON.stringify(decision));
+
+		const { moveData, ...toLog } = (decision[0] as MoveDecision);
+		debug("Send Decision: ".cyan + JSON.stringify(toLog));
 		let str = "/choose ";
 		for (let i = 0; i < decision.length; i++) {
 			str += decision[i].getDecisionStr();
