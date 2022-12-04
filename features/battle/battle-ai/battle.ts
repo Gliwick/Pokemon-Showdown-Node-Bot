@@ -294,7 +294,7 @@ export class Battle {
 			if (typeof minor !== "function") {
 				error("Unknown minor type: " + args[0] + " - " + sys.inspect(minor) + "");
 			} else {
-				debug('running minor ' + args[0] + '(' + args + ',' + kwargs, ')');
+				debug('running minor ' + args[0] + '([' + args + '], ' + kwargs.toString(), ')');
 				try {
 					minor.call(this, args, kwargs, isIntro);
 				} catch (e) {
@@ -307,7 +307,7 @@ export class Battle {
 		}
 	};
 
-	runMajor(args, kwargs, isIntro?: boolean) {
+	runMajor(args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) {
 		if (majors[args[0]]) {
 			let major = majors[args[0]];
 			let r = 0;
@@ -317,7 +317,7 @@ export class Battle {
 			if (typeof major !== "function") {
 				error("Unknown major type: " + args[0] + " - " + sys.inspect(major) + "");
 			} else {
-				debug('running major ' + args[0] + '(' + args + ',' + kwargs, ')');
+				debug('running major ' + args[0] + '([' + args + '], ' + kwargs.toString(), ')');
 				try {
 					major.call(this, args, kwargs, isIntro);
 				} catch (e) {

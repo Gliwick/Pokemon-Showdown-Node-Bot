@@ -8,7 +8,7 @@ import { getPokemon, getMove, getEffect, getItem, getAbility } from './battle-da
 
 type Minor = `-${string}`;
 
-export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) => void) | Minor } = {
+export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string]: string }, isIntro) => void) | Minor } = {
 	"-damage": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const hp = this.parseHealth(args[2]);
@@ -216,7 +216,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 	"-miss": "-crit",
 	"-supereffective": "-crit",
 	"-resisted": "-crit",
-	"-crit": function (this: Battle, args, kwargs, isIntro?: boolean) {
+	"-crit": function (this: Battle, args, kwargs, isIntro) {
 		// Not real information - message minors
 		if (isIntro) return;
 		const ident = this.parsePokemonIdent(args[1]);
@@ -275,11 +275,11 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 	"-prepare": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const move = args[2];
-		const target = this.parsePokemonIdent(args[3]);
+		const target = this.parsePokemonIdent(args[1]);
 		poke.prepareMove(move, target.slot);
 	},
 
-	"-status": function (this: Battle, args, kwargs, isIntro?: boolean) {
+	"-status": function (this: Battle, args, kwargs, isIntro) {
 		const poke = this.getActive(args[1]);
 		poke.status = args[2];
 		poke.helpers.statusCounter = 0;

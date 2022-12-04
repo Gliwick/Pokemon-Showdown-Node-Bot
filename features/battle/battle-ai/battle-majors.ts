@@ -6,7 +6,7 @@ import { toId } from '../../../tools';
 import { Battle, BattleType, Side } from './battle';
 import { Move, Pokemon, getPokemon, getMove, getEffect, BoostedStat } from './battle-data';
 
-export const majors: { [key: string]: ((args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) => void) | string } = {
+export const majors: { [key: string]: ((args: string[], kwargs: { [key: string]: string }, isIntro) => void) | string } = {
 	rated: function (this: Battle, args, kwargs) {
 		this.rated = true;
 	},
@@ -122,13 +122,13 @@ export const majors: { [key: string]: ((args: string[], kwargs: { [key: string]:
 		}
 	},
 
-	win: function (this: Battle, args, kwargs, isIntro?: boolean) {
+	win: function (this: Battle, args, kwargs, isIntro) {
 		if (!isIntro) this.win(args[1]);
 		this.ended = true;
 		this.leave();
 	},
 
-	tie: function (this: Battle, args, kwargs, isIntro?: boolean) {
+	tie: function (this: Battle, args, kwargs, isIntro) {
 		this.ended = true;
 		if (!isIntro) this.message("tie");
 		this.leave();
@@ -253,7 +253,7 @@ export const majors: { [key: string]: ((args: string[], kwargs: { [key: string]:
 		}
 	},
 
-	faint: function (this: Battle, args, kwargs, isIntro?: boolean) {
+	faint: function (this: Battle, args, kwargs, isIntro) {
 		const poke = this.getActive(args[1]);
 		if (!poke) return;
 
@@ -344,7 +344,7 @@ export const majors: { [key: string]: ((args: string[], kwargs: { [key: string]:
 		poke.helpers.lastMoveTurn = this.turn;
 	},
 
-	cant: function (this: Battle, args, kwargs, isIntro?: boolean) {
+	cant: function (this: Battle, args, kwargs, isIntro) {
 		const poke = this.getActive(args[1]);
 		if (!poke) return;
 
