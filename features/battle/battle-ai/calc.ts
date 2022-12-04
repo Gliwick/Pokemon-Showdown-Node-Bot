@@ -501,9 +501,6 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			case 'beadsofruin':
 				if (defStat === 'spd') def = Math.floor(def * 0.75);
 				break;
-			case 'supremeoverlord':
-				atk = Math.floor(atk * (1 + atkConditions.pokemon.filter(poke => poke.fainted).reduce((acc: number) => acc += 0.1, 0)));
-				break;
 		}
 	}
 
@@ -960,6 +957,9 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				break;
 			case 'sharpness':
 				if (move.flags?.slicing) bp = Math.floor(bp * 1.5);
+				break;
+			case 'supremeoverlord':
+				bp = Math.floor(bp * (1 + atkConditions.pokemon.filter(poke => poke.fainted).reduce((acc: number) => acc += 0.1, 0)));
 				break;
 		}
 	}
