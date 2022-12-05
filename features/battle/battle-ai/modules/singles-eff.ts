@@ -886,6 +886,13 @@ export class SinglesEffective implements Module {
 						res.unviable.push(decisions[i]);
 					}
 					continue;
+				case 'brickbreak':
+				case 'psychicfangs':
+				case 'ragingbull':
+					if ((conditionsB.side['lightscreen'] || conditionsB.side['reflect'] || conditionsB.side['auroraveil']) && !pokeA.hasAbility('infiltrator')) {
+						res.viable.push(decisions[i]);
+					}
+					continue;
 				case 'tidyup':
 					if (!this.selfLastPokemon(battle) && this.sideHasHazards(conditionsA)) {
 						res.obligatory.push(decisions[i]);

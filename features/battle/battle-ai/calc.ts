@@ -1156,7 +1156,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	/* Side */
 
 	const screenModifier = ['doubles', 'triples'].includes(globalConditions.gametype) ? 0.66 : 0.5;
-	if (!(move.id in { 'brickbreak': 1, 'psychicfangs': 1 }) && !atkPoke.hasAbility('infiltrator')) {
+	if (!['brickbreak', 'psychicfangs', 'ragingbull'].includes(move.id) && !atkPoke.hasAbility('infiltrator')) {
 		if (defConditions.volatiles.reflect && category === 'Physical') modifier *= 0.5; // Gen 1
 		if ((defConditions.side.reflect || defConditions.side.auroraveil) && category === 'Physical') modifier *= screenModifier;
 		if ((defConditions.side.lightscreen || defConditions.side.auroraveil) && category === 'Special') modifier *= screenModifier;
