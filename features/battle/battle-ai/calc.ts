@@ -335,9 +335,9 @@ export function getMoveType(poke: Pokemon, move, conditions: Conditions, globalC
 	return move.type;
 }
 
-function getDamage(level: number, bp: number, atk: number, def: number, modifier: number, typesMux: number): number {
+function getDamage(level: number, bp: number, atk: number, def: number, modifier: number, typeEffectiveness: number): number {
 	if (bp === 0) return 0;
-	return Math.floor((Math.floor(Math.floor((Math.floor(2 * level / 5.0) + 2) * bp * atk / def) / 50.0) + 2) * modifier * typesMux) || 1;
+	return Math.floor((Math.floor(Math.floor((Math.floor(2 * level / 5.0) + 2) * bp * atk / def) / 50.0) + 2) * modifier * typeEffectiveness) || 1;
 };
 
 /*
@@ -463,7 +463,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				break;
 			case 'orichalcumpulse':
 				if (!supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
-					if (atkStat === 'atk') atk = Math.floor(atk * 1.3);
+					if (atkStat === 'atk') atk = Math.floor(atk * 1.33);
 				}
 				break;
 			case 'protosynthesis':
@@ -475,7 +475,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				break;
 			case 'hadronengine':
 				if (globalConditions.electricterrain) {
-					if (atkStat === 'spa') atk = Math.floor(atk * 1.3);
+					if (atkStat === 'spa') atk = Math.floor(atk * 1.33);
 				}
 				break;
 			case 'quarkdrive':
@@ -858,7 +858,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			break;
 		case 'collisioncourse':
 		case 'electrodrift':
-			if (typeEffectiveness > 1) bp = Math.floor(bp * 1.3);
+			if (typeEffectiveness > 1) bp = Math.floor(bp * 1.33);
 			break;
 	}
 
@@ -964,7 +964,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				if (move.flags?.slicing) bp = Math.floor(bp * 1.5);
 				break;
 			case 'supremeoverlord':
-				bp = Math.floor(bp * (1 + atkConditions.pokemon.filter(poke => poke.fainted).reduce((acc: number) => acc += 0.1, 0)));
+				bp = Math.floor(bp * Math.floor(atkConditions.pokemon.filter(poke => poke.fainted).reduce((acc: number) => acc += 410, 4096) / 4096));
 				break;
 		}
 	}
