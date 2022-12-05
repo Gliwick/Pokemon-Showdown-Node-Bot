@@ -964,7 +964,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				if (move.flags?.slicing) bp = Math.floor(bp * 1.5);
 				break;
 			case 'supremeoverlord':
-				bp = Math.floor(bp * Math.floor(atkConditions.pokemon.filter(poke => poke.fainted).reduce((acc: number) => acc += 410, 4096) / 4096));
+				bp = Math.floor(bp * (atkConditions.pokemon.filter(poke => poke.fainted).reduce((acc: number) => acc += 410, 4096) / 4096.0));
 				break;
 		}
 	}
