@@ -10,7 +10,7 @@ import { getMultipleEff } from "./../typechart";
 import { Pokemon, Conditions, calculate, getMoveType, getHazardsDamage } from "./../calc";
 import { getAbility, getFormatsData, getItem, getMove } from "./../battle-data";
 import { Battle } from "../battle";
-import { Decision, MoveDecision } from "../decision";
+import { Decision, MoveDecision, TeamDecision } from "../decision";
 
 const SingleTurnMoves = ['protect', 'detect', 'kingsshield', 'quickguard', 'spikyshield', 'wideguard', 'banefulbunker', 'obstruct', 'maxguard', 'endure'];
 
@@ -2251,7 +2251,7 @@ export class SinglesEffective implements Module {
 	* Switches
 	*/
 
-	getBestSwitch(battle: Battle, decisions: Decision[][]): { decision: Decision[], ev: { [key: string]: number } }[] {
+	getBestSwitch(battle: Battle, decisions: Decision[][]): Decision[] {
 		debug('Switch options | Foe: ' + battle.foe.active[0].name);
 		let switches = [];
 		for (let i = 0; i < decisions.length; i++) {
@@ -2286,14 +2286,13 @@ export class SinglesEffective implements Module {
 		return switches[0].decision;
 	};
 
-	getBestLead(battle: Battle, decisions: Decision[][]): Decision[] {
-		let sideIdToPokemon = {};
-		for (let i = 0; i < decisions.length; i++) {
-			const sideId = decisions[i][0].team[0];
-			sideIdToPokemon[sideId] = battle.getCalcRequestPokemon(sideId, true);;
-		}
+	getBestLead(battle: Battle, decisions: TeamDecision[][]): Decision[] {
+		const sideIdToPokemon = decisions.map(decision => decision[0].team[0]).reduce((acc: Record<number, Pokemon>, v) => {
+			acc[v] = battle.getCalcRequestPokemon(v, true);
+			return acc;
+		}, {});
 
-		const leads: Decision[][] = [];
+		let leads: TeamDecision[][] = [];
 
 		// trickroom setters
 		for (let i = 0; i < decisions.length; i++) {
@@ -2388,8 +2387,17 @@ export class SinglesEffective implements Module {
 			}
 		}
 
-		if (leads.length === 0) return this.sample(decisions);
-		return this.sample(leads);
+		decisions = leads || decisions;
+		leads = [];
+		for (let i = 0; i < decisions.length; i++) {
+			const sideId = decisions[i][0].team[0];
+			const pokeA = sideIdToPokemon[sideId];
+			if (pokeA.hasAbility('supremeoverlord')) continue;
+			if (battle.request.side.pokemon[sideId].moves.some(move => ['lastrespects', 'revivalblessing'].includes(move))) continue;
+			leads.push(decisions[i]);
+		}
+
+		return this.sample(leads || decisions);
 	};
 
 	/*
@@ -2403,7 +2411,7 @@ export class SinglesEffective implements Module {
 		} else if (battle.request?.active) {
 			return this.getBestMove(battle, decisions);
 		} else {
-			return this.getBestLead(battle, decisions);
+			return this.getBestLead(battle, decisions as TeamDecision[][]);
 		}
 	};
 };

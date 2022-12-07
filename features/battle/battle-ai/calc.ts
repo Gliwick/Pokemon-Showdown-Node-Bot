@@ -1078,6 +1078,10 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		}
 	}
 
+	if (move.type === atkPoke.terastallize && !move.multihit && move.priority <= 0 && move.bp && move.bp > 1) {
+		bp = Math.max(bp, 60);
+	}
+
 	/******************************
 	* Modifiers
 	*******************************/
