@@ -210,13 +210,11 @@ exports.getTimeAgo = function (time, lang) {
 
 /* File system utils */
 
-export function watchFile(filename: PathLike, listener: (curr: Stats, prev: Stats) => void): boolean {
+export function watchFile(filename: PathLike, listener: (curr: Stats, prev: Stats) => void): void {
 	try {
 		fsWatchFile.apply(fs, [filename, listener]);
-		return false;
 	} catch (e) {
 		error('Your version of node does not support `fs.watchFile`');
-		return false;
 	}
 };
 
