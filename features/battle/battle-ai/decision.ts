@@ -3,7 +3,7 @@
 */
 
 import { Battle } from "./battle";
-import { Move, PokemonType } from "./battle-data";
+import { Move, Type } from "./battle-data";
 
 type DecisionType = 'move' | 'switch' | 'team' | 'pass' | 'shift';
 
@@ -22,7 +22,7 @@ export abstract class Decision {
 	protected abstract getArgsStr(battle?: Battle): string;
 }
 
-type Transformation = { terastallize: PokemonType } | string;
+type Transformation = { terastallize: Type } | string;
 
 export class MoveDecision extends Decision {
 	moveId: number;
@@ -302,7 +302,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 					for (let target of targets) {
 						tables[i].push(new MoveDecision(j, target, null, move.move, move.pp));
 						if (mega) tables[i].push(new MoveDecision(j, target, 'mega', move.move, move.pp));
-						if (active.canTerastallize) tables[i].push(new MoveDecision(j, target, { terastallize: active.canTerastallize as PokemonType }, move.move, move.pp));;
+						if (active.canTerastallize) tables[i].push(new MoveDecision(j, target, { terastallize: active.canTerastallize as Type }, move.move, move.pp));;
 					}
 
 					if (active.canZMove && active.canZMove[j]) {

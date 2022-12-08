@@ -10,7 +10,7 @@ import { GroupChatsManager } from './groupchats/index'
 import { ModerationManager } from './moderation/index'
 import { TournamentsManager } from './tournaments/index'
 
-const featureInitializers: { [key: string]: () => Feature } = {
+const featureInitializers: Record<string, () => Feature> = {
     battle: () => new BattleManager(),
     groupchats: () => new GroupChatsManager(),
     moderation: () => new ModerationManager(),
@@ -21,10 +21,10 @@ export function initFeature(id: string): Feature | null {
     return featureInitializers[id]?.();
 }
 
-export function initFeatures(): { [key: string]: Feature } {
-    return Object.entries(featureInitializers).reduce((acc: { [key: string]: Feature }, [id, initializer]) => {
+export function initFeatures(): Record<string, Feature> {
+    return Object.entries(featureInitializers).reduce((acc: Record<string, Feature>, [id, initializer]) => {
         acc[id] = initializer(); return acc;
     }, {});
 }
 
-export const features: { [key: string]: Feature } = initFeatures();
+export const features: Record<string, Feature> = initFeatures();

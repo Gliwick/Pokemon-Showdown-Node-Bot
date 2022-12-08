@@ -2,11 +2,12 @@
 	Majors
 */
 
+import { error } from '../../../console-reports';
 import { toId } from '../../../tools';
 import { Battle, BattleType, Side } from './battle';
 import { Move, Pokemon, getPokemon, getMove, getEffect, BoostedStat } from './battle-data';
 
-export const majors: { [key: string]: ((args: string[], kwargs: { [key: string]: string }, isIntro) => void) | string } = {
+export const majors: Record<string, ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void) | string> = {
 	rated: function (this: Battle, args, kwargs) {
 		this.rated = true;
 	},

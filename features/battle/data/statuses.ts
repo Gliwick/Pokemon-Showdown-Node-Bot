@@ -88,13 +88,13 @@ interface BasicEffect extends EffectData {
 
 // type stabs to emulate missing types
 type EventMethod = `on${string}`;
-type AnyFunction = (this: { [key: string]: any }, arg1?: any, arg2?: any, arg3?: any, arg4?: any) => void;
-type ActiveMove = { [key: string]: any };
+type AnyFunction = (this: Record<string, any>, arg1?: any, arg2?: any, arg3?: any, arg4?: any) => void;
+type ActiveMove = Record<string, any>;
 
-type Condition = BasicEffect & { [key in EventMethod]?: AnyFunction | number | string } & {
+type Condition = BasicEffect & Record<EventMethod, AnyFunction | number | string> & {
 	readonly effectType: 'Condition' | 'Weather' | 'Status' | 'Terastal';
 	readonly counterMax?: number;
-	readonly durationCallback?: (this: { [key: string]: any }, target: { [key: string]: any }, source: { [key: string]: any }, effect: Condition | null) => number;
+	readonly durationCallback?: (this: Record<string, any>, target: Record<string, any>, source: Record<string, any>, effect: Condition | null) => number;
 }
 
 export type ConditionData = Partial<Condition>;

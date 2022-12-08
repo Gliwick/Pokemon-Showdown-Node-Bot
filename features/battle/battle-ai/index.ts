@@ -4,12 +4,13 @@
 
 const battleAutojoinFile = AppOptions.data + "_temp/" + "battle-autojoin-tmp.json";
 
+import { debug } from "../../../console-reports";
 import { Battle } from "./battle";
 
 import { createStream } from "./battle-log";
 
 export class BattleBot {
-	battles: { [key: string]: Battle } = {};
+	battles: Record<string, Battle> = {};
 	battlesCount = 0;
 
 	autojoinFFM;

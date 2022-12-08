@@ -2,7 +2,7 @@
 * Pokemon Data translations
 */
 
-export const translations: { [key: string]: { [key: string]: string } } = {};
+export const translations: Record<string, Record<string, string>> = {};
 
 /* Battle Abilities */
 

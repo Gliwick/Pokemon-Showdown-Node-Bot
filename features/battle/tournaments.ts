@@ -9,7 +9,7 @@ const ACTION_INTERVAL = 1500;
 
 export class TourManager {
 	tourData = {};
-	lastAction: { [key: string]: number } = {};
+	lastAction: Record<string, number> = {};
 
 	teamBuilder: TeamBuilder;
 

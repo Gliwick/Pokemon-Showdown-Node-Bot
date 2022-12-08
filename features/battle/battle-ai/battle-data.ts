@@ -11,9 +11,9 @@ const MODS_DATA_DIR = BATTLE_DATA_DIR + 'mods/';
 
 export const CurrentGen = 9;
 
-export type PokemonType = 'Bug' | 'Dark' | 'Dragon' | 'Electric' | 'Fairy' | 'Fighting' | 'Fire' | 'Flying' | 'Ghost' | 'Grass' | 'Ground' | 'Ice' | 'Normal' | 'Poison' | 'Psychic' | 'Rock' | 'Steel' | 'Water' | '???';
+export type Type = 'Bug' | 'Dark' | 'Dragon' | 'Electric' | 'Fairy' | 'Fighting' | 'Fire' | 'Flying' | 'Ghost' | 'Grass' | 'Ground' | 'Ice' | 'Normal' | 'Poison' | 'Psychic' | 'Rock' | 'Steel' | 'Water' | '???';
 
-export function getEffect(effect, gen) {
+export function getEffect(effect, gen: number = CurrentGen) {
 	if (!effect || typeof effect === 'string') {
 		const name = (effect || '').trim();
 		if (name.substr(0, 5) === 'item:') {
@@ -121,7 +121,7 @@ export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: st
 
 export const getTemplate = getPokemon;
 
-export function getMove(move, gen: number = CurrentGen, battleId?: string): Move {
+export function getMove(move: string, gen: number = CurrentGen, battleId?: string): Move {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	move = toId(move);
 	if (move.indexOf("hiddenpower") === 0) {
@@ -174,9 +174,8 @@ export function getMove(move, gen: number = CurrentGen, battleId?: string): Move
 			priority: 0,
 			flags: { protect: 1 },
 			effectType: 'Move',
-			type: 'Normal',
+			type: evaluateMoveType(move),
 		};
-
 
 		const specialTypes = ['Fire', 'Water', 'Grass', 'Ice', 'Electric', 'Dark', 'Psychic', 'Dragon'];
 		if (specialTypes.includes(moveData.type)) moveData.category = 'Special';
@@ -187,7 +186,7 @@ export function getMove(move, gen: number = CurrentGen, battleId?: string): Move
 	return moveData;
 };
 
-const TypeAliases: { [key in PokemonType]?: string[] } = {
+const TypeAliases: Partial<Record<Type, string[]>> = {
 	'Bug': ['bug'],
 	'Dark': ['dark'],
 	'Dragon': ['dragon'],
@@ -208,8 +207,8 @@ const TypeAliases: { [key in PokemonType]?: string[] } = {
 	'Water': ['water', 'aqua', 'bubble', 'hydro'],
 };
 
-function evaluateMoveType(name: string): PokemonType {
-	let moveType: PokemonType;
+function evaluateMoveType(name: string): Type {
+	let moveType: Type;
 	for (moveType in TypeAliases) {
 		if (name.indexOf(moveType) >= 0) {
 			return moveType;
@@ -227,7 +226,7 @@ function evaluateMoveType(name: string): PokemonType {
 	return 'Normal';
 }
 
-export function getItem(item, gen: number = CurrentGen, battleId?: string) {
+export function getItem(item: string, gen: number = CurrentGen, battleId?: string) {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	item = toId(item);
 	const itemData = {};
@@ -255,7 +254,7 @@ export function getItem(item, gen: number = CurrentGen, battleId?: string) {
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + "/items.js").BattleItems[move];
+			temp = require(MODS_DATA_DIR + formatMod + "/items.js").BattleItems[item];
 		} catch (e) { }
 		if (temp) {
 			if (!temp.inherit) {
@@ -281,19 +280,19 @@ export function getItem(item, gen: number = CurrentGen, battleId?: string) {
 	return itemData;
 };
 
-export function getAbility(ab, gen: number = CurrentGen, battleId?: string) {
+export function getAbility(abilityId: string, gen: number = CurrentGen, battleId?: string) {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
-	ab = toId(ab);
+	abilityId = toId(abilityId);
 	const ability = {};
 	let temp;
 	try {
-		temp = DataDownloader.getAbilities()[ab];
+		temp = DataDownloader.getAbilities()[abilityId];
 		for (let i in temp) ability[i] = temp[i];
-		ability.id = ab;
+		ability.id = abilityId;
 	} catch (e) { }
 	for (let i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + "gen" + i + "/abilities.js").BattleAbilities[ab];
+			temp = require(BATTLE_DATA_DIR + "gen" + i + "/abilities.js").BattleAbilities[abilityId];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
@@ -309,7 +308,7 @@ export function getAbility(ab, gen: number = CurrentGen, battleId?: string) {
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + "/abilities.js").BattleAbilities[move];
+			temp = require(MODS_DATA_DIR + formatMod + "/abilities.js").BattleAbilities[abilityId];
 		} catch (e) { }
 		if (temp) {
 			if (!temp.inherit) {
@@ -321,8 +320,8 @@ export function getAbility(ab, gen: number = CurrentGen, battleId?: string) {
 
 	if (!ability.id) {
 		return {
-			id: ab,
-			name: ab,
+			id: abilityId,
+			name: abilityId,
 			rating: 0,
 			num: 0,
 			category: "Effect",
@@ -350,7 +349,7 @@ export class Move {
 		this.pp = Math.floor(this.template.pp * 1.6);
 	}
 
-	restorePP(pp) {
+	restorePP(pp?: number) {
 		if (pp) {
 			this.pp += pp;
 		} else {
@@ -359,15 +358,15 @@ export class Move {
 	};
 };
 
-export type Gender = "M" | "F" | "N";
+export type Gender = 'M' | 'F' | 'N';
+
+export type Unknown = '&unknown';
 
 export type BoostedStat = 'atk' | 'def' | 'spa' | 'spd' | 'spe' | 'accuracy' | 'evasion';
-
-export type StatBoostsTable = { [key in BoostedStat]?: number };
+export type BoostsTable = Partial<Record<BoostedStat, number>>;
 
 export type BaseStat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
-
-export type BaseStatsTable = { [key in BaseStat]?: number };
+export type StatsTable = Partial<Record<BaseStat, number>>;
 
 export class Pokemon implements PokemonDetails {
 	template;
@@ -375,20 +374,20 @@ export class Pokemon implements PokemonDetails {
 	name;
 
 	transformed: boolean = false;
-	transformPrev = null;
+	transformPrev: Partial<Pokemon> | null = null;
 
 	gender: Gender | null = null;
 	level: number = 100;
 	shiny: boolean = false;
 
-	item: { [key: string]: string } | "&unknown" = "&unknown";
+	item: Record<string, any> | Unknown = '&unknown';
 	itemEffect = '';
 	prevItem = null;
 	prevItemEffect = '';
 
-	ability: { [key: string]: string } | "&unknown" = "&unknown";
+	ability: Record<string, any> | Unknown = '&unknown';
 	supressedAbility: boolean = false;
-	baseAbility: { [key: string]: string } | "&unknown" = "&unknown";
+	baseAbility: Record<string, any> | Unknown = '&unknown';
 	abilityStack = [];
 
 	moves: Move[] = [];
@@ -399,14 +398,14 @@ export class Pokemon implements PokemonDetails {
 	hp: number = 100;
 	fainted: boolean = false;
 	status: string | null = null;
-	volatiles = {};
-	boosts: StatBoostsTable = {};
-	terastallize: PokemonType | null = null;
+	volatiles: Record<string, any> = {};
+	boosts: BoostsTable = {};
+	terastallize: Type | null = null;
 
 	passing: number | null = null;
 	prepared = null;
 
-	helpers: { [key: string]: any } = {};
+	helpers: Record<string, any> = {};
 
 	constructor(template, properties: Partial<Pokemon>) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
@@ -422,12 +421,12 @@ export class Pokemon implements PokemonDetails {
 		}
 	}
 
-	addVolatile(volatile) {
+	addVolatile(volatile: string) {
 		volatile = toId(volatile);
 		this.volatiles[volatile] = true;
 	};
 
-	removeVolatile(volatile) {
+	removeVolatile(volatile: string) {
 		volatile = toId(volatile);
 		if (this.volatiles[volatile]) delete this.volatiles[volatile];
 	};
@@ -436,12 +435,12 @@ export class Pokemon implements PokemonDetails {
 		for (let i in this.volatiles) delete this.volatiles[i];
 	};
 
-	addBoost(stat, n) {
+	addBoost(stat: BoostedStat, n: number) {
 		if (!this.boosts[stat]) this.boosts[stat] = 0;
 		this.boosts[stat] += n;
 	};
 
-	setBoost(stat, n) {
+	setBoost(stat: BoostedStat, n: number) {
 		this.boosts[stat] = n;
 	};
 
@@ -455,7 +454,7 @@ export class Pokemon implements PokemonDetails {
 		for (let i in this.boosts) delete this.boosts[i];
 	};
 
-	markAbility(id, isNotBase: boolean = false) {
+	markAbility(id: string, isNotBase: boolean = false) {
 		this.ability = getAbility(id);
 		if ((!this.baseAbility || this.baseAbility === "&unknown") && !isNotBase) {
 			this.baseAbility = this.ability;
@@ -475,13 +474,10 @@ export class Pokemon implements PokemonDetails {
 	};
 
 	prepareMove(move, target) {
-		this.prepared = {
-			move: move,
-			target: target
-		};
+		this.prepared = { move, target };
 	};
 
-	markMove(id, deduct) {
+	markMove(id: string, deduct?: number) {
 		id = toId(id);
 		let move = null;
 		for (let i = 0; i < this.moves.length; i++) {
@@ -495,7 +491,7 @@ export class Pokemon implements PokemonDetails {
 		return move;
 	};
 
-	transformInto(pokemon) {
+	transformInto(pokemon: Pokemon) {
 		this.transformPrev = {
 			template: this.template,
 			species: this.species,
@@ -508,8 +504,8 @@ export class Pokemon implements PokemonDetails {
 		this.species = pokemon.species;
 		this.template = pokemon.template;
 		this.shiny = pokemon.shiny;
-		this.ability = pokemon.shiny;
-		this.baseAbility = pokemon.shiny;
+		this.ability = pokemon.ability;
+		this.baseAbility = pokemon.baseAbility;
 		this.abilityStack = pokemon.abilityStack.slice();
 		this.moves = [];
 		let mv;
@@ -520,7 +516,7 @@ export class Pokemon implements PokemonDetails {
 		}
 		this.transformed = true;
 		this.removeAllBoosts();
-		for (let stat in pokemon.boosts) this.boosts[stat] = pokemon.boosts[stat];
+		this.boosts = { ...pokemon.boosts };
 		this.addVolatile('transform');
 		this.addVolatile('formechange');
 		this.volatiles.formechange = (pokemon.volatiles.formechange ? pokemon.volatiles.formechange : pokemon.species);
@@ -531,10 +527,10 @@ export class Pokemon implements PokemonDetails {
 		if (this.transformPrev) {
 			this.template = this.transformPrev.template;
 			this.species = this.transformPrev.species;
-			this.shiny = this.transformPrev.shiny;
-			this.moves = this.transformPrev.moves;
-			this.ability = this.transformPrev.ability;
-			this.baseAbility = this.transformPrev.baseAbility;
+			this.shiny = !!this.transformPrev.shiny;
+			this.moves = this.transformPrev.moves || [];
+			this.ability = this.transformPrev.ability || '&unknown';
+			this.baseAbility = this.transformPrev.baseAbility || '&unknown';
 			this.abilityStack = this.transformPrev.abilityStack;
 		}
 		this.transformPrev = null;
@@ -554,7 +550,7 @@ export class Player {
 	userid: string;
 	avatar;
 	active: (Pokemon | null)[] = [];
-	side: { [key: string]: any } = {};
+	side: Record<string, any> = {};
 	pokemon: Pokemon[] = [];
 	teamPv: (PokemonDetails | null)[] = [];
 
@@ -565,24 +561,24 @@ export class Player {
 		this.avatar = avatar || 0;
 	}
 
-	setName(name) {
+	setName(name: string) {
 		this.name = name;
 		this.userid = toId(name);
 	};
 
-	removeSideCondition(condition) {
+	removeSideCondition(condition: string) {
 		condition = toId(condition);
 		if (this.side[condition]) delete this.side[condition];
 	};
 
-	addSideCondition(condition) {
+	addSideCondition(condition: string) {
 		condition = toId(condition);
 		if (!this.side[condition]) this.side[condition] = 0;
 		this.side[condition]++;
 	};
 };
 
-export function getFormatsData(poke, gen: number = CurrentGen, battleId?: string) {
+export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?: string) {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	poke = toId(poke);
 	const formatsData = {};

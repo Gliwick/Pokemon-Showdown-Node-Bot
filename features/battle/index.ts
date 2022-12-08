@@ -24,7 +24,7 @@ export class BattleManager implements Feature {
 		this.teamBuilder = new TeamBuilder();
 		this.challengeManager = new ChallengeManager(this.battleBot, this.teamBuilder);
 		this.tourManager = new TourManager(this.teamBuilder);
-		this.ladderManager = new LadderManager();
+		this.ladderManager = new LadderManager(this.battleBot, this.teamBuilder);
 	};
 
 	init() {

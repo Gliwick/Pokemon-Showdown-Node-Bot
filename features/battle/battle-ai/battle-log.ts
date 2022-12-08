@@ -2,6 +2,10 @@
 	Log system (battle)
 */
 
+import { existsSync, mkdirSync, PathLike, readdirSync, unlinkSync } from "fs";
+import { errlog, error } from "../../../console-reports";
+import { Battle } from "./battle";
+
 const LOGS_PATH = './logs/';
 
 function dateDifference(date1, date2) {
@@ -22,17 +26,17 @@ function dateDifference(date1, date2) {
 	return dif;
 }
 
-function checkDir(dir) {
+function checkDir(dir: PathLike) {
 	try {
-		if (!fs.existsSync(dir))
-			fs.mkdirSync(dir);
+		if (!existsSync(dir))
+			mkdirSync(dir);
 	} catch (e) { }
 }
 
 checkDir(LOGS_PATH);
 checkDir(LOGS_PATH + "battle-log/");
 
-export function createStream(battle) {
+export function createStream(battle: Battle) {
 	if (!Config.battleLog) return;
 	const f = new Date();
 	const fstr = Tools.addLeftZero(f.getFullYear(), 4) + '_' + Tools.addLeftZero(f.getMonth() + 1, 2) + '_' + Tools.addLeftZero(f.getDate(), 2);
@@ -45,7 +49,7 @@ export function createStream(battle) {
 	this.sweep(LOGS_PATH + "battle-log/");
 };
 
-export function sweep(dir) {
+export function sweep(dir: string) {
 	//delete previous logs
 	let ageOfLogs = 15;
 	if (Config.battleLog && typeof Config.battleLog.ageOfLogs === "number") {
@@ -54,7 +58,7 @@ export function sweep(dir) {
 	}
 	const f = new Date();
 	try {
-		const logs = fs.readdirSync(dir);
+		const logs = readdirSync(dir);
 		let aux;
 		const maxDaysOld = ageOfLogs;
 		for (let i = 0; i < logs.length; i++) {
@@ -63,7 +67,7 @@ export function sweep(dir) {
 			aux = aux.split('_');
 			if (aux.length < 4) continue;
 			if (dateDifference({ "day": parseInt(aux[3]), "month": parseInt(aux[2]), "year": parseInt(aux[1]) }, { "day": f.getDate(), "month": f.getMonth() + 1, "year": f.getFullYear() }) > maxDaysOld) {
-				try { fs.unlinkSync(dir + logs[i]); } catch (e) { error('failed to delete old security logs\n' + e.stack); }
+				try { unlinkSync(dir + logs[i]); } catch (e) { error('failed to delete old security logs\n' + e.stack); }
 			}
 		}
 	} catch (e) {

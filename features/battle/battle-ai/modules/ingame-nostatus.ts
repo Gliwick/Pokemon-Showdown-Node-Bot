@@ -17,6 +17,7 @@
 
 
 import { toId } from '../../../../tools';
+import { debug } from '../../../../console-reports';
 import { Module } from '../modules';
 
 import { Pokemon, Conditions, calculate } from './../calc';

@@ -1,6 +1,10 @@
 /*
 * Tools file
 */
+import * as fs from "fs";
+import { lstatSync, PathLike, readdirSync, Stats, watchFile as fsWatchFile } from "fs";
+import { inspect } from "util";
+import { errlog, error, info, ok } from "./console-reports";
 
 /* String utils */
 
@@ -53,12 +57,12 @@ exports.levenshtein = function (s, t, l) { // s = string 1, t = string 2, l = li
 	for (var i = n; i >= 0; i--) d[i] = [];
 	// Step 2
 	for (var i = n; i >= 0; i--) d[i][0] = i;
-	for (var j = m; j >= 0; j--) d[0][j] = j;
+	for (let j = m; j >= 0; j--) d[0][j] = j;
 	// Step 3
 	for (var i = 1; i <= n; i++) {
 		var s_i = s.charAt(i - 1);
 		// Step 4
-		for (var j = 1; j <= m; j++) {
+		for (let j = 1; j <= m; j++) {
 			// Check the jagged ld total so far
 			if (i === j && d[i][j] > 4) return n;
 			var t_j = t.charAt(j - 1);
@@ -74,116 +78,6 @@ exports.levenshtein = function (s, t, l) { // s = string 1, t = string 2, l = li
 	}
 	// Step 7
 	return d[n][m];
-};
-
-/* Console reporting */
-
-global.ok = function (str) {
-	if (AppOptions.debugmode) {
-		if (AppOptions.debugmode > 3) return;
-	} else if (Config.debug && Config.debug.ok === false) return;
-	console.log('ok'.green + '\t' + str);
-};
-
-global.info = function (str) {
-	if (AppOptions.debugmode) {
-		if (AppOptions.debugmode > 3) return;
-	} else if (Config.debug && Config.debug.info === false) return;
-	console.log('info'.cyan + '\t' + str);
-};
-
-global.error = function (str) {
-	if (AppOptions.debugmode) {
-		if (AppOptions.debugmode > 3) return;
-	} else if (Config.debug && Config.debug.error === false) return;
-	console.log('error'.red + '\t' + str);
-};
-
-global.errlog = function (str) {
-	if (AppOptions.debugmode) {
-		if (AppOptions.debugmode > 3) return;
-	} else if (Config.debug && Config.debug.errlog === false) return;
-	console.log(str);
-};
-
-global.debug = function (str) {
-	if (AppOptions.debugmode) {
-		if (AppOptions.debugmode > 1) return;
-	} else if (Config.debug && Config.debug.debug === false) return;
-	console.log('debug'.blue + '\t' + str);
-};
-
-global.cmdr = function (str) {
-	if (AppOptions.debugmode) {
-		if (AppOptions.debugmode > 1) return;
-	} else if (Config.debug && Config.debug.cmdr === false) return;
-	console.log('cmdr'.magenta + '\t' + str);
-};
-
-global.recv = function (str) {
-	if (AppOptions.debugmode) {
-		if (AppOptions.debugmode > 1) return;
-	} else if (Config.debug && Config.debug.recv === false) return;
-	console.log('recv'.grey + '\t' + str);
-};
-
-global.sent = function (str) {
-	if (AppOptions.debugmode) {
-		if (AppOptions.debugmode > 1) return;
-	} else if (Config.debug && Config.debug.sent === false) return;
-	console.log('sent'.grey + '\t' + str);
-};
-
-global.monitor = function (str, type, flag) {
-	switch (type) {
-		case 'room':
-			if (AppOptions.debugmode) {
-				if (AppOptions.debugmode > 3) return;
-			} else if (Config.debug && Config.debug.room === false) return;
-			switch (flag) {
-				case 'join':
-					console.log('room'.green + '\t' + str);
-					break;
-				case 'leave':
-					console.log('room'.yellow + '\t' + str);
-					break;
-				case 'error':
-					console.log('room'.red + '\t' + str);
-					break;
-				default:
-					console.log('room'.blue + '\t' + str);
-			}
-			break;
-		case 'battle':
-			if (AppOptions.debugmode) {
-				if (AppOptions.debugmode > 2) return;
-			} else if (Config.debug && Config.debug.battle === false) return;
-			switch (flag) {
-				case 'join':
-					console.log('battle'.green + '\t' + str);
-					break;
-				case 'leave':
-					console.log('battle'.yellow + '\t' + str);
-					break;
-				case 'error':
-					console.log('battle'.red + '\t' + str);
-					break;
-				default:
-					console.log('battle'.blue + '\t' + str);
-			}
-			break;
-		case 'status':
-			if (AppOptions.debugmode) {
-				if (AppOptions.debugmode > 2) return;
-			} else if (Config.debug && Config.debug.status === false) return;
-			console.log('status'.blue + '\t' + str);
-			break;
-		default:
-			if (AppOptions.debugmode) {
-				if (AppOptions.debugmode > 2) return;
-			} else if (Config.debug && Config.debug.monitor === false) return;
-			console.log('monitor'.cyan + '\t' + str);
-	}
 };
 
 /* Process arguments */
@@ -316,9 +210,10 @@ exports.getTimeAgo = function (time, lang) {
 
 /* File system utils */
 
-exports.watchFile = function () {
+export function watchFile(filename: PathLike, listener: (curr: Stats, prev: Stats) => void): boolean {
 	try {
-		return fs.watchFile.apply(fs, arguments);
+		fsWatchFile.apply(fs, [filename, listener]);
+		return false;
 	} catch (e) {
 		error('Your version of node does not support `fs.watchFile`');
 		return false;
@@ -391,7 +286,7 @@ exports.uploadToHastebin = function (toUpload, callback) {
 
 var loadLang = exports.loadLang = function (lang, reloading) {
 	var tradObj = {}, cmdsTra = {}, tempObj = {};
-	fs.readdirSync('./languages/' + lang).forEach((file: string) => {
+	readdirSync('./languages/' + lang).forEach((file: string) => {
 		if (!file.endsWith('.ts')) return;
 		if (reloading) Tools.uncacheTree('./languages/' + lang + '/' + file);
 		tempObj = require('./languages/' + lang + '/' + file).translations;
@@ -407,13 +302,13 @@ var loadLang = exports.loadLang = function (lang, reloading) {
 var translations = exports.translations = {};
 var loadTranslations = exports.loadTranslations = function (reloading) {
 	var errs = [];
-	fs.readdirSync('./languages').forEach(function (lang) {
-		if (fs.lstatSync('./languages/' + lang).isDirectory()) {
+	readdirSync('./languages').forEach((lang) => {
+		if (lstatSync('./languages/' + lang).isDirectory()) {
 			try {
 				translations[lang] = loadLang(lang, reloading);
 			} catch (e) {
 				errlog(e.stack);
-				error("Could not import language: ./languages/" + lang + "/ | " + sys.inspect(e));
+				error("Could not import language: ./languages/" + lang + "/ | " + inspect(e));
 				errs.push(lang);
 			}
 		}
@@ -563,7 +458,7 @@ var teamToJSON = exports.teamToJSON = function (text) {
 			line = line.substr(5);
 			var evLines = line.split('/');
 			curSet.evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
-			for (var j = 0; j < evLines.length; j++) {
+			for (let j = 0; j < evLines.length; j++) {
 				var evLine = evLines[j].trim();
 				var spaceIndex = evLine.indexOf(' ');
 				if (spaceIndex === -1) continue;
@@ -576,7 +471,7 @@ var teamToJSON = exports.teamToJSON = function (text) {
 			line = line.substr(5);
 			var ivLines = line.split(' / ');
 			curSet.ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
-			for (var j = 0; j < ivLines.length; j++) {
+			for (let j = 0; j < ivLines.length; j++) {
 				var ivLine = ivLines[j];
 				var spaceIndex = ivLine.indexOf(' ');
 				if (spaceIndex === -1) continue;
@@ -702,7 +597,7 @@ var packTeam = exports.packTeam = function (team) {
 
 		if (set.pokeball || (set.hpType && !hasHP) || set.gigantamax || (set.dynamaxLevel !== undefined && set.dynamaxLevel !== 10) || set.teraType) {
 			buf += ',' + (set.hpType || '');
-			buf += ',' + toID(set.pokeball);
+			buf += ',' + toId(set.pokeball);
 			buf += ',' + (set.gigantamax ? 'G' : '');
 			buf += ',' + (set.dynamaxLevel !== undefined && set.dynamaxLevel !== 10 ? set.dynamaxLevel : '');
 			buf += ',' + (set.teraType || '');
@@ -890,7 +785,7 @@ exports.exportTeam = function (team) {
 		}
 		var first = true;
 		if (curSet.evs) {
-			for (var j in BattleStatNames) {
+			for (let j in BattleStatNames) {
 				if (!curSet.evs[j]) continue;
 				if (first) {
 					text += 'EVs: ';
@@ -911,7 +806,7 @@ exports.exportTeam = function (team) {
 		if (curSet.ivs) {
 			var defaultIvs = true;
 			var hpType = false;
-			for (var j = 0; j < curSet.moves.length; j++) {
+			for (let j = 0; j < curSet.moves.length; j++) {
 				var move = curSet.moves[j];
 				if (move.substr(0, 13) === 'Hidden Power ' && move.substr(0, 14) !== 'Hidden Power [') {
 					hpType = move.substr(13);
@@ -951,7 +846,7 @@ exports.exportTeam = function (team) {
 			text += "\n";
 		}
 		if (curSet.moves) {
-			for (var j = 0; j < curSet.moves.length; j++) {
+			for (let j = 0; j < curSet.moves.length; j++) {
 				var move = curSet.moves[j];
 				if (move.substr(0, 13) === 'Hidden Power ') {
 					move = move.substr(0, 13) + '[' + move.substr(13) + ']';

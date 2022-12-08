@@ -3,6 +3,7 @@
  */
 
 import { toId } from '../../../tools';
+import { debug } from '../../../console-reports';
 import { Battle } from './battle';
 import { Decision } from './decision';
 import { IngameNoStatus } from './modules/ingame-nostatus';
@@ -15,7 +16,7 @@ export interface Module {
 	decide: (battle: Battle, decisions: Decision[][]) => Decision[];
 }
 
-export const modules: { [key: string]: Module } = {
+export const modules: Record<string, Module> = {
 	'ingame-nostatus': new IngameNoStatus(),
 	'random': new Random(),
 	'singles-eff': new SinglesEffective(),

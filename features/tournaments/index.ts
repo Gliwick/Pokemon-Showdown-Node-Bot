@@ -71,7 +71,7 @@ export class TournamentsManager implements Feature {
 	id = 'tours';
 	desc = 'A tool to ease tournaments creation';
 
-	tournaments: { [key: string]: Tournament } = {};
+	tournaments: Record<string, Tournament> = {};
 	tourData = {};
 
 	leaderboards: LeaderboardsManager;

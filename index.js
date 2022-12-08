@@ -501,7 +501,7 @@ if (!AppOptions.testmode && Config.crashguard) {
 
 //WatchConfig
 if (!AppOptions.testmode && Config.watchconfig) {
-	Tools.watchFile(AppOptions.config, function (curr, prev) {
+	Tools.watchFile(AppOptions.config, (curr, prev) => {
 		if (curr.mtime <= prev.mtime) return;
 		try {
 			Tools.uncacheTree(AppOptions.config);

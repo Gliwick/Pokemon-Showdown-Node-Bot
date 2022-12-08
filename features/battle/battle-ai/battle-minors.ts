@@ -3,12 +3,13 @@
 */
 
 import { toId } from '../../../tools';
+import { debug } from '../../../console-reports';
 import { Battle } from './battle';
-import { getPokemon, getMove, getEffect, getItem, getAbility } from './battle-data';
+import { getPokemon, getMove, getEffect, getItem, getAbility, Type } from './battle-data';
 
-type Minor = `-${string}`;
+export type Minor = `-${string}`;
 
-export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string]: string }, isIntro) => void) | Minor } = {
+export const minors: Record<Minor, ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void) | Minor> = {
 	"-damage": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const hp = this.parseHealth(args[2]);
@@ -188,10 +189,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 			}
 		} else {
 			poke.removeAllBoosts();
-			for (let i in poke2.boosts) {
-				poke.boosts[i] = poke2.boosts[i];
-				if (!poke.boosts[i]) delete poke.boosts[i];
-			}
+			poke.boosts = { ...poke2.boosts };
 		}
 	},
 
@@ -459,7 +457,7 @@ export const minors: { [key in Minor]?: ((args: string[], kwargs: { [key: string
 
 	"-terastallize": function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
-		poke.terastallize = args[2];
+		poke.terastallize = args[2] as Type;
 	},
 
 	"-start": function (this: Battle, args, kwargs) {

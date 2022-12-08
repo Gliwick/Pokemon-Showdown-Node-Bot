@@ -1,14 +1,21 @@
-import { battleBot } from "./battle-ai";
-import { teamBuilder } from "./teambuilder";
+import { toId } from "../../tools";
+import { BattleBot } from "./battle-ai";
+import { TeamBuilder } from "./teambuilder";
 
 export class LadderManager {
 	reportsRoom: boolean = false;
 	laddering: boolean = false;
-	ladderTimer: number | null = null;
+	ladderTimer: NodeJS.Timeout | null = null;
 
-	constructor() { };
+	battleBot: BattleBot;
+	teamBuilder: TeamBuilder;
 
-	reportBattle(room) {
+	constructor(battleBot: BattleBot, teamBuilder: TeamBuilder) {
+		this.battleBot = battleBot;
+		this.teamBuilder = teamBuilder;
+	};
+
+	reportBattle(room: string) {
 		if (!this.reportsRoom) return;
 		let lang = Config.language || 'english';
 		if (Settings.settings['language'] && Settings.settings['language'][this.reportsRoom]) lang = Settings.settings['language'][this.reportsRoom];
@@ -16,25 +23,25 @@ export class LadderManager {
 		this.reportsRoom = false;
 	};
 
-	start(format) {
+	start(format?: string) {
 		if (!format) return false;
 		if (this.laddering) return false;
 		format = toId(format);
-		const check = function () {
+		const check = (() => {
 			if (Settings.lockdown) return;
 			let counter = 0;
 			let maxBattles = 1;
 			if (Config.ladderNumberOfBattles) maxBattles = Config.ladderNumberOfBattles;
-			for (let battle in battleBot.battles) {
-				if (battleBot.battles[battle].tier && toId(battleBot.battles[battle].tier) === format && battleBot.battles[battle].rated) counter++;
+			for (let battle in this.battleBot.battles) {
+				if (this.battleBot.battles[battle].tier && toId(this.battleBot.battles[battle].tier) === format && this.battleBot.battles[battle].rated) counter++;
 			}
 			if (counter >= maxBattles) return;
 			const cmds: string[] = [];
-			const team = teamBuilder.getTeam(format);
+			const team = this.teamBuilder.getTeam(format);
 			if (team) cmds.push('|/useteam ' + team);
 			cmds.push('|/search ' + format);
 			Bot.send(cmds);
-		};
+		}).bind(this);
 		this.laddering = true;
 		this.ladderTimer = setInterval(check, Config.ladderCheckInterval || (10 * 1000));
 		check();

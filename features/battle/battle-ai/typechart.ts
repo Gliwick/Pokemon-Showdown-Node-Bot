@@ -5,9 +5,9 @@
 const DATA_DIR = './../data/';
 const MODS_DATA_DIR = DATA_DIR + 'mods/';
 
-import { CurrentGen, PokemonType } from './battle-data';
+import { CurrentGen, Type } from './battle-data';
 
-export function getMultipleEff(typeA: PokemonType, typesB: PokemonType[], gen: number, notImmune: boolean, inverse: boolean, battleId?: string): number {
+export function getMultipleEff(typeA: Type, typesB: Type[], gen: number, notImmune: boolean, inverse: boolean, battleId?: string): number {
 	let mux = 1;
 	let tmp;
 	for (let i = 0; i < typesB.length; i++) {
@@ -18,7 +18,7 @@ export function getMultipleEff(typeA: PokemonType, typesB: PokemonType[], gen: n
 	return mux;
 };
 
-export function getEffectiveness(typeA: PokemonType, typeB: PokemonType, gen: number = CurrentGen, inverse: boolean, battleId?: string): number {
+export function getEffectiveness(typeA: Type, typeB: Type, gen: number = CurrentGen, inverse: boolean, battleId?: string): number {
 	const chart = getChart(gen, battleId);
 
 	if (!chart[typeB] || !chart[typeB][typeA]) return 1;
@@ -44,14 +44,14 @@ function getChart(gen: number = CurrentGen, battleId?: string): TypeChart {
 		} catch (e) { }
 	}
 
-	return typechart['gen' + gen] || typechart['gen' + CurrentGen];
+	return typechart[('gen' + gen) as Gen] || typechart[('gen' + CurrentGen) as Gen];
 }
 
 type Gen = `gen${number}`;
 
-type TypeChart = { [key in PokemonType]?: { [key in PokemonType]?: number } };
+type TypeChart = Partial<Record<Type, Partial<Record<Type, number>>>>;
 
-export const typechart: { [key in Gen]?: TypeChart } = {
+export const typechart: Record<Gen, TypeChart> = {
 	gen9: {
 		"Bug": {
 			"Bug": 0,

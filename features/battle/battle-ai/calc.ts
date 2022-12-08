@@ -3,9 +3,10 @@
 */
 
 import { toId } from '../../../tools';
+import { debug } from '../../../console-reports';
 import { getMultipleEff, getEffectiveness } from "./typechart";
 
-import { CurrentGen, PokemonType, Gender, BaseStat, BaseStatsTable, StatBoostsTable, BoostedStat } from "./battle-data";
+import { CurrentGen, Type, Gender, BaseStat, StatsTable, BoostsTable, BoostedStat } from "./battle-data";
 import { Battle } from "./battle";
 import { deepcopy } from '../utils';
 
@@ -18,22 +19,22 @@ export class Pokemon {
 	name: string;
 	species: string;
 	gender: Gender | null = null;
-	item: { [key: string]: any } | null = null;
-	stats: BaseStatsTable = {};
-	evs: BaseStatsTable = {};
-	ivs: BaseStatsTable = {};
-	dvs: BaseStatsTable = {};
-	nature: BaseStatsTable = {};
-	ability: { [key: string]: any } | null = null;
+	item: Record<string, any> | null = null;
+	stats: StatsTable = {};
+	evs: StatsTable = {};
+	ivs: StatsTable = {};
+	dvs: StatsTable = {};
+	nature: StatsTable = {};
+	ability: Record<string, any> | null = null;
 	supressedAbility: boolean = false;
 	level: number = 100;
 	shiny: boolean = false;
 	happiness: number | null = null;
 	status: string | null = null;
-	terastallize: PokemonType | null = null;
+	terastallize: Type | null = null;
 	hp: number = 100;
 
-	constructor(template, properties: Partial<Pokemon> & { helpers?: { [key: string]: any } }) {
+	constructor(template, properties: Partial<Pokemon> & { helpers?: Record<string, any> }) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
 		this.template = { ...template };
 		if (properties.helpers?.template) {
@@ -93,14 +94,14 @@ export class Pokemon {
 		}
 	};
 
-	getStats(gen: number = CurrentGen): Required<BaseStatsTable> {
-		return BaseStats.reduce((acc: BaseStatsTable, stat) => {
+	getStats(gen: number = CurrentGen): Required<StatsTable> {
+		return BaseStats.reduce((acc: StatsTable, stat) => {
 			acc[stat] = this.getStat(stat, gen);
 			return acc;
-		}, {}) as Required<BaseStatsTable>;
+		}, {}) as Required<StatsTable>;
 	};
 
-	getBoostedStat(stat: BaseStat & BoostedStat, statValue: number, boosts: StatBoostsTable): number {
+	getBoostedStat(stat: BaseStat & BoostedStat, statValue: number, boosts: BoostsTable): number {
 		if (boosts[stat]) {
 			let muxOff = 1 + (0.5) * Math.abs(boosts[stat] || 0);
 			if ((boosts[stat] || 0) < 0) muxOff = 1 / muxOff;
@@ -109,7 +110,7 @@ export class Pokemon {
 		return statValue;
 	};
 
-	getTypes(conditions: Conditions): PokemonType[] {
+	getTypes(conditions: Conditions): Type[] {
 		if (this.terastallize) return [this.terastallize];
 
 		let types = [...(this.template.types || [])];
@@ -132,11 +133,11 @@ export class Pokemon {
 		return false;
 	}
 
-	hasAbility(ability: string | { [key: string]: any }): boolean {
+	hasAbility(ability: string | Record<string, any>): boolean {
 		return !!(this.ability && !this.supressedAbility && (this.ability.id === ability || (typeof ability !== 'string' && this.ability.id in ability)));
 	}
 
-	hasItem(item: string | { [key: string]: number }): boolean {
+	hasItem(item: string | Record<string, any>): boolean {
 		return !!(this.item && (this.item.id === item || (typeof item !== 'string' && this.item.id in item)) && !this.hasAbility('klutz'));
 	}
 
@@ -177,11 +178,11 @@ export class Pokemon {
 };
 
 export class Conditions {
-	volatiles: { [key: string]: any } = {};
-	boosts: StatBoostsTable = {};
-	side: { [key: string]: any } = {};
+	volatiles: Record<string, any> = {};
+	boosts: BoostsTable = {};
+	side: Record<string, any> = {};
 	pokemon = [];
-	immediate: { [key: string]: any } = {};
+	immediate: Record<string, any> = {};
 
 	constructor(data: Partial<Conditions>) {
 		if (typeof data !== 'object') throw new Error('Invalid conditions data');
@@ -273,7 +274,7 @@ export function getHazardsDamage(poke: Pokemon, conditions: Conditions, globalCo
 	return dmg;
 };
 
-export function getMoveType(poke: Pokemon, move, conditions: Conditions, globalConditions, gen: number = CurrentGen): PokemonType {
+export function getMoveType(poke: Pokemon, move, conditions: Conditions, globalConditions, gen: number = CurrentGen): Type {
 	switch (move.id) {
 		case 'aurawheel':
 			if (poke.template.species === 'Morpeko-Hangry') return 'Dark';
@@ -367,7 +368,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	const defConditions = new Conditions(defender.conditions || {});
 
 	if (typeof transformation === 'object' && transformation?.terastallize) {
-		atkPoke.terastallize = transformation.terastallize as PokemonType;
+		atkPoke.terastallize = transformation.terastallize as Type;
 	}
 
 	const gen = battle.gen || CurrentGen;
@@ -876,7 +877,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				if (bp <= 60) bp = Math.floor(bp * 1.5);
 				break;
 			case 'toxicboost':
-				if (category === 'Physical' && atkPoke.status in { 'psn': 1, 'tox': 1 }) bp = Math.floor(bp * 1.5);
+				if (category === 'Physical' && ['psn', 'tox'].includes(atkPoke.status || '')) bp = Math.floor(bp * 1.5);
 				break;
 			case 'toughclaws':
 				if (move.flags?.contact) bp = Math.floor(bp * 1.3);

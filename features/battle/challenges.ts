@@ -12,7 +12,7 @@ export class ChallengeManager {
 		this.teamBuilder = teamBuilder;
 	};
 
-	canChallenge(nBattles, user: string) {
+	canChallenge(nBattles: number, user: string) {
 		if (!nBattles) return true; //If it is not busy, accept the challenge
 		if (Config.aceptAll) return true; //Acept all challenges if 'aceptAll' is enabled
 		if (Config.maxBattles && Config.maxBattles > nBattles) return true; //If it is not in too many battles, accept the challenge

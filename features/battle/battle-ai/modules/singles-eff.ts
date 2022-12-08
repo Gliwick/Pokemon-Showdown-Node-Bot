@@ -4,6 +4,7 @@
  */
 
 import { toId } from '../../../../tools';
+import { debug } from '../../../../console-reports';
 import { Module } from "../modules";
 
 import { getMultipleEff } from "./../typechart";
@@ -263,7 +264,7 @@ export class SinglesEffective implements Module {
 		return { pokeA, conditionsA, conditionsB, gconditions };
 	}
 
-	evaluatePokemon(battle: Battle, sideId: number): { [key: string]: number } {
+	evaluatePokemon(battle: Battle, sideId: number): Record<string, number> {
 		if (!battle.foe.active[0] || battle.foe.active[0].fainted) return { t: 0, d: 0 };
 
 		let isActive = (sideId === 0 && !!battle.request.active);
@@ -1863,7 +1864,7 @@ export class SinglesEffective implements Module {
 		}
 	}
 
-	sample<Type>(arr: Type[]): Type {
+	sample<T>(arr: T[]): T {
 		return arr[Math.floor(Math.random() * arr.length)];
 	}
 

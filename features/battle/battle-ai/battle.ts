@@ -3,19 +3,22 @@
  * Battle Bot 2.0
  */
 
+import { createWriteStream, PathLike, writeFileSync, WriteStream } from 'fs';
+import { inspect } from 'util';
 import { toId } from '../../../tools';
+import { debug, errlog, error } from '../../../console-reports';
 
 const MAX_RECURSIVE = 5;
 const MIN_TIME_LOCK = 3 * 1000; // 3 secods to avoid send spam
 
 import { majors } from './battle-majors';
-import { minors } from './battle-minors';
+import { minors, Minor } from './battle-minors';
 
 import { choose } from './modules';
-import { Decision, getDecisions, MoveDecision, SwitchDecision } from './decision';
+import { Decision, getDecisions, MoveDecision } from './decision';
 
 
-import { Player, Pokemon, getPokemon, getItem, getAbility, CurrentGen, PokemonDetails, Gender } from './battle-data';
+import { Player, Pokemon, getPokemon, getItem, getAbility, CurrentGen, PokemonDetails } from './battle-data';
 
 import { Pokemon as CalcRequestPokemon } from './calc';
 
@@ -47,14 +50,14 @@ interface Ident {
 export class Battle {
 	id: string;
 	title: number | null = null;
-	players: { [key in Side]: Player } = {
+	players: Record<Side, Player> = {
 		p1: new Player('p1'),
 		p2: new Player('p2'),
 	};
-	users: { [key: string]: string } = {};
+	users: Record<string, any> = {};
 
-	self: { [key: string]: any } = {};
-	foe: { [key: string]: any } = {};
+	self: Record<string, any> = {};
+	foe: Record<string, any> = {};
 
 	gametype: BattleType = BattleType.singles;
 	gen: number = CurrentGen;
@@ -66,21 +69,21 @@ export class Battle {
 	timer: boolean = false;
 	sentTimerReq: number = 0;
 	turn: number = 0;
-	request: { [key: string]: any } | null = null;
+	request: Record<string, any> | null = null;
 	rqid: number = 0;
 	teamPreview: number = 1;
 
-	conditions: { [key: string]: any } = {};
+	conditions: Record<string, any> = {};
 
-	file = null;
-	stream = null;
+	file: PathLike | null = null;
+	stream: WriteStream | null = null;
 	lastSend: LastSend = {
 		rqid: -1,
 		time: 0,
 		decision: null
 	};
 	lock: boolean = false;
-	leaveInterval: number | null = null;
+	leaveInterval: NodeJS.Timeout | null = null;
 
 	helpers: Helpers = { self: {}, foe: {} };
 
@@ -91,13 +94,13 @@ export class Battle {
 		this.id = id;
 	}
 
-	createLogStream(file) {
-		fs.writeFileSync(file, ""); // Clear File
-		this.stream = fs.createWriteStream(file, { flags: 'a+' });
+	createLogStream(file: PathLike) {
+		writeFileSync(file, ""); // Clear File
+		this.stream = createWriteStream(file, { flags: 'a+' });
 		this.file = file;
 	};
 
-	send(data) {
+	send(data: string | string[]) {
 		Bot.sendRoom(this.id, data, 2000);
 	};
 
@@ -240,8 +243,8 @@ export class Battle {
 		} catch (e2) {
 			errlog(e2.message);
 			errlog(e2.stack);
-			error("Module failed: " + mod.id + " | " + sys.inspect(e2));
-			SecurityLog.log("BATTLE MODULE FAILED: " + e2.message + "\nmodule: " + mod.id + "\n" + e2.stack);
+			error("Module failed: " + mod?.id + " | " + sys.inspect(e2));
+			SecurityLog.log("BATTLE MODULE FAILED: " + e2.message + "\nmodule: " + mod?.id + "\n" + e2.stack);
 		}
 		this.lock = false;
 		this.sendDecision(decisions[Math.floor(Math.random() * decisions.length)]);
@@ -264,37 +267,38 @@ export class Battle {
 			return;
 		} else {
 			let args = ['done'];
-			const kwargs = {};
+			const kwargs: Record<string, string> = {};
 			if (str !== '|') {
 				args = str.substr(1).split('|');
 			}
-			while (args[args.length - 1] && args[args.length - 1].substr(0, 1) === '[') {
+			while (args.length > 0 && args[args.length - 1].startsWith('[')) {
 				const bracketPos = args[args.length - 1].indexOf(']');
 				if (bracketPos <= 0) break;
-				const argstr = args.pop();
+				const argstr = args.pop() as string;
 				// default to '.' so it evaluates to boolean true
 				kwargs[argstr.substr(1, bracketPos - 1)] = ((argstr.substr(bracketPos + 1)).trim() || '.');
 			}
-			if (args[0].substr(0, 1) === '-') {
-				this.runMinor(args, kwargs, isIntro);
+			const event = args[0];
+			if (event.startsWith('-')) {
+				this.runMinor(event as Minor, args, kwargs, isIntro);
 			} else {
 				this.runMajor(args, kwargs, isIntro);
 			}
 		}
 	};
 
-	runMinor(args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) {
+	runMinor(event: Minor, args: string[], kwargs: Record<string, string>, isIntro?: boolean) {
 		if (args) {
 			if (args[2] === 'Sturdy' && args[0] === '-activate') args[2] = 'ability: Sturdy';
 		}
-		if (minors[args[0]]) {
-			let minor = minors[args[0]];
+		if (minors[event]) {
+			let minor = minors[event];
 			let r = 0;
 			while (typeof minor === "string" && r <= MAX_RECURSIVE) {
 				minor = minors[minor];
 			}
 			if (typeof minor !== "function") {
-				error("Unknown minor type: " + args[0] + " - " + sys.inspect(minor) + "");
+				error("Unknown minor type: " + args[0] + " - " + inspect(minor) + "");
 			} else {
 				debug('running minor ' + args[0] + '([' + args + '], ' + JSON.stringify(kwargs) + ')');
 				try {
@@ -309,7 +313,7 @@ export class Battle {
 		}
 	};
 
-	runMajor(args: string[], kwargs: { [key: string]: string }, isIntro?: boolean) {
+	runMajor(args: string[], kwargs: Record<string, string>, isIntro?: boolean) {
 		if (majors[args[0]]) {
 			let major = majors[args[0]];
 			let r = 0;
@@ -363,7 +367,7 @@ export class Battle {
 	};
 
 	parseSlot(id: string): number {
-		const slots: { [key: string]: number } = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5 };
+		const slots: Record<string, number> = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5 };
 		return slots[id] || 0;
 	};
 
@@ -404,7 +408,11 @@ export class Battle {
 	getSide(str?: string) {
 		if (!str) return null;
 		str = str.split(":")[0];
-		return this.players[str];
+		if (!(str in this.players)) {
+			error('Unknown side: ' + str);
+			return;
+		}
+		return this.players[str as Side];
 	};
 
 	getActive(str?: string): Pokemon | null {

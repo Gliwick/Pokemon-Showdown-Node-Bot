@@ -1,9 +1,12 @@
+import { existsSync, readFileSync, rename, writeFile } from 'fs';
+import { inspect } from 'util';
+import { debug, error } from '../../console-reports';
 import { toId } from '../../tools';
 
 const teamsDataFile = AppOptions.data + 'teams.json';
 
 export class TeamBuilder {
-	teams = {};
+	teams?: any = {};
 	staticTeams = {};
 	dynTeams = {};
 
@@ -16,15 +19,15 @@ export class TeamBuilder {
 		try {
 			if (reloading) Tools.uncacheTree('./features/battle/teams.js');
 			this.staticTeams = require('./teams.js').teams;
-			if (!fs.existsSync(teamsDataFile)) {
+			if (!existsSync(teamsDataFile)) {
 				this.dynTeams = {};
 			} else {
-				this.dynTeams = JSON.parse(fs.readFileSync(teamsDataFile).toString());
+				this.dynTeams = JSON.parse(readFileSync(teamsDataFile).toString());
 			}
 			this.mergeTeams();
 			return true;
 		} catch (e) {
-			error('failed to load teams: ' + sys.inspect(e));
+			error('failed to load teams: ' + inspect(e));
 			return false;
 		}
 	};
@@ -72,12 +75,12 @@ export class TeamBuilder {
 			this.writePending = true;
 			return;
 		}
-		fs.writeFile(teamsDataFile + '.0', data, function () {
+		writeFile(teamsDataFile + '.0', data, function () {
 			// rename is atomic on POSIX, but will throw an error on Windows
-			fs.rename(teamsDataFile + '.0', teamsDataFile, function (err) {
+			rename(teamsDataFile + '.0', teamsDataFile, function (err) {
 				if (err) {
 					// This should only happen on Windows.
-					fs.writeFile(teamsDataFile, data, finishWriting);
+					writeFile(teamsDataFile, data, finishWriting);
 					return;
 				}
 				finishWriting();
@@ -93,13 +96,13 @@ export class TeamBuilder {
 		let teamStr = '';
 		try {
 			if (typeof teamChosen === 'string') {
-				//already parsed
+				// already parsed
 				teamStr = teamChosen;
 			} else if (typeof teamChosen === 'object') {
 				if (teamChosen.maxPokemon && teamChosen.pokemon) {
-					//generate random team
+					// generate random team
 					const team = [];
-					const hasSpecies: { [key: string]: boolean } = {};
+					const hasSpecies: Record<string, boolean> = {};
 					if (teamChosen.essentialPokemon) {
 						for (let poke of teamChosen.essentialPokemon) {
 							team.push(poke);
