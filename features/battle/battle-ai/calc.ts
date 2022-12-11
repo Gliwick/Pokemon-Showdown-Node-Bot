@@ -889,7 +889,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			if (globalConditions.mistyterrain && atkPoke.isGrounded(atkConditions)) bp = Math.floor(bp * 1.5);
 			break;
 		case 'lastrespects':
-			bp = atkConditions.pokemon.filter(poke => poke.fainted).reduce((acc: number) => acc += 50, bp);
+			bp = bp + 50 * atkConditions.pokemon.filter(poke => poke.fainted || poke.status === 'fnt').length;
 			break;
 		case 'collisioncourse':
 		case 'electrodrift':
@@ -980,7 +980,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				if (move.flags?.slicing) bp = Math.floor(bp * 1.5);
 				break;
 			case 'supremeoverlord':
-				bp = Math.floor(bp * (atkConditions.pokemon.filter(poke => poke.fainted).reduce((acc: number) => acc += 410, 4096) / 4096.0));
+				bp = Math.floor(bp * (1 + 0.1 * atkConditions.pokemon.filter(poke => poke.fainted || poke.status === 'fnt').length));
 				break;
 		}
 	}
