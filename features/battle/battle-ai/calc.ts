@@ -35,7 +35,7 @@ export class Pokemon {
 	terastallize: Type | null = null;
 	hp: number = 100;
 
-	category?: Category | 'Status' | 'Mixed';
+	category: Category | 'Status' | 'Mixed' = 'Mixed';
 
 	constructor(template, properties: Partial<Pokemon> & { helpers?: Record<string, any> }, battle: Battle) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
@@ -539,10 +539,10 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	if (defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility('neutralizinggas')) {
 		switch (defPoke.ability.id) {
 			case 'vesselofruin':
-				if (atkStat === 'spa') atk = Math.floor(atk * 0.75);
+				if (category === 'Special') atk = Math.floor(atk * 0.75);
 				break;
 			case 'tabletsofruin':
-				if (atkStat === 'atk') atk = Math.floor(atk * 0.75);
+				if (category === 'Physical') atk = Math.floor(atk * 0.75);
 				break;
 			case 'protosynthesis':
 				if (!defConditions.volatiles.protosynthesis && !supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
@@ -1023,14 +1023,14 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			case 'lightball':
 				if (atkPoke.template.species.startsWith('Pikachu')) atk = Math.floor(atk * 2);
 			case 'thickclub':
-				if (atkStat === 'atk' && atkPoke.template.species === 'Clamperl') atk = Math.floor(atk * 2);
+				if (category === 'Physical' && ['Cubone', 'Marowak', 'Marowak-Alola'].includes(atkPoke.template.species)) atk *= 2;
 			case 'deepseatooth':
-				if (atkStat === 'spa') atk = Math.floor(atk * 2);
+				if (category === 'Special' && atkPoke.template.species === 'Clamperl') atk *= 2;
 			case 'choiceband':
-				if (atkStat === 'atk') atk = Math.floor(atk * 1.5);
+				if (category === 'Physical') atk = Math.floor(atk * 1.5);
 				break;
 			case 'choicespecs':
-				if (atkStat === 'spa') atk = Math.floor(atk * 1.5);
+				if (category === 'Special') atk = Math.floor(atk * 1.5);
 				break;
 			case 'souldew':
 			case 'adamantorb':

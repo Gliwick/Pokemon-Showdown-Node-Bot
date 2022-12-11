@@ -667,20 +667,22 @@ export class SinglesEffective implements BattleModule {
 			if (move.category === 'Special' || move.id === 'naturepower') hasSpecial = true;
 			if (move.category === 'Status') hasStatus = true;
 		}
-		if (hasPhysical) pokeB.category = 'Physical';
-		if (hasSpecial) pokeB.category = 'Special';
-		if (hasPhysical && hasSpecial) pokeB.category = 'Mixed';
-		if (!pokeB.category && movesB.length >= 4) pokeB.category = 'Status';
-		if (!pokeB.category) {
-			if (conditionsB.boosts && conditionsB.boosts.atk > 0 && conditionsB.boosts.spa <= 0) pokeB.category = 'Physical';
-			if (conditionsB.boosts && conditionsB.boosts.atk <= 0 && conditionsB.boosts.spa < 0) pokeB.category = 'Special';
-			if (conditionsB.boosts && conditionsB.boosts.atk > 0 && pokeB.template.species === 'Magearna') pokeB.category = 'Special';
+
+		let pokeCategory: (typeof pokeB.category | null) = null;
+		if (hasPhysical) pokeCategory = 'Physical';
+		if (hasSpecial) pokeCategory = 'Special';
+		if (hasPhysical && hasSpecial) pokeCategory = 'Mixed';
+		if (!pokeCategory && movesB.length >= 4) pokeCategory = 'Status';
+		if (!pokeCategory) {
+			if (conditionsB.boosts && conditionsB.boosts.atk > 0 && conditionsB.boosts.spa <= 0) pokeCategory = 'Physical';
+			if (conditionsB.boosts && conditionsB.boosts.atk <= 0 && conditionsB.boosts.spa < 0) pokeCategory = 'Special';
+			if (conditionsB.boosts && conditionsB.boosts.atk > 0 && pokeB.template.species === 'Magearna') pokeCategory = 'Special';
 		}
-		if (!pokeB.category) {
-			if (pokeB.template.baseStats['atk'] > pokeB.template.baseStats['spa']) pokeB.category = 'Physical';
-			if (pokeB.template.baseStats['atk'] < pokeB.template.baseStats['spa']) pokeB.category = 'Special';
+		if (!pokeCategory) {
+			if (pokeB.template.baseStats['atk'] > pokeB.template.baseStats['spa']) pokeCategory = 'Physical';
+			if (pokeB.template.baseStats['atk'] < pokeB.template.baseStats['spa']) pokeCategory = 'Special';
 		}
-		pokeB.category = pokeB.category || 'Mixed';
+		pokeB.category = pokeCategory || pokeB.category;
 
 		let supressedWeather = this.isWeatherSupressed(pokeA, pokeB);
 		for (let i = 0; i < decisions.length; i++) {
