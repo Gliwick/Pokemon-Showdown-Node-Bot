@@ -595,7 +595,7 @@ export class SinglesEffective implements BattleModule {
 	}
 
 	selfLastPokemon(battle: Battle): boolean {
-		(battle.request?.side?.pokemon || []).foreach(poke => debug('active: ' + poke.active + ', fainted: ' + poke.fainted));
+		(battle.request?.side?.pokemon || []).map(poke => debug('active: ' + poke.active + ', fainted: ' + poke.fainted));
 		return (battle.request?.side?.pokemon || []).filter(poke => !poke.active).all(poke => !!poke.fainted);
 	}
 

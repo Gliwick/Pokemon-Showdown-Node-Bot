@@ -31,7 +31,7 @@ var data = exports.data = [
 	},
 	{
 		url: "https://play.pokemonshowdown.com/data/learnsets.js?" + datenow,
-		file: "learnsets-g6.js"
+		file: "learnsets.js"
 	},
 	{
 		url: "https://play.pokemonshowdown.com/data/aliases.js?" + datenow,
