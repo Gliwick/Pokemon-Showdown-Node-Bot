@@ -4,9 +4,9 @@
 
 import { Battle } from "../battle";
 import { Decision } from "../decision";
-import { Module } from "../modules";
+import { BattleModule } from "../modules";
 
-export class Random implements Module {
+export class Random implements BattleModule {
   id = "random";
 
   constructor() { };

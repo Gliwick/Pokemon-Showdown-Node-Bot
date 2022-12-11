@@ -30,7 +30,7 @@ export class MoveDecision extends Decision {
 	move: string;
 	movePP: number;
 	transformation: Transformation | null;
-	moveData: Move | null = null;
+	moveData: Record<string, any> | null = null;
 
 	constructor(moveId: number, target: number | null, transformation: Transformation | null, move: string, movePP: number) {
 		super('move');

@@ -1,6 +1,6 @@
 export interface Feature {
-    id: string;
-    desc?: string;
+    readonly id: string;
+    readonly desc?: string;
     init: () => void;
     destroy: () => void;
 }

@@ -1,4 +1,3 @@
-
 declare global {
     interface String {
         green(): string;
@@ -69,7 +68,10 @@ export function sent(str: string): void {
     console.log('sent'.grey + '\t' + str);
 };
 
-export function monitor(str: string, type: string, flag?: string) {
+export type MonitorType = 'room' | 'battle' | 'status';
+export type MonitorFlag = 'join' | 'leave' | 'error';
+
+export function monitor(str: string, type?: MonitorType, flag?: MonitorFlag) {
     switch (type) {
         case 'room':
             if (AppOptions.debugmode) {

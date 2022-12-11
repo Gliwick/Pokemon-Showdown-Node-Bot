@@ -10,13 +10,13 @@ import { IngameNoStatus } from './modules/ingame-nostatus';
 import { Random } from './modules/random';
 import { SinglesEffective } from './modules/singles-eff';
 
-export interface Module {
-	id: string;
-	desc?: string;
+export interface BattleModule {
+	readonly id: string;
+	readonly desc?: string;
 	decide: (battle: Battle, decisions: Decision[][]) => Decision[];
 }
 
-export const modules: Record<string, Module> = {
+export const modules: Record<string, BattleModule> = {
 	'ingame-nostatus': new IngameNoStatus(),
 	'random': new Random(),
 	'singles-eff': new SinglesEffective(),
@@ -26,7 +26,7 @@ Object.values(modules).forEach((mod) => {
 	debug("Loaded battle module: " + mod.id + (mod.desc ? (" [" + mod.desc + "]") : ""));
 });
 
-export function choose(battle: Battle): Module | null {
+export function choose(battle: Battle): BattleModule | null {
 	if (!battle.tier) return null;
 
 	const modId = Config.battleModules?.[toId(battle.tier)];

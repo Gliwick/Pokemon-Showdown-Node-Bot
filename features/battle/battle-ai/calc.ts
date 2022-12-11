@@ -15,6 +15,7 @@ const BoostedStats: (BaseStat & BoostedStat)[] = ['atk', 'def', 'spa', 'spd', 's
 
 export class Pokemon {
 	template;
+	gen: number;
 
 	name: string;
 	species: string;
@@ -34,7 +35,9 @@ export class Pokemon {
 	terastallize: Type | null = null;
 	hp: number = 100;
 
-	constructor(template, properties: Partial<Pokemon> & { helpers?: Record<string, any> }) {
+	category?: Category | 'Status' | 'Mixed';
+
+	constructor(template, properties: Partial<Pokemon> & { helpers?: Record<string, any> }, battle: Battle) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
 		this.template = { ...template };
 		if (properties.helpers?.template) {
@@ -42,6 +45,8 @@ export class Pokemon {
 				this.template[attr] = deepcopy(properties.helpers.template[attr]);
 			}
 		}
+
+		this.gen = battle.gen;
 
 		this.name = this.template.species;
 		this.species = this.template.species;
@@ -74,12 +79,12 @@ export class Pokemon {
 		}
 	};
 
-	getStat(stat: BaseStat, gen: number = CurrentGen): number {
+	getStat(stat: BaseStat): number {
 		const knownStat = this.stats[stat];
 		if (knownStat) return knownStat;
 		if (stat === 'hp' && this.getBaseStat(stat) === 1) return 1;
 
-		if (gen <= 2) {
+		if (this.gen <= 2) {
 			if (stat === 'hp') {
 				return Math.floor(((this.getBaseStat(stat) + this.getDV(stat)) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level / 100) + 10 + this.level;
 			} else {
@@ -87,16 +92,16 @@ export class Pokemon {
 			}
 		} else {
 			if (stat === 'hp') {
-				return Math.floor((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, gen) / 4) * this.level / 100 + this.level + 10);
+				return Math.floor((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, this.gen) / 4) * this.level / 100 + this.level + 10);
 			} else {
-				return Math.floor(Math.floor((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, gen) / 4) * this.level / 100 + 5) * (this.nature[stat] || 1));
+				return Math.floor(Math.floor((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, this.gen) / 4) * this.level / 100 + 5) * (this.nature[stat] || 1));
 			}
 		}
 	};
 
-	getStats(gen: number = CurrentGen): Required<StatsTable> {
+	getStats(): Required<StatsTable> {
 		return BaseStats.reduce((acc: StatsTable, stat) => {
-			acc[stat] = this.getStat(stat, gen);
+			acc[stat] = this.getStat(stat);
 			return acc;
 		}, {}) as Required<StatsTable>;
 	};
@@ -123,7 +128,7 @@ export class Pokemon {
 		return types;
 	}
 
-	hasType(type_s: string | string[], conditions: Conditions): boolean {
+	hasType(type_s: Type | Type[], conditions: Conditions): boolean {
 		let pokemonTypes = this.getTypes(conditions);
 		if (typeof type_s === 'string') return pokemonTypes.includes(type_s);
 
@@ -134,6 +139,7 @@ export class Pokemon {
 	}
 
 	hasAbility(ability: string | Record<string, any>): boolean {
+		if (this.gen < 3) return false;
 		return !!(this.ability && !this.supressedAbility && (this.ability.id === ability || (typeof ability !== 'string' && this.ability.id in ability)));
 	}
 
@@ -148,7 +154,7 @@ export class Pokemon {
 	getFullSpe(battle: Pick<Battle, 'gen' | 'conditions'>, conditions: Conditions, ignoreBoost?: boolean): number {
 		const gen = battle.gen || CurrentGen;
 
-		let spe = Math.floor(this.getStat('spe', gen));
+		let spe = Math.floor(this.getStat('spe'));
 		if (!ignoreBoost) spe = this.getBoostedStat('spe', spe, conditions.boosts);
 
 		if (this.status && this.hasAbility('quickfeet')) {
@@ -160,18 +166,18 @@ export class Pokemon {
 		if (this.hasItem({ 'ironball': 1, 'machobrace': 1 })) spe = Math.floor(spe * 0.5);
 		if (this.hasItem('choicescarf')) spe = Math.floor(spe * 1.5);
 		if (this.hasItem('quickpowder') && this.template.species === 'Ditto') spe = Math.floor(spe * 2);
-		if (conditions.tailwind) spe *= 2;
 		if (conditions.volatiles.unburden) spe *= 2;
 		if (conditions.volatiles.protosynthesis === 'spe' || conditions.volatiles.quarkdrive === 'spe') spe = Math.floor(spe * 1.5);
 
-		const gconditions = battle.conditions;
-		if (gconditions.weather && !gconditions.supressedWeather) {
-			if (['desolateland', 'sunnyday'].includes(toId(gconditions.weather)) && this.hasAbility('chlorophyll')) spe *= 2;
-			if (['primordealsea', 'raindance'].includes(toId(gconditions.weather)) && this.hasAbility('swiftswim')) spe *= 2;
-			if (toId(gconditions.weather) === 'sandstorm' && this.hasAbility('sandrush')) spe *= 2;
-			if (toId(gconditions.weather) === 'snow' && this.hasAbility('slushrush')) spe *= 2;
+		const globalConditions = battle.conditions;
+		if (globalConditions.tailwind) spe *= 2;
+		if (globalConditions.weather && !globalConditions.supressedWeather) {
+			if (['desolateland', 'sunnyday'].includes(toId(globalConditions.weather)) && this.hasAbility('chlorophyll')) spe *= 2;
+			if (['primordealsea', 'raindance'].includes(toId(globalConditions.weather)) && this.hasAbility('swiftswim')) spe *= 2;
+			if (toId(globalConditions.weather) === 'sandstorm' && this.hasAbility('sandrush')) spe *= 2;
+			if (['hail', 'snow'].includes(toId(globalConditions.weather)) && this.hasAbility('slushrush')) spe *= 2;
 		}
-		if (gconditions.electricterrain && this.hasAbility('surgesurfer')) spe = Math.floor(spe * 2);
+		if (globalConditions.electricterrain && this.hasAbility('surgesurfer')) spe = Math.floor(spe * 2);
 
 		return spe;
 	};
@@ -252,8 +258,8 @@ export class Damage {
 	};
 };
 
-export function getHazardsDamage(poke: Pokemon, conditions: Conditions, globalConditions, gen: number = CurrentGen, battleId: string): number {
-	if ((gen >= 3 && poke.hasAbility('magicguard')) || poke.hasItem('heavydutyboots')) return 0;
+export function getHazardsDamage(poke: Pokemon, conditions: Conditions, globalConditions: Record<string, any>, gen: number = CurrentGen, battleId: string): number {
+	if (poke.hasAbility('magicguard') || poke.hasItem('heavydutyboots')) return 0;
 
 	const side = conditions.side;
 	if (poke.template.species === 'Shedinja' && (side.stealthrock || side.spikes || side.gmaxsteelsurge)) return 100;
@@ -274,7 +280,7 @@ export function getHazardsDamage(poke: Pokemon, conditions: Conditions, globalCo
 	return dmg;
 };
 
-export function getMoveType(poke: Pokemon, move, conditions: Conditions, globalConditions, gen: number = CurrentGen): Type {
+export function getMoveType(poke: Pokemon, move, conditions: Conditions, globalConditions: Record<string, any>, gen: number = CurrentGen): Type {
 	switch (move.id) {
 		case 'aurawheel':
 			if (poke.template.species === 'Morpeko-Hangry') return 'Dark';
@@ -299,7 +305,7 @@ export function getMoveType(poke: Pokemon, move, conditions: Conditions, globalC
 			if (['primordialsea', 'raindance'].includes(globalConditions.weather)) return 'Water';
 			if (['desolateland', 'sunnyday'].includes(globalConditions.weather)) return 'Fire';
 			if (globalConditions.weather === 'sandstorm') return 'Rock';
-			if (globalConditions.weather === 'snow') return 'Ice';
+			if (['hail', 'snow'].includes(toId(globalConditions.weather))) return 'Ice';
 			return move.type;
 		case 'terrainpulse':
 			if (globalConditions.electricterrain) return 'Electric';
@@ -311,7 +317,7 @@ export function getMoveType(poke: Pokemon, move, conditions: Conditions, globalC
 			return poke.terastallize || move.type;
 	}
 
-	if (gen >= 3 && poke.ability && !poke.supressedAbility) {
+	if (poke.ability && !poke.supressedAbility) {
 		switch (poke.ability.id) {
 			case 'normalize':
 				return 'Normal';
@@ -361,10 +367,12 @@ interface PokemonWithConditions {
 	conditions?: Conditions;
 };
 
-export function calculate(attacker: PokemonWithConditions, defender: PokemonWithConditions, move, globalConditions, battle: Battle, transformation?: any): Damage {
-	const atkPoke = new Pokemon(attacker.poke.template, attacker.poke);
+type Category = 'Physical' | 'Special';
+
+export function calculate(attacker: PokemonWithConditions, defender: PokemonWithConditions, move, globalConditions: Record<string, any>, battle: Battle, transformation?: any): Damage {
+	const atkPoke = new Pokemon(attacker.poke.template, attacker.poke, battle);
 	const atkConditions = new Conditions(attacker.conditions || {});
-	const defPoke = new Pokemon(defender.poke.template, defender.poke);
+	const defPoke = new Pokemon(defender.poke.template, defender.poke, battle);
 	const defConditions = new Conditions(defender.conditions || {});
 
 	if (typeof transformation === 'object' && transformation?.terastallize) {
@@ -378,12 +386,12 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	globalConditions.supressedWeather = (atkPoke.hasAbility({ 'airlock': 1, 'cloudnine': 1 }) || defPoke.hasAbility({ 'airlock': 1, 'cloudnine': 1 }));
 	let supressedWeather = globalConditions.supressedWeather;
 
-	const atkStats = atkPoke.getStats(gen), defStats = defPoke.getStats(gen);
-	const atkSpe = atkPoke.getFullSpe({ conditions: globalConditions, gen: gen }, atkConditions, false);
-	const defSpe = defPoke.getFullSpe({ conditions: globalConditions, gen: gen }, defConditions, false);
+	const atkStats = atkPoke.getStats(), defStats = defPoke.getStats();
+	const atkSpe = atkPoke.getFullSpe({ conditions: globalConditions, gen }, atkConditions, false);
+	const defSpe = defPoke.getFullSpe({ conditions: globalConditions, gen }, defConditions, false);
 
 	let atk, def, atkStat: BaseStat, defStat: BaseStat;
-	let category, defCategory;
+	let category: Category, defCategory: Category;
 
 	/******************************
 	* Attack and Defense Stats
@@ -438,53 +446,10 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 
 	if (move.id === 'grassyglide' && globalConditions.grassyterrain && atkPoke.isGrounded(atkConditions)) movePriority++;
 
-	if (gen >= 3 && atkPoke.ability && !atkPoke.supressedAbility && !defPoke.hasAbility('neutralizinggas')) {
+	if (atkPoke.ability && !atkPoke.supressedAbility && !defPoke.hasAbility('neutralizinggas')) {
 		switch (atkPoke.ability.id) {
 			case 'blaze':
 				if (moveType === 'Fire' && atkPoke.hp <= (100 / 3)) atk = Math.floor(atk * 1.5);
-				break;
-			case 'defeatist':
-				if (atkPoke.hp < 50 && category === 'Physical') atk = Math.floor(atk * 0.5);
-				break;
-			case 'guts':
-				if (atkPoke.status && atkPoke.status !== 'frz' && category === 'Physical') atk = Math.floor(atk * 1.5);
-				break;
-			case 'hugepower':
-			case 'purepower':
-				if (atkStat === 'atk') atk = Math.floor(atk * 2);
-				break;
-			case 'hustle':
-			case 'gorillatactics':
-				if (atkStat === 'atk') atk = Math.floor(atk * 1.5);
-				break;
-			case 'solarpower':
-				if (!supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
-					if (atkStat === 'spa') atk = Math.floor(atk * 1.5);
-				}
-				break;
-			case 'orichalcumpulse':
-				if (!supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
-					if (atkStat === 'atk') atk = Math.floor(atk * 1.33);
-				}
-				break;
-			case 'protosynthesis':
-				if (!atkConditions.volatiles.protosynthesis && !supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
-					const maxStat = BoostedStats.reduce((acc, v) => Math.max(acc, atkStats[v]), 0);
-					const maxStatName = BoostedStats.filter(stat => atkStats[stat] === maxStat)[0];
-					if (atkStat === maxStatName) atk = Math.floor(atk * 1.3);
-				}
-				break;
-			case 'hadronengine':
-				if (globalConditions.electricterrain) {
-					if (atkStat === 'spa') atk = Math.floor(atk * 1.33);
-				}
-				break;
-			case 'quarkdrive':
-				if (!atkConditions.volatiles.quarkdrive && globalConditions.electricterrain) {
-					const maxStat = BoostedStats.reduce((acc, v) => Math.max(acc, atkStats[v]), 0);
-					const maxStatName = BoostedStats.filter(stat => atkStats[stat] === maxStat)[0];
-					if (atkStat === maxStatName) atk = Math.floor(atk * 1.3);
-				}
 				break;
 			case 'overgrow':
 				if (moveType === 'Grass' && atkPoke.hp <= (100 / 3.0)) atk = Math.floor(atk * 1.5);
@@ -495,11 +460,34 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			case 'torrent':
 				if (moveType === 'Water' && atkPoke.hp <= (100 / 3.0)) atk = Math.floor(atk * 1.5);
 				break;
-			case 'triage':
-				if (move.flags?.heal) movePriority += 3;
+			case 'defeatist':
+				if (atkPoke.hp < 50 && category === 'Physical') atk = Math.floor(atk * 0.5);
 				break;
-			case 'galewings':
-				if (moveType === 'Flying' && (gen <= 6 || atkPoke.hp >= 100)) movePriority++;
+			case 'guts':
+				if (atkPoke.status && atkPoke.status !== 'frz' && category === 'Physical') atk = Math.floor(atk * 1.5);
+				break;
+			case 'hugepower':
+			case 'purepower':
+				if (category === 'Physical') atk = Math.floor(atk * 2);
+				break;
+			case 'hustle':
+			case 'gorillatactics':
+				if (category === 'Physical') atk = Math.floor(atk * 1.5);
+				break;
+			case 'steelworker':
+				if (move.type === 'Steel') atk = Math.floor(atk * 1.5);
+				break;
+			case 'waterbubble':
+				if (move.type === 'Water') atk *= 2;
+				break;
+			case 'transistor':
+				if (move.type === 'Electric') atk = Math.floor(atk * 1.5);
+				break;
+			case 'dragonsmaw':
+				if (move.type === 'Dragon') atk = Math.floor(atk * 1.5);
+				break;
+			case 'rockypayload':
+				if (move.type === 'Rock') atk = Math.floor(atk * 1.5);
 				break;
 			case 'swordofruin':
 				if (defStat === 'def') def = Math.floor(def * 0.75);
@@ -507,10 +495,48 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			case 'beadsofruin':
 				if (defStat === 'spd') def = Math.floor(def * 0.75);
 				break;
+			// weather
+			case 'solarpower':
+				if (!supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
+					if (category === 'Special') atk = Math.floor(atk * 1.5);
+				}
+				break;
+			case 'orichalcumpulse':
+				if (!supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
+					if (category === 'Physical') atk = Math.floor(atk * 1.3);
+				}
+				break;
+			case 'protosynthesis':
+				if (!atkConditions.volatiles.protosynthesis && !supressedWeather && ['desolateland', 'sunnyday'].includes(globalConditions.weather)) {
+					const maxStat = BoostedStats.reduce((acc, v) => Math.max(acc, atkStats[v]), 0);
+					const maxStatName = BoostedStats.filter(stat => atkStats[stat] === maxStat)[0];
+					if (atkStat === maxStatName) atk = Math.floor(atk * 1.3);
+				}
+				break;
+			// terrain
+			case 'hadronengine':
+				if (globalConditions.electricterrain) {
+					if (category === 'Special') atk = Math.floor(atk * 1.3);
+				}
+				break;
+			case 'quarkdrive':
+				if (!atkConditions.volatiles.quarkdrive && globalConditions.electricterrain) {
+					const maxStat = BoostedStats.reduce((acc, v) => Math.max(acc, atkStats[v]), 0);
+					const maxStatName = BoostedStats.filter(stat => atkStats[stat] === maxStat)[0];
+					if (atkStat === maxStatName) atk = Math.floor(atk * 1.3);
+				}
+				break;
+			// priority
+			case 'triage':
+				if (move.flags?.heal) movePriority += 3;
+				break;
+			case 'galewings':
+				if (moveType === 'Flying' && (gen <= 6 || atkPoke.hp >= 100)) movePriority++;
+				break;
 		}
 	}
 
-	if (gen >= 3 && defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility('neutralizinggas')) {
+	if (defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility('neutralizinggas')) {
 		switch (defPoke.ability.id) {
 			case 'vesselofruin':
 				if (atkStat === 'spa') atk = Math.floor(atk * 0.75);
@@ -535,18 +561,24 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		}
 		if (!atkPoke.hasAbility({ 'moldbreaker': 1, 'teravolt': 1, 'turboblaze': 1 }) && !move.ignoreAbility) {
 			switch (defPoke.ability.id) {
+				case 'thickfat':
+					if (['Ice', 'Fire'].includes(moveType)) atk = Math.floor(atk * 0.5);
+					break;
+				case 'waterbubble':
+					if (moveType === 'Fire') atk = Math.floor(atk * 0.5);
+					break;
+				case 'purifyingsalt':
+					if (moveType === 'Ghost') atk = Math.floor(atk * 0.5);
+					break;
 				case 'marvelscale':
 					if (atkPoke.status && defStat === 'def') def = Math.floor(def * 1.5);
 					break;
 				case 'furcoat':
 					if (defStat === 'def') def = Math.floor(def * 2);
 					break;
-				case 'icescales':
-					if (defStat === 'spd') def = Math.floor(def * 2);
-					break;
 				case 'grasspelt':
 					if (globalConditions.grassyterrain) {
-						if (defStat === 'def') def = Math.floor(def * 1.3);
+						if (defStat === 'def') def = Math.floor(def * 1.5);
 					}
 					break;
 			}
@@ -572,7 +604,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	if (gen <= 2 && move.drain && defConditions.volatiles.substitute) immune = true;
 	if (!defPoke.isGrounded(defConditions) && moveType === 'Ground' && !notImmune) immune = true;
 
-	if (gen >= 3 && defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility({ 'moldbreaker': 1, 'teravolt': 1, 'turboblaze': 1, 'neutralizinggas': 1 }) && !move.ignoreAbility) {
+	if (defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility({ 'moldbreaker': 1, 'teravolt': 1, 'turboblaze': 1, 'neutralizinggas': 1 }) && !move.ignoreAbility) {
 		switch (defPoke.ability.id) {
 			case 'dryskin':
 			case 'stormdrain':
@@ -735,8 +767,10 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			break;
 		case 'punishment':
 			bp = 60;
-			for (let stat in defConditions.boosts) {
-				if (defConditions.boosts[stat] > 0) bp += (20 * defConditions.boosts[stat]);
+			let stat: BoostedStat;
+			for (stat in defConditions.boosts) {
+				const boost = defConditions.boosts[stat];
+				if (boost && boost > 0) bp += (20 * boost);
 			}
 			break;
 		case 'beatup':
@@ -810,7 +844,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			break;
 		case 'solarbeam':
 		case 'solarblade':
-			if (['primordialsea', 'raindance', 'sandstorm', 'snow'].includes(toId(globalConditions.weather))) bp = Math.floor(bp * 0.5);
+			if (['primordialsea', 'raindance', 'sandstorm', 'hail', 'snow'].includes(toId(globalConditions.weather))) bp = Math.floor(bp * 0.5);
 			break;
 		case 'hyperspacefury':
 			if (atkPoke.template.species !== 'Hoopa-Unbound') bp = 0;
@@ -859,7 +893,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			break;
 		case 'collisioncourse':
 		case 'electrodrift':
-			if (typeEffectiveness > 1) bp = Math.floor(bp * 1.33);
+			if (typeEffectiveness > 1) bp = Math.floor(bp * 1.5);
 			break;
 	}
 
@@ -871,7 +905,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		return new Damage(defStats.hp);
 	}
 
-	if (gen >= 3 && atkPoke.ability && !atkPoke.supressedAbility && !defPoke.hasAbility('neutralizinggas')) {
+	if (atkPoke.ability && !atkPoke.supressedAbility && !defPoke.hasAbility('neutralizinggas')) {
 		switch (atkPoke.ability.id) {
 			case 'technician':
 				if (bp <= 60) bp = Math.floor(bp * 1.5);
@@ -903,21 +937,8 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 					else bp = Math.floor(bp * 1.33);
 				}
 				break;
-			case 'steelworker':
 			case 'steelyspirit':
 				if (move.type === 'Steel') bp = Math.floor(bp * 1.5);
-				break;
-			case 'waterbubble':
-				if (move.type === 'Water') bp *= 2;
-				break;
-			case 'transistor':
-				if (move.type === 'Electric') bp *= 2;
-				break;
-			case 'dragonsmaw':
-				if (move.type === 'Dragon') bp *= 2;
-				break;
-			case 'rockypayload':
-				if (move.type === 'Rock') bp *= 2;
 				break;
 			case 'flareboost':
 				if (category === 'Special' && atkPoke.status === 'brn') bp = Math.floor(bp * 1.5);
@@ -952,12 +973,6 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			case 'analytic':
 				if ((!globalConditions.trickroom && atkSpe < defSpe) || (globalConditions.trickroom && atkSpe > defSpe)) bp = Math.floor(bp * 1.3);
 				break;
-			case 'tintedlens':
-				if (typeEffectiveness < 1) bp *= 2;
-				break;
-			case 'neuroforce':
-				if (typeEffectiveness > 1) bp = Math.floor(bp * 1.25);
-				break;
 			case 'punkrock':
 				if (move.flags?.sound) bp = Math.floor(bp * 1.3);
 				break;
@@ -970,7 +985,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		}
 	}
 
-	if (gen >= 3 && defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility('neutralizinggas')) {
+	if (defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility('neutralizinggas')) {
 		switch (defPoke.ability.id) {
 			case 'prismarmor':
 				if (typeEffectiveness > 1) bp = Math.floor(bp * 0.75);
@@ -981,10 +996,6 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		}
 		if (!atkPoke.hasAbility({ 'moldbreaker': 1, 'teravolt': 1, 'turboblaze': 1 }) && !move.ignoreAbility) {
 			switch (defPoke.ability.id) {
-				case 'fluffy':
-					if (moveType === 'Fire') bp *= 2;
-					if (move.flags?.contact) bp = Math.floor(bp * 0.5);
-					break;
 				case 'darkaura':
 					if (move.type === 'Dark') {
 						if (atkPoke.hasAbility('aurabreak')) bp = Math.floor(bp * 0.75);
@@ -1000,25 +1011,8 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				case 'dryskin':
 					if (moveType === 'Fire') bp = Math.floor(bp * 1.25);
 					break;
-				case 'thickfat':
-					if (['Ice', 'Fire'].includes(moveType)) atk = Math.floor(atk * 0.5);
-					break;
 				case 'heatproof':
-				case 'waterbubble':
 					if (moveType === 'Fire') bp = Math.floor(bp * 0.5);
-					break;
-				case 'purifyingsalt':
-					if (moveType === 'Ghost') atk = Math.floor(atk * 0.5);
-					break;
-				case 'filter':
-				case 'solidrock':
-					if (typeEffectiveness > 1) bp = Math.floor(bp * 0.75);
-					break;
-				case 'multiscale':
-					if (defPoke.hp >= 100) bp = Math.floor(bp * 0.5);
-					break;
-				case 'punkrock':
-					if (move.flags?.sound) bp = Math.floor(bp * 0.5);
 					break;
 			}
 		}
@@ -1092,27 +1086,73 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	if (atkPoke.item?.id === 'lifeorb') modifier *= 1.3;
 
 	/* STAB */
-	let stab;
+	let stab = 1;
 	if (atkPoke.terastallize) {
-		let originalStab = (atkPoke.template.types.includes(moveType) >= 0 || atkPoke.hasAbility({ 'libero': 1, 'protean': 1 }));
+		let originalStab = (atkPoke.template.types.includes(moveType) >= 0);
 		let teraStab = (move.type === atkPoke.terastallize);
 		if (originalStab && teraStab) {
 			debug('applying double ' + move.type + ' stab from terastallization');
-			stab = 2;
-		} else if (originalStab || teraStab) {
+			stab = atkPoke.hasAbility('adaptability') ? 2.25 : 2;
+		} else if (teraStab) {
+			stab = atkPoke.hasAbility('adaptability') ? 2 : 1.5;
+		} else if (originalStab) {
 			stab = 1.5;
 		}
 	} else {
 		if (atkPoke.hasType(moveType, atkConditions) || atkPoke.hasAbility({ 'libero': 1, 'protean': 1 })) {
-			stab = 1.5;
+			stab = atkPoke.hasAbility('adaptability') ? 2 : 1.5;
 		}
 	}
-	if (stab) {
-		if (gen >= 3 && atkPoke.hasAbility('adaptability')) stab *= (4.0 / 3.0);
-		modifier *= stab;
+
+	modifier *= stab;
+
+	/* Abilities */
+
+	if (atkPoke.ability && !atkPoke.supressedAbility && !defPoke.hasAbility('neutralizinggas')) {
+		switch (atkPoke.ability.id) {
+			case 'tintedlens':
+				if (typeEffectiveness < 1) modifier *= 2;
+				break;
+			case 'neuroforce':
+				if (typeEffectiveness > 1) modifier *= 1.25;
+				break;
+		}
+	}
+
+	if (defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility('neutralizinggas')) {
+		switch (defPoke.ability.id) {
+			case 'prismarmor':
+				if (typeEffectiveness > 1) modifier *= 0.75;
+				break;
+			case 'shadowshield':
+				if (defPoke.hp >= 100) modifier *= 0.5;
+				break;
+		}
+		if (!atkPoke.hasAbility({ 'moldbreaker': 1, 'teravolt': 1, 'turboblaze': 1 }) && !move.ignoreAbility) {
+			switch (defPoke.ability.id) {
+				case 'fluffy':
+					if (moveType === 'Fire') modifier *= 2;
+					if (move.flags?.contact) modifier *= 0.5;
+					break;
+				case 'icescales':
+					if (defStat === 'spd') modifier *= 0.5;
+					break;
+				case 'filter':
+				case 'solidrock':
+					if (typeEffectiveness > 1) modifier *= 0.75;
+					break;
+				case 'multiscale':
+					if (defPoke.hp >= 100) modifier *= 0.5;
+					break;
+				case 'punkrock':
+					if (move.flags?.sound) modifier *= 0.5;
+					break;
+			}
+		}
 	}
 
 	/* Weather */
+
 	if (globalConditions.weather && !supressedWeather) {
 		if (move.type === 'Water' && (toId(globalConditions.weather) in { 'primordialsea': 1, 'raindance': 1 })) modifier *= 1.5;
 		if (move.type === 'Fire' && (toId(globalConditions.weather) in { 'desolateland': 1, 'sunnyday': 1 })) modifier *= 1.5;
@@ -1122,10 +1162,14 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 
 		if (globalConditions.weather === 'sunnyday' && move.type === 'Water') modifier *= 0.5;
 		if (globalConditions.weather === 'raindance' && move.type === 'Fire') modifier *= 0.5;
-	}
 
-	if (gen >= 4 && defTypes.indexOf('Rock') >= 0 && globalConditions.weather === 'sandstorm') {
-		if (defStat === 'spd') def = Math.floor(def * 1.5);
+		if (gen >= 4 && defTypes.indexOf('Rock') >= 0 && globalConditions.weather === 'sandstorm') {
+			if (defStat === 'spd') def = Math.floor(def * 1.5);
+		}
+
+		if (gen >= 9 && defTypes.indexOf('Ice') >= 0 && ['hail', 'snow'].includes(toId(globalConditions.weather))) {
+			if (defStat === 'def') def = Math.floor(def * 1.5);
+		}
 	}
 
 	/* Boosting */
@@ -1135,7 +1179,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		else atk = atkPoke.getBoostedStat(atkStat, atk, atkConditions.boosts);
 	}
 
-	let willCrit = atkConditions.immediate.crit || move.willCrit || atkPoke.hasItem({ 'leek': 1, 'luckypunch': 1, 'stick': 1 });
+	const willCrit = atkConditions.immediate.crit || move.willCrit || atkPoke.hasItem({ 'leek': 1, 'luckypunch': 1, 'stick': 1 });
 
 	if (defConditions.boosts[defStat]) {
 		if (!willCrit && !move.ignoreDefensive && !atkPoke.hasAbility('unaware')) {

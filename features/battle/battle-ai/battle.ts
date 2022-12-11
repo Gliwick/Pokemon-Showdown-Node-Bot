@@ -462,6 +462,7 @@ export class Battle {
 		const pokeA = new CalcRequestPokemon(
 			getPokemon(details.species, this.gen, this.id),
 			{ level: details.level, shiny: details.shiny, gender: details.gender, helpers: (this.helpers[side][pokeId] || {}) },
+			this,
 		);
 		pokeA.item = getItem(p.item, this.gen);
 		pokeA.ability = getAbility(p.baseAbility, this.gen);

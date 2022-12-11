@@ -18,11 +18,11 @@
 
 import { toId } from '../../../../tools';
 import { debug } from '../../../../console-reports';
-import { Module } from '../modules';
+import { BattleModule } from '../modules';
 
 import { Pokemon, Conditions, calculate } from './../calc';
 
-import { getAbility, getMove, getPokemon } from './../battle-data';
+import { CurrentGen, getAbility, getMove, getPokemon } from './../battle-data';
 import { Battle } from '../battle';
 import {
   Decision,
@@ -62,7 +62,7 @@ const DoubleTurnMoves = [
  * Team and Switch Decisions
  */
 
-export class IngameNoStatus implements Module {
+export class IngameNoStatus implements BattleModule {
   id = 'ingame-nostatus';
 
   constructor() { };
@@ -84,7 +84,7 @@ export class IngameNoStatus implements Module {
         level: pokeView.level,
         gender: pokeView.gender,
         evs: { hp: 192, def: 124, spd: 124 },
-      });
+      }, battle);
       if (toId(battle.tier || '').indexOf('challengecup') >= 0)
         poke.happiness = 100;
       if (template.abilities)
@@ -150,7 +150,7 @@ export class IngameNoStatus implements Module {
           gender: targets[j].gender,
           shiny: targets[j].shiny,
           evs: { hp: 192, def: 124, spd: 124 },
-        });
+        }, battle);
         pokeB.hp = targets[j].hp;
         pokeB.status = targets[j].status;
         if (targets[j].item === '&unknown') {
@@ -242,7 +242,7 @@ export class IngameNoStatus implements Module {
         gender: targets[i].gender,
         shiny: targets[i].shiny,
         evs: { hp: 192, def: 124, spd: 124 },
-      });
+      }, battle);
       pokeB.hp = targets[i].hp;
       pokeB.status = targets[i].status;
       if (targets[i].item === '&unknown') {
