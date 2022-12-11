@@ -25,7 +25,7 @@ import { Pokemon as CalcRequestPokemon } from './calc';
 interface LastSend {
 	rqid: number;
 	time: number;
-	decision: any;
+	decision: Decision[] | null;
 }
 
 interface Helpers {
@@ -33,7 +33,7 @@ interface Helpers {
 	foe: any;
 }
 
-export type Side = 'p1' | 'p2';
+export type PlayerId = 'p1' | 'p2';
 export enum BattleType { singles = 'singles', doubles = 'doubles', triples = 'triples' };
 
 interface Status {
@@ -50,14 +50,14 @@ interface Ident {
 export class Battle {
 	id: string;
 	title: number | null = null;
-	players: Record<Side, Player> = {
+	players: Record<PlayerId, Player> = {
 		p1: new Player('p1'),
 		p2: new Player('p2'),
 	};
 	users: Record<string, any> = {};
 
-	self: Record<string, any> = {};
-	foe: Record<string, any> = {};
+	self: Player | null = null;
+	foe: Player | null = null;
 
 	gametype: BattleType = BattleType.singles;
 	gen: number = CurrentGen;
@@ -412,7 +412,7 @@ export class Battle {
 			error('Unknown side: ' + str);
 			return;
 		}
-		return this.players[str as Side];
+		return this.players[str as PlayerId];
 	};
 
 	getActive(str?: string): Pokemon | null {
@@ -427,7 +427,7 @@ export class Battle {
 			error('Unknown side: ' + side);
 			return null;
 		}
-		const player = this.players[side as Side];
+		const player = this.players[side as PlayerId];
 		const active = player.active?.[slot];
 		if (active) {
 			active.name = name;
@@ -452,11 +452,13 @@ export class Battle {
 	};
 
 	getCalcRequestPokemon(sideId: number, forceMega?: boolean): CalcRequestPokemon {
+		if (!this.request) return new CalcRequestPokemon(getPokemon('', this.gen, this.id), {}, this);
+
 		const p = this.request.side.pokemon[sideId];
 		const details = this.parseDetails(p.details);
 		const condition = this.parseStatus(p.condition);
 
-		let side = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
+		const side: 'self' | 'foe' = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
 		let pokeId = p.ident.split(': ')[1] + '|' + details.species;
 
 		const poke = new CalcRequestPokemon(
@@ -469,9 +471,9 @@ export class Battle {
 		poke.status = condition.status;
 		poke.hp = condition.hp;
 		poke.stats = p.stats;
-		const active = this.request.active?.[sideId];
-		if (active) {
-			poke.terastallize = active?.terastallize;
+		const battlePokemon = this[side]?.pokemon?.filter?.(playerPokemon => playerPokemon.name === p.name);
+		if (battlePokemon?.length) {
+			poke.terastallize = battlePokemon[0].terastallize;
 		}
 		if (forceMega && (p.canMegaEvo || (active?.canMegaEvo))) {
 			if (poke.item.megaStone) {

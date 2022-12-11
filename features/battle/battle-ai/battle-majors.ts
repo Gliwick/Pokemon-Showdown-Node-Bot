@@ -4,7 +4,7 @@
 
 import { error } from '../../../console-reports';
 import { toId } from '../../../tools';
-import { Battle, BattleType, Side } from './battle';
+import { Battle, BattleType, PlayerId } from './battle';
 import { Move, Pokemon, getPokemon, getMove, getEffect, BoostedStat } from './battle-data';
 
 export const majors: Record<string, ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void) | string> = {
@@ -109,7 +109,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 
 		const name = args[2];
 		const avatar = args[3];
-		const player = this.players[id as Side];
+		const player = this.players[id as PlayerId];
 		if (player) {
 			player.setName(name || "");
 			player.avatar = avatar || 0;
@@ -145,7 +145,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 		this.players.p2.teamPv = [];
 		for (let i = 0; i < this.players.p1.active.length; i++) {
 			this.players.p1.active[i] = null;
-			this.players.p1.active[i] = null;
+			this.players.p2.active[i] = null;
 		}
 	},
 
@@ -156,7 +156,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 			return;
 		}
 
-		this.players[p as Side].teamPv.push(this.parseDetails(args[2]));
+		this.players[p as PlayerId].teamPv.push(this.parseDetails(args[2]));
 	},
 
 	detailschange: function (this: Battle, args, kwargs) {
@@ -194,7 +194,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 		const name = Tools.toName(spl[1]);
 		const details = this.parseDetails(args[2]);
 		const health = this.parseStatus(args[3]);
-		const player = this.players[p as Side];
+		const player = this.players[p as PlayerId];
 		/* Get the pokemon or create a new one */
 		let poke: Pokemon | null = null;
 		for (let i = 0; i < player.pokemon.length; i++) {
@@ -276,7 +276,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 			return;
 		}
 
-		const player = this.players[poke.side as Side];
+		const player = this.players[poke.side as PlayerId];
 		const temp = player.active[poke.slot];
 		player.active[poke.slot] = player.active[to];
 		player.active[to] = temp;
@@ -322,7 +322,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 			if (!det || !(det.side in this.players)) {
 				error('Unknown side: ' + det?.side);
 			} else {
-				this.players[det.side as Side].side.wish = {
+				this.players[det.side as PlayerId].side.wish = {
 					move: move.id,
 					turn: this.turn,
 					poke: poke
