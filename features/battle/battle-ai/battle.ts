@@ -372,6 +372,7 @@ export class Battle {
 	};
 
 	parseStatus(str: string): Status {
+		debug('parseStatus', str);
 		const status: Status = {
 			hp: 100,
 			status: null,
@@ -480,7 +481,6 @@ export class Battle {
 				poke.ability = getAbility(poke.template.abilities[0]);
 			}
 		}
-		debug(JSON.stringify(condition), poke.status);
 		return poke;
 	};
 
