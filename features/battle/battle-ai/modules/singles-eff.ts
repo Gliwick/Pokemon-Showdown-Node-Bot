@@ -595,8 +595,8 @@ export class SinglesEffective implements BattleModule {
 	}
 
 	selfLastPokemon(battle: Battle): boolean {
-		(battle.request?.side?.pokemon || []).map(poke => debug('active: ' + poke.active + ', status: ' + poke.status));
-		return (battle.request?.side?.pokemon || []).filter(poke => !poke.active).all(poke => poke.status === 'fnt');
+		(battle.request?.side?.pokemon || []).map(poke => debug('active: ' + poke.active + ', status: ' + battle.parseStatus(poke.condition)));
+		return (battle.request?.side?.pokemon || []).filter(poke => !poke.active).all(poke => battle.parseStatus(poke.condition) === 'fnt');
 	}
 
 	selfCanSwitch(decisions: Decision[][], pokeA: Pokemon, conditionsA: Conditions, pokeB: Pokemon, conditionsB: Conditions): boolean {

@@ -372,7 +372,6 @@ export class Battle {
 	};
 
 	parseStatus(str: string): Status {
-		debug('parseStatus', str);
 		const status: Status = {
 			hp: 100,
 			status: null,
