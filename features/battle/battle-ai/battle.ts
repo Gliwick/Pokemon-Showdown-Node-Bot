@@ -459,28 +459,29 @@ export class Battle {
 		let side = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
 		let pokeId = p.ident.split(': ')[1] + '|' + details.species;
 
-		const pokeA = new CalcRequestPokemon(
+		const poke = new CalcRequestPokemon(
 			getPokemon(details.species, this.gen, this.id),
 			{ level: details.level, shiny: details.shiny, gender: details.gender, helpers: (this.helpers[side][pokeId] || {}) },
 			this,
 		);
-		pokeA.item = getItem(p.item, this.gen);
-		pokeA.ability = getAbility(p.baseAbility, this.gen);
-		pokeA.status = condition.status;
-		pokeA.hp = condition.hp;
-		pokeA.stats = p.stats;
+		poke.item = getItem(p.item, this.gen);
+		poke.ability = getAbility(p.baseAbility, this.gen);
+		poke.status = condition.status;
+		poke.hp = condition.hp;
+		poke.stats = p.stats;
 		const active = this.request.active?.[sideId];
 		if (active) {
-			pokeA.terastallize = active?.terastallize;
+			poke.terastallize = active?.terastallize;
 		}
 		if (forceMega && (p.canMegaEvo || (active?.canMegaEvo))) {
-			if (pokeA.item.megaStone) {
-				pokeA.template = getPokemon(pokeA.item.megaStone, this.gen, this.id);
-				pokeA.species = pokeA.template.species;
-				pokeA.ability = getAbility(pokeA.template.abilities[0]);
+			if (poke.item.megaStone) {
+				poke.template = getPokemon(poke.item.megaStone, this.gen, this.id);
+				poke.species = poke.template.species;
+				poke.ability = getAbility(poke.template.abilities[0]);
 			}
 		}
-		return pokeA;
+		debug(JSON.stringify(condition), poke.status);
+		return poke;
 	};
 
 	destroy() {
