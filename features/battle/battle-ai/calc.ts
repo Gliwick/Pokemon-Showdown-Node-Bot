@@ -37,7 +37,7 @@ export class Pokemon {
 
 	category: Category | 'Status' | 'Mixed' = 'Mixed';
 
-	constructor(template, properties: Partial<Pokemon> & { helpers?: Record<string, any> }, battle: Battle) {
+	constructor(template, properties: Partial<Pokemon> & { helpers?: Record<string, any> }, battle?: Battle) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
 		this.template = { ...template };
 		if (properties.helpers?.template) {
@@ -46,7 +46,7 @@ export class Pokemon {
 			}
 		}
 
-		this.gen = battle.gen;
+		this.gen = battle?.gen || CurrentGen;
 
 		this.name = this.template.species;
 		this.species = this.template.species;
@@ -352,14 +352,13 @@ function getDamage(level: number, bp: number, atk: number, def: number, modifier
  *
  * Arguments:
  *
- *  - pokeA, pokeB (Pokemon)
+ *  - attacker, defender (Pokemon)
  *  - move (move template)
  *
  * Optional arguments:
  *
- *  - conditionsA, conditionsB (Conditions)
  *  - gconditions (Global conditions)
- *  - gen (6 by default)
+ *  - battle
 */
 
 interface PokemonWithConditions {
@@ -369,7 +368,7 @@ interface PokemonWithConditions {
 
 type Category = 'Physical' | 'Special';
 
-export function calculate(attacker: PokemonWithConditions, defender: PokemonWithConditions, move, globalConditions: Record<string, any>, battle: Battle, transformation?: any): Damage {
+export function calculate(attacker: PokemonWithConditions, defender: PokemonWithConditions, move, globalConditions?: Record<string, any>, battle?: Battle, transformation?: any): Damage {
 	const atkPoke = new Pokemon(attacker.poke.template, attacker.poke, battle);
 	const atkConditions = new Conditions(attacker.conditions || {});
 	const defPoke = new Pokemon(defender.poke.template, defender.poke, battle);
@@ -379,8 +378,8 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		atkPoke.terastallize = transformation.terastallize as Type;
 	}
 
-	const gen = battle.gen || CurrentGen;
-	const battleId = battle.id;
+	const gen = battle?.gen || CurrentGen;
+	const battleId = battle?.id;
 
 	if (!globalConditions) globalConditions = {};
 	globalConditions.supressedWeather = (atkPoke.hasAbility({ 'airlock': 1, 'cloudnine': 1 }) || defPoke.hasAbility({ 'airlock': 1, 'cloudnine': 1 }));
