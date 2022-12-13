@@ -661,9 +661,8 @@ export class SinglesEffective implements BattleModule {
 		});
 		let movesB = battle.foe.active[0].moves;
 
-		let randomBattle = (battle.id.indexOf('random') >= 0 || battle.id.indexOf('challengecup') >= 0 || battle.id.indexOf('hackmonscup') >= 0);
-		let speA = selfPoke.getFullSpe(battle, selfConditions, false);
-		let speB = foePoke.getFullSpe(battle, foeConditions, false);
+		const selfSpe = selfPoke.getFullSpe(battle, selfConditions, false);
+		const foeSpe = foePoke.getFullSpe(battle, foeConditions, false);
 
 		let hasPhysical = false, hasSpecial = false, hasStatus = false;
 		for (let i = 0; i < movesB.length; i++) {
@@ -823,13 +822,13 @@ export class SinglesEffective implements BattleModule {
 					res.unviable.push(decisions[i]);
 				} else if (move.id === 'partingshot' && foePoke.hasAbility({ 'contrary': 1, 'magicbounce': 1 })) {
 					res.unviable.push(decisions[i]);
-				} else if (move.id === 'shedtail' && ((speA > speB && selfPoke.hp <= 50) || selfPoke.hp <= 75)) {
+				} else if (move.id === 'shedtail' && ((selfSpe > foeSpe && selfPoke.hp <= 50) || selfPoke.hp <= 75)) {
 					res.unviable.push(decisions[i]);
 				} else if (move.id === 'batonpass' && Object.keys(selfConditions).some(condition => condition.startsWith('perish'))) {
 					res.unviable.push(decisions[i]);
 				} else if (move.id === 'batonpass' && Object.values(selfConditions.boosts).some(boost => boost > 0)) {
 					res.obligatory.push(decisions[i]);
-				} else if (movePriority > 0 || (movePriority === 0 && speA > speB)) {
+				} else if (movePriority > 0 || (movePriority === 0 && selfSpe > foeSpe)) {
 					res.switching.push(decisions[i]);
 				} else {
 					res.slowswitching.push(decisions[i]);
@@ -932,7 +931,7 @@ export class SinglesEffective implements BattleModule {
 					}
 					continue;
 				case 'substitute':
-					if (selfConditions.volatiles['substitute'] || ev.received >= 50 || selfPoke.hp <= 25 || (selfPoke.hp < 50 && speA <= speB) || battle.self.active[0].helpers.lastMove === 'substitute' || selfPoke.status in { 'psn': 1, 'tox': 1 } || foeConditions.volatiles['taunt']) {
+					if (selfConditions.volatiles['substitute'] || ev.received >= 50 || selfPoke.hp <= 25 || (selfPoke.hp < 50 && selfSpe <= foeSpe) || battle.self.active[0].helpers.lastMove === 'substitute' || selfPoke.status in { 'psn': 1, 'tox': 1 } || foeConditions.volatiles['taunt']) {
 						res.unviable.push(decisions[i]);
 					} else if (foePoke.category === 'Status' || ev.received <= 25) {
 						res.obligatory.push(decisions[i]);
@@ -962,7 +961,7 @@ export class SinglesEffective implements BattleModule {
 					else if (!selfPoke.item) res.unviable.push(decisions[i]);
 					continue;
 				case 'destinybond':
-					if (battle.self.active[0].helpers.lastMove === 'destinybond' || foeConditions.volatiles.dynamax || selfPoke.hp > 25 || (speA < speB && !selfPoke.hasAbility('prankster') && !selfPoke.hasItem('custapberry'))) res.unviable.push(decisions[i]);
+					if (battle.self.active[0].helpers.lastMove === 'destinybond' || foeConditions.volatiles.dynamax || selfPoke.hp > 25 || (selfSpe < foeSpe && !selfPoke.hasAbility('prankster') && !selfPoke.hasItem('custapberry'))) res.unviable.push(decisions[i]);
 					else res.viable.push(decisions[i]);
 					continue;
 				case 'disable':
@@ -1067,7 +1066,7 @@ export class SinglesEffective implements BattleModule {
 					}
 					continue;
 				case 'tailwind':
-					if (selfConditions.side['tailwind'] || battle.conditions['trickroom'] || (speA > speB && (!foeConditions.boosts.spe || foeConditions.boosts.spe <= 0))) {
+					if (selfConditions.side['tailwind'] || battle.conditions['trickroom'] || (selfSpe > foeSpe && (!foeConditions.boosts.spe || foeConditions.boosts.spe <= 0))) {
 						res.unviable.push(decisions[i]);
 					} else {
 						res.viable.push(decisions[i]);
@@ -1104,7 +1103,7 @@ export class SinglesEffective implements BattleModule {
 					}
 					continue;
 				case 'trickroom':
-					if (battle.conditions['trickroom'] || speA >= speB || selfConditions.boosts.spe > 0 || foeConditions.boosts.spe < 0) {
+					if (battle.conditions['trickroom'] || selfSpe >= foeSpe || selfConditions.boosts.spe > 0 || foeConditions.boosts.spe < 0) {
 						res.unviable.push(decisions[i]);
 					} else {
 						res.obligatory.push(decisions[i]);
@@ -1159,9 +1158,9 @@ export class SinglesEffective implements BattleModule {
 							clearedBoosts.total++;
 						}
 					}
-					let speANoBoost = selfPoke.getFullSpe(battle, foeConditions, true);
-					let speBNoBoost = foePoke.getFullSpe(battle, foeConditions, true);
-					if (clearedBoosts.atk || clearedBoosts.spa || (clearedBoosts.spe && speANoBoost >= speBNoBoost)) {
+					const selfSpeNoBoost = selfPoke.getFullSpe(battle, foeConditions, true);
+					const foeSpeNoBoost = foePoke.getFullSpe(battle, foeConditions, true);
+					if (clearedBoosts.atk || clearedBoosts.spa || (clearedBoosts.spe && selfSpeNoBoost >= foeSpeNoBoost)) {
 						res.obligatory.push(decisions[i]);
 					} else if (clearedBoosts.total > 0) {
 						res.viable.push(decisions[i]);
@@ -1189,7 +1188,7 @@ export class SinglesEffective implements BattleModule {
 					res.unviable.push(decisions[i]);
 				} else if (selfPoke.hasAbility('speedboost') && !(selfConditions.boosts.spe > 0)) {
 					res.obligatory.push(decisions[i]);
-				} else if (move.id === 'kingsshield' && selfPoke.template.name === 'Aegislash-Blade' && speA <= speB) {
+				} else if (move.id === 'kingsshield' && selfPoke.template.name === 'Aegislash-Blade' && selfSpe <= foeSpe) {
 					res.obligatory.push(decisions[i]);
 					// protect on badly poisoned foe, but don't be too predictable to prevent safe switch-in or setup
 					// needs to be obligatory to be chosen instead of a switch-out
@@ -1239,7 +1238,7 @@ export class SinglesEffective implements BattleModule {
 				}
 				switch (moveStatus) {
 					case 'par':
-						if ((speA > speB && !(!foeConditions.boosts.spe || foeConditions.boosts.spe <= 0) && !selfPoke.hasAbility('prankster')) || (battle.gen > 5 && foePoke.hasType('Electric', foeConditions)) || foePoke.hasAbility({ 'guts': 1, 'limber': 1 })) {
+						if ((selfSpe > foeSpe && !(!foeConditions.boosts.spe || foeConditions.boosts.spe <= 0) && !selfPoke.hasAbility('prankster')) || (battle.gen > 5 && foePoke.hasType('Electric', foeConditions)) || foePoke.hasAbility({ 'guts': 1, 'limber': 1 })) {
 							res.unviable.push(decisions[i]);
 							continue;
 						}
@@ -1298,7 +1297,7 @@ export class SinglesEffective implements BattleModule {
 					res.unviable.push(decisions[i]);
 				} else if (move.id === 'wish' && battle.self.active[0].helpers.lastMove === 'wish') {
 					res.unviable.push(decisions[i]);
-				} else if (speA > speB && move.id !== 'wish') {
+				} else if (selfSpe > foeSpe && move.id !== 'wish') {
 					if (selfPoke.hp >= 60) {
 						res.unviable.push(decisions[i]);
 					} else if (selfPoke.hp <= 25) {
@@ -1420,9 +1419,8 @@ export class SinglesEffective implements BattleModule {
 			volatiles: battle.foe.active[0].volatiles,
 			boosts: battle.foe.active[0].boosts
 		});
-		let randomBattle = (battle.id.indexOf('random') >= 0 || battle.id.indexOf('challengecup') >= 0 || battle.id.indexOf('hackmonscup') >= 0);
-		let speA = selfPoke.getFullSpe(battle, selfConditions, false);
-		let speB = foePoke.getFullSpe(battle, foeConditions, false);
+		const selfSpe = selfPoke.getFullSpe(battle, selfConditions, false);
+		const foeSpe = foePoke.getFullSpe(battle, foeConditions, false);
 
 		let supressedWeather = this.isWeatherSupressed(selfPoke, foePoke);
 		for (let i = 0; i < decisions.length; i++) {
@@ -1478,8 +1476,8 @@ export class SinglesEffective implements BattleModule {
 			let hp = foePoke.hp;
 			if (foeConditions.volatiles.dynamax) {
 				hp *= 2;
-				if (speA < speB && move.priority <= 0 && foePoke.template.species.startsWith('Alcremie')) hp = Math.min(200, hp + 33.3);
-			} else if (speA < speB && move.priority <= 0 && !(foePoke.status in { 'frz': 1, 'slp': 1 }) && !foeConditions.volatiles['healblock'] && !foeConditions.volatiles['taunt']) {
+				if (selfSpe < foeSpe && move.priority <= 0 && foePoke.template.species.startsWith('Alcremie')) hp = Math.min(200, hp + 33.3);
+			} else if (selfSpe < foeSpe && move.priority <= 0 && !(foePoke.status in { 'frz': 1, 'slp': 1 }) && !foeConditions.volatiles['healblock'] && !foeConditions.volatiles['taunt']) {
 				let movesB = battle.foe.active[0].moves;
 				let foeRecoveryHP = 0;
 				for (let j = 0; j < movesB.length; j++) {
