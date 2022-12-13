@@ -71,7 +71,7 @@ export class IngameNoStatus implements BattleModule {
     if (!battle.foe.teamPv.length) return 0;
 
     const p = battle.request.side.pokemon[s];
-    const pokeA = battle.getCalcRequestPokemon(s, true);
+    const pokeA = battle.parseRequestPokemon(s, true);
     if (toId(battle.tier || '').indexOf('challengecup') >= 0)
       pokeA.happiness = 100;
 
@@ -126,7 +126,7 @@ export class IngameNoStatus implements BattleModule {
   getSwitchAverage(battle: Battle, pokeId: number): number {
     let final = 0;
     const p = battle.request.side.pokemon[pokeId];
-    const pokeA = battle.getCalcRequestPokemon(pokeId, true);
+    const pokeA = battle.parseRequestPokemon(pokeId, true);
     if (toId(battle.tier).indexOf('challengecup') >= 0) pokeA.happiness = 100;
     const conditionsA = new Conditions({
       side: battle.self.side,
@@ -212,7 +212,7 @@ export class IngameNoStatus implements BattleModule {
       if (!des.transformation) return 0; // Mega evolve by default
     }
 
-    const pokeA = battle.getCalcRequestPokemon(act, true);
+    const pokeA = battle.parseRequestPokemon(act, true);
     if (toId(battle.tier || '').indexOf('challengecup') >= 0)
       pokeA.happiness = 100; // Random
     const conditionsA = new Conditions({

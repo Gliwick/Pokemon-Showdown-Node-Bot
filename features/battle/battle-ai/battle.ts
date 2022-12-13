@@ -20,7 +20,7 @@ import { Decision, getDecisions, MoveDecision } from './decision';
 
 import { Player, Pokemon, getPokemon, getItem, getAbility, CurrentGen, PokemonDetails } from './battle-data';
 
-import { Pokemon as CalcRequestPokemon } from './calc';
+import { Pokemon as CalcPokemon } from './calc';
 
 interface LastSend {
 	rqid: number;
@@ -193,7 +193,7 @@ export class Battle {
 		const side = (player === this.self.id) ? "self" : "foe";
 		if (Config.battleMessages[type][side]) {
 			if (type === 'faint') {
-				const lost = this.self.pokemon.all(p => p.fainted);
+				const lost = this.self.pokemon.every(p => p.fainted);
 				if (lost) return;
 			}
 			let msg = Config.battleMessages[type][side][Math.floor(Math.random() * Config.battleMessages[type][side].length)];
@@ -218,9 +218,9 @@ export class Battle {
 		let decisions, mod;
 		try {
 			decisions = getDecisions(this);
-		} catch (e) {
+		} catch (e: any) {
 			debug(e.stack);
-			debug("Decision maker crashed: " + sys.inspect(e));
+			debug("Decision maker crashed: " + inspect(e));
 			SecurityLog.log("BATTLE D.M. CRASH: " + e.message + "\n" + e.stack);
 			this.lock = false;
 			return;
@@ -240,10 +240,10 @@ export class Battle {
 					return;
 				}
 			}
-		} catch (e2) {
+		} catch (e2: any) {
 			errlog(e2.message);
 			errlog(e2.stack);
-			error("Module failed: " + mod?.id + " | " + sys.inspect(e2));
+			error("Module failed: " + mod?.id + " | " + inspect(e2));
 			SecurityLog.log("BATTLE MODULE FAILED: " + e2.message + "\nmodule: " + mod?.id + "\n" + e2.stack);
 		}
 		this.lock = false;
@@ -303,7 +303,7 @@ export class Battle {
 				debug('running minor ' + args[0] + '([' + args + '], ' + JSON.stringify(kwargs) + ')');
 				try {
 					minor.call(this, args, kwargs, isIntro);
-				} catch (e) {
+				} catch (e: any) {
 					errlog(e.message);
 					errlog(e.stack);
 					error("Minor failed | Battle id: " + this.id + " | Minor: " + args[0]);
@@ -321,12 +321,12 @@ export class Battle {
 				major = majors[major];
 			}
 			if (typeof major !== "function") {
-				error("Unknown major type: " + args[0] + " - " + sys.inspect(major) + "");
+				error("Unknown major type: " + args[0] + " - " + inspect(major) + "");
 			} else {
 				debug('running major ' + args[0] + '([' + args + '], ' + JSON.stringify(kwargs) + ')');
 				try {
 					major.call(this, args, kwargs, isIntro);
-				} catch (e) {
+				} catch (e: any) {
 					errlog(e.message);
 					errlog(e.stack);
 					error("Major failed | Battle id: " + this.id + " | Major: " + args[0]);
@@ -451,17 +451,19 @@ export class Battle {
 		};
 	};
 
-	getCalcRequestPokemon(sideId: number, forceMega?: boolean): CalcRequestPokemon {
-		if (!this.request) return new CalcRequestPokemon(getPokemon('', this.gen, this.id), {}, this);
+	parseRequestPokemon(sideId: number, forceMega?: boolean): CalcPokemon {
+		if (!this.request) throw new Error('Request not received yet');
 
 		const p = this.request.side.pokemon[sideId];
 		const details = this.parseDetails(p.details);
 		const condition = this.parseStatus(p.condition);
 
+		if (!details) throw new Error('Request pokemon has no details');
+
 		const side: 'self' | 'foe' = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
 		let pokeId = p.ident.split(': ')[1] + '|' + details.species;
 
-		const poke = new CalcRequestPokemon(
+		const poke = new CalcPokemon(
 			getPokemon(details.species, this.gen, this.id),
 			{ level: details.level, shiny: details.shiny, gender: details.gender, helpers: (this.helpers[side][pokeId] || {}) },
 			this,
@@ -475,7 +477,7 @@ export class Battle {
 		if (battlePokemon?.length) {
 			poke.terastallize = battlePokemon[0].terastallize;
 		}
-		if (forceMega && (p.canMegaEvo || (active?.canMegaEvo))) {
+		if (forceMega && (p.canMegaEvo || this.request.active?.[0]?.canMegaEvo)) {
 			if (poke.item.megaStone) {
 				poke.template = getPokemon(poke.item.megaStone, this.gen, this.id);
 				poke.species = poke.template.species;

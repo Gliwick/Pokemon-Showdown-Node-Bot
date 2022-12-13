@@ -428,7 +428,11 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 
 	// custom attacking stat
 	if (move.id === 'bodypress') atkStat = 'def';
-	if ((['photongeyser', 'lightthatburststhesky', 'terablast'].includes(move.id) && atkStats.atk > atkStats.spa) || (move.id === 'shellsidearm' && atkStats.atk / defStats.def > atkStats.spa / defStats.spd)) {
+	if (
+		(['photongeyser', 'lightthatburststhesky'].includes(move.id) && atkStats.atk > atkStats.spa) ||
+		(move.id === 'shellsidearm' && atkStats.atk / defStats.def > atkStats.spa / defStats.spd) ||
+		(move.id === 'terablast' && atkPoke.terastallize && atkStats.atk > atkStats.spa)
+	) {
 		atkStat = 'atk';
 		defStat = 'def';
 		if (move.id === 'shellsidearm') {
