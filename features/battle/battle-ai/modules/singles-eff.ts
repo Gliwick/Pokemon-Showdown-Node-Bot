@@ -1865,7 +1865,7 @@ export class SinglesEffective implements BattleModule {
 	}
 
 	logDecisions(selfPoke: Pokemon, foePoke: Pokemon, bestSw: SwitchDecision[] | null, damageMoves: DamageViabilityCategories, supportMoves: SupportViabilityCategoties): void {
-		debug(this.toLogString(selfPoke) + ' vs ' + this.toLogString(foePoke));
+		debug(this.toLogString(selfPoke) + '\nVS\n' + this.toLogString(foePoke));
 
 		debug('Best switch: ' + (bestSw?.[0]?.poke || 'none'));
 
