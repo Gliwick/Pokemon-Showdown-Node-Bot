@@ -6,7 +6,7 @@ import { toId } from '../../../tools';
 import { debug } from '../../../console-reports';
 import { getMultipleEff, getEffectiveness } from "./typechart";
 
-import { CurrentGen, Type, Gender, BaseStat, StatsTable, BoostsTable, BoostedStat } from "./battle-data";
+import { CurrentGen, Type, Gender, BaseStat, StatsTable, BoostsTable, BoostedStat, Pokemon as BattlePokemon } from "./battle-data";
 import { Battle } from "./battle";
 import { deepcopy } from '../utils';
 
@@ -187,7 +187,7 @@ export class Conditions {
 	volatiles: Record<string, any> = {};
 	boosts: BoostsTable = {};
 	side: Record<string, any> = {};
-	pokemon = [];
+	pokemon: BattlePokemon[] = [];
 	immediate: Record<string, any> = {};
 
 	constructor(data: Partial<Conditions>) {
@@ -368,7 +368,7 @@ interface PokemonWithConditions {
 
 type Category = 'Physical' | 'Special';
 
-export function calculate(attacker: PokemonWithConditions, defender: PokemonWithConditions, move, globalConditions?: Record<string, any>, battle?: Battle, transformation?: any): Damage {
+export function calculate(attacker: PokemonWithConditions, defender: PokemonWithConditions, move, globalConditions: Record<string, any> = {}, battle?: Battle, transformation?: any): Damage {
 	const atkPoke = new Pokemon(attacker.poke.template, attacker.poke, battle);
 	const atkConditions = new Conditions(attacker.conditions || {});
 	const defPoke = new Pokemon(defender.poke.template, defender.poke, battle);
@@ -381,7 +381,6 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	const gen = battle?.gen || CurrentGen;
 	const battleId = battle?.id;
 
-	if (!globalConditions) globalConditions = {};
 	globalConditions.supressedWeather = (atkPoke.hasAbility({ 'airlock': 1, 'cloudnine': 1 }) || defPoke.hasAbility({ 'airlock': 1, 'cloudnine': 1 }));
 	let supressedWeather = globalConditions.supressedWeather;
 

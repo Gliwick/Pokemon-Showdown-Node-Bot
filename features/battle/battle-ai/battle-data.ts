@@ -390,7 +390,7 @@ export class Pokemon implements PokemonDetails {
 	baseAbility: Record<string, any> | Unknown = '&unknown';
 	abilityStack = [];
 
-	moves: Move[] = [];
+	moves: Record<string, any>[] = [];
 
 	active: boolean = false;
 	slot: number = -1;

@@ -188,7 +188,7 @@ export class SinglesEffective implements BattleModule {
 		return (!pokeA.hasAbility('neutralizinggas') && !pokeB.hasAbility('neutralizinggas') && (pokeA.hasAbility({ 'airlock': 1, 'cloudnine': 1 }) || pokeB.hasAbility({ 'airlock': 1, 'cloudnine': 1 })));
 	}
 
-	getConditionsAfterSwitchIn(battle: Battle, selfPoke: Pokemon, foePoke: Pokemon, foeConditions: Conditions, gconditions = {}): {
+	getConditionsAfterSwitchIn(battle: Battle, selfPoke: Pokemon, foePoke: Pokemon, foeConditions: Conditions, gconditions: Record<string, any> = {}): {
 		selfPoke: Pokemon, selfConditions: Conditions, foeConditions: Conditions, gconditions: Record<string, any>
 	} {
 		const selfConditions = new Conditions({
@@ -405,7 +405,7 @@ export class SinglesEffective implements BattleModule {
 			for (let move of supposedMoves) {
 				movesB.push(getMove(move, battle.gen, battle.id));
 			}
-			const typeCommonPhysicalMove = {
+			const typeCommonPhysicalMove: Partial<Record<Type, any>> = {
 				'Bug': 'xscissor',
 				'Dark': 'knockoff',
 				'Dragon': 'dragonclaw',
@@ -425,7 +425,7 @@ export class SinglesEffective implements BattleModule {
 				'Steel': 'ironhead',
 				'Water': 'liquidation',
 			};
-			const typeCommonSpecialMove = {
+			const typeCommonSpecialMove: Partial<Record<Type, any>> = {
 				'Bug': 'bugbuzz',
 				'Dark': 'darkpulse',
 				'Dragon': 'dragonpulse',
@@ -836,7 +836,7 @@ export class SinglesEffective implements BattleModule {
 				}
 				continue;
 			}
-			let ev = this.evaluatePokemon(battle, 0);
+			const ev = this.evaluatePokemon(battle, 0);
 			switch (move.id) {
 				case 'ceaselessedge':
 				case 'spikes':
@@ -932,9 +932,9 @@ export class SinglesEffective implements BattleModule {
 					}
 					continue;
 				case 'substitute':
-					if (selfConditions.volatiles['substitute'] || ev.r >= 50 || selfPoke.hp <= 25 || (selfPoke.hp < 50 && speA <= speB) || battle.self.active[0].helpers.lastMove === 'substitute' || selfPoke.status in { 'psn': 1, 'tox': 1 } || foeConditions.volatiles['taunt']) {
+					if (selfConditions.volatiles['substitute'] || ev.received >= 50 || selfPoke.hp <= 25 || (selfPoke.hp < 50 && speA <= speB) || battle.self.active[0].helpers.lastMove === 'substitute' || selfPoke.status in { 'psn': 1, 'tox': 1 } || foeConditions.volatiles['taunt']) {
 						res.unviable.push(decisions[i]);
-					} else if (foePoke.category === 'Status' || ev.r <= 25) {
+					} else if (foePoke.category === 'Status' || ev.received <= 25) {
 						res.obligatory.push(decisions[i]);
 					} else {
 						res.viable.push(decisions[i]);
@@ -988,7 +988,7 @@ export class SinglesEffective implements BattleModule {
 				case 'taunt':
 					if (foeConditions.volatiles[move.volatileStatus] || !hasStatus || foePoke.hasAbility({ 'aromaveil': 1, 'oblivious': 1 })) {
 						res.unviable.push(decisions[i]);
-					} else if (foePoke.category === 'Status' || ev.rpc <= 25) {
+					} else if (foePoke.category === 'Status' || ev.receivedPercentage <= 25) {
 						res.obligatory.push(decisions[i]);
 					} else {
 						res.viable.push(decisions[i]);
@@ -1126,7 +1126,7 @@ export class SinglesEffective implements BattleModule {
 						res.unviable.push(decisions[i]);
 					} else if (foePoke.category === 'Status') {
 						res.obligatory.push(decisions[i]);
-					} else if (ev.rpc <= 25) {
+					} else if (ev.receivedPercentage <= 25) {
 						res.viable.push(decisions[i]);
 					} else {
 						res.unviable.push(decisions[i]);
@@ -1292,7 +1292,7 @@ export class SinglesEffective implements BattleModule {
 				continue;
 			}
 			if ((move.heal && move.heal[0] / move.heal[1] >= 0.33) || move.id in { 'moonlight': 1, 'morningsun': 1, 'rest': 1, 'shoreup': 1, 'strengthsap': 1, 'synthesis': 1, 'wish': 1 }) {
-				if (ev.r >= 50 || (selfPoke.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3)) {
+				if (ev.received >= 50 || (selfPoke.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3)) {
 					res.unviable.push(decisions[i]);
 				} else if (move.id in { 'moonlight': 1, 'morningsun': 1, 'synthesis': 1 } && !supressedWeather && toId(battle.conditions.weather) in { 'primordialsea': 1, 'raindance': 1, 'sandstorm': 1, 'hail': 1, 'snow': 1 }) {
 					res.unviable.push(decisions[i]);
@@ -1309,7 +1309,7 @@ export class SinglesEffective implements BattleModule {
 				} else {
 					if (selfPoke.hp >= 85) {
 						res.unviable.push(decisions[i]);
-					} else if (selfPoke.hp <= 25 && ev.rpc <= 85) {
+					} else if (selfPoke.hp <= 25 && ev.receivedPercentage <= 85) {
 						res.obligatory.push(decisions[i]);
 					} else {
 						res.viable.push(decisions[i]);
@@ -1900,7 +1900,7 @@ export class SinglesEffective implements BattleModule {
 		let foePoke = this.supposeActiveFoe(battle);
 		decisions = this.filterRedundantMaxMoves(this.getMovesData(battle, decisions, selfPoke));
 
-		let bestSwitch = this.getBestSwitch(battle, decisions);
+		let bestSwitch: SwitchDecision[] | MoveDecision[] = this.getBestSwitch(battle, decisions);
 		let damageMoves = this.getViableDamageMoves(battle, decisions);
 		let supportMoves = this.getViableSupportMoves(battle, decisions);
 		this.logDecisions(selfPoke, foePoke, bestSwitch, damageMoves, supportMoves);
@@ -1921,14 +1921,13 @@ export class SinglesEffective implements BattleModule {
 		});
 		let movesB = battle.foe.active[0].moves;
 
-		let randomBattle = (battle.id.indexOf('random') >= 0 || battle.id.indexOf('challengecup') >= 0 || battle.id.indexOf('hackmonscup') >= 0);
-		let speA = selfPoke.getFullSpe(battle, selfConditions, false);
-		let speANoBoost = selfPoke.getFullSpe(battle, selfConditions, true);
-		let speB = foePoke.getFullSpe(battle, foeConditions, false);
+		let selfSpe = selfPoke.getFullSpe(battle, selfConditions, false);
+		let selfSpeNoBoost = selfPoke.getFullSpe(battle, selfConditions, true);
+		let foeSpe = foePoke.getFullSpe(battle, foeConditions, false);
 		if (battle.conditions['trickroom']) {
-			speA = -1 * speA;
-			speANoBoost = -1 * speANoBoost;
-			speB = -1 * speB;
+			selfSpe = -1 * selfSpe;
+			selfSpeNoBoost = -1 * selfSpeNoBoost;
+			foeSpe = -1 * foeSpe;
 		}
 		let supressedWeather = this.isWeatherSupressed(selfPoke, foePoke);
 
@@ -1946,7 +1945,7 @@ export class SinglesEffective implements BattleModule {
 			if (foeConditions.volatiles['substitute'] && !damageMoves.subbreak.length && !damageMoves.hasMultihit && !damageMoves.canBypassSub && !supportMoves.hasAuthentic) switchIfNoOption = true;
 			if (selfPoke.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3 && !selfPoke.hasAbility({ 'magicguard': 1, 'poisonheal': 1 })) switchIfNoOption = true;
 			if (selfPoke.status && selfPoke.hasAbility('naturalcure')) switchIfNoOption = true;
-			if (selfConditions.volatiles['curse'] || selfConditions.volatiles['leechseed'] || (!battle.conditions['trickroom'] && speANoBoost > speB && speA < speB && selfConditions.boosts.spe < 0)) switchIfNoOption = true;
+			if (selfConditions.volatiles['curse'] || selfConditions.volatiles['leechseed'] || (!battle.conditions['trickroom'] && selfSpeNoBoost > foeSpe && selfSpe < foeSpe && selfConditions.boosts.spe < 0)) switchIfNoOption = true;
 
 			let movesA = battle.request.side.pokemon[0].moves;
 			for (let moveId of movesA) {
@@ -2060,9 +2059,9 @@ export class SinglesEffective implements BattleModule {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
 				const move = finalDamageMoves[i][0].moveData;
-				if (!selfPoke.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && selfPoke.hasAbility('serenegrace'))) && move.secondary.boosts && (move.secondary.boosts.def || move.secondary.boosts.spd || (move.secondary.boosts.spe && speA <= speB))) filteredMoves.push(finalDamageMoves[i]);
+				if (!selfPoke.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && selfPoke.hasAbility('serenegrace'))) && move.secondary.boosts && (move.secondary.boosts.def || move.secondary.boosts.spd || (move.secondary.boosts.spe && selfSpe <= foeSpe))) filteredMoves.push(finalDamageMoves[i]);
 				if (move.id in { 'maxdarkness': 1, 'maxphantasm': 1 }) filteredMoves.push(finalDamageMoves[i]);
-				if (speA <= speB && move.id in { 'maxstrike': 1, 'gmaxfoamburst': 1 }) filteredMoves.push(finalDamageMoves[i]);
+				if (selfSpe <= foeSpe && move.id in { 'maxstrike': 1, 'gmaxfoamburst': 1 }) filteredMoves.push(finalDamageMoves[i]);
 			}
 			if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 		}
@@ -2220,23 +2219,26 @@ export class SinglesEffective implements BattleModule {
 				if (movesB[i].category !== 'Status') {
 					if ((movesB[i].type === 'Electric' && selfPoke.hasType('Ground', selfConditions)) || selfPoke.hasAbility('wonderguard')) continue;
 				}
-				if (movesB[i].flags && movesB[i].flags['contact'] && (selfPoke.hasAbility({ 'ironbarbs': 1, 'roughskin': 1 }) || selfPoke.hasItem('rockyhelmet'))) continue;
+				if (movesB[i].flags?.contact && (selfPoke.hasAbility({ 'ironbarbs': 1, 'roughskin': 1 }) || selfPoke.hasItem('rockyhelmet'))) continue;
 				foeHasSwitch = true;
 			}
 		}
 
-		if (!foeHasSwitch && ev.rpc >= 85 && ((speA <= speB && maxPriority <= 0) || (damageMoves.ohko.length === 0 && supportMoves.obligatory.length === 0))) {
+		if (!foeHasSwitch && ev.receivedPercentage >= 85 && ((selfSpe <= foeSpe && maxPriority <= 0) || (damageMoves.ohko.length === 0 && supportMoves.obligatory.length === 0))) {
 			if (bestSwitch) {
 				debug('Returning best switch');
 				if (bestSwitch[0].type === 'move') return bestSwitch;
-				let evBestSwitch = this.evaluatePokemon(battle, bestSwitch[0].pokeId);
-				if (evBestSwitch.rpc < 50 && (evBestSwitch.r < ev.r || (evBestSwitch.r === ev.r && evBestSwitch.d > ev.d))) {
+				let evBestSwitch = this.evaluatePokemon(battle, (bestSwitch[0] as SwitchDecision).pokeId);
+				if (
+					evBestSwitch.receivedPercentage < 50 &&
+					(evBestSwitch.received < ev.received || (evBestSwitch.received === ev.received && evBestSwitch.inflicted > ev.inflicted))
+				) {
 					return bestSwitch;
 				}
 			}
 		}
 
-		if (bestSwitch && (ev.rpc <= 25 || (ev.rpc <= 85 && ev.r <= 33.3 && selfPoke.hasAbility('regenerator'))) && supportMoves.slowswitching.length) bestSwitch = this.sample(supportMoves.slowswitching);
+		if (bestSwitch && (ev.receivedPercentage <= 25 || (ev.receivedPercentage <= 85 && ev.received <= 33.3 && selfPoke.hasAbility('regenerator'))) && supportMoves.slowswitching.length) bestSwitch = this.sample(supportMoves.slowswitching);
 
 		if (damageMoves.ohko.length) {
 			return this.sample(finalDamageMoves);
@@ -2250,10 +2252,13 @@ export class SinglesEffective implements BattleModule {
 			}
 		} else if (damageMoves['3hko'].length > 0 || supportMoves.viable.length > 0 || damageMoves.bad.length > 0) {
 			if (bestSwitch) {
-				if (bestSwitch[0].type === 'move' && bestSwitch[0].moveId !== 'batonpass') return bestSwitch;
+				if (bestSwitch[0].type === 'move' && (bestSwitch[0] as MoveDecision).move !== 'batonpass') return bestSwitch;
 				if (switchIfNoOption && damageMoves['3hko'].length === 0) return bestSwitch;
-				let evBestSwitch = this.evaluatePokemon(battle, bestSwitch[0].pokeId);
-				if (evBestSwitch.rpc < 50 && (evBestSwitch.r < ev.r || (evBestSwitch.r === ev.r && evBestSwitch.d > ev.d))) {
+				let evBestSwitch = this.evaluatePokemon(battle, (bestSwitch[0] as SwitchDecision).pokeId);
+				if (
+					evBestSwitch.receivedPercentage < 50 &&
+					(evBestSwitch.received < ev.received || (evBestSwitch.received === ev.received && evBestSwitch.inflicted > ev.inflicted))
+				) {
 					return bestSwitch;
 				}
 			}
@@ -2277,18 +2282,19 @@ export class SinglesEffective implements BattleModule {
 
 	getBestSwitch(battle: Battle, decisions: Decision[][]): SwitchDecision[] | null {
 		debug('Switch options | Foe: ' + battle.foe.active[0].name);
-		const switches: { decision: SwitchDecision[], ev: Matchup }[] = [];
+		let switches: { decision: SwitchDecision[], ev: Matchup }[] = [];
 		for (let i = 0; i < decisions.length; i++) {
 			if (decisions[i][0].type !== 'switch') continue;
 
-			if (battle.foe.active[0] && !battle.foe.active[0].fainted && battle.self.pokemon[decisions[i][0].pokeId]) {
-				let pk = battle.self.pokemon[decisions[i][0].pokeId];
+			const decision = (decisions[i] as SwitchDecision[]);
+			if (battle.foe.active[0] && !battle.foe.active[0].fainted && battle.self.pokemon[decision[0].pokeId]) {
+				let pk = battle.self.pokemon[decision[0].pokeId];
 				if (pk.helpers.hasNoViableMoves === battle.foe.active[0].name) continue;
 			}
 
 			const switchOption = {
-				decision: decisions[i] as SwitchDecision[],
-				ev: this.evaluatePokemon(battle, decisions[i][0].pokeId),
+				decision,
+				ev: this.evaluatePokemon(battle, decision[0].pokeId),
 			};
 			debug('Switch option | Pokemon: ' + switchOption.decision[0].poke + ' | Evaluation: ' + JSON.stringify(switchOption.ev));
 			switches.push(switchOption);
@@ -2296,17 +2302,17 @@ export class SinglesEffective implements BattleModule {
 
 		if (!switches.length) return null;
 
-		switches.sort((a, b) => 10000 * (a.ev.r - b.ev.r) + (b.ev.d - a.ev.d));
+		switches.sort((a, b) => 10000 * (a.ev.received - b.ev.received) + (b.ev.inflicted - a.ev.inflicted));
 
 		if (battle.foe.active[0] && battle.foe.active[0].volatiles['substitute']) {
 			debug('Returning sub breaker');
-			const subBreakers = switches.filter(switchOption => (switchOption.ev.d > 25));
+			const subBreakers = switches.filter(switchOption => (switchOption.ev.inflicted > 25));
 			if (subBreakers.length) return subBreakers[0].decision;
 		}
 
-		let minR = switches[0].ev.r;
-		if (minR < 100) switches = switches.filter(switchOption => (switchOption.ev.r < Math.min(100, minR + 10)));
-		switches.sort((a, b) => (b.ev.d - a.ev.d));
+		let minR = switches[0].ev.received;
+		if (minR < 100) switches = switches.filter(switchOption => (switchOption.ev.received < Math.min(100, minR + 10)));
+		switches.sort((a, b) => (b.ev.inflicted - a.ev.inflicted));
 		return switches[0].decision;
 	};
 
@@ -2428,7 +2434,7 @@ export class SinglesEffective implements BattleModule {
 	* Swapper
 	*/
 
-	decide(battle: Battle, decisions: Decision[][]): Decision[] {
+	decide(battle: Battle, decisions: Decision[][]): Decision[] | null {
 		if (battle.gametype !== 'singles') throw new Error('This module only works for singles gametype');
 		if (battle.request?.forceSwitch) {
 			return this.getBestSwitch(battle, decisions);

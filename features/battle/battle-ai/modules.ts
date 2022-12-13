@@ -13,7 +13,7 @@ import { SinglesEffective } from './modules/singles-eff';
 export interface BattleModule {
 	readonly id: string;
 	readonly desc?: string;
-	decide: (battle: Battle, decisions: Decision[][]) => Decision[];
+	decide: (battle: Battle, decisions: Decision[][]) => Decision[] | null;
 }
 
 export const modules: Record<string, BattleModule> = {
