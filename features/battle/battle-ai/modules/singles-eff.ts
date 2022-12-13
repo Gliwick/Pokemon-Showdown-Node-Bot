@@ -1468,22 +1468,21 @@ export class SinglesEffective implements BattleModule {
 			if (move.id in { 'endeavor': 1, 'snore': 1 }) continue; // handled as support moves
 			if (move.id in { 'solarbeam': 1, 'solarblade': 1 } && !supressedWeather && !(toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 })) continue;
 			if ((move.id === 'burnup' && !selfPoke.hasType('Fire', selfConditions)) || (move.id === 'doubleshock' && !selfPoke.hasType('Electric', selfConditions))) continue;
-			if (move.id === 'suckerpunch' && (foeRecoveryHP > 0 || battle.self.active[0].helpers.lastMove === 'suckerpunch')) continue;
 
 			let dmg = calculate({ poke: selfPoke, conditions: selfConditions }, { poke: foePoke, conditions: foeConditions },
 				move, battle.conditions, battle, des.transformation).getAvg();
 
 			let hp = foePoke.hp;
+			let foeRecoveryHP = 0;
 			if (foeConditions.volatiles.dynamax) {
 				hp *= 2;
-				if (selfSpe < foeSpe && move.priority <= 0 && foePoke.template.species.startsWith('Alcremie')) hp = Math.min(200, hp + 33.3);
-			} else if (selfSpe < foeSpe && move.priority <= 0 && !(foePoke.status in { 'frz': 1, 'slp': 1 }) && !foeConditions.volatiles['healblock'] && !foeConditions.volatiles['taunt']) {
-				let movesB = battle.foe.active[0].moves;
-				let foeRecoveryHP = 0;
+				if (selfSpe < foeSpe && move.priority <= 0 && foePoke.template.species.startsWith('Alcremie')) foeRecoveryHP = 33.3;
+			} else if (!foeConditions.volatiles['healblock'] && !foeConditions.volatiles['taunt']) {
+				const movesB = battle.foe.active[0].moves;
 				for (let j = 0; j < movesB.length; j++) {
 					if (movesB[j].heal) foeRecoveryHP = Math.max(foeRecoveryHP, (movesB[j].heal[0] / movesB[j].heal[1]) * 100);
 					if (movesB[j].id === 'purify' && selfPoke.status) foeRecoveryHP = Math.max(foeRecoveryHP, 50);
-					if (move.id in { 'moonlight': 1, 'morningsun': 1, 'synthesis': 1 }) {
+					if (['moonlight', 'morningsun', 'synthesis'].includes(move.id)) {
 						if (supressedWeather || !battle.conditions.weather) {
 							foeRecoveryHP = Math.max(foeRecoveryHP, 50);
 						} else if (toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 }) {
@@ -1492,12 +1491,26 @@ export class SinglesEffective implements BattleModule {
 							foeRecoveryHP = Math.max(foeRecoveryHP, 25);
 						}
 					}
-					if (movesB[j].id === 'shoreup' && !supressedWeather && toId(battle.conditions.weather) === 'sandstorm') foeRecoveryHP = Math.max(foeRecoveryHP, 66.6);
+					if (movesB[j].id === 'shoreup') {
+						if (!supressedWeather && toId(battle.conditions.weather) === 'sandstorm') foeRecoveryHP = Math.max(foeRecoveryHP, 66.6);
+						else foeRecoveryHP = Math.max(foeRecoveryHP, 50);
+					}
 					if (movesB[j].id === 'rest' && !((battle.conditions['electricterrain'] || battle.conditions['mistyterrain']) && foePoke.isGrounded(foeConditions))) foeRecoveryHP = Math.max(foeRecoveryHP, 100);
 					if (movesB[j].id === 'strengthsap') foeRecoveryHP = Math.max(foeRecoveryHP, (100 * selfPoke.getStat('atk')) / foePoke.getStat('hp'));
 				}
+			}
+			if (
+				(((selfSpe <= foeSpe && move.priority === 0) || move.priority < 0) && !['frz', 'slp'].includes(foePoke.status || '')) ||
+				foeConditions.volatiles.dynamax
+			) {
 				hp = Math.min(100, hp + foeRecoveryHP);
 			}
+
+			if (
+				move.id === 'suckerpunch' &&
+				!foeConditions.volatiles['taunt'] &&
+				(foeRecoveryHP > 0 || battle.self.active[0].helpers.lastMove === 'suckerpunch')
+			) continue;
 
 			let pc = (dmg * 100) / hp;
 			if (move.id === 'guardianofalola') {
