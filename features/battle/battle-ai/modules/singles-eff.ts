@@ -2433,7 +2433,7 @@ export class SinglesEffective implements BattleModule {
 		for (let i = 0; i < decisions.length; i++) {
 			const sideId = decisions[i][0].team[0];
 			const poke = sideIdToPokemon[sideId];
-			if (poke.hasAbility('supremeoverlord')) continue;
+			if (poke.hasAbility({'dauntlessshield': 1, 'intrepidsword': 1, 'supremeoverlord': 1})) continue;
 			if (battle.request.side.pokemon[sideId].moves.some(move => ['lastrespects', 'revivalblessing'].includes(move))) continue;
 			leads.push(decisions[i]);
 		}
