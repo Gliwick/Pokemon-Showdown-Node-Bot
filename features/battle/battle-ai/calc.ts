@@ -1245,7 +1245,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			hitsBP.push(bp);
 		}
 	} else if (move.id === 'beatup') {
-		hitsBP = [bp, bp, bp, bp, bp, bp];
+		hitsBP = atkConditions.pokemon.filter(poke => !(poke.fainted || poke.status === 'fnt')).map(() => bp);
 	} else if (atkPoke.hasAbility('parentalbond') && !defPoke.hasAbility('neutralizinggas')) {
 		if (!move.multihit && !move.selfdestruct && !move.multihit && !move.flags?.charge && !(move.spreadHit && ['doubles', 'triples'].includes(globalConditions.gametype)) && !move.isZ && !move.isMax) {
 			let secondHitMultiplier = 1;
