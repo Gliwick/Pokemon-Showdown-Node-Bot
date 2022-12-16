@@ -3,7 +3,7 @@
 */
 
 import { toId } from '../../../tools';
-import { debug } from '../../../console-reports';
+import { debug, error } from '../../../console-reports';
 import { Battle } from './battle';
 import { getPokemon, getMove, getEffect, getItem, getAbility, Type } from './battle-data';
 
@@ -274,6 +274,10 @@ export const minors: Record<Minor, ((args: string[], kwargs: Record<string, stri
 		const poke = this.getActive(args[1]);
 		const move = args[2];
 		const target = this.parsePokemonIdent(args[1]);
+		if (!poke || !target) {
+			error('No active pokemon found or no target parsed');
+			return;
+		}
 		poke.prepareMove(move, target.slot);
 	},
 

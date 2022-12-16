@@ -368,6 +368,11 @@ export type BoostsTable = Partial<Record<BoostedStat, number>>;
 export type BaseStat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 export type StatsTable = Partial<Record<BaseStat, number>>;
 
+interface PreparedMove {
+	move: string;
+	target: number;
+}
+
 export class Pokemon implements PokemonDetails {
 	template;
 	species;
@@ -390,7 +395,7 @@ export class Pokemon implements PokemonDetails {
 	baseAbility: Record<string, any> | Unknown = '&unknown';
 	abilityStack = [];
 
-	moves: Record<string, any>[] = [];
+	moves: Move[] = [];
 
 	active: boolean = false;
 	slot: number = -1;
@@ -403,7 +408,7 @@ export class Pokemon implements PokemonDetails {
 	terastallize: Type | null = null;
 
 	passing: number | null = null;
-	prepared = null;
+	prepared: PreparedMove | null = null;
 
 	helpers: Record<string, any> = {};
 
@@ -473,7 +478,7 @@ export class Pokemon implements PokemonDetails {
 		}
 	};
 
-	prepareMove(move, target) {
+	prepareMove(move: string, target: number) {
 		this.prepared = { move, target };
 	};
 

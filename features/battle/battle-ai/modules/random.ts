@@ -7,7 +7,7 @@ import { Decision } from "../decision";
 import { BattleModule } from "../modules";
 
 export class Random implements BattleModule {
-  id = "random";
+  id = 'random';
 
   constructor() { };
 
