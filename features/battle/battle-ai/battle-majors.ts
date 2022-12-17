@@ -4,7 +4,7 @@
 
 import { error } from '../../../console-reports';
 import { toId } from '../../../tools';
-import { Battle, BattleType, PlayerId } from './battle';
+import { Battle, BattleType, PlayerId, Request } from './battle';
 import { Move, Pokemon, getPokemon, getMove, getEffect, BoostedStat } from './battle-data';
 
 export const majors: Record<string, ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void) | string> = {
@@ -14,10 +14,10 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 
 	request: function (this: Battle, args, kwargs) {
 		args.shift();
-		this.request = {};
+		this.request = null;
 		const arg = args.join("|");
-		if (arg.length) this.request = JSON.parse(arg);
-		this.rqid = this.request ? this.request.rqid : -1;
+		if (arg.length) this.request = JSON.parse(arg) as Request;
+		this.rqid = this.request?.rqid || -1;
 	},
 
 	start: function (this: Battle, args, kwargs) {
@@ -397,13 +397,19 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 	},
 
 	callback: function (this: Battle, args, kwargs) {
-		if (!this.request) {
+		if (!this.request?.active) {
 			error('No request received yet');
 			return;
 		}
 
 		args.shift();
-		const pokemon = isNaN(Number(args[1])) ? this.getActive(args[1]) : this.self.active[args[1]];
+		const activeId = Number(args[1]);
+		const pokemon = isNaN(activeId) ? this.getActive(args[1]) : this.self?.active?.[activeId];
+		if (!pokemon) {
+			error('No active pokemon found: ' + args[1]);
+			return;
+		}
+
 		const requestData = this.request.active[pokemon.slot];
 		switch (args[0]) {
 			case 'trapped':

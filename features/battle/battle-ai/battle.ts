@@ -17,10 +17,66 @@ import { minors, Minor } from './battle-minors';
 import { choose } from './modules';
 import { Decision, getDecisions, MoveDecision } from './decision';
 
-
-import { Player, Pokemon, getPokemon, getItem, getAbility, CurrentGen, PokemonDetails } from './battle-data';
+import { Player, Pokemon, getPokemon, getItem, getAbility, CurrentGen, PokemonDetails, StatsTable, Type } from './battle-data';
 
 import { Pokemon as CalcPokemon } from './calc';
+
+export type PlayerId = 'p1' | 'p2';
+export enum BattleType { singles = 'singles', doubles = 'doubles', triples = 'triples' };
+
+interface RequestMove {
+	move: string;
+	id: string;
+	pp: number;
+	maxpp: number;
+	target: string;
+	disabled: boolean;
+}
+
+interface RequestTransformationMove {
+	move: string;
+	target: string;
+}
+
+interface RequestActivePokemon {
+	moves: RequestMove[];
+	trapped?: boolean;
+	canMegaEvo?: boolean;
+	canZMove?: RequestTransformationMove[];
+	canDynamax?: boolean;
+	maxMoves?: {
+		maxMoves: RequestTransformationMove[];
+	};
+	canTerastallize?: Type;
+}
+
+interface RequestPokemon {
+	ident: `${PlayerId}: ${string}`;
+	details: string;
+	condition: string;
+	active: boolean;
+	stats: Omit<Required<StatsTable>, 'hp'>;
+	moves: string[];
+	baseAbility: string;
+	item: string;
+	commanding: boolean;
+	reviving: boolean;
+	pokeball: string;
+	ability: string;
+}
+
+interface RequestSide {
+	name: string;
+	id: string;
+	pokemon: RequestPokemon[];
+}
+
+export interface Request {
+	teamPreview?: boolean;
+	active?: RequestActivePokemon[];
+	side: RequestSide;
+	rqid: number;
+}
 
 interface LastSend {
 	rqid: number;
@@ -32,9 +88,6 @@ interface Helpers {
 	self: any;
 	foe: any;
 }
-
-export type PlayerId = 'p1' | 'p2';
-export enum BattleType { singles = 'singles', doubles = 'doubles', triples = 'triples' };
 
 interface Status {
 	hp: number
@@ -69,7 +122,7 @@ export class Battle {
 	timer: boolean = false;
 	sentTimerReq: number = 0;
 	turn: number = 0;
-	request: Record<string, any> | null = null;
+	request: Request | null = null;
 	rqid: number = 0;
 	teamPreview: number = 1;
 
@@ -457,8 +510,9 @@ export class Battle {
 		const p = this.request.side.pokemon[sideId];
 		const details = this.parseDetails(p.details);
 		const condition = this.parseStatus(p.condition);
+		const ident = this.parsePokemonIdent(p.ident);
 
-		if (!details) throw new Error('Request pokemon has no details');
+		if (!details || !ident) throw new Error('Request pokemon has no details or ident: ' + JSON.stringify(p));
 
 		const side: 'self' | 'foe' = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
 		let pokeId = p.ident.split(': ')[1] + '|' + details.species;
@@ -473,11 +527,11 @@ export class Battle {
 		poke.status = condition.status;
 		poke.hp = condition.hp;
 		poke.stats = p.stats;
-		const battlePokemon = this[side]?.pokemon?.filter?.(playerPokemon => playerPokemon.name === p.name);
+		const battlePokemon = this[side]?.pokemon?.filter?.(playerPokemon => playerPokemon.name === ident.name);
 		if (battlePokemon?.length) {
 			poke.terastallize = battlePokemon[0].terastallize;
 		}
-		if (forceMega && (p.canMegaEvo || this.request.active?.[0]?.canMegaEvo)) {
+		if (forceMega && this.request.active?.[0]?.canMegaEvo) {
 			if (poke.item.megaStone) {
 				poke.template = getPokemon(poke.item.megaStone, this.gen, this.id);
 				poke.species = poke.template.species;

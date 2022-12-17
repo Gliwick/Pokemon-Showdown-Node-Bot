@@ -1242,7 +1242,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			hitsBP.push(bp);
 		}
 	} else if (move.id === 'beatup') {
-		hitsBP = atkConditions.pokemon.filter(poke => !(poke.fainted || poke.status === 'fnt')).map(() => bp);
+		hitsBP = atkConditions.pokemon.filter(poke => !(poke.fainted || poke.status === 'fnt')).map(poke => Math.floor(poke.template.baseStats.atk / 10) + 5);
 	} else if (atkPoke.hasAbility('parentalbond') && !defPoke.hasAbility('neutralizinggas')) {
 		if (!move.multihit && !move.selfdestruct && !move.multihit && !move.flags?.charge && !(move.spreadHit && ['doubles', 'triples'].includes(globalConditions.gametype)) && !move.isZ && !move.isMax) {
 			let secondHitMultiplier = 1;
