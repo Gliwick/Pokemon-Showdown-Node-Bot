@@ -768,7 +768,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			if (bp > 120) bp = 120;
 			break;
 		case 'punishment':
-			bp = 60 + 20 * Object.values(defConditions.boosts).filter(boost => boost > 0).length;
+			bp = 60 + 20 * Object.values(defConditions.boosts).filter(boost => boost > 0).reduce((acc, v) => acc + v, 0);
 			break;
 		case 'trumpcard':
 		case 'present':
