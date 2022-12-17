@@ -768,15 +768,8 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			if (bp > 120) bp = 120;
 			break;
 		case 'punishment':
-			bp = 60;
-			let stat: BoostedStat;
-			for (stat in defConditions.boosts) {
-				const boost = defConditions.boosts[stat];
-				if (boost && boost > 0) bp += (20 * boost);
-			}
+			bp = 60 + 20 * Object.values(defConditions.boosts).filter(boost => boost > 0).length;
 			break;
-		case 'beatup':
-			bp = Math.floor(atkPoke.template.baseStats.atk / 10) + 5;
 		case 'trumpcard':
 		case 'present':
 			bp = 40;
@@ -1075,10 +1068,6 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		}
 	}
 
-	if (move.type === atkPoke.terastallize && !move.multihit && move.priority <= 0 && move.bp && move.bp > 1) {
-		bp = Math.max(bp, 60);
-	}
-
 	/******************************
 	* Modifiers
 	*******************************/
@@ -1092,7 +1081,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	if (atkPoke.terastallize) {
 		let originalStab = (atkPoke.template.types.includes(moveType) >= 0);
 		let teraStab = (move.type === atkPoke.terastallize);
-		if (originalStab && teraStab) {
+		if (originalStab && teraStab && !['firepledge', 'grasspledge', 'waterpledge'].includes(move.id)) {
 			debug('applying double ' + move.type + ' stab from terastallization');
 			stab = atkPoke.hasAbility('adaptability') ? 2.25 : 2;
 		} else if (teraStab) {
@@ -1229,6 +1218,14 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 
 	if (['doubles', 'triples'].includes(globalConditions.gametype)) {
 		if (move.target.startsWith('allAdjacent')) modifier *= 0.75;
+	}
+
+	if (
+		move.type === atkPoke.terastallize && move.priority <= 0 && !move.multihit && move.bp &&
+		!(move.basePower === 0 && move.basePowerCallback) &&
+		!['dragonenergy', 'eruption', 'waterspout'].includes(move.id)
+	) {
+		bp = Math.max(bp, 60);
 	}
 
 	/******************************
