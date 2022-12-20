@@ -13,7 +13,7 @@ import { BoostsTable, getAbility, getFormatsData, getItem, getMove, Move, Type }
 import { Battle } from "../battle";
 import { Decision, MoveDecision, SwitchDecision, TeamDecision } from "../decision";
 
-const SingleTurnMoves = ['protect', 'detect', 'kingsshield', 'quickguard', 'spikyshield', 'wideguard', 'banefulbunker', 'obstruct', 'maxguard', 'endure'];
+const ProtectionMoves = ['protect', 'detect', 'kingsshield', 'quickguard', 'spikyshield', 'wideguard', 'banefulbunker', 'obstruct', 'maxguard', 'endure'];
 
 interface Matchup {
 	received: number;
@@ -1181,10 +1181,12 @@ export class SinglesEffective implements BattleModule {
 				}
 				continue;
 			}
-			if (SingleTurnMoves.includes(move.id)) {
-				if (SingleTurnMoves.includes(battle.self.active[0].helpers.lastMove)) {
+			if (ProtectionMoves.includes(move.id)) {
+				if (ProtectionMoves.includes(battle.self.active[0].helpers.lastMove)) {
 					res.unviable.push(decisions[i]);
 				} else if ((move.id === 'maxguard') !== !!foeConditions.volatiles.dynamax) {
+					res.unviable.push(decisions[i]);
+				} else if (battle.conditions['trickroom'] && selfSpe < foeSpe) {
 					res.unviable.push(decisions[i]);
 				} else if (selfPoke.hasAbility('speedboost') && !(selfConditions.boosts.spe > 0)) {
 					res.obligatory.push(decisions[i]);
@@ -1717,7 +1719,7 @@ export class SinglesEffective implements BattleModule {
 			}
 
 			let foeCanProtect = false;
-			if (!(move.id in { 'gmaxoneblow': 1, 'gmaxrapidflow': 1 }) && !SingleTurnMoves.includes(battle.foe.active[0].helpers.lastMove) && !['frz', 'slp'].includes(foePoke.status || '')) {
+			if (!(move.id in { 'gmaxoneblow': 1, 'gmaxrapidflow': 1 }) && !ProtectionMoves.includes(battle.foe.active[0].helpers.lastMove) && !['frz', 'slp'].includes(foePoke.status || '')) {
 				let movesB = battle.foe.active[0].moves;
 				if (foeConditions.volatiles.dynamax) {
 					for (let j = 0; j < movesB.length; j++) {
@@ -1725,7 +1727,7 @@ export class SinglesEffective implements BattleModule {
 					}
 				} else if (move?.flags?.protect && (!move.flags['contact'] || !selfPoke.hasAbility('unseenfist'))) {
 					for (let j = 0; j < movesB.length; j++) {
-						if (SingleTurnMoves.includes(movesB[j].id)) foeCanProtect = true;
+						if (ProtectionMoves.includes(movesB[j].id)) foeCanProtect = true;
 					}
 				}
 			}
@@ -2212,7 +2214,7 @@ export class SinglesEffective implements BattleModule {
 		}
 
 		// no contact
-		if (!selfPoke.hasAbility({ 'toughclaws': 1, 'unseenfist': 1 }) && !selfPoke.hasItem('protectivepads')) {
+		if (!selfPoke.hasAbility({ 'toughclaws': 1, 'unseenfist': 1 }) && !selfPoke.hasItem({'protectivepads':1, 'punchingglove':1})) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
 				const move = finalDamageMoves[i][0].moveData;
