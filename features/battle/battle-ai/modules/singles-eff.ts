@@ -1902,7 +1902,7 @@ export class SinglesEffective implements BattleModule {
 		}
 	}
 
-	sample<T>(arr: T[]): T {
+	sample<T>(arr: readonly T[]): T {
 		return arr[Math.floor(Math.random() * arr.length)];
 	}
 
