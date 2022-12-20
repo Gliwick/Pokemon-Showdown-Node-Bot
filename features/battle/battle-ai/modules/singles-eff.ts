@@ -1911,7 +1911,7 @@ export class SinglesEffective implements BattleModule {
 		let foePoke = this.supposeActiveFoe(battle);
 		decisions = this.filterRedundantMaxMoves(this.getMovesData(battle, decisions, selfPoke));
 
-		let bestSwitch: SwitchDecision[] | MoveDecision[] = this.getBestSwitch(battle, decisions);
+		let bestSwitch: SwitchDecision[] | MoveDecision[] | null = this.getBestSwitch(battle, decisions);
 		let damageMoves = this.getViableDamageMoves(battle, decisions);
 		let supportMoves = this.getViableSupportMoves(battle, decisions);
 		this.logDecisions(selfPoke, foePoke, bestSwitch, damageMoves, supportMoves);
