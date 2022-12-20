@@ -28,7 +28,7 @@ interface SupportViabilityCategoties {
 	sleepTalk: Decision[][];
 	switching: Decision[][];
 	slowswitching: Decision[][];
-	hasAuthentic: boolean;
+	canBypassSub: boolean;
 };
 
 interface DamageViabilityCategories {
@@ -642,7 +642,7 @@ export class SinglesEffective implements BattleModule {
 			sleepTalk: [],
 			switching: [],
 			slowswitching: [],
-			hasAuthentic: false,
+			canBypassSub: false,
 		};
 		let sideId = 0; // Active, singles
 		let selfPoke = battle.parseRequestPokemon(sideId, true);
@@ -758,7 +758,7 @@ export class SinglesEffective implements BattleModule {
 					if (move.category === 'Status') res.unviable.push(decisions[i]);
 					continue;
 				} else if (move.category === 'Status') {
-					res.hasAuthentic = true;
+					res.canBypassSub = true;
 				}
 			}
 			if (move.flags?.powder && battle.gen > 5) {
@@ -1955,7 +1955,7 @@ export class SinglesEffective implements BattleModule {
 			// No switch when dynamaxed
 			if (selfConditions.volatiles.dynamax) bestSwitch = null;
 
-			if (foeConditions.volatiles['substitute'] && !damageMoves.subbreak.length && !damageMoves.hasMultihit && !damageMoves.canBypassSub && !supportMoves.hasAuthentic) switchIfNoOption = true;
+			if (foeConditions.volatiles['substitute'] && !damageMoves.subbreak.length && !damageMoves.hasMultihit && !damageMoves.canBypassSub && !supportMoves.canBypassSub) switchIfNoOption = true;
 			if (selfPoke.status === 'tox' && battle.turn - battle.self.active[0].helpers.sw >= 3 && !selfPoke.hasAbility({ 'magicguard': 1, 'poisonheal': 1 })) switchIfNoOption = true;
 			if (selfPoke.status && selfPoke.hasAbility('naturalcure')) switchIfNoOption = true;
 			if (selfConditions.volatiles['curse'] || selfConditions.volatiles['leechseed'] || (!battle.conditions['trickroom'] && selfSpeNoBoost > foeSpe && selfSpe < foeSpe && selfConditions.boosts.spe < 0)) switchIfNoOption = true;
