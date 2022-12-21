@@ -612,7 +612,7 @@ export class SinglesEffective implements BattleModule {
 			if (foePoke.hasAbility('magnetpull') && selfPoke.hasType('Steel', selfConditions)) return false;
 			if (foePoke.hasAbility('shadowtag') && !selfPoke.hasAbility('shadowtag')) return false;
 		}
-		return decisions.flatMap(decs => decs).some(des => des.type === 'switch');
+		return decisions.flat(1).some(des => des.type === 'switch');
 	}
 
 	selfHasStatus(battle: Battle): boolean {
@@ -2214,7 +2214,7 @@ export class SinglesEffective implements BattleModule {
 		}
 
 		// no contact
-		if (!selfPoke.hasAbility({ 'toughclaws': 1, 'unseenfist': 1 }) && !selfPoke.hasItem({'protectivepads':1, 'punchingglove':1})) {
+		if (!selfPoke.hasAbility({ 'toughclaws': 1, 'unseenfist': 1 }) && !selfPoke.hasItem({ 'protectivepads': 1, 'punchingglove': 1 })) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
 				const move = finalDamageMoves[i][0].moveData;
@@ -2435,7 +2435,8 @@ export class SinglesEffective implements BattleModule {
 		for (let i = 0; i < decisions.length; i++) {
 			const sideId = decisions[i][0].team[0];
 			const poke = sideIdToPokemon[sideId];
-			if (poke.hasAbility({'dauntlessshield': 1, 'intrepidsword': 1, 'supremeoverlord': 1})) continue;
+			if (poke.hasAbility({ 'dauntlessshield': 1, 'intrepidsword': 1, 'supremeoverlord': 1, 'unburden': 1 })) continue;
+			if (poke.hasItem({ 'powerherb': 1, 'throatspray': 1 })) continue;
 			if (battle.request.side.pokemon[sideId].moves.some(move => ['lastrespects', 'revivalblessing'].includes(move))) continue;
 			leads.push(decisions[i]);
 		}
