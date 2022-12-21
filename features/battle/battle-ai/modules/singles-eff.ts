@@ -2436,8 +2436,9 @@ export class SinglesEffective implements BattleModule {
 			const sideId = decisions[i][0].team[0];
 			const poke = sideIdToPokemon[sideId];
 			if (poke.hasAbility({ 'dauntlessshield': 1, 'intrepidsword': 1, 'supremeoverlord': 1, 'unburden': 1 })) continue;
-			if (poke.hasItem({ 'powerherb': 1, 'throatspray': 1 })) continue;
-			if (battle.request.side.pokemon[sideId].moves.some(move => ['lastrespects', 'revivalblessing'].includes(move))) continue;
+			if (poke.hasItem({ 'powerherb': 1, 'throatspray': 1, 'whiteherb': 1 })) continue;
+			if (battle.request.side.pokemon[sideId].moves
+				.some(move => ['bellydrum', 'clangoroussoul', 'filletaway', 'lastrespects', 'revivalblessing', 'shellsmash'].includes(move))) continue;
 			leads.push(decisions[i]);
 		}
 
