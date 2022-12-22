@@ -131,6 +131,7 @@ export class SinglesEffective implements BattleModule {
 							case 'orichalcumpulse':
 								itemId = 'heatrock';
 								break;
+							case 'electricsurge':
 							case 'hadronengine':
 								itemId = 'terrainextender';
 								break;
