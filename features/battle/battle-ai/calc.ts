@@ -601,7 +601,7 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	const defTypes = [...defPoke.getTypes(defConditions)];
 	let typeEffectiveness = getMultipleEff(moveType, defTypes, gen, notImmune, !!inversebattle, battleId);
 	if (move.id === 'flyingpress') typeEffectiveness *= getMultipleEff('Flying', defTypes, gen, notImmune, !!inversebattle, battleId);
-	if (move.id === 'freezedry' && defTypes.indexOf('Water') >= 0) typeEffectiveness = 2 * getMultipleEff(moveType, defTypes.filter(t => t !== 'Water'), gen, notImmune, !!inversebattle, battleId);
+	if (move.id === 'freezedry' && defTypes.includes('Water')) typeEffectiveness = 2 * getMultipleEff(moveType, defTypes.filter(t => t !== 'Water'), gen, notImmune, !!inversebattle, battleId);
 	if (move.type === 'Shadow') typeEffectiveness = 2;
 
 	let immune = false;
