@@ -8,21 +8,16 @@ const MODS_DATA_DIR = DATA_DIR + 'mods/';
 import { CurrentGen, Type } from './battle-data';
 
 export function getMultipleEff(typeA: Type, typesB: Type[], gen: number, notImmune: boolean, inverse: boolean, battleId?: string): number {
-	let mux = 1;
-	let tmp;
-	for (let i = 0; i < typesB.length; i++) {
-		tmp = getEffectiveness(typeA, typesB[i], gen, inverse, battleId);
-		if (tmp === 0 && notImmune) tmp = 1;
-		mux *= tmp;
-	}
-	return mux;
+	return typesB.map((type) => getEffectiveness(typeA, type, gen, inverse, battleId))
+		.map(eff => notImmune && eff === 0 ? 1 : eff)
+		.reduce((acc, v) => acc * v, 1);
 };
 
 export function getEffectiveness(typeA: Type, typeB: Type, gen: number = CurrentGen, inverse: boolean, battleId?: string): number {
-	const chart = getChart(gen, battleId);
+	const chart = getChart(gen, battleId)[typeB];
 
-	if (!chart[typeB] || !chart[typeB][typeA]) return 1;
-	switch (chart[typeB][typeA]) {
+	if (!chart || !chart[typeA]) return 1;
+	switch (chart[typeA]) {
 		case 1:
 			return inverse ? 0.5 : 2;
 		case 2:

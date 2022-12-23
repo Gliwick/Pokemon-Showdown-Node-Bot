@@ -596,10 +596,13 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	if (move.id === 'struggle') notImmune = true;
 	if (['Fighting', 'Normal'].includes(moveType) && (defConditions.volatiles.foresight || atkPoke.hasAbility('scrappy'))) notImmune = true;
 	if (moveType === 'Ground' && (move.id === 'thousandarrows' || globalConditions.gravity)) notImmune = true;
-	let defTypes = defPoke.getTypes(defConditions).slice();
-	let typeEffectiveness = getMultipleEff(moveType, defTypes, gen, notImmune, !!globalConditions.inversebattle, battleId);
-	if (move.id === 'flyingpress') typeEffectiveness *= getMultipleEff('Flying', defTypes, gen, notImmune, !!globalConditions.inversebattle, battleId);
-	if (move.id === 'freezedry' && defTypes.indexOf('Water') >= 0 && !globalConditions.inversebattle) typeEffectiveness *= (2 / getEffectiveness(moveType, 'Water', gen, !!globalConditions.inversebattle, battleId));
+
+	const { inversebattle } = globalConditions;
+	const defTypes = [...defPoke.getTypes(defConditions)];
+	let typeEffectiveness = getMultipleEff(moveType, defTypes, gen, notImmune, !!inversebattle, battleId);
+	if (move.id === 'flyingpress') typeEffectiveness *= getMultipleEff('Flying', defTypes, gen, notImmune, !!inversebattle, battleId);
+	if (move.id === 'freezedry' && defTypes.indexOf('Water') >= 0) typeEffectiveness = 2 * getMultipleEff(moveType, defTypes.filter(t => t !== 'Water'), gen, notImmune, !!inversebattle, battleId);
+	if (move.type === 'Shadow') typeEffectiveness = 2;
 
 	let immune = false;
 
