@@ -74,6 +74,7 @@ interface RequestSide {
 export interface Request {
 	teamPreview?: boolean;
 	active?: RequestActivePokemon[];
+	forceSwitch?: boolean[];
 	side: RequestSide;
 	rqid: number;
 }

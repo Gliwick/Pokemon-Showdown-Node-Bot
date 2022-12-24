@@ -22,7 +22,7 @@ export const modules: Record<string, BattleModule> = {
 	'singles-eff': new SinglesEffective(),
 };
 
-Object.values(modules).forEach((mod) => {
+Object.values(modules).forEach(mod => {
 	debug("Loaded battle module: " + mod.id + (mod.desc ? (" [" + mod.desc + "]") : ""));
 });
 

@@ -256,7 +256,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 		const fw = req.forceSwitch;
 		const tables: Decision[][] = [];
 		let canSw;
-		const toSw = fw.filter(i => !!i).reduce((acc: number) => acc++, 0);
+		const toSw = fw.filter(i => !!i).length;
 		for (let i = 0; i < fw.length; i++) {
 			tables.push([]);
 			if (!fw[i]) {
