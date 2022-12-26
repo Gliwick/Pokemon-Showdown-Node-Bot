@@ -24,9 +24,10 @@ console.log((
 	'-----------------------------------------------\n'
 ).yellow);
 
-global.Tools = new require('./tools.ts').Tools();
 var cmdArgs = process.argv.slice(2);
-if (!global.AppOptions) global.AppOptions = Tools.paseArguments(cmdArgs);
+if (!global.AppOptions) global.AppOptions = require('./app-options.ts').parseArguments(cmdArgs);
+
+global.Tools = new require('./tools.ts').Tools();
 
 if (AppOptions.help) {
 	console.log(

@@ -1,10 +1,11 @@
-import { AppOptionsType, Tools as ToolsManager } from "./tools";
+import { AppOptionsType } from "./app-options";
 import { Client } from "./showdown-client";
 import { CommandParser as CommandParserClass } from "./command-parser";
 import { ConfigType, Format } from "./global-types";
 import { DataDownloader as DataDownloaderClass } from "./data-downloader"
 import { Feature } from "./features";
 import { SecurityLogger } from "./security-log"
+import { Tools as ToolsManager } from "./tools";
 import { FlatFileManager as FlatFileManagerClass, SettingsManager } from "./settings";
 
 declare global {
