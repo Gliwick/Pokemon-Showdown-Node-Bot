@@ -6,9 +6,6 @@ import { inspect } from "util";
 import { debug, errlog, error, ok } from "./console-reports";
 import { toId } from "./tools";
 
-const settingsDataFile = AppOptions.data + 'settings.json';
-const cacheDataFile = AppOptions.data + '_temp/' + 'http-cache.json';
-
 export class FlatFileManager {
 	file: PathLike;
 	writing: boolean;
@@ -233,12 +230,12 @@ export class SettingsManager {
 		language?: Record<string, string>;
 		sleep?: Record<string, boolean>;
 	};
-	settingsFFM = new FlatFileManager(settingsDataFile);
+	settingsFFM = new FlatFileManager(AppOptions.data + 'settings.json');
 	permissions: Record<string, number> = {};
 	parserFilters: Record<string, (room: string, by: string, msg: string) => boolean> = {};
 	userManager: UserManager;
 	httpCache: Record<string, { url: string, time: number }> = {};
-	cacheFFM = new FlatFileManager(cacheDataFile);
+	cacheFFM = new FlatFileManager(AppOptions.data + '_temp/' + 'http-cache.json');
 	lockdown: boolean = false;
 	package: Record<string, any>;
 
