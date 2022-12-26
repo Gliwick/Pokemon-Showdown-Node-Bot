@@ -70,7 +70,7 @@ export class GroupChatsManager implements Feature {
 		this.timer = setInterval(this.intervalJoin, this.groupChatTryJoinInterval);
 	};
 
-	parse(room, message, isIntro, spl) {
+	parse(room: string, message: string, isIntro: boolean, spl: string[]) {
 		if (this.ignored[room]) return;
 		if (!isIntro && spl[0] === 'J' || spl[0] === 'j') {
 			this.runAutopromote(room, spl[1]);

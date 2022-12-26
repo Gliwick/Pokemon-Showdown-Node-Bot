@@ -505,7 +505,7 @@ export class ModerationManager implements Feature {
 		this.cleanDataTimer = setInterval(this.cleanData, 30 * 60 * 1000);
 	};
 
-	parse(room, message, isIntro, spl) {
+	parse(room: string, message: string, isIntro: boolean, spl: string[]) {
 		if (isIntro) return;
 		if (!Bot.rooms[room] || Bot.rooms[room].type !== "chat") return;
 		if (!Config.moderation) Config.moderation = {};

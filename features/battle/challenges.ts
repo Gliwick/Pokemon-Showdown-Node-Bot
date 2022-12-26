@@ -1,4 +1,4 @@
-import { Parser } from ".";
+import { Parser } from "..";
 import { debug } from "../../console-reports";
 import { BattleBot } from "./battle-ai";
 import { TeamBuilder } from "./teambuilder";

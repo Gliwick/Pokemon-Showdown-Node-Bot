@@ -58,17 +58,21 @@ Also, command have a context:
 Features
 ------------
 
-Bot features are complex modules hat fulfill secondary functions, located in the folder `features`. Each feature is a folder that must have an `index.js` main file. That file will be required of bot start and should have the following minimum structure:
+Bot features are complex modules hat fulfill secondary functions, located in the folder `features`. Each feature is a folder that must have an `index.ts` main file. That file will be required of bot start and should have a class with following minimum structure:
 ```js
-exports.id = 'featureid';
-exports.desc = 'Simple Feature description';
+id = 'featureid';
+desc = 'Simple Feature description';
 
-exports.init = function () {
+init = function () {
 	//init function
 };
 
-exports.parse = function (room, message, isIntro, spl) {
+parse = function (room, message, isIntro, spl) {
 	//data parse
+};
+
+destroy = function () {
+	//destroy function
 };
 ```
 

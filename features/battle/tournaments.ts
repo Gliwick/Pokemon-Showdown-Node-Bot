@@ -2,7 +2,7 @@
 	Tournaments parser
 */
 
-import { Parser } from '.';
+import { Parser } from '..';
 import { toId } from '../../tools';
 import { TeamBuilder } from "./teambuilder";
 

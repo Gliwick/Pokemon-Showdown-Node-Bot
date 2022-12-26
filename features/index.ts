@@ -1,4 +1,8 @@
-export interface Feature {
+export interface Parser {
+    parse: (room: string, message: string, isIntro: boolean, spl: string[]) => void;
+}
+
+export interface Feature extends Parser {
     readonly id: string;
     readonly desc?: string;
     init: () => void;

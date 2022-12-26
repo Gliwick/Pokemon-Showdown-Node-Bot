@@ -97,7 +97,7 @@ export class TournamentsManager implements Feature {
 		}
 	};
 
-	parse(room, message, isIntro, spl) {
+	parse(room: string, message: string, isIntro: boolean, spl: string[]) {
 		if (spl[0] !== 'tournament') return;
 		if (isIntro) return;
 		if (!this.tourData[room]) this.tourData[room] = {};

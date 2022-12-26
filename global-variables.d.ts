@@ -1,4 +1,4 @@
-import { AppOptionsType, ConfigType } from "./setup";
+import { AppOptionsType, ConfigType } from "./options";
 import { Client } from "./showdown-client";
 import { CommandParser as CommandParserClass } from "./command-parser";
 import { DataDownloader as DataDownloaderClass } from "./data-downloader"
