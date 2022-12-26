@@ -4,7 +4,7 @@
 
 const battleAutojoinFile = AppOptions.data + "_temp/" + "battle-autojoin-tmp.json";
 
-import { debug } from "../../../console-reports";
+import { debug, error } from "../../../console-reports";
 import { Battle } from "./battle";
 
 import { createStream } from "./battle-log";
@@ -14,7 +14,7 @@ export class BattleBot {
 	battlesCount = 0;
 
 	autojoinFFM;
-	autoJoinData = {};
+	autoJoinData: Record<string, number> = {};
 
 	constructor() {
 		this.autojoinFFM = new Settings.FlatFileManager(battleAutojoinFile);
@@ -34,7 +34,7 @@ export class BattleBot {
 		if (!Config.abandonedBattleAutojoin) return;
 		try {
 			this.autoJoinData = this.autojoinFFM.readObj();
-		} catch (e) { error(e.stack); }
+		} catch (e: any) { error(e.stack); }
 		debug(JSON.stringify(this.autoJoinData));
 		const cmds: string[] = [];
 		for (let i in this.autoJoinData) {
@@ -59,7 +59,7 @@ export class BattleBot {
 		this.autojoinFFM.writeObj(this.autoJoinData);
 	};
 
-	receive(room, data, isIntro?: boolean) {
+	receive(room: string, data: string, isIntro?: boolean) {
 		if (data.charAt(0) === ">") return;
 		const spl = data.substr(1).split("|");
 		if (spl[0] === 'init') {

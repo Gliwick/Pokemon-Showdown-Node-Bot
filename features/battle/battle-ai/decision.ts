@@ -2,8 +2,8 @@
 * Decision maker
 */
 
-import { Battle, RequestMoveBase } from "./battle";
-import { Move, Type } from "./battle-data";
+import { Battle, RequestMove } from "./battle";
+import { Type } from "./battle-data";
 
 type DecisionType = 'move' | 'switch' | 'team' | 'pass' | 'shift';
 
@@ -180,13 +180,13 @@ function validateDecision(des: Decision[]): boolean {
 	return true;
 }
 
-function cartesianProduct(tables: Decision[][]) {
+function cartesianProduct(tables: Decision[][]): Decision[][] {
 	return tables.reduce(
 		(a, b) => a.flatMap(d => b.map(e => [d, e].flat())), [[]] as Decision[][]
 	).filter(decisions => validateDecision(decisions));
 }
 
-function getTargets(battle: Battle, activeIndex: number, move: RequestMoveBase): (number | null)[] {
+function getTargets(battle: Battle, activeIndex: number, move: RequestMove): (number | null)[] {
 	if (!battle.request || !battle.self || !battle.foe) throw new Error('Request not received yet');
 	const targets: (number | null)[] = [];
 	if (['any', 'normal', 'adjacentAlly', 'adjacentAllyOrSelf', 'adjacentFoe'].includes(move.target)) {
@@ -299,8 +299,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 			}
 
 			// dynamax
-			const canDynamax = !!(active.canDynamax);
-			if ((canDynamax || dynamaxActive) && active.maxMoves) {
+			if ((active.canDynamax || dynamaxActive) && active.maxMoves) {
 				for (let j = 0; j < active.maxMoves.maxMoves.length; j++) {
 					const baseMove = active.moves[j];
 					const maxMove = active.maxMoves.maxMoves[j];
@@ -308,7 +307,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 
 					const targets = getTargets(battle, i, maxMove);
 					for (let target of targets) {
-						tables[i].push(new MoveDecision(j, target, canDynamax ? 'dynamax' : null, maxMove.move, baseMove.pp));
+						tables[i].push(new MoveDecision(j, target, active.canDynamax ? 'dynamax' : null, maxMove.move, baseMove.pp));
 					}
 				}
 			}

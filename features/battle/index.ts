@@ -2,6 +2,7 @@
 	Battle Feature
 */
 
+import { errlog, error } from '../../console-reports';
 import { Feature } from '../index';
 import { BattleBot } from './battle-ai';
 import { ChallengeManager } from './challenges';
@@ -53,7 +54,7 @@ export class BattleManager implements Feature {
 
 		try {
 			this.battleBot.receive(room, message, isIntro);
-		} catch (e) {
+		} catch (e: any) {
 			errlog(e.stack);
 			error("battleBot crash");
 		}
