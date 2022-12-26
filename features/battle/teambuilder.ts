@@ -108,30 +108,25 @@ export class TeamBuilder {
 			} else if (Array.isArray(teamChosen)) {
 				//parse team
 				teamStr = this.packTeam(teamChosen);
-			} else if (typeof teamChosen === 'object') {
-				if (teamChosen.maxPokemon && teamChosen.pokemon) {
-					// generate random team
-					const team = [];
-					const hasSpecies: Record<string, boolean> = {};
-					if (teamChosen.essentialPokemon) {
-						for (let poke of teamChosen.essentialPokemon) {
-							team.push(poke);
-							hasSpecies[poke.species] = true;
-						}
+			} else if (typeof teamChosen === 'object' && teamChosen.maxPokemon && teamChosen.pokemon) {
+				// generate random team
+				const team = [];
+				const hasSpecies: Record<string, boolean> = {};
+				if (teamChosen.essentialPokemon) {
+					for (let poke of teamChosen.essentialPokemon) {
+						team.push(poke);
+						hasSpecies[poke.species] = true;
 					}
-					const pokes = teamChosen.pokemon.randomize();
-					for (let i = 0; team.length < teamChosen.maxPokemon; i++) {
-						if (!hasSpecies[pokes[i].species]) {
-							team.push(pokes[i]);
-							hasSpecies[pokes[i].species] = true;
-						}
-					}
-					if (Config.debug.debug) debug("Packed Team: " + JSON.stringify(team));
-					teamStr = this.packTeam(team);
-				} else {
-					error("invalid team data type: " + JSON.stringify(teamChosen));
-					return false;
 				}
+				const pokes = teamChosen.pokemon.randomize();
+				for (let i = 0; team.length < teamChosen.maxPokemon; i++) {
+					if (!hasSpecies[pokes[i].species]) {
+						team.push(pokes[i]);
+						hasSpecies[pokes[i].species] = true;
+					}
+				}
+				if (Config.debug.debug) debug("Packed Team: " + JSON.stringify(team));
+				teamStr = this.packTeam(team);
 			} else {
 				error("invalid team data type: " + JSON.stringify(teamChosen));
 				return false;
