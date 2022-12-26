@@ -1,15 +1,15 @@
 ﻿Pokemon Showdown Bot for Node
 ====================
 
-[![Build Status](https://travis-ci.org/Ecuacion/Pokemon-Showdown-Node-Bot.svg)](https://travis-ci.org/Ecuacion/Pokemon-Showdown-Node-Bot)
-[![Dependency Status](https://david-dm.org/Ecuacion/Pokemon-Showdown-Node-Bot.svg)](https://david-dm.org/Ecuacion/Pokemon-Showdown-Node-Bot)
-[![devDependency Status](https://david-dm.org/Ecuacion/Pokemon-Showdown-Node-Bot/dev-status.svg)](https://david-dm.org/Ecuacion/Pokemon-Showdown-Node-Bot#info=devDependencies)
-[![Version](https://img.shields.io/badge/version-0.7.2-orange.svg)](https://github.com/Ecuacion/Pokemon-Showdown-Node-Bot#pokemon-showdown-bot-for-node)
+[![Build Status](https://travis-ci.org/Gliwick/Pokemon-Showdown-Node-Bot.svg)](https://travis-ci.org/Gliwick/Pokemon-Showdown-Node-Bot)
+[![Dependency Status](https://david-dm.org/Gliwick/Pokemon-Showdown-Node-Bot.svg)](https://david-dm.org/Gliwick/Pokemon-Showdown-Node-Bot)
+[![devDependency Status](https://david-dm.org/Gliwick/Pokemon-Showdown-Node-Bot/dev-status.svg)](https://david-dm.org/Gliwick/Pokemon-Showdown-Node-Bot#info=devDependencies)
+[![Version](https://img.shields.io/badge/version-0.7.2-orange.svg)](https://github.com/Gliwick/Pokemon-Showdown-Node-Bot#pokemon-showdown-bot-for-node)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://opensource.org/licenses/MIT)
 
 This is a [Pokemon Showdown](https://github.com/Zarel/Pokemon-Showdown) bot written in JavaScript for [Node](http://nodejs.org/)
 
-This bot is based on commands and features, which are explained [here](https://github.com/Ecuacion/Pokemon-Showdown-Node-Bot/blob/master/DEVELOPMENT.md). This is intended to ease bot configuration and customization, separating commands in multiple files, multiple features in different folders and merging functions in Global Objects like Bot, CommandParser or Settings. This bot also works in multiple languages at the same time, useful for language rooms.
+This bot is based on commands and features, which are explained [here](https://github.com/Gliwick/Pokemon-Showdown-Node-Bot/blob/master/DEVELOPMENT.md). This is intended to ease bot configuration and customization, separating commands in multiple files, multiple features in different folders and merging functions in Global Objects like Bot, CommandParser or Settings. This bot also works in multiple languages at the same time, useful for language rooms.
 
 Features included in this package:
  - **Base:** Basic commands for getting basic information, manage command permissions, languages and dynamic commands (only-text commands useful for giving information).
@@ -37,7 +37,7 @@ $ npm install --production
 ```
 If you want to use `npm test` for developement, install all dependencies with `npm install`
 
-To configure your bot, copy `config-example.js` to `config.js` and edit that file. You can specify bot login credentials among other things. If you don't specify credentials, the bot will log in a random username started by 'Bot'. Read the [Configuration Guide](https://github.com/Ecuacion/Pokemon-Showdown-Node-Bot/blob/master/CONFIGGUIDE.md) for more information
+To configure your bot, copy `config-example.js` to `config.js` and edit that file. You can specify bot login credentials among other things. If you don't specify credentials, the bot will log in a random username started by 'Bot'. Read the [Configuration Guide](https://github.com/Gliwick/Pokemon-Showdown-Node-Bot/blob/master/CONFIGGUIDE.md) for more information
 
 Now, to start the bot use:
 ```
@@ -53,7 +53,7 @@ Don't forget to use `npm install --production` after each update to re-install t
 Configuration
 ------------
 
-Check the [configuration guide](https://github.com/Ecuacion/Pokemon-Showdown-Node-Bot/blob/master/CONFIGGUIDE.md) for more information.
+Check the [configuration guide](https://github.com/Gliwick/Pokemon-Showdown-Node-Bot/blob/master/CONFIGGUIDE.md) for more information.
 
 **Connection Details**
  - `Config.server`: Server url, for example main server url is `sim.smogon.com`
@@ -101,6 +101,7 @@ Credits
 -----------
 
  - [Ecuacion](https://github.com/Ecuacion/) (Owner)
+ - [Gliwick](https://github.com/Gliwick/) (Fork owner)
  
 Contributors:
 
