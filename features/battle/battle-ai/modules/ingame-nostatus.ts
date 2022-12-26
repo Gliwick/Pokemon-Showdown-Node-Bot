@@ -35,12 +35,13 @@ import {
  * Bad moves for 1v1
  */
 const BadMoves = [
-  'focuspunch',
-  'shelltrap',
-  'explosion',
-  'selfdestruct',
-  'lastresort',
   'dreameater',
+  'focuspunch',
+  'explosion',
+  'lastresort',
+  'mistyexplosion',
+  'selfdestruct',
+  'shelltrap',
   'snore',
 ];
 
@@ -72,8 +73,7 @@ export class IngameNoStatus implements BattleModule {
 
     const p = battle.request.side.pokemon[s];
     const pokeA = battle.parseRequestPokemon(s, true);
-    if (toId(battle.tier || '').indexOf('challengecup') >= 0)
-      pokeA.happiness = 100;
+    if (toId(battle.tier).includes('challengecup')) pokeA.happiness = 100;
 
     let final = 0;
     const conditions = new Conditions({});
@@ -85,7 +85,7 @@ export class IngameNoStatus implements BattleModule {
         gender: pokeView.gender,
         evs: { hp: 192, def: 124, spd: 124 },
       }, battle);
-      if (toId(battle.tier || '').indexOf('challengecup') >= 0)
+      if (toId(battle.tier).includes('challengecup'))
         poke.happiness = 100;
       if (template.abilities)
         poke.ability = getAbility(template.abilities[0], battle.gen);
@@ -93,7 +93,7 @@ export class IngameNoStatus implements BattleModule {
       for (let j = 0; j < p.moves.length; j++) {
         const move = getMove(p.moves[j], battle.gen);
         if (move.category === 'Status') continue;
-        if (BadMoves.indexOf(move.id) >= 0) continue;
+        if (BadMoves.includes(move.id)) continue;
         const dmg = calculate(
           { poke: pokeA, conditions: conditions },
           { poke: poke, conditions: conditions },
@@ -102,7 +102,7 @@ export class IngameNoStatus implements BattleModule {
           battle
         );
         debug('DMG [' + pokeA.species + ', ' + poke.species + ', ' + move.name + '] = ' + dmg.getMax());
-        if (DoubleTurnMoves.indexOf(move.id) >= 0)
+        if (DoubleTurnMoves.includes(move.id))
           calcVal += dmg.getMax() * 0.5;
         else calcVal += dmg.getMax();
       }
@@ -127,7 +127,7 @@ export class IngameNoStatus implements BattleModule {
     let final = 0;
     const p = battle.request.side.pokemon[pokeId];
     const pokeA = battle.parseRequestPokemon(pokeId, true);
-    if (toId(battle.tier).indexOf('challengecup') >= 0) pokeA.happiness = 100;
+    if (toId(battle.tier).includes('challengecup')) pokeA.happiness = 100;
     const conditionsA = new Conditions({
       side: battle.self.side,
       pokemon: battle.self.pokemon,
@@ -175,7 +175,7 @@ export class IngameNoStatus implements BattleModule {
           battle
         );
         debug('DMG [' + pokeA.species + ', ' + pokeB.species + ', ' + move.name + '] = ' + dmg.getMax());
-        if (DoubleTurnMoves.indexOf(move.id) >= 0) final += dmg.getMax() * 0.5;
+        if (DoubleTurnMoves.includes(move.id)) final += dmg.getMax() * 0.5;
         else final += dmg.getMax();
       }
     }
@@ -205,7 +205,7 @@ export class IngameNoStatus implements BattleModule {
     const move = getMove(p.moves[des.moveId]);
 
     if (move.category === 'Status') return 0;
-    if (BadMoves.indexOf(move.id) >= 0) return 0;
+    if (BadMoves.includes(move.id)) return 0;
     if (des.target < 0) return 0; // Do not kill your own allies
 
     if (a.canMegaEvo || p.canMegaEvo) {
@@ -213,7 +213,7 @@ export class IngameNoStatus implements BattleModule {
     }
 
     const pokeA = battle.parseRequestPokemon(act, true);
-    if (toId(battle.tier || '').indexOf('challengecup') >= 0)
+    if (toId(battle.tier).includes('challengecup'))
       pokeA.happiness = 100; // Random
     const conditionsA = new Conditions({
       side: battle.self.side,
@@ -267,7 +267,7 @@ export class IngameNoStatus implements BattleModule {
         battle
       );
       debug('DMG [' + pokeA.species + ', ' + pokeB.species + ', ' + move.name + '] = ' + dmg.getMax());
-      if (DoubleTurnMoves.indexOf(move.id) >= 0) final += dmg.getMax() * 0.5;
+      if (DoubleTurnMoves.includes(move.id)) final += dmg.getMax() * 0.5;
       else final += dmg.getMax();
     }
     if (!final) return -100000; // Inmmune

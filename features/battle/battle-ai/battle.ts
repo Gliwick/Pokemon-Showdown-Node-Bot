@@ -24,7 +24,12 @@ import { Pokemon as CalcPokemon } from './calc';
 export type PlayerId = 'p1' | 'p2';
 export enum BattleType { singles = 'singles', doubles = 'doubles', triples = 'triples' };
 
-interface RequestMove {
+export interface RequestMoveBase {
+	move: string;
+	target: string;
+}
+
+export interface RequestMove extends RequestMoveBase {
 	move: string;
 	id: string;
 	pp: number;
@@ -33,19 +38,14 @@ interface RequestMove {
 	disabled: boolean;
 }
 
-interface RequestTransformationMove {
-	move: string;
-	target: string;
-}
-
 interface RequestActivePokemon {
 	moves: RequestMove[];
 	trapped?: boolean;
 	canMegaEvo?: boolean;
-	canZMove?: RequestTransformationMove[];
+	canZMove?: RequestMoveBase[];
 	canDynamax?: boolean;
 	maxMoves?: {
-		maxMoves: RequestTransformationMove[];
+		maxMoves: RequestMoveBase[];
 	};
 	canTerastallize?: Type;
 }

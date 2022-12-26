@@ -1168,11 +1168,11 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		if (globalConditions.weather === 'sunnyday' && move.type === 'Water') modifier *= 0.5;
 		if (globalConditions.weather === 'raindance' && move.type === 'Fire') modifier *= 0.5;
 
-		if (gen >= 4 && defTypes.indexOf('Rock') >= 0 && globalConditions.weather === 'sandstorm') {
+		if (gen >= 4 && defTypes.includes('Rock') && globalConditions.weather === 'sandstorm') {
 			if (defStat === 'spd') def = Math.floor(def * 1.5);
 		}
 
-		if (gen >= 9 && defTypes.indexOf('Ice') >= 0 && ['hail', 'snow'].includes(toId(globalConditions.weather))) {
+		if (gen >= 9 && defTypes.includes('Ice') && ['hail', 'snow'].includes(toId(globalConditions.weather))) {
 			if (defStat === 'def') def = Math.floor(def * 1.5);
 		}
 	}

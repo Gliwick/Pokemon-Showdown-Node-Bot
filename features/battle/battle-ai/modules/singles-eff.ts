@@ -62,7 +62,7 @@ export class SinglesEffective implements BattleModule {
 		foePoke.hp = target.hp;
 		foePoke.status = target.status;
 
-		const isHackmonsBattle = (battle.id.indexOf('hackmon') >= 0);
+		const isHackmonsBattle = battle.id.includes('hackmon');
 
 		// ability
 		if (battle.gen >= 3 && !target.supressedAbility) {
@@ -88,7 +88,7 @@ export class SinglesEffective implements BattleModule {
 				} else if (foePoke.template.requiredItems) {
 					itemId = foePoke.template.requiredItems[0];
 				} else if (foePoke.template.evos && !(foePoke.template.id in { 'cubone': 1, 'farfetchdgalar': 1, 'pikachu': 1 })) {
-					if (battle.gen === 7 && foePoke.template.id === 'eevee' && battle.id.indexOf('lc') < 0) itemId = 'eeviumz';
+					if (battle.gen === 7 && foePoke.template.id === 'eevee' && !battle.id.includes('lc')) itemId = 'eeviumz';
 					else itemId = 'eviolite';
 				} else if (foePoke.template.id.startsWith('pikachu')) {
 					itemId = 'lightball';
@@ -111,7 +111,7 @@ export class SinglesEffective implements BattleModule {
 							itemId = 'choicespecs';
 							break;
 						case 'kommoo':
-							if (battle.gen === 7 && battle.id.indexOf('gen7uu') < 0) itemId = 'kommoniumz';
+							if (battle.gen === 7 && !battle.id.includes('gen7uu')) itemId = 'kommoniumz';
 							break;
 					}
 					if (foePoke.ability && !itemId) {
@@ -150,13 +150,13 @@ export class SinglesEffective implements BattleModule {
 
 		// evs, ivs and nature
 		if (battle.gen >= 3) foePoke.ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
-		if (battle.id.indexOf('hackmonscup') > 0) {
+		if (battle.id.includes('hackmonscup')) {
 			foePoke.evs = { hp: 124, atk: 124, def: 124, spa: 124, spd: 124, spe: 124 };
 			if (battle.gen >= 3) foePoke.ivs = { hp: 15, atk: 15, def: 15, spa: 15, spd: 15, spe: 15 };
 		} else if (battle.gen <= 2) {
 			foePoke.evs = { hp: 252, atk: 252, def: 252, spa: 252, spd: 252, spe: 252 };
 			foePoke.dvs = { hp: 15, atk: 15, def: 15, spa: 15, spd: 15, spe: 15 };
-		} else if (battle.id.indexOf('random') > 0) {
+		} else if (battle.id.includes('random')) {
 			foePoke.evs = { hp: 84, atk: 84, def: 84, spa: 84, spd: 84, spe: 84 };
 		} else {
 			if (isHackmonsBattle && battle.gen !== 6) {
@@ -337,7 +337,7 @@ export class SinglesEffective implements BattleModule {
 
 			if (moveData.id === 'hiddenpower') {
 				let randomBattleMovesHaveHP = false;
-				if (battle.id.indexOf('hackmonscup') < 0) {
+				if (!battle.id.includes('hackmonscup')) {
 					const formatsData = getFormatsData(foePoke.template.species, battle.gen, battle.id);
 					if (formatsData && formatsData.randomBattleMoves) {
 						for (let randomBattleMove of formatsData.randomBattleMoves) {
@@ -357,11 +357,11 @@ export class SinglesEffective implements BattleModule {
 			}
 		}
 
-		if (foePoke.template.requiredMove && battle.id.indexOf('hackmon') < 0) {
+		if (foePoke.template.requiredMove && !battle.id.includes('hackmon')) {
 			movesB.push(getMove(foePoke.template.requiredMove, battle.gen, battle.id));
 		}
 
-		if (battle.id.indexOf('hackmonscup') < 0) {
+		if (!battle.id.includes('hackmonscup')) {
 			const hasType: Partial<Record<Type, boolean>> = {};
 			for (let move of movesB) {
 				if (move.category !== 'Status' && (move.basePower <= 1 || move.basePower >= 55 || move.multihit) && move.priority === 0) hasType[getMoveType(foePoke, move, foeConditions, gconditions, battle.gen)] = true;
@@ -1270,7 +1270,7 @@ export class SinglesEffective implements BattleModule {
 						res.unviable.push(des);
 						continue;
 					case 'slp':
-						if (foePoke.hasAbility({ 'insomnia': 1, 'sweetveil': 1, 'vitalspirit': 1 }) || (move.id === 'darkvoid' && selfPoke.template.species !== 'Darkrai') || (battle.rules.indexOf('Sleep Clause Mod') >= 0 && this.alreadyOppSleeping(battle))) {
+						if (foePoke.hasAbility({ 'insomnia': 1, 'sweetveil': 1, 'vitalspirit': 1 }) || (move.id === 'darkvoid' && selfPoke.template.species !== 'Darkrai') || (battle.rules.includes('Sleep Clause Mod') && this.alreadyOppSleeping(battle))) {
 							res.unviable.push(des);
 							continue;
 						}

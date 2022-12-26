@@ -2,7 +2,7 @@
 * Decision maker
 */
 
-import { Battle } from "./battle";
+import { Battle, RequestMoveBase } from "./battle";
 import { Move, Type } from "./battle-data";
 
 type DecisionType = 'move' | 'switch' | 'team' | 'pass' | 'shift';
@@ -129,13 +129,13 @@ function isTooFar(battle: Battle, a: number, b: number): boolean {
 	}
 }
 
-function combinateTeamPreview(array, i, values, solutions) {
+function combinateTeamPreview(array: number[], i: number, values: number[], solutions: number[][]) {
 	if (i >= array.length) {
 		solutions.push([...array]);
 		return;
 	}
 	for (let j = 0; j < values.length; j++) {
-		if (array.indexOf(values[j]) >= 0) continue; //Repeated
+		if (array.includes(values[j])) continue; //Repeated
 		array[i] = values[j];
 		combinateTeamPreview(array, i + 1, values, solutions);
 		array[i] = -1;
@@ -143,7 +143,7 @@ function combinateTeamPreview(array, i, values, solutions) {
 }
 
 function generateTeamCombinations(sideLength: number, requiredLength: number) {
-	const comb = [];
+	const comb: number[][] = [];
 	const values: number[] = [];
 	const array: number[] = [];
 	for (let i = 0; i < sideLength; i++) {
@@ -156,19 +156,19 @@ function generateTeamCombinations(sideLength: number, requiredLength: number) {
 	return comb;
 }
 
-function validateDecision(des: Decision[]) {
+function validateDecision(des: Decision[]): boolean {
 	let transformed = false;
 	let shiftConsumed = false;
 	let passed = true;
 	const switched: number[] = [];
 	for (let i = 0; i < des.length; i++) {
-		if (des[i].transformation) {
+		if ((des[i] as MoveDecision).transformation) {
 			if (transformed) return false; // 2 mega evolutions at the same time
 			transformed = true;
 		}
 		if (des[i].type === "switch") {
 			const pokeId = (des[i] as SwitchDecision).pokeId;
-			if (switched.indexOf(pokeId) >= 0) return false; // Switch to the same pokemon
+			if (switched.includes(pokeId)) return false; // Switch to the same pokemon
 			switched.push(pokeId);
 		} else if (des[i].type === "shift") {
 			if (shiftConsumed) return false; // 2 shifts at the same time
@@ -180,42 +180,25 @@ function validateDecision(des: Decision[]) {
 	return true;
 }
 
-function nextCombinationDecision(array, i: number, tables, solutions) {
-	if (i >= array.length) {
-		//validate combinational decision
-		if (!validateDecision(array)) return;
-		//add it
-		solutions.push(array.slice());
-		return;
-	}
-	for (let j = 0; j < tables[i].length; j++) {
-		array[i] = tables[i][j];
-		nextCombinationDecision(array, i + 1, tables, solutions);
-	}
+function cartesianProduct(tables: Decision[][]) {
+	return tables.reduce(
+		(a, b) => a.flatMap(d => b.map(e => [d, e].flat())), [[]] as Decision[][]
+	).filter(decisions => validateDecision(decisions));
 }
 
-function cartesianProduct(tables) {
-	const array = [];
-	const comb = [];
-	for (let i = 0; i < tables.length; i++) {
-		array.push(null)
-	};
-	nextCombinationDecision(array, 0, tables, comb);
-	return comb;
-}
-
-function getTargets(battle: Battle, activeIndex: number, move): (number | null)[] {
+function getTargets(battle: Battle, activeIndex: number, move: RequestMoveBase): (number | null)[] {
+	if (!battle.request || !battle.self || !battle.foe) throw new Error('Request not received yet');
 	const targets: (number | null)[] = [];
 	if (['any', 'normal', 'adjacentAlly', 'adjacentAllyOrSelf', 'adjacentFoe'].includes(move.target)) {
 		if (!move.target.startsWith('adjacentAlly')) {
 			let auxHasTarget = false;
 			for (let tar = 0; tar < battle.foe.active.length; tar++) {
-				if (!battle.foe.active[tar] || battle.foe.active[tar].fainted) continue; // Target not found
+				if (!battle.foe.active[tar] || battle.foe.active[tar]?.fainted) continue; // Target not found
 				if (move.target !== 'any' && isTooFar(battle, tar, activeIndex)) continue; // Target too far
 				auxHasTarget = true;
 			}
 			for (let tar = 0; tar < battle.foe.active.length; tar++) {
-				if (auxHasTarget && (!battle.foe.active[tar] || battle.foe.active[tar].fainted)) continue; // Target not found
+				if (auxHasTarget && (!battle.foe.active[tar] || battle.foe.active[tar]?.fainted)) continue; // Target not found
 				if (move.target !== 'any' && isTooFar(battle, tar, activeIndex)) continue; // Target too far
 				targets.push(tar);
 			}
@@ -223,7 +206,7 @@ function getTargets(battle: Battle, activeIndex: number, move): (number | null)[
 		if (move.target !== 'adjacentFoe') {
 			for (let tar = 0; tar < battle.self.active.length; tar++) {
 				if (move.target !== 'adjacentAllyOrSelf' && tar === activeIndex) continue; // Not self target allowed
-				if (!battle.self.active[tar] || battle.self.active[tar].fainted) continue; // Target not found
+				if (!battle.self.active[tar] || battle.self.active[tar]?.fainted) continue; // Target not found
 				if (move.target !== 'any' && isTooFar(battle, tar, activeIndex)) continue; // Target too far
 				targets.push((-1) * (tar + 1));
 			}
@@ -289,14 +272,14 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 			const active = req.active[i];
 
 			// moves
-			const dynamax = !!(battle.self.active[0].volatiles.dynamax);
-			if (!dynamax) {
+			const dynamaxActive = battle.self && !!battle.self.active[0]?.volatiles?.dynamax;
+			if (!dynamaxActive) {
 				for (let j = 0; j < active.moves.length; j++) {
 					const move = active.moves[j];
 					if (move.disabled || move.pp === 0) continue; // No more moves
 
 					let mega = false;
-					if (active.canMegaEvo || (req.side.pokemon[i] && req.side.pokemon[i].canMegaEvo)) mega = true;
+					if (active.canMegaEvo) mega = true;
 
 					const targets = getTargets(battle, i, move);
 					for (let target of targets) {
@@ -317,14 +300,15 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 
 			// dynamax
 			const canDynamax = !!(active.canDynamax);
-			if ((canDynamax || dynamax) && active.maxMoves) {
+			if ((canDynamax || dynamaxActive) && active.maxMoves) {
 				for (let j = 0; j < active.maxMoves.maxMoves.length; j++) {
-					let move = active.maxMoves.maxMoves[j];
-					if (move.disabled || move.pp === 0) continue; // No more moves
+					const baseMove = active.moves[j];
+					const maxMove = active.maxMoves.maxMoves[j];
+					if (baseMove.disabled || baseMove.pp === 0) continue; // No more moves
 
-					let targets = getTargets(battle, i, move);
+					const targets = getTargets(battle, i, maxMove);
 					for (let target of targets) {
-						tables[i].push(new MoveDecision(j, target, canDynamax ? 'dynamax' : null, move.move, move.pp));
+						tables[i].push(new MoveDecision(j, target, canDynamax ? 'dynamax' : null, maxMove.move, baseMove.pp));
 					}
 				}
 			}

@@ -40,7 +40,7 @@ export function choose(battle: Battle): BattleModule | null {
 
 	/* Module decision by default */
 
-	if (toId(battle.tier).indexOf('1v1') >= 0) {
+	if (toId(battle.tier).includes('1v1')) {
 		if (modules["ingame-nostatus"]) {
 			debug("Battle module [" + battle.id + "] - Using ingame-nostatus");
 			return modules["ingame-nostatus"];

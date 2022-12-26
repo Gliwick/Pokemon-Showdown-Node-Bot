@@ -651,8 +651,8 @@ export const minors: Record<Minor, ((args: string[], kwargs: Record<string, stri
 	},
 
 	"-message": function (this: Battle, args, kwargs) {
-		if (args[1] && args[1].indexOf("NOTE: This is an Inverse Battle") >= 0) {
-			this.conditions["inversebattle"] = true;
+		if (args[1] && args[1].includes('NOTE: This is an Inverse Battle')) {
+			this.conditions['inversebattle'] = true;
 			debug(this.id + ": Changed to inverse Battle");
 		}
 	}

@@ -124,9 +124,6 @@ export const getTemplate = getPokemon;
 export function getMove(move: string, gen: number = CurrentGen, battleId?: string): Record<string, any> {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	move = toId(move);
-	if (move.indexOf("hiddenpower") === 0) {
-		move = move.replace(/[0-9]/g, "");
-	}
 	let moveData = {};
 	let temp;
 	try {
@@ -210,14 +207,14 @@ const TypeAliases: Partial<Record<Type, string[]>> = {
 function evaluateMoveType(name: string): Type {
 	let moveType: Type;
 	for (moveType in TypeAliases) {
-		if (name.indexOf(moveType) >= 0) {
+		if (name.includes(moveType)) {
 			return moveType;
 		}
 	}
 
 	for (moveType in TypeAliases) {
 		for (let typeAlias of (TypeAliases[moveType] || [])) {
-			if (name.indexOf(typeAlias) >= 0) {
+			if (name.includes(typeAlias)) {
 				return moveType;
 			}
 		}

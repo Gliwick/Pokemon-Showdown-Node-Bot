@@ -40,9 +40,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 		if (!args[1]) args[1] = '';
 		for (let key in kwargs) args[1] += '[' + key + '] ' + kwargs[key];
 		this.tier = args[1];
-		if (toId(this.tier).indexOf("inversebattle") >= 0) {
-			this.conditions["inversebattle"] = true;
-		}
+		this.conditions['inversebattle'] = toId(this.tier).includes('inversebattle');
 		this.start();
 	},
 
@@ -82,7 +80,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 	inactive: function (this: Battle, args, kwargs) {
 		this.timer = true;
 		if (args[1]) {
-			if (args[1].indexOf("Battle timer is ON") === 0 || args[1].indexOf("You have") === 0 || toId(args[1]).indexOf(toId(Bot.status.nickName)) >= 0) this.makeDecision();
+			if (args[1].includes('Battle timer is ON') || args[1].includes('You have') || toId(args[1]).includes(toId(Bot.status.nickName))) this.makeDecision();
 		}
 	},
 
