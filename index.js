@@ -11,7 +11,6 @@ try {
 	global.sys = require('sys');
 	global.fs = require('fs');
 	global.path = require('path');
-	global.PSClient = require('./showdown-client.ts').Client;
 } catch (e) {
 	console.log(e.stack);
 	console.log("ERROR: missing dependencies, try 'npm install'");
@@ -233,6 +232,7 @@ var opts = {
 	debug: Config.debug?.debug ?? true,
 };
 
+global.PSClient = require('./showdown-client.ts').Client;
 global.Bot = new PSClient(Config.server, Config.port, opts);
 
 var connected = false;
