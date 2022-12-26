@@ -66,7 +66,7 @@ export function getEffect(effect, gen: number = CurrentGen) {
 export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: string) {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	poke = toId(poke);
-	const pokemon = {};
+	const pokemon = { id: poke };
 	let temp;
 	try {
 		temp = DataDownloader.getPokedex()[poke];
@@ -102,6 +102,7 @@ export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: st
 
 	if (!pokemon.name && !pokemon.species) {
 		return {
+			id: poke,
 			num: 0,
 			name: poke,
 			species: poke,

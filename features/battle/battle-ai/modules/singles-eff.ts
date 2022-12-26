@@ -87,10 +87,10 @@ export class SinglesEffective implements BattleModule {
 					itemId = foePoke.template.requiredItem;
 				} else if (foePoke.template.requiredItems) {
 					itemId = foePoke.template.requiredItems[0];
-				} else if (foePoke.template.evos && !(foePoke.template.id in { 'cubone': 1, 'farfetchdgalar': 1, 'pikachu': 1 })) {
+				} else if (foePoke.template.evos && !['cubone', 'farfetchdgalar', 'pikachu'].includes(foePoke.template.id)) {
 					if (battle.gen === 7 && foePoke.template.id === 'eevee' && !battle.id.includes('lc')) itemId = 'eeviumz';
 					else itemId = 'eviolite';
-				} else if (foePoke.template.id.startsWith('pikachu')) {
+				} else if (foePoke.template.id && foePoke.template.id.startsWith('pikachu')) {
 					itemId = 'lightball';
 				} else {
 					switch (foePoke.template.id) {
