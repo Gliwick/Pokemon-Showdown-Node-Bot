@@ -24,7 +24,7 @@ console.log((
 ).yellow);
 
 var cmdArgs = process.argv.slice(2);
-if (!global.AppOptions) global.AppOptions = require('./app-config.ts').parseArguments(cmdArgs);
+if (!global.AppOptions) global.AppOptions = require('./setup.ts').parseArguments(cmdArgs);
 
 if (AppOptions.help) {
 	console.log(
@@ -39,10 +39,6 @@ if (AppOptions.help) {
 	);
 	process.exit();
 }
-
-if (!AppOptions.config) AppOptions.config = './config.js';
-if (!AppOptions.data) AppOptions.data = './data/';
-if (AppOptions.data.charAt(AppOptions.data.length - 1) !== '/') AppOptions.data += '/';
 
 if (!fs.existsSync(AppOptions.data)) {
 	console.log(AppOptions.data + " does not exist - creating data directory...");
@@ -60,7 +56,7 @@ if (!fs.existsSync(AppOptions.config)) {
 }
 
 global.Config = require(AppOptions.config);
-require('./app-config.ts').checkConfig();
+require('./setup.ts').checkConfig();
 
 global.Tools = new (require('./tools.ts').Tools)();
 

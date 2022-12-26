@@ -6,7 +6,7 @@ import * as http from "http";
 import * as https from "https";
 import { inspect } from "util";
 import { errlog, error, info, ok } from "./console-reports";
-import { ConfigType } from "./app-config";
+import { ConfigType } from "./setup";
 import { typechart } from "./data/typechart";
 import { initFeature } from "./features";
 

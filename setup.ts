@@ -4,12 +4,15 @@ export interface AppOptionsType {
     help?: boolean;
     debugmode?: number;
     testmode?: boolean;
-    config?: string;
-    data?: string;
+    config: string;
+    data: string;
 };
 
 export function parseArguments(arr: string[]): AppOptionsType {
-    const opts: AppOptionsType = {};
+    const opts: AppOptionsType = {
+        config: './config.js',
+        data: './data/',
+    };
     let arg = '';
     for (let i = 0; i < arr.length; i++) {
         arg = arr[i].toLowerCase().trim();
@@ -53,9 +56,9 @@ export function parseArguments(arr: string[]): AppOptionsType {
             }
         }
     }
+    if (!opts.data.endsWith('/')) opts.data += '/';
     return opts;
 };
-
 
 interface LogConfig {
     ageOfLogs: number
