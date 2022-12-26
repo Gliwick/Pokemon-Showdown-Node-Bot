@@ -1301,7 +1301,7 @@ export class SinglesEffective implements BattleModule {
 					res.unviable.push(des);
 				} else if (selfSpe > foeSpe && move.id !== 'wish') {
 					if (selfPoke.hp >= 60) {
-						res.unviable.push(des]);
+						res.unviable.push(des);
 					} else if (selfPoke.hp <= 25) {
 						res.obligatory.push(des);
 					} else {
