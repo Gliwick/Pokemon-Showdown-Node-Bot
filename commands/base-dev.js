@@ -156,7 +156,7 @@ exports.commands = {
 				this.sclog();
 				try {
 					Tools.uncacheTree('./command-parser.ts');
-					global.CommandParser = new require('./../command-parser.ts').CommandParser();
+					global.CommandParser = new (require('./../command-parser.ts').CommandParser)();
 					this.reply('command-parser.ts reloaded');
 					info('command-parser.ts reloaded');
 					CommandParser.loadCommands(true);
@@ -169,7 +169,7 @@ exports.commands = {
 				this.sclog();
 				try {
 					Tools.uncacheTree('./tools.ts');
-					global.Tools = new require('./../tools.ts').Tools();
+					global.Tools = new (require('./../tools.ts').Tools)();
 					this.reply('tools.ts reloaded');
 					info('tools.ts reloaded');
 					Tools.loadTranslations(true);
@@ -181,7 +181,7 @@ exports.commands = {
 			case 'data':
 				this.sclog();
 				Tools.uncacheTree('./data-downloader.ts');
-				global.DataDownloader = new require('./../data-downloader.ts').DataDownloader();
+				global.DataDownloader = new (require('./../data-downloader.ts').DataDownloader)();
 				DataDownloader.download();
 				this.reply('Data files reloaded');
 				break;

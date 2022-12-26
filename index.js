@@ -62,7 +62,7 @@ if (!fs.existsSync(AppOptions.config)) {
 global.Config = require(AppOptions.config);
 require('./app-config.ts').checkConfig();
 
-global.Tools = new require('./tools.ts').Tools();
+global.Tools = new (require('./tools.ts').Tools)();
 
 if (AppOptions.debugmode) info((['Debug', 'Monitor', 'Production'])[AppOptions.debugmode - 1] + ' mode');
 
@@ -72,14 +72,14 @@ info('Loading globals');
 
 global.Formats = {};
 
-global.Settings = new require('./settings.ts').SettingsManager();
+global.Settings = new (require('./settings.ts').SettingsManager)();
 global.FlatFileManager = require('./settings.ts').FlatFileManager;
 
-global.DataDownloader = new require('./data-downloader.ts').DataDownloader();
+global.DataDownloader = new (require('./data-downloader.ts').DataDownloader)();
 
-global.CommandParser = new require('./command-parser.ts').CommandParser();
+global.CommandParser = new (require('./command-parser.ts').CommandParser)();
 
-global.SecurityLog = new require('./security-log.ts').SecurityLogger();
+global.SecurityLog = new (require('./security-log.ts').SecurityLogger)();
 
 /* Commands */
 
