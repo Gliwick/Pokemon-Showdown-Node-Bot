@@ -1974,28 +1974,28 @@ export class SinglesEffective implements BattleModule {
 		if (selfPoke.status === 'frz') damageMoveCategories.push(damageMoves.defrost);
 		damageMoveCategories = damageMoveCategories.concat([damageMoves.ohko, damageMoves.thko, damageMoves['3hko'], damageMoves.bad]);
 
-		let finalDamageMoves = [];
+		let finalDamageMoves: MoveDecision[] = [];
 		for (let category of damageMoveCategories) {
 			if (category.length) {
-				finalDamageMoves = category.slice();
+				finalDamageMoves = [...category];
 				break;
 			}
 		}
 
-		let filteredMoves = [];
+		let filteredMoves: MoveDecision[] = [];
 
 		// multihit or bypasssub if sub
 		if (foeConditions.volatiles['substitute'] && !selfPoke.hasAbility({ 'infiltrator': 1, 'parentalbond': 1 })) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (move.multihit || move.id === 'beatup') filteredMoves.push(finalDamageMoves[i]);
 			}
 			if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (move.flags?.bypasssub) filteredMoves.push(finalDamageMoves[i]);
 			}
 			if (filteredMoves.length > 0) {
@@ -2015,7 +2015,7 @@ export class SinglesEffective implements BattleModule {
 		) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (move.multihit || move.id === 'beatup' || (foePoke.hasAbility('iceface') && move.category !== 'Physical')) filteredMoves.push(finalDamageMoves[i]);
 			}
 			if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
@@ -2025,7 +2025,7 @@ export class SinglesEffective implements BattleModule {
 		let maxPriority = -10;
 		filteredMoves = [];
 		for (let i = 0; i < finalDamageMoves.length; i++) {
-			const move = finalDamageMoves[i][0].moveData;
+			const move = finalDamageMoves[i].moveData;
 			let priority = move.priority;
 			if (move.drain && selfPoke.hasAbility('triage')) priority += 3;
 			if (move.id === 'grassyglide' && battle.conditions['grassyterrain'] && selfPoke.isGrounded(selfConditions)) priority++;
@@ -2044,7 +2044,7 @@ export class SinglesEffective implements BattleModule {
 		// no charge/recharge
 		filteredMoves = [];
 		for (let i = 0; i < finalDamageMoves.length; i++) {
-			const move = finalDamageMoves[i][0].moveData;
+			const move = finalDamageMoves[i].moveData;
 			if (!(move.flags && (move.flags['recharge'] || (move.flags['charge'] && !selfPoke.hasItem('whiteherb'))))) filteredMoves.push(finalDamageMoves[i]);
 			if (move.id in { 'solarbeam': 1, 'solarblade': 1 } && !supressedWeather && toId(battle.conditions.weather) in { 'desolateland': 1, 'sunnyday': 1 }) filteredMoves.push(finalDamageMoves[i]);
 		}
@@ -2054,7 +2054,7 @@ export class SinglesEffective implements BattleModule {
 		if (!selfPoke.hasAbility('contrary')) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (!selfPoke.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && selfPoke.hasAbility('serenegrace'))) && move.secondary.self && move.secondary.self.boosts && (move.secondary.self.boosts.atk || move.secondary.self.boosts.spa || move.secondary.self.boosts.spe)) filteredMoves.push(finalDamageMoves[i]);
 				if (move.id === 'maxairstream' || (move.id === 'maxknuckle' && selfPoke.template.baseStats.atk >= selfPoke.template.baseStats.spa) || (move.id === 'maxooze' && selfPoke.template.baseStats.atk <= selfPoke.template.baseStats.spa)) filteredMoves.push(finalDamageMoves[i]);
 				if (move.id === 'fellstinger' && damageMoves.ohko.length) filteredMoves.push(finalDamageMoves[i]);
@@ -2066,7 +2066,7 @@ export class SinglesEffective implements BattleModule {
 		if (!damageMoves.ohko.length && !foePoke.hasAbility('contrary')) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (!selfPoke.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && selfPoke.hasAbility('serenegrace'))) && move.secondary.boosts && (move.secondary.boosts.def || move.secondary.boosts.spd || (move.secondary.boosts.spe && selfSpe <= foeSpe))) filteredMoves.push(finalDamageMoves[i]);
 				if (move.id in { 'maxdarkness': 1, 'maxphantasm': 1 }) filteredMoves.push(finalDamageMoves[i]);
 				if (selfSpe <= foeSpe && move.id in { 'maxstrike': 1, 'gmaxfoamburst': 1 }) filteredMoves.push(finalDamageMoves[i]);
@@ -2077,7 +2077,7 @@ export class SinglesEffective implements BattleModule {
 		// no recoil
 		filteredMoves = [];
 		for (let i = 0; i < finalDamageMoves.length; i++) {
-			const move = finalDamageMoves[i][0].moveData;
+			const move = finalDamageMoves[i].moveData;
 			if ((!move.recoil || foePoke.hp * move.recoil[0] / move.recoil[1] < selfPoke.hp) && !move.mindBlownRecoil) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
@@ -2086,7 +2086,7 @@ export class SinglesEffective implements BattleModule {
 		if (!(selfConditions.boosts.accuracy > 0) && !(foeConditions.boosts.evasion < 0) && !selfPoke.hasAbility({ 'compoundeyes': 1, 'noguard': 1, 'victorystar': 1 })) {
 			let maxAccuracy = 0;
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				let accuracy = move.finalDamageMoves;
 				if (move.id in { 'tripleaxel': 1, 'triplekick': 1 } && !selfPoke.hasAbility('skilllink')) accuracy = 73;
 				if (!supressedWeather) {
@@ -2114,7 +2114,7 @@ export class SinglesEffective implements BattleModule {
 		// no self-confusion
 		filteredMoves = [];
 		for (let i = 0; i < finalDamageMoves.length; i++) {
-			const move = finalDamageMoves[i][0].moveData;
+			const move = finalDamageMoves[i].moveData;
 			if (!(move.self && move.self.volatileStatus)) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
@@ -2123,7 +2123,7 @@ export class SinglesEffective implements BattleModule {
 		if (!selfPoke.hasAbility('contrary')) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (!(move.self && move.self.boosts)) filteredMoves.push(finalDamageMoves[i]);
 			}
 			if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
@@ -2132,14 +2132,14 @@ export class SinglesEffective implements BattleModule {
 		// prefer terastal
 		filteredMoves = [];
 		for (let i = 0; i < finalDamageMoves.length; i++) {
-			if (finalDamageMoves[i][0].transformation?.terastallize) filteredMoves.push(finalDamageMoves[i]);
+			if (finalDamageMoves[i].transformation?.terastallize) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 
 		// no z or max
 		filteredMoves = [];
 		for (let i = 0; i < finalDamageMoves.length; i++) {
-			if (!['zmove', 'dynamax'].includes(finalDamageMoves[i][0].transformation)) filteredMoves.push(finalDamageMoves[i]);
+			if (!['zmove', 'dynamax'].includes(finalDamageMoves[i].transformation)) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 
@@ -2147,7 +2147,7 @@ export class SinglesEffective implements BattleModule {
 		if (foePoke.item && foePoke.item.id) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (move.id === 'knockoff' || (move.id === 'incinerate' && (foePoke.item.isBerry || foePoke.item.isGem))) filteredMoves.push(finalDamageMoves[i]);
 			}
 			if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
@@ -2157,7 +2157,7 @@ export class SinglesEffective implements BattleModule {
 		if (!damageMoves.ohko.length && !foeConditions.volatiles.dynamax && !selfPoke.hasAbility('sheerforce') && !selfPoke.hasItem({ 'kingsrock': 1, 'razorfang': 1 })) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if ((move.secondary && move.secondary.volatileStatus === 'flinch') || move.id in { 'firefang': 1, 'icefang': 1, 'thunderfang': 1 }) filteredMoves.push(finalDamageMoves[i]);
 			}
 			if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
@@ -2167,7 +2167,7 @@ export class SinglesEffective implements BattleModule {
 		if (selfPoke.hp <= 85 && !selfConditions.volatiles['healblock']) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (move.drain && !foePoke.hasAbility('liquidooze')) filteredMoves.push(finalDamageMoves[i]);
 				if (move.id === 'gmaxfinale') filteredMoves.push(finalDamageMoves[i]);
 				if (move.id === 'maxovergrowth' && selfPoke.isGrounded(selfConditions) && !foePoke.isGrounded(selfConditions)) filteredMoves.push(finalDamageMoves[i]);
@@ -2180,7 +2180,7 @@ export class SinglesEffective implements BattleModule {
 		if (!selfPoke.hasAbility('contrary')) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (!selfPoke.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && selfPoke.hasAbility('serenegrace'))) && move.secondary.self && move.secondary.self.boosts && (move.secondary.self.boosts.def || move.secondary.self.boosts.spd)) filteredMoves.push(finalDamageMoves[i]);
 				if (move.id in { 'maxquake': 1, 'maxsteelspike': 1 }) filteredMoves.push(finalDamageMoves[i]);
 			}
@@ -2191,7 +2191,7 @@ export class SinglesEffective implements BattleModule {
 		if (!damageMoves.ohko.length && !foePoke.hasAbility('contrary')) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (!selfPoke.hasAbility('sheerforce') && move.secondary && (move.secondary.chance >= 50 || (move.secondary.chance >= 25 && selfPoke.hasAbility('serenegrace'))) && move.secondary.boosts && (move.secondary.boosts.atk || move.secondary.boosts.spa)) filteredMoves.push(finalDamageMoves[i]);
 				if (move.id in { 'maxflutterby': 1, 'maxwyrmwind': 1 }) filteredMoves.push(finalDamageMoves[i]);
 			}
@@ -2202,7 +2202,7 @@ export class SinglesEffective implements BattleModule {
 		if (selfPoke.hasAbility('sheerforce') && selfPoke.hasItem('lifeorb')) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (move.secondary || move.secondaries) filteredMoves.push(finalDamageMoves[i]);
 			}
 			if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
@@ -2212,13 +2212,13 @@ export class SinglesEffective implements BattleModule {
 		if (!selfPoke.hasAbility({ 'toughclaws': 1, 'unseenfist': 1 }) && !selfPoke.hasItem({ 'protectivepads': 1, 'punchingglove': 1 })) {
 			filteredMoves = [];
 			for (let i = 0; i < finalDamageMoves.length; i++) {
-				const move = finalDamageMoves[i][0].moveData;
+				const move = finalDamageMoves[i].moveData;
 				if (!move.flags || !move.flags['contact']) filteredMoves.push(finalDamageMoves[i]);
 			}
 			if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 		}
 
-		debug('Final damage moves: ' + JSON.stringify(finalDamageMoves.map(d => d[0].move)));
+		debug('Final damage moves: ' + JSON.stringify(finalDamageMoves.map(d => d.move)));
 
 		let foeHasSwitch = false;
 		for (let i = 0; i < movesB.length; i++) {
