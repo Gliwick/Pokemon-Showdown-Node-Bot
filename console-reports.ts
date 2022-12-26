@@ -1,12 +1,12 @@
 declare global {
     interface String {
-        green(): string;
-        cyan(): string;
-        red(): string;
-        blue(): string;
-        magenta(): string;
-        grey(): string;
-        yellow(): string;
+        green: string;
+        cyan: string;
+        red: string;
+        blue: string;
+        magenta: string;
+        grey: string;
+        yellow: string;
     }
 }
 

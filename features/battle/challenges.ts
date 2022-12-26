@@ -1,7 +1,9 @@
+import { Parser } from ".";
+import { debug } from "../../console-reports";
 import { BattleBot } from "./battle-ai";
 import { TeamBuilder } from "./teambuilder";
 
-export class ChallengeManager {
+export class ChallengeManager implements Parser {
 	challenges: string[] = [];
 
 	battleBot: BattleBot;
@@ -12,7 +14,7 @@ export class ChallengeManager {
 		this.teamBuilder = teamBuilder;
 	};
 
-	canChallenge(nBattles: number, user: string) {
+	canChallenge(nBattles: number, user: string): boolean {
 		if (!nBattles) return true; //If it is not busy, accept the challenge
 		if (Config.aceptAll) return true; //Acept all challenges if 'aceptAll' is enabled
 		if (Config.maxBattles && Config.maxBattles > nBattles) return true; //If it is not in too many battles, accept the challenge
@@ -20,7 +22,7 @@ export class ChallengeManager {
 		return false;
 	}
 
-	parse(room, message, isIntro, spl) {
+	parse(room: string, message: string, isIntro: boolean, spl: string[]) {
 		if (!spl[3].startsWith('/challenge ')) return;
 		let nBattles = Object.keys(this.battleBot.battles).length;
 		this.challenges = [spl[4]];

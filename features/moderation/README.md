@@ -115,10 +115,10 @@ exports.moderation = {
 		"roomban"
 	],
 
-	psServersExcepts: {
-		"showdown": 1,
-		"smogtours": 1
-	},
+	psServersExcepts: [
+		"showdown",
+		"smogtours"
+	],
 
 	zeroToleranceDefaultLevel: 'h',
 	zeroToleranceLevels: {

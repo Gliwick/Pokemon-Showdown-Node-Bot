@@ -82,7 +82,7 @@ jscsOptions.config = "./test/.jscsrc";
 
 var lintData = [
 	{
-		dirs: ['./command-parser.js', './data-downloader.js', './index.js', './security-log.js', './settings.js', 'showdown-client.js', './tools.ts', './commands/*.js', './features/*/*.ts', './languages/*/*.js', './features/battle/battle-ai/*.ts', './features/battle/battle-ai/modules/*.ts'],
+		dirs: ['./command-parser.ts', './data-downloader.ts', './index.js', './security-log.ts', './settings.ts', 'showdown-client.ts', './tools.ts', './commands/*.js', './features/*/*.ts', './languages/*/*.js', './features/battle/battle-ai/*.ts', './features/battle/battle-ai/modules/*.ts'],
 		jsHint: jsHintOptions.base,
 		jscs: jscsOptions.base
 	}, {

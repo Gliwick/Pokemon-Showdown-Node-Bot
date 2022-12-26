@@ -10,7 +10,11 @@ import { LadderManager } from './ladder';
 import { TeamBuilder } from './teambuilder';
 import { TourManager } from './tournaments';
 
-export class BattleManager implements Feature {
+export interface Parser {
+	parse: (room: string, message: string, isIntro: boolean, spl: string[]) => void;
+}
+
+export class BattleManager implements Feature, Parser {
 	id = 'battle';
 	desc = 'Automated battle bot';
 
@@ -34,7 +38,7 @@ export class BattleManager implements Feature {
 		this.teamBuilder.loadTeamList();
 	};
 
-	parse(room: string, message: string, isIntro: boolean, spl: string) {
+	parse(room: string, message: string, isIntro: boolean, spl: string[]) {
 		switch (spl[0]) {
 			case 'tournament':
 				this.tourManager.parse(room, message, isIntro, spl);

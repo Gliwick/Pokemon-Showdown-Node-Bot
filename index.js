@@ -11,7 +11,7 @@ try {
 	global.sys = require('sys');
 	global.fs = require('fs');
 	global.path = require('path');
-	global.PSClient = require('./showdown-client.js');
+	global.PSClient = require('./showdown-client.ts').Client;
 } catch (e) {
 	console.log(e.stack);
 	console.log("ERROR: missing dependencies, try 'npm install'");
@@ -24,7 +24,7 @@ console.log((
 	'-----------------------------------------------\n'
 ).yellow);
 
-global.Tools = require('./tools.ts');
+global.Tools = new require('./tools.ts').Tools();
 var cmdArgs = process.argv.slice(2);
 if (!global.AppOptions) global.AppOptions = Tools.paseArguments(cmdArgs);
 
@@ -72,13 +72,14 @@ info('Loading globals');
 
 global.Formats = {};
 
-global.Settings = require('./settings.js');
+global.Settings = new require('./settings.ts').SettingsManager();
+global.FlatFileManager = require('./settings.ts').FlatFileManager;
 
-global.DataDownloader = require('./data-downloader.js');
+global.DataDownloader = new require('./data-downloader.ts').DataDownloader();
 
-global.CommandParser = require('./command-parser.js');
+global.CommandParser = new require('./command-parser.ts').CommandParser();
 
-global.SecurityLog = require('./security-log.js');
+global.SecurityLog = new require('./security-log.ts').SecurityLogger();
 
 /* Commands */
 
@@ -93,7 +94,7 @@ if (!AppOptions.testmode) Tools.loadTranslations();
 global.Features = {};
 
 if (!AppOptions.testmode) {
-	Features = require('./features/index.ts').features;
+	Features = require('./features/index.ts').initFeatures();
 
 	Object.values(Features).forEach((f) => {
 		ok("New feature: " + f.id + ' | ' + f.desc);
@@ -221,15 +222,14 @@ var opts = {
 	secprotocols: [],
 	connectionTimeout: Config.connectionTimeout,
 	loginServer: 'https://play.pokemonshowdown.com/~~' + Config.serverid + '/action.php',
-	nickName: null,
-	pass: null,
+	nickName: Config.nick,
+	pass: Config.pass,
 	retryLogin: false,
 	autoConnect: false,
 	autoReconnect: false,
 	autoReconnectDelay: 0,
-	autoJoin: [],
-	showErrors: (Config.debug ? Config.debug.debug : true),
-	debug: (Config.debug ? Config.debug.debug : true)
+	showErrors: Config.debug?.debug ?? true,
+	debug: Config.debug?.debug ?? true,
 };
 
 global.Bot = new PSClient(Config.server, Config.port, opts);

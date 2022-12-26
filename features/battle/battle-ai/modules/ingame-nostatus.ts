@@ -208,7 +208,7 @@ export class IngameNoStatus implements BattleModule {
     if (BadMoves.includes(move.id)) return 0;
     if (des.target < 0) return 0; // Do not kill your own allies
 
-    if (a.canMegaEvo || p.canMegaEvo) {
+    if (a.canMegaEvo) {
       if (!des.transformation) return 0; // Mega evolve by default
     }
 

@@ -63,13 +63,13 @@ exports.rooms = ['lobby'];
 * exports.rooms = ['room1', 'room2']; //For joining some rooms
 */
 
-exports.privateRooms = { //Rooms listed here will be ignored by seen command
-	//privateroomname: true
-};
+exports.privateRooms = [ //Rooms listed here will be ignored by seen command
+	//'privateroomname'
+];
 
-exports.ignoreRooms = { //Rooms listed here will be ignored by CommandParser (bot is "asleep" in those rooms)
-	//roomid: true
-};
+exports.ignoreRooms = [ //Rooms listed here will be ignored by CommandParser (bot is "asleep" in those rooms)
+	//'roomid'
+];
 
 exports.initCmds = ['|/avatar 120']; // Other commands (avatar, blockchallenges, etc)
 
@@ -235,11 +235,11 @@ exports.moderation = {
 		"roomban"
 	],
 
-	psServersExcepts: {
-		"showdown": 1,
-		"smogtours": 1,
-		"sim": 1
-	},
+	psServersExcepts: [
+		"showdown",
+		"smogtours",
+		"sim"
+	],
 
 	zeroToleranceDefaultLevel: 'h',
 	zeroToleranceLevels: {
@@ -332,14 +332,6 @@ exports.leaderboards['tournaments'] = {
 */
 
 /*
-* Youtube
-*/
-
-exports.youtube = {
-	enableByDefault: false
-};
-
-/*
 * Chat Logger
 */
 
@@ -348,43 +340,6 @@ exports.chatLogger = {
 	ignore: { 'tournament': ['update', 'updateEnd'], 'formats': true, 'challstr': true, 'updateuser': true, 'queryresponse': true },
 	logIntroMessages: true,
 	ageOfLogs: 7 //in days (max age of logs, 0 to keep logs infinitely)
-};
-
-/*
-exports.logServer = {
-	port: 5400,
-	bindaddress: null,
-	users: {
-		'admin': {
-			name: 'Administrator',
-			pass: 'password',
-			access: {'room1': 1, 'room2': 1}
-		}
-	},
-	rooms: {
-		'room1': {private: true},
-		'room2': {private: true}
-	}
-};
-*/
-
-/*
-* Auto-Invite
-*/
-
-exports.autoInvite = [
-	//{linked: 'public room linked', private: 'private room', rank: '+'}
-];
-
-/*
-* GitHub
-* Read this: https://developer.github.com/webhooks/creating/
-*/
-
-exports.github = {
-	room: 'development',
-	secret: "",
-	port: 3420
 };
 
 /*

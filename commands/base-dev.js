@@ -85,9 +85,9 @@ exports.commands = {
 			var rooms = "", roomArr = [];
 			var buf = "", cmds = [];
 			buf += "**Bot status** |" + (Settings.lockdown ? " **Lockdown** |" : "") + " Username: ``" + Bot.status.nickName + "`` | Rooms: ";
-			for (var i in Bot.rooms) {
+			for (let i in Bot.rooms) {
 				var botIdent = Bot.rooms[i].users[toId(Bot.status.nickName)] || " ";
-				roomArr.push("<<" + i + ">> (" + Bot.rooms[i].type.charAt(0).toLowerCase() + (Settings.isSleeping(i) ? "s" : "r") + (botIdent.charAt(0) !== " " ? botIdent.charAt(0) : "u") + (Config.privateRooms[i] ? "h" : "p") + ")");
+				roomArr.push("<<" + i + ">> (" + Bot.rooms[i].type.charAt(0).toLowerCase() + (Settings.isSleeping(i) ? "s" : "r") + (botIdent.charAt(0) !== " " ? botIdent.charAt(0) : "u") + (Config.privateRooms.includes(i) ? "h" : "p") + ")");
 			}
 			if (roomArr.length) {
 				for (var i = 0; i < roomArr.length; i++) {
@@ -109,7 +109,7 @@ exports.commands = {
 		if (!roomObj) return this.pmReply("Room \"" + tarRoom + "\" not found");
 		var sleep = Settings.isSleeping(tarRoom) ? "Sleeping" : "Ready";
 		var botIdent = Bot.rooms[roomObj.id].users[toId(Bot.status.nickName)] || " ";
-		this.pmReply("**" + roomObj.title + "** <<" + roomObj.id + ">> | Type: ``" + roomObj.type + "``" + (Config.privateRooms[roomObj.id] ? " (Hidden)" : "") + " | Users: ``" + roomObj.users.length + "`` | Bot group: ``" + (botIdent.charAt(0) !== " " ? botIdent.charAt(0) : "(regular user)") + "`` | Status: ``" + sleep + "``");
+		this.pmReply("**" + roomObj.title + "** <<" + roomObj.id + ">> | Type: ``" + roomObj.type + "``" + (Config.privateRooms.includes(roomObj.id) ? " (Hidden)" : "") + " | Users: ``" + roomObj.users.length + "`` | Bot group: ``" + (botIdent.charAt(0) !== " " ? botIdent.charAt(0) : "(regular user)") + "`` | Status: ``" + sleep + "``");
 	},
 
 	uncacheall: 'clearcache',
@@ -144,37 +144,32 @@ exports.commands = {
 				this.sclog();
 				if (!args[1]) return this.reply("You must specify a feature");
 				args[1] = args[1].trim();
-				var e = Tools.reloadFeature(args[1]);
-				if (e) {
-					if (e === -1) {
-						return this.reply("Error: Feature " + args[1] + " not found");
-					} else {
-						errlog(e.stack);
-						return this.reply("Error: Feature " + args[1] + " crashed");
-					}
-				} else {
+				try {
+					Tools.reloadFeature(args[1]);
 					return this.reply("Feature: " + args[1] + " hotpatched");
+				} catch (e) {
+					errlog(e.stack);
+					return this.reply(e.message || 'Error: Feature: ' + args[1] + ' crashed');
 				}
-				break;
 			case 'commandparser':
 			case 'parser':
 				this.sclog();
 				try {
-					Tools.uncacheTree('./command-parser.js');
-					global.CommandParser = require('./../command-parser.js');
-					this.reply('command-parser.js reloaded');
-					info('command-parser.js reloaded');
+					Tools.uncacheTree('./command-parser.ts');
+					global.CommandParser = new require('./../command-parser.ts').CommandParser();
+					this.reply('command-parser.ts reloaded');
+					info('command-parser.ts reloaded');
 					CommandParser.loadCommands(true);
 				} catch (e) {
 					errlog(e.stack);
-					this.reply('Error: command-parser.js has errors');
+					this.reply('Error: command-parser.ts has errors');
 				}
 				break;
 			case 'tools':
 				this.sclog();
 				try {
 					Tools.uncacheTree('./tools.ts');
-					global.Tools = require('./../tools.ts');
+					global.Tools = new require('./../tools.ts').Tools();
 					this.reply('tools.ts reloaded');
 					info('tools.ts reloaded');
 					Tools.loadTranslations(true);
@@ -185,8 +180,8 @@ exports.commands = {
 				break;
 			case 'data':
 				this.sclog();
-				Tools.uncacheTree('./data-downloader.js');
-				global.DataDownloader = require('./../data-downloader.js');
+				Tools.uncacheTree('./data-downloader.ts');
+				global.DataDownloader = new require('./../data-downloader.ts').DataDownloader();
 				DataDownloader.download();
 				this.reply('Data files reloaded');
 				break;

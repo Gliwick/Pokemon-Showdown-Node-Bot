@@ -373,7 +373,7 @@ export class ModerationManager implements Feature {
 		if (modSettings['psservers'] !== 0 && msg.toLowerCase().indexOf(".psim.us") > -1) {
 			var serverAds = this.getServersAds(msg);
 			for (var z = 0; z < serverAds.length; z++) {
-				if (!(serverAds[z] in Config.moderation.psServersExcepts)) {
+				if (!Config.moderation.psServersExcepts.includes(serverAds[z])) {
 					infractions.push(this.trad('server-0', room));
 					totalPointVal += pv;
 					if (pointVal < pv) {
@@ -464,7 +464,7 @@ export class ModerationManager implements Feature {
 			cmd = Config.moderation.punishments[pointVal - 1];
 
 			if (cmd === 'roomban' && !this.isBotRanked(room, Tools.getGroup('moderator'))) cmd = 'hourmute'; //Bot is not a moderator
-			if ((room in Config.privateRooms) && cmd === 'warn') cmd = 'mute'; //can't warn in private rooms
+			if (Config.privateRooms.includes(room) && cmd === 'warn') cmd = 'mute'; //can't warn in private rooms
 
 			Bot.say(room, '/' + cmd + ' ' + user + muteMessage);
 		}

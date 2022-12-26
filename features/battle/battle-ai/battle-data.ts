@@ -365,11 +365,6 @@ export type BoostsTable = Partial<Record<BoostedStat, number>>;
 export type BaseStat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 export type StatsTable = Partial<Record<BaseStat, number>>;
 
-interface PreparedMove {
-	move: string;
-	target: number;
-}
-
 export class Pokemon implements PokemonDetails {
 	template;
 	species;
@@ -405,7 +400,10 @@ export class Pokemon implements PokemonDetails {
 	terastallize: Type | null = null;
 
 	passing: number | null = null;
-	prepared: PreparedMove | null = null;
+	prepared: {
+		move: string;
+		target: number;
+	} | null = null;
 
 	helpers: Record<string, any> = {};
 

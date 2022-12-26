@@ -4,7 +4,7 @@
 
 Settings.addPermissions(['info', 'wall']);
 
-function getCmdList (head) {
+function getCmdList(head) {
 	var cmdArr = Object.keys(CommandParser.dynCommands).sort();
 	var newCmdArr = [];
 	for (var i = 0; i < cmdArr.length; i++) {
@@ -42,7 +42,7 @@ exports.commands = {
 			}
 			return;
 		}
-		var perm = (cmd in {'wall': 1, 'dynwall': 1, 'infowall': 1}) ? 'wall' : 'info';
+		var perm = (cmd in { 'wall': 1, 'dynwall': 1, 'infowall': 1 }) ? 'wall' : 'info';
 		if (!this.can(perm) || this.roomType === 'pm') {
 			if (!arg) {
 				var list = getCmdList(this.trad('list') + ': ');

@@ -27,5 +27,8 @@
         "files": true,
         "transpileOnly": true,
         "transpiler": "ts-node/transpilers/swc-experimental",
-    }
+    },
+    "files": [
+        "./global-variables.d.ts"
+    ]
 }

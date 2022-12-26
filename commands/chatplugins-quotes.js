@@ -1,8 +1,8 @@
 const quotesDataFile = AppOptions.data + 'quotes.json';
 const jokesDataFile = AppOptions.data + 'jokes.json';
 
-var quotesFFM = new Settings.FlatFileManager(quotesDataFile);
-var jokesFFM = new Settings.FlatFileManager(jokesDataFile);
+var quotesFFM = new FlatFileManager(quotesDataFile);
+var jokesFFM = new FlatFileManager(jokesDataFile);
 
 var quotes = {};
 var jokes = {};

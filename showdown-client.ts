@@ -23,25 +23,62 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var https = require('https');
-var url = require('url');
-var EventEmitter = require('events').EventEmitter;
-var WebSocketClient = require('websocket').client;
-var util = require('util');
+import * as https from 'https';
+import * as url from 'url';
+import { EventEmitter } from 'events';
+import { client as WebSocketClient, connection } from 'websocket';
+import * as util from 'util';
+import { IncomingMessage } from 'http';
+import { toId } from './tools';
 
-function MyEmitter() {
-	EventEmitter.call(this);
+interface ClientOptions {
+	server: string;
+	serverid: string;
+	port: number;
+	secprotocols: string[];
+	connectionTimeout: number;
+	loginServer: string;
+	nickName: string | null;
+	pass: string | null;
+	retryLogin: number;
+	autoConnect: boolean;
+	autoReconnect: boolean;
+	autoReconnectDelay: number;
+	showErrors: boolean;
+	debug: boolean;
 }
 
-util.inherits(MyEmitter, EventEmitter);
+interface Room {
+	type: string;
+	title: string;
+	users: Record<string, string>;
+	userCount: number;
+};
 
-function toId (text) {
-	if (typeof text !== 'string') return text;
-	return text.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
+export class Client {
+	opts: ClientOptions;
+	actionUrl: url.UrlWithStringQuery;
+	rooms: Record<string, Room>;
+	roomcount: number;
+	connection: connection | null;
+	statusId: number;
+	status: {
+		connected: boolean;
+		nickName?: string;
+		named?: number;
+		avatar?: string;
+	};
+	challstr: {
+		id: string;
+		str: string;
+	};
+	events: EventEmitter;
+	closed: boolean = false;
+	webSocket: WebSocketClient | null = null;
+	lastMessage?: number;
+	connectionTimeOutInterval: NodeJS.Timeout | null = null;
 
-var Client = (function () {
-	function Client (server, port, opts) {
+	constructor(server: string, port: number, opts: Partial<ClientOptions>) {
 		this.opts = {
 			server: server,
 			serverid: 'showdown',
@@ -55,14 +92,10 @@ var Client = (function () {
 			autoConnect: true,
 			autoReconnect: true,
 			autoReconnectDelay: 30 * 1000,
-			autoJoin: [],
 			showErrors: false,
-			debug: false
+			debug: false,
+			...opts
 		};
-		if (typeof opts === 'object') {
-			for (var i in opts)
-				this.opts[i] = opts[i];
-		}
 		this.actionUrl = url.parse(this.opts.loginServer);
 
 		this.rooms = {};
@@ -70,25 +103,23 @@ var Client = (function () {
 
 		this.connection = null;
 		this.statusId = 0;
-		this.status = {
-			connected: false,
-			nickName: null,
-			named: false
-		};
+		this.status = { connected: false };
 		this.challstr = {
-			id: 0,
-			str: ''
+			id: '',
+			str: '',
 		};
-		this.events = new MyEmitter();
-		this.debug = function (str) {
-			if (this.opts.debug) console.log("DEBUG: " + str);
-		};
-		this.error = function (str) {
-			if (this.opts.showErrors) console.log("ERROR: " + str);
-		};
+		this.events = new EventEmitter();
 	}
 
-	Client.prototype.init = function () {
+	debug(str: string): void {
+		if (this.opts.debug) console.log("DEBUG: " + str);
+	}
+
+	error(str: string): void {
+		if (this.opts.showErrors) console.log("ERROR: " + str);
+	}
+
+	init() {
 		if (this.opts.autoConnect) {
 			this.connect();
 		}
@@ -97,15 +128,15 @@ var Client = (function () {
 		}
 	};
 
-	Client.prototype.on = function (name, listener) {
+	on(name: string, listener: (...args: any[]) => void) {
 		this.events.addListener(name, listener);
 	};
 
-	Client.prototype.removeListener = function (name, listener) {
+	removeListener(name: string, listener: (...args: any[]) => void) {
 		this.events.removeListener(name, listener);
 	};
 
-	Client.prototype.connect = function (retry) {
+	connect(retry?: boolean) {
 		if (retry) {
 			this.debug('retrying...');
 		}
@@ -117,7 +148,7 @@ var Client = (function () {
 		self.rooms = {};
 		self.roomcount = 0;
 		webSocket.on('connectFailed', function (err) {
-			self.error("Could not connect to server " + self.opts.server + ": " + sys.inspect(err));
+			self.error("Could not connect to server " + self.opts.server + ": " + util.inspect(err));
 			self.events.emit('disconnect', err);
 			if (self.opts.autoReconnect) {
 				self.debug("retrying in " + (self.opts.autoReconnectDelay / 1000) + " seconds");
@@ -132,7 +163,7 @@ var Client = (function () {
 			self.status.connected = true;
 			self.connection = connection;
 			connection.on('error', function (err) {
-				self.error('connection error: ' + sys.inspect(err));
+				self.error('connection error: ' + util.inspect(err));
 				self.connection = null;
 				self.status.connected = false;
 				self.events.emit('disconnect', err);
@@ -144,7 +175,7 @@ var Client = (function () {
 				}
 			});
 			connection.on('close', function () {
-				self.debug('connection closed: ' + sys.inspect(arguments));
+				self.debug('connection closed: ' + util.inspect(arguments));
 				self.connection = null;
 				self.status.connected = false;
 				self.events.emit('disconnect', 0);
@@ -169,27 +200,27 @@ var Client = (function () {
 			str += chars.charAt(~~(Math.random() * l));
 		}
 		var conStr = 'ws://' + self.opts.server + ':' + self.opts.port + '/showdown/' + id + '/' + str + '/websocket';
-		self.debug('connecting to ' + conStr + ' - secondary protocols: ' + sys.inspect(self.opts.secprotocols));
+		self.debug('connecting to ' + conStr + ' - secondary protocols: ' + util.inspect(self.opts.secprotocols));
 		webSocket.connect(conStr, self.opts.secprotocols);
 	};
 
-	Client.prototype.disconnect = function () {
+	disconnect() {
 		this.closed = true;
 		if (this.connection) this.connection.close();
 	};
 
-	Client.prototype.softDisconnect = function () {
+	softDisconnect() {
 		if (this.connection) this.connection.close();
 	};
 
-	Client.prototype.rename = Client.prototype.login = function (nick, pass) {
-		var requestOptions = {
+	rename(nick: string, pass?: string | null) {
+		const requestOptions: https.RequestOptions = {
 			hostname: this.actionUrl.hostname,
 			port: this.actionUrl.port,
 			path: this.actionUrl.pathname,
 			agent: false
 		};
-		var data = null;
+		var data = '';
 		if (!pass) {
 			requestOptions.method = 'GET';
 			requestOptions.path += '?act=getassertion&userid=' + toId(nick) + '&challengekeyid=' + this.challstr.id + '&challenge=' + this.challstr.str;
@@ -203,13 +234,13 @@ var Client = (function () {
 			};
 			this.debug("Sending log in request to: " + requestOptions.path + " | Data -> " + data);
 		}
-		var req = https.request(requestOptions, function (res) {
+		var req = https.request(requestOptions, ((res: IncomingMessage): void => {
 			res.setEncoding('utf8');
 			var data = '';
-			res.on('data', function (chunk) {
+			res.on('data', (chunk: string): void => {
 				data += chunk;
 			});
-			res.on('end', function () {
+			res.on('end', (function (this: Client): void {
 				if (data === ';') {
 					this.error('failed to log in; nick is registered - invalid or no password given');
 					this.events.emit('renamefailure', -1);
@@ -219,7 +250,7 @@ var Client = (function () {
 					this.error('failed to log in: ' + data);
 					if (this.opts.retryLogin) {
 						this.debug("Retrying log in process in " + (this.opts.retryLogin / 1000) + " seconds...");
-						setTimeout(function () {this.rename(nick, pass);}.bind(this), this.opts.retryLogin);
+						setTimeout(function (this: Client) { this.rename(nick, pass); }.bind(this), this.opts.retryLogin);
 					}
 					this.events.emit('renamefailure', -2);
 					return;
@@ -228,67 +259,66 @@ var Client = (function () {
 					this.error('the login server is under heavy load');
 					if (this.opts.retryLogin) {
 						this.debug("Retrying log in process in " + (this.opts.retryLogin / 1000) + " seconds...");
-						setTimeout(function () {this.rename(nick, pass);}.bind(this), this.opts.retryLogin);
+						setTimeout(function (this: Client) { this.rename(nick, pass); }.bind(this), this.opts.retryLogin);
 					}
 					this.events.emit('renamefailure', -3);
 					return;
 				}
 				try {
-					data = JSON.parse(data.substr(1));
-					if (data.actionsuccess) {
-						data = data.assertion;
+					const jsonData = JSON.parse(data.substr(1));
+					if (jsonData.actionsuccess) {
+						data = jsonData.assertion;
 					} else {
 						this.error('could not log in; action was not successful: ' + JSON.stringify(data));
 						if (this.opts.retryLogin) {
 							this.debug("Retrying log in process in " + (this.opts.retryLogin / 1000) + " seconds...");
-							setTimeout(function () {this.rename(nick, pass);}.bind(this), this.opts.retryLogin);
+							setTimeout(function (this: Client) { this.rename(nick, pass); }.bind(this), this.opts.retryLogin);
 						}
 						this.events.emit('renamefailure', -4);
 						return;
 					}
-				} catch (e) {}
+				} catch (e) { }
 				this.debug('Sending log in trn...');
 				this.send('|/trn ' + nick + ',0,' + data);
-			}.bind(this));
-		}.bind(this));
-		req.on('error', function (err) {
-			this.error('login error: ' + sys.inspect(err));
+			}).bind(this));
+		}).bind(this));
+		req.on('error', (function (this: Client, err: Error) {
+			this.error('login error: ' + util.inspect(err));
 			if (this.opts.retryLogin) {
 				this.debug("Retrying log in process in " + (this.opts.retryLogin / 1000) + " seconds...");
-				setTimeout(function () {this.rename(nick, pass);}.bind(this), this.opts.retryLogin);
+				setTimeout(function (this: Client) { this.rename(nick, pass); }.bind(this), this.opts.retryLogin);
 			}
 			this.events.emit('renamefailure', err);
 			return;
-		}.bind(this));
+		}).bind(this));
 		if (data) {
 			req.write(data);
 		}
 		req.end();
 	};
 
-	Client.prototype.logout = function () {
+	logout() {
 		this.send('|/logout');
 	};
 
-	Client.prototype.isConnected = function () {
+	isConnected() {
 		return !!this.status.connected;
 	};
 
-	Client.prototype.getBotNick = function () {
+	getBotNick() {
 		return this.status.nickName;
 	};
 
-	Client.prototype.send = function (data, delay) {
-		var connection = this.connection;
+	send(data: any, delay: number = 1000) {
+		const connection = this.connection;
 		var self = this;
-		if (!delay) delay = 1000;
 		if (connection && connection.connected) {
-			if (!(data instanceof Array)) {
+			if (!Array.isArray(data)) {
 				data = [data.toString()];
 			}
 			if (data.length > 3) {
-				var spacer;
-				var nextToSend = function () {
+				var spacer: NodeJS.Timeout;
+				const nextToSend = () => {
 					if (!data.length) {
 						clearInterval(spacer);
 						return;
@@ -312,8 +342,8 @@ var Client = (function () {
 		}
 	};
 
-	Client.prototype.sendRoom = function (room, data, delay) {
-		if (!(data instanceof Array)) {
+	sendRoom(room: String, data: any, delay?: number) {
+		if (!Array.isArray(data)) {
 			data = [data.toString()];
 		}
 		for (var i = 0; i < data.length; i++) {
@@ -322,30 +352,19 @@ var Client = (function () {
 		return this.send(data, delay);
 	};
 
-	Client.prototype.say = function (room, msg) {
+	say(room: string, msg: string) {
 		if (room.charAt(0) === ',') {
 			return this.pm(room.substr(1), msg);
 		}
 		return this.send(room + '|' + msg);
 	};
 
-	Client.prototype.pm = function (user, msg) {
+	pm(user: string, msg: string) {
 		return this.send('|/pm ' + user + ',' + msg);
 	};
 
-	Client.prototype.joinRooms = function (rooms) {
-		var cmds = [];
-		var room;
-		for (var i = 0; i < rooms.length; i++) {
-			room = toId(rooms[i]);
-			if (this.rooms[room]) continue;
-			cmds.push('|/join ' + room);
-		}
-		if (cmds.length) return this.send(cmds);
-	};
-
-	Client.prototype.leaveRooms = function (rooms) {
-		var cmds = [];
+	leaveRooms(rooms: string[]) {
+		var cmds: string[] = [];
 		var room;
 		for (var i = 0; i < rooms.length; i++) {
 			room = toId(rooms[i]);
@@ -355,22 +374,18 @@ var Client = (function () {
 		if (cmds.length) return this.send(cmds);
 	};
 
-	Client.prototype.joinRoom = function (room) {
-		return this.joinRooms([room]);
-	};
-
-	Client.prototype.leaveRoom = function (room) {
+	leaveRoom(room: string) {
 		return this.leaveRooms([room]);
 	};
 
-	Client.prototype.receive = function (message) {
+	receive(message: string) {
 		this.lastMessage = Date.now();
 		var flag = message.substr(0, 1);
 		var data;
 		switch (flag) {
 			case 'a':
 				data = JSON.parse(message.substr(1));
-				if (data instanceof Array) {
+				if (Array.isArray(data)) {
 					for (var i = 0; i < data.length; i++) {
 						this.receiveMsg(data[i]);
 					}
@@ -381,7 +396,7 @@ var Client = (function () {
 		}
 	};
 
-	Client.prototype.receiveMsg = function (message) {
+	receiveMsg(message?: string) {
 		if (!message) return;
 		if (message.indexOf('\n') > -1) {
 			var spl = message.split('\n');
@@ -405,7 +420,7 @@ var Client = (function () {
 		}
 	};
 
-	Client.prototype.receiveLine = function (room, message, isIntro) {
+	receiveLine(room: string, message: string, isIntro?: boolean) {
 		var spl = message.substr(1).split('|');
 		this.events.emit('line', room, message, isIntro, spl);
 		if (spl[1]) {
@@ -417,9 +432,6 @@ var Client = (function () {
 		var by, timeOff;
 		switch (spl[0]) {
 			case 'formats':
-				if (this.events['formats'] && typeof this.events['formats'] === 'function') {
-					this.events['formats'](message.substr(spl[0].length + 2));
-				}
 				this.events.emit('formats', message.substr(spl[0].length + 2));
 				break;
 			case 'challstr':
@@ -440,7 +452,6 @@ var Client = (function () {
 				this.status.named = named;
 				this.status.avatar = avatar;
 				this.events.emit('rename', name, named, avatar);
-				if (named) this.joinRooms(this.opts.autoJoin);
 				break;
 			case 'init':
 				this.rooms[room] = {
@@ -556,7 +567,7 @@ var Client = (function () {
 		}
 	};
 
-	Client.prototype.startConnectionTimeOut = function () {
+	startConnectionTimeOut() {
 		var self = this;
 		this.stopConnectionTimeOut();
 		this.connectionTimeOutInterval = setInterval(function () {
@@ -570,16 +581,12 @@ var Client = (function () {
 		}, self.opts.connectionTimeout);
 	};
 
-	Client.prototype.stopConnectionTimeOut = function () {
+	stopConnectionTimeOut() {
 		if (this.connectionTimeOutInterval) clearInterval(this.connectionTimeOutInterval);
 	};
 
-	Client.prototype.destroy = function () {
+	destroy() {
 		this.stopConnectionTimeOut();
 		this.disconnect();
 	};
-
-	return Client;
-})();
-
-module.exports = Client;
+};

@@ -6,9 +6,9 @@ import { toId } from '../../tools';
 const teamsDataFile = AppOptions.data + 'teams.json';
 
 export class TeamBuilder {
-	teams?: any = {};
-	staticTeams = {};
-	dynTeams = {};
+	teams: Record<string, any> = {};
+	staticTeams: Record<string, any> = {};
+	dynTeams: Record<string, { format: string, packed: string }> = {};
 
 	writing: boolean = false;
 	writePending: boolean = false;
@@ -33,9 +33,8 @@ export class TeamBuilder {
 	};
 
 	mergeTeams() {
-		if (this.teams) delete this.teams;
 		this.teams = {};
-		Object.merge(this.teams, this.staticTeams);
+		Object.assign(this.teams, this.staticTeams);
 		for (let i in this.dynTeams) {
 			const team = this.dynTeams[i];
 			if (!this.teams[team.format]) this.teams[team.format] = [];
@@ -43,7 +42,7 @@ export class TeamBuilder {
 		}
 	};
 
-	addTeam(name, format, packed) {
+	addTeam(name: string, format: string, packed: string) {
 		if (this.dynTeams[name]) return false;
 		this.dynTeams[name] = {
 			format: format,
@@ -54,7 +53,7 @@ export class TeamBuilder {
 		return true;
 	};
 
-	removeTeam(name) {
+	removeTeam(name: string) {
 		if (!this.dynTeams[name]) return false;
 		delete this.dynTeams[name];
 		this.mergeTeams();
@@ -64,7 +63,7 @@ export class TeamBuilder {
 
 	saveTeams() {
 		const data = JSON.stringify(this.dynTeams);
-		const finishWriting = function () {
+		const finishWriting = () => {
 			this.writing = false;
 			if (this.writePending) {
 				this.writePending = false;
@@ -88,7 +87,7 @@ export class TeamBuilder {
 		});
 	};
 
-	getTeam(format) {
+	getTeam(format: string): string | false {
 		const formatId = toId(format);
 		const teamStuff = this.teams[formatId];
 		if (!teamStuff || !teamStuff.length) return false;
@@ -130,12 +129,13 @@ export class TeamBuilder {
 				return false;
 			}
 			return teamStr;
-		} catch (e) {
+		} catch (e: any) {
 			error(e.stack);
+			return false;
 		}
 	};
 
-	hasTeam(format) {
+	hasTeam(format: string): boolean {
 		const formatId = toId(format);
 		if (this.teams[formatId]) return true;
 		return false;
@@ -143,7 +143,7 @@ export class TeamBuilder {
 
 	/* Pack Team function - from Pokemon-Showdown-Client */
 
-	packTeam(team) {
+	packTeam(team: Record<string, any>[]): string {
 		return Tools.packTeam(team);
 	}
 };

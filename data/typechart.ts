@@ -1,4 +1,9 @@
-export const typechart = {
+import { Stat } from "../tools";
+
+export const typechart: Record<string, {
+	damageTaken: Record<string, 0 | 1 | 2 | 3>,
+	HPivs?: Partial<Record<Stat, number>>
+}> = {
 	"Bug": {
 		damageTaken: {
 			"Bug": 0,

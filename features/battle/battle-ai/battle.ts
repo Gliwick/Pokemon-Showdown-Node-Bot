@@ -22,7 +22,13 @@ import { Player, Pokemon, getPokemon, getItem, getAbility, CurrentGen, PokemonDe
 import { Pokemon as CalcPokemon } from './calc';
 
 export type PlayerId = 'p1' | 'p2';
-export enum BattleType { singles = 'singles', doubles = 'doubles', triples = 'triples' };
+export type BattleType = 'singles' | 'doubles' | 'triples' | 'rotation';
+export const BattleTypeActiveSlots: Record<BattleType, number> = {
+	singles: 1,
+	doubles: 2,
+	triples: 3,
+	rotation: 3,
+}
 
 export interface RequestMove {
 	move: string;
@@ -77,17 +83,6 @@ export interface Request {
 	rqid: number;
 }
 
-interface LastSend {
-	rqid: number;
-	time: number;
-	decision: Decision[] | null;
-}
-
-interface Helpers {
-	self: any;
-	foe: any;
-}
-
 interface Status {
 	hp: number
 	status: string | null;
@@ -111,7 +106,7 @@ export class Battle {
 	self: Player | null = null;
 	foe: Player | null = null;
 
-	gametype: BattleType = BattleType.singles;
+	gametype: BattleType = 'singles';
 	gen: number = CurrentGen;
 	tier: string = 'gen9ou';
 	rules: string[] = [];
@@ -129,7 +124,7 @@ export class Battle {
 
 	file: PathLike | null = null;
 	stream: WriteStream | null = null;
-	lastSend: LastSend = {
+	lastSent: { rqid: number; time: number; decision: Decision[] | null; } = {
 		rqid: -1,
 		time: 0,
 		decision: null
@@ -137,7 +132,10 @@ export class Battle {
 	lock: boolean = false;
 	leaveInterval: NodeJS.Timeout | null = null;
 
-	helpers: Helpers = { self: {}, foe: {} };
+	helpers: { self: Record<string, any>; foe: Record<string, any>; } = {
+		self: {},
+		foe: {}
+	};
 
 	rated: boolean = false;
 	ended: boolean = false;
@@ -170,7 +168,7 @@ export class Battle {
 			str += decision[i].getDecisionStr();
 			if (i < decision.length - 1) str += ", ";
 		}
-		this.lastSend = {
+		this.lastSent = {
 			rqid: this.rqid,
 			time: Date.now(),
 			decision: decision
@@ -232,23 +230,24 @@ export class Battle {
 	message(type: string, player?: string, poke?: string) {
 		if (!this.self) return; // Not playing
 		if (!Config.battleMessages || !Config.battleMessages[type]) return;
+		const messages = Config.battleMessages[type];
 
 		if (!player) {
-			if (Config.battleMessages[type]["self"]) {
-				this.send(Config.battleMessages[type]["self"][Math.floor(Math.random() * Config.battleMessages[type]["self"].length)]);
-				return;
+			const messagesArray = Array.isArray(messages) ? messages : messages?.self;
+			if (messagesArray) {
+				this.send(messagesArray[Math.floor(Math.random() * messagesArray.length)]);
 			}
-			this.send(Config.battleMessages[type][Math.floor(Math.random() * Config.battleMessages[type].length)]);
 			return;
 		}
 
-		const side = (player === this.self.id) ? "self" : "foe";
-		if (Config.battleMessages[type][side]) {
+		const side = (player === this.self.id) ? 'self' : 'foe';
+		const sideMessages = !Array.isArray(messages) && messages[side];
+		if (sideMessages) {
 			if (type === 'faint') {
 				const lost = this.self.pokemon.every(p => p.fainted);
 				if (lost) return;
 			}
-			let msg = Config.battleMessages[type][side][Math.floor(Math.random() * Config.battleMessages[type][side].length)];
+			let msg = sideMessages[Math.floor(Math.random() * sideMessages.length)];
 			if (poke) msg = msg.replace(/#poke/g, poke);
 			this.send(msg);
 		}
@@ -257,10 +256,10 @@ export class Battle {
 	makeDecision(forced?: boolean) {
 		if (!this.self) return; // Not playing
 		debug(this.id + "->MakeDecision");
-		if (!forced && this.lastSend.rqid >= 0 && this.lastSend.rqid === this.rqid) {
-			if (Date.now() - this.lastSend.time < MIN_TIME_LOCK) return;
-			if (this.lastSend.decision) {
-				this.sendDecision(this.lastSend.decision);
+		if (!forced && this.lastSent.rqid >= 0 && this.lastSent.rqid === this.rqid) {
+			if (Date.now() - this.lastSent.time < MIN_TIME_LOCK) return;
+			if (this.lastSent.decision) {
+				this.sendDecision(this.lastSent.decision);
 				return;
 			}
 		}
@@ -513,7 +512,7 @@ export class Battle {
 
 		if (!details || !ident) throw new Error('Request pokemon has no details or ident: ' + JSON.stringify(p));
 
-		const side: 'self' | 'foe' = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
+		const side: keyof Battle['helpers'] = (toId(this.request.side.name) === toId(Bot.status.nickName)) ? 'self' : 'foe';
 		let pokeId = p.ident.split(': ')[1] + '|' + details.species;
 
 		const poke = new CalcPokemon(

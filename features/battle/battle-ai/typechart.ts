@@ -44,7 +44,7 @@ function getChart(gen: number = CurrentGen, battleId?: string): TypeChart {
 
 type Gen = `gen${number}`;
 
-type TypeChart = Partial<Record<Type, Partial<Record<Type, number>>>>;
+type TypeChart = Partial<Record<Type, Partial<Record<Type, 0 | 1 | 2 | 3>>>>;
 
 export const typechart: Record<Gen, TypeChart> = {
 	gen9: {

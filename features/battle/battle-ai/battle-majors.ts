@@ -4,7 +4,7 @@
 
 import { error } from '../../../console-reports';
 import { toId } from '../../../tools';
-import { Battle, BattleType, PlayerId, Request } from './battle';
+import { Battle, BattleType, BattleTypeActiveSlots, PlayerId, Request } from './battle';
 import { Move, Pokemon, getPokemon, getMove, getEffect, BoostedStat } from './battle-data';
 
 export const majors: Record<string, ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void) | string> = {
@@ -45,28 +45,15 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 	},
 
 	gametype: function (this: Battle, args, kwargs) {
-		if (!(args[1] in BattleType)) {
+		if (!(args[1] in BattleTypeActiveSlots)) {
 			error('Unknown battle type: ' + args[1]);
 			return;
 		}
 
-		this.gametype = BattleType[args[1] as keyof typeof BattleType];
+		this.gametype = args[1] as BattleType;
 		this.conditions["gametype"] = this.gametype;
-		switch (args[1]) {
-			default:
-				this.players.p1.active = [null];
-				this.players.p2.active = [null];
-				break;
-			case 'doubles':
-				this.players.p1.active = [null, null];
-				this.players.p2.active = [null, null];
-				break;
-			case 'triples':
-			case 'rotation':
-				this.players.p1.active = [null, null, null];
-				this.players.p2.active = [null, null, null];
-				break;
-		}
+		this.players.p1.active = Array(BattleTypeActiveSlots[this.gametype]).fill(null);
+		this.players.p2.active = Array(BattleTypeActiveSlots[this.gametype]).fill(null);
 	},
 
 	variation: function (this: Battle, args, kwargs) {

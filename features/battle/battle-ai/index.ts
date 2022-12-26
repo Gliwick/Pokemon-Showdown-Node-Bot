@@ -5,6 +5,7 @@
 const battleAutojoinFile = AppOptions.data + "_temp/" + "battle-autojoin-tmp.json";
 
 import { debug, error } from "../../../console-reports";
+import { FlatFileManager } from "../../../settings";
 import { Battle } from "./battle";
 
 import { createStream } from "./battle-log";
@@ -17,7 +18,7 @@ export class BattleBot {
 	autoJoinData: Record<string, number> = {};
 
 	constructor() {
-		this.autojoinFFM = new Settings.FlatFileManager(battleAutojoinFile);
+		this.autojoinFFM = new FlatFileManager(battleAutojoinFile);
 	};
 
 	init() {
@@ -30,7 +31,7 @@ export class BattleBot {
 		this.battlesCount = 0;
 	};
 
-	tryJoinAbandonedBattles() {
+	tryJoinAbandonedBattles(): string[] | undefined {
 		if (!Config.abandonedBattleAutojoin) return;
 		try {
 			this.autoJoinData = this.autojoinFFM.readObj();

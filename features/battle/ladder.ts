@@ -3,7 +3,7 @@ import { BattleBot } from "./battle-ai";
 import { TeamBuilder } from "./teambuilder";
 
 export class LadderManager {
-	reportsRoom: boolean = false;
+	reportsRoom: string | null = null;
 	laddering: boolean = false;
 	ladderTimer: NodeJS.Timeout | null = null;
 
@@ -18,12 +18,12 @@ export class LadderManager {
 	reportBattle(room: string) {
 		if (!this.reportsRoom) return;
 		let lang = Config.language || 'english';
-		if (Settings.settings['language'] && Settings.settings['language'][this.reportsRoom]) lang = Settings.settings['language'][this.reportsRoom];
+		if (Settings.settings.language && Settings.settings.language[this.reportsRoom]) lang = Settings.settings['language'][this.reportsRoom];
 		Bot.say(this.reportsRoom, Tools.translateGlobal('battle', 'battlefound', lang) + ": <<" + room + ">>");
-		this.reportsRoom = false;
+		this.reportsRoom = null;
 	};
 
-	start(format?: string) {
+	start(format?: string): boolean {
 		if (!format) return false;
 		if (this.laddering) return false;
 		format = toId(format);
@@ -48,7 +48,7 @@ export class LadderManager {
 		return true;
 	};
 
-	stop() {
+	stop(): boolean {
 		if (!this.laddering) return false;
 		this.laddering = false;
 		if (this.ladderTimer) clearTimeout(this.ladderTimer);

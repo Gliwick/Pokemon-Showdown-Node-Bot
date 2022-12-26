@@ -53,24 +53,24 @@ exports.commands = {
 		} while (uptime);
 
 		switch (buffer.length) {
-		case 5:
-			text += buffer[4] + ', ';
-			text += buffer[3] + ', ';
-			text += buffer[2] + ', ' + buffer[1] + ', ' + this.trad('and') + ' ' + buffer[0];
-			break;
-		case 4:
-			text += buffer[3] + ', ';
-			text += buffer[2] + ', ' + buffer[1] + ', ' + this.trad('and') + ' ' + buffer[0];
-			break;
-		case 3:
-			text += buffer[2] + ', ' + buffer[1] + ', ' + this.trad('and') + ' ' + buffer[0];
-			break;
-		case 2:
-			text += buffer[1] + ' ' + this.trad('and') + ' ' + buffer[0];
-			break;
-		case 1:
-			text += buffer[0];
-			break;
+			case 5:
+				text += buffer[4] + ', ';
+				text += buffer[3] + ', ';
+				text += buffer[2] + ', ' + buffer[1] + ', ' + this.trad('and') + ' ' + buffer[0];
+				break;
+			case 4:
+				text += buffer[3] + ', ';
+				text += buffer[2] + ', ' + buffer[1] + ', ' + this.trad('and') + ' ' + buffer[0];
+				break;
+			case 3:
+				text += buffer[2] + ', ' + buffer[1] + ', ' + this.trad('and') + ' ' + buffer[0];
+				break;
+			case 2:
+				text += buffer[1] + ' ' + this.trad('and') + ' ' + buffer[0];
+				break;
+			case 1:
+				text += buffer[0];
+				break;
 		}
 		this.restrictReply(text, 'info');
 	},
@@ -111,8 +111,8 @@ exports.commands = {
 		var text = '';
 		arg = toId(arg);
 		if (!arg || arg.length > 18) return this.pmReply(this.trad('inv'));
-		var alts = Settings.userManager.getAlts(arg);
-		if (alts && alts.length) {
+		let alts = Settings.userManager.getAlts(arg);
+		if (alts.length) {
 			if (this.can("alts")) {
 				var cmds = [];
 				var toAdd;
@@ -140,7 +140,7 @@ exports.commands = {
 				}
 			}
 		} else {
-			text += this.trad('n') + ' ' +  Settings.userManager.getName(arg);
+			text += this.trad('n') + ' ' + Settings.userManager.getName(arg);
 		}
 		this.pmReply(text);
 	},

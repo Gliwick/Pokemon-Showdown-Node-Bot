@@ -272,7 +272,7 @@ export class SinglesEffective implements BattleModule {
 	}
 
 	evaluatePokemon(battle: Battle, sideId: number): Matchup {
-		if (!battle.foe.active[0] || battle.foe.active[0].fainted) return { t: 0, d: 0 };
+		if (!battle.foe.active[0] || battle.foe.active[0].fainted) return { received: 0, receivedPercentage: 0, inflicted: 0 };
 
 		let isActive = (sideId === 0 && !!battle.request.active);
 

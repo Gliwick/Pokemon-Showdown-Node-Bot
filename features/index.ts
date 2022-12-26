@@ -2,6 +2,7 @@ export interface Feature {
     readonly id: string;
     readonly desc?: string;
     init: () => void;
+    getInitCmds?: () => string[] | undefined;
     destroy: () => void;
 }
 
@@ -10,21 +11,19 @@ import { GroupChatsManager } from './groupchats/index'
 import { ModerationManager } from './moderation/index'
 import { TournamentsManager } from './tournaments/index'
 
-const featureInitializers: Record<string, () => Feature> = {
-    battle: () => new BattleManager(),
-    groupchats: () => new GroupChatsManager(),
-    moderation: () => new ModerationManager(),
-    tournament: () => new TournamentsManager(),
+const features: Record<string, new () => Feature> = {
+    battle: BattleManager,
+    groupchats: GroupChatsManager,
+    moderation: ModerationManager,
+    tournament: TournamentsManager,
 }
 
-export function initFeature(id: string): Feature | null {
-    return featureInitializers[id]?.();
+export function initFeature(id: string): Feature | undefined {
+    return features[id] && new features[id]();
 }
 
 export function initFeatures(): Record<string, Feature> {
-    return Object.entries(featureInitializers).reduce((acc: Record<string, Feature>, [id, initializer]) => {
-        acc[id] = initializer(); return acc;
+    return Object.entries(features).reduce((acc: Record<string, Feature>, [id, constructor]) => {
+        acc[id] = new constructor(); return acc;
     }, {});
 }
-
-export const features: Record<string, Feature> = initFeatures();

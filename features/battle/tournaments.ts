@@ -2,13 +2,14 @@
 	Tournaments parser
 */
 
+import { Parser } from '.';
 import { toId } from '../../tools';
 import { TeamBuilder } from "./teambuilder";
 
 const ACTION_INTERVAL = 1500;
 
-export class TourManager {
-	tourData = {};
+export class TourManager implements Parser {
+	tourData: Record<string, Record<string, any>> = {};
 	lastAction: Record<string, number> = {};
 
 	teamBuilder: TeamBuilder;
@@ -17,7 +18,7 @@ export class TourManager {
 		this.teamBuilder = teamBuilder;
 	};
 
-	canSendCommands(room: string) {
+	canSendCommands(room: string): boolean {
 		let res = true;
 		if (this.lastAction[room] && Date.now() - this.lastAction[room] < ACTION_INTERVAL) res = false;
 		this.lastAction[room] = Date.now();
@@ -25,24 +26,21 @@ export class TourManager {
 	};
 
 	clearData() {
-		for (let i in this.tourData)
-			delete this.tourData[i];
+		this.tourData = {};
 	};
 
-	parse(room, message, isIntro: boolean, spl) {
+	parse(room: string, message: string, isIntro: boolean, spl: string[]) {
 		if (spl[0] !== 'tournament') return;
 		if (!this.tourData[room]) this.tourData[room] = {};
 		switch (spl[1]) {
 			case 'update':
 				try {
 					const data = JSON.parse(spl[2]);
-					for (let i in data) {
-						this.tourData[room][i] = data[i];
-					}
+					Object.assign(this.tourData[room], data);
 				} catch (e) { }
 				break;
 			case 'updateEnd':
-				if (!Settings.lockdown && Settings.settings['jointours'] && Settings.settings['jointours'][room] && this.tourData[room].format && !this.tourData[room].isJoined && !this.tourData[room].isStarted) {
+				if (!Settings.lockdown && Settings.settings.jointours && Settings.settings.jointours[room] && this.tourData[room].format && !this.tourData[room].isJoined && !this.tourData[room].isStarted) {
 					const format = toId(this.tourData[room].format);
 					if (Formats[format] && !Formats[format].team) {
 						Bot.say(room, '/tour join');

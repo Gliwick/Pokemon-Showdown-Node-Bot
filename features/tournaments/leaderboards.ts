@@ -2,6 +2,7 @@
 * Tournaments points system
 */
 
+import { FlatFileManager } from '../../settings';
 import { toId } from '../../tools';
 
 const toursDataFile = AppOptions.data + 'leaderboards.json';
@@ -13,7 +14,7 @@ export class LeaderboardsManager {
 	resetCodes = {};
 
 	constructor() {
-		this.toursFFM = new Settings.FlatFileManager(toursDataFile);
+		this.toursFFM = new FlatFileManager(toursDataFile);
 		this.ladder = this.toursFFM.readObjSafe();
 	}
 

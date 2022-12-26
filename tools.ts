@@ -1,13 +1,22 @@
 /*
 * Tools file
 */
-import * as fs from "fs";
-import { lstatSync, PathLike, readdirSync, Stats, watchFile as fsWatchFile } from "fs";
+import { lstatSync, readdirSync, watchFile as fsWatchFile } from "fs";
+import * as http from "http";
+import * as https from "https";
 import { inspect } from "util";
 import { errlog, error, info, ok } from "./console-reports";
+import { ConfigType } from "./global-types";
+import { typechart } from "./data/typechart";
+import { initFeature } from "./features";
+
+declare global {
+	interface String {
+		escapeHTML(): string;
+	}
+}
 
 /* String utils */
-
 
 export function toId(text?: string): string {
 	if (!text) return '';
@@ -15,359 +24,32 @@ export function toId(text?: string): string {
 };
 global.toId = toId;
 
-global.toRoomid = exports.toRoomid = function (roomid) {
+export function toRoomid(roomid: string): string {
 	return roomid.replace(/[^a-zA-Z0-9-]+/g, '').toLowerCase();
 };
+global.toRoomid = toRoomid;
 
-exports.toName = function (text) {
-	if (!text) return '';
-	return text.trim();
+export interface AppOptionsType {
+	help?: boolean;
+	debugmode?: number;
+	testmode?: boolean;
+	config?: string;
+	data?: string;
+}
+
+const DefaultPermissions: ConfigType['globalPermissions'] = {
+	'voice': '+',
+	'driver': '%',
+	'moderator': '@',
+	'roomowner': '#',
+	'admin': '~',
 };
 
-exports.addLeftZero = function (num, nz) {
-	var str = num.toString();
-	while (str.length < nz) str = "0" + str;
-	return str;
-};
+export type Stat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 
-exports.escapeHTML = function (str) {
-	if (!str) return '';
-	return ('' + str).escapeHTML();
-};
+const Stats: Stat[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 
-exports.generateRandomNick = function (numChars) {
-	var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-	var str = '';
-	for (var i = 0, l = chars.length; i < numChars; i++) {
-		str += chars.charAt(~~(Math.random() * l));
-	}
-	return str;
-};
-
-exports.levenshtein = function (s, t, l) { // s = string 1, t = string 2, l = limit
-	// Original levenshtein distance function by James Westgate, turned out to be the fastest
-	var d = []; // 2d matrix
-	// Step 1
-	var n = s.length;
-	var m = t.length;
-	if (n === 0) return m;
-	if (m === 0) return n;
-	if (l && Math.abs(m - n) > l) return Math.abs(m - n);
-	// Create an array of arrays in javascript (a descending loop is quicker)
-	for (var i = n; i >= 0; i--) d[i] = [];
-	// Step 2
-	for (var i = n; i >= 0; i--) d[i][0] = i;
-	for (let j = m; j >= 0; j--) d[0][j] = j;
-	// Step 3
-	for (var i = 1; i <= n; i++) {
-		var s_i = s.charAt(i - 1);
-		// Step 4
-		for (let j = 1; j <= m; j++) {
-			// Check the jagged ld total so far
-			if (i === j && d[i][j] > 4) return n;
-			var t_j = t.charAt(j - 1);
-			var cost = (s_i === t_j) ? 0 : 1; // Step 5
-			// Calculate the minimum
-			var mi = d[i - 1][j] + 1;
-			var b = d[i][j - 1] + 1;
-			var c = d[i - 1][j - 1] + cost;
-			if (b < mi) mi = b;
-			if (c < mi) mi = c;
-			d[i][j] = mi; // Step 6
-		}
-	}
-	// Step 7
-	return d[n][m];
-};
-
-/* Process arguments */
-
-exports.paseArguments = function (arr) {
-	var opts = {};
-	var arg = '';
-	for (var i = 0; i < arr.length; i++) {
-		arg = arr[i].toLowerCase().trim();
-		if (arg.charAt(0) === '-') {
-			switch (arg) {
-				case '-h':
-				case '-help':
-					opts.help = true;
-					break;
-				case '-production':
-				case '-p':
-					opts.debugmode = 3;
-					break;
-				case '-monitor':
-				case '-m':
-					opts.debugmode = 2;
-					break;
-				case '-debug':
-				case '-d':
-					opts.debugmode = 1;
-					break;
-				case '-test':
-				case '-t':
-					opts.testmode = true;
-					break;
-				case '-c':
-				case '-config':
-					if (!arr[i + 1]) opts.help = true;
-					opts.config = arr[i + 1];
-					i++;
-					break;
-				case '-dt':
-				case '-data':
-					if (!arr[i + 1]) opts.help = true;
-					opts.data = arr[i + 1];
-					i++;
-					break;
-				default:
-					console.log('unknown parametter: ' + arg);
-					opts.help = true;
-			}
-		}
-	}
-	return opts;
-};
-
-/* Commands and Permissions */
-
-exports.stripCommands = function (text) {
-	return ((text.trim().charAt(0) === '/') ? '/' : ((text.trim().charAt(0) === '!') ? ' ' : '')) + text.trim();
-};
-
-exports.getTargetRoom = function (arg) {
-	if (!arg) return null;
-	if (arg.indexOf("[") !== 0) return null;
-	if (arg.indexOf("]") < 0) return null;
-	var target = toRoomid(arg.substr(arg.indexOf("[") + 1, arg.indexOf("]") - arg.indexOf("[") - 1));
-	var newArg = arg.substr(arg.indexOf("]") + 1);
-	return { arg: newArg, room: target };
-};
-
-exports.equalOrHigherRank = function (userIdentity, rank) {
-	if (typeof rank === "string" && rank.length > 1) rank = Tools.getGroup(rank);
-	if (rank === ' ') return true;
-	if (!Config.ranks) Config.ranks = [];
-	var userId = toId(userIdentity);
-	var userRank = '';
-	if (userId in Config.exceptions) {
-		userRank = Config.exceptions[userId];
-	} else {
-		userRank = userIdentity.charAt(0);
-	}
-	if (userRank === true) return true;
-	if (rank === true) return false;
-	if (Config.ranks.indexOf(userRank) === -1) return false;
-	if (Config.ranks.indexOf(userRank) >= Config.ranks.indexOf(rank)) return true;
-	return false;
-};
-
-exports.getGroup = function (perm) {
-	if (!perm) return true;
-	var globalPermissions = { 'voice': '+', 'driver': '%', 'moderator': '@', 'roomowner': '#', 'admin': '~' };
-	if (Config.globalPermissions) {
-		for (var i in Config.globalPermissions) globalPermissions[i] = Config.globalPermissions[i];
-	}
-	return globalPermissions[perm] || true;
-};
-
-/* Time and Dates */
-
-exports.getDateString = function () {
-	var date = new Date();
-	return (Tools.addLeftZero(date.getDate(), 2) + '/' + Tools.addLeftZero(date.getMonth() + 1, 2) + '/' + Tools.addLeftZero(date.getFullYear(), 4) + ' ' + Tools.addLeftZero(date.getHours(), 2) + ':' + Tools.addLeftZero(date.getMinutes(), 2) + ':' + Tools.addLeftZero(date.getSeconds(), 2));
-};
-
-exports.getTimeAgo = function (time, lang) {
-	time = Date.now() - time;
-	time = Math.round(time / 1000); // rounds to nearest second
-	var seconds = time % 60;
-	var times = [];
-	var trans = function (data) {
-		if (!lang) lang = Config.language || 'english';
-		return Tools.translateGlobal('time', data, lang);
-	};
-	if (seconds) times.push(String(seconds) + ' ' + (seconds === 1 ? trans('second') : trans('seconds')));
-	var minutes, hours, days;
-	if (time >= 60) {
-		time = (time - seconds) / 60; // converts to minutes
-		minutes = time % 60;
-		if (minutes) times = [String(minutes) + ' ' + (minutes === 1 ? trans('minute') : trans('minutes'))].concat(times);
-		if (time >= 60) {
-			time = (time - minutes) / 60; // converts to hours
-			hours = time % 24;
-			if (hours) times = [String(hours) + ' ' + (hours === 1 ? trans('hour') : trans('hours'))].concat(times);
-			if (time >= 24) {
-				days = (time - hours) / 24; // you can probably guess this one
-				if (days) times = [String(days) + ' ' + (days === 1 ? trans('day') : trans('days'))].concat(times);
-			}
-		}
-	}
-	if (!times.length) times.push('0 ' + trans('seconds'));
-	return times.join(', ');
-};
-
-/* File system utils */
-
-export function watchFile(filename: PathLike, listener: (curr: Stats, prev: Stats) => void): void {
-	try {
-		fsWatchFile.apply(fs, [filename, listener]);
-	} catch (e) {
-		error('Your version of node does not support `fs.watchFile`');
-	}
-};
-
-exports.uncacheTree = function (root) {
-	var uncache = [require.resolve(root)];
-	do {
-		var newuncache = [];
-		for (var i = 0; i < uncache.length; ++i) {
-			if (require.cache[uncache[i]]) {
-				newuncache.push.apply(newuncache,
-					require.cache[uncache[i]].children.map(function (module) {
-						return module.filename;
-					})
-				);
-				delete require.cache[uncache[i]];
-			}
-		}
-		uncache = newuncache;
-	} while (uncache.length > 0);
-};
-
-/* Http utils */
-
-exports.httpGet = function (url, callback) {
-	if (typeof callback !== "function") return;
-	var http = require("http");
-	http.get(url, function (res) {
-		var data = '';
-		res.on('data', function (part) {
-			data += part;
-		});
-		res.on('end', function () {
-			callback(data);
-		});
-		res.on('error', function (e) {
-			callback(null, e);
-		});
-	}).on('error', function (e) {
-		callback(null, e);
-	});
-};
-
-exports.uploadToHastebin = function (toUpload, callback) {
-	var reqOpts = {
-		hostname: "hastebin.com",
-		method: "POST",
-		path: '/documents'
-	};
-	var req = require('https').request(reqOpts, function (res) {
-		res.on('data', function (chunk) {
-			try {
-				var linkStr = "hastebin.com/" + JSON.parse(chunk.toString())['key'];
-				if (typeof callback === "function") callback(true, linkStr);
-			} catch (e) {
-				if (typeof callback === "function") callback(false, e);
-			}
-		});
-	});
-	req.on('error', function (e) {
-		if (typeof callback === "function") callback(false, e);
-	});
-	req.write(toUpload);
-	req.end();
-};
-
-/* Languages */
-
-var loadLang = exports.loadLang = function (lang, reloading) {
-	var tradObj = {}, cmdsTra = {}, tempObj = {};
-	readdirSync('./languages/' + lang).forEach(file => {
-		if (!file.endsWith('.ts')) return;
-		if (reloading) Tools.uncacheTree('./languages/' + lang + '/' + file);
-		tempObj = require('./languages/' + lang + '/' + file).translations;
-		for (var t in tempObj) {
-			if (t === "commands") Object.merge(cmdsTra, tempObj[t]);
-			else tradObj[t] = tempObj[t];
-		}
-	});
-	tradObj.commands = cmdsTra;
-	return tradObj;
-};
-
-var translations = exports.translations = {};
-var loadTranslations = exports.loadTranslations = function (reloading) {
-	var errs = [];
-	readdirSync('./languages').forEach(lang => {
-		if (lstatSync('./languages/' + lang).isDirectory()) {
-			try {
-				translations[lang] = loadLang(lang, reloading);
-			} catch (e) {
-				errlog(e.stack);
-				error("Could not import language: ./languages/" + lang + "/ | " + inspect(e));
-				errs.push(lang);
-			}
-		}
-	});
-	if (reloading) info('Languages reloaded' + (errs.length ? ('. Errors: ' + errs.join(', ')) : '') + '. Languages: ' + Object.keys(translations).join(', '));
-	else ok('Loaded languages' + (errs.length ? ('. Errors: ' + errs.join(', ')) : '') + '. Languages: ' + Object.keys(translations).join(', '));
-	return errs;
-};
-
-exports.translateCmd = function (cmd, data, lang) {
-	if (translations[lang] && translations[lang]['commands'] && translations[lang]['commands'][cmd]) {
-		return translations[lang]['commands'][cmd][data];
-	} else {
-		lang = 'english';
-		if (!translations[lang] || !translations[lang]['commands'] || !translations[lang]['commands'][cmd]) {
-			return '__(not found)__';
-		} else {
-			return translations[lang]['commands'][cmd][data];
-		}
-	}
-};
-
-exports.translateGlobal = function (glob, data, lang) {
-	if (translations[lang] && translations[lang][glob] && typeof translations[lang][glob][data] !== "undefined") {
-		return translations[lang][glob][data];
-	} else {
-		lang = 'english';
-		if (!translations[lang] || !translations[lang][glob] || typeof translations[lang][glob][data] === "undefined") {
-			return '__(not found)__';
-		} else {
-			return translations[lang][glob][data];
-		}
-	}
-};
-
-exports.tryTranslate = function (type, name, lang) {
-	if (!lang) return name;
-	var id = toId(name);
-	if (translations[lang] && translations[lang][type] && translations[lang][type][id]) {
-		return translations[lang][type][id];
-	}
-	return name;
-};
-
-/* Battle formats and data */
-
-exports.parseAliases = function (format) {
-	if (!format) return '';
-	format = toId(format);
-	var aliases = Config.formatAliases || {};
-	if (Formats[format]) return format;
-	if (aliases[format]) format = toId(aliases[format]);
-	if (Formats[format]) return format;
-	try {
-		var psAliases = DataDownloader.getAliases();
-		if (psAliases[format]) format = toId(psAliases[format]);
-	} catch (e) { }
-	return format;
-};
-
-var BattleStatIDs = exports.BattleStatIDs = {
+const BattleStatIDs: Record<string, Stat> = {
 	HP: 'hp',
 	hp: 'hp',
 	Atk: 'atk',
@@ -384,530 +66,917 @@ var BattleStatIDs = exports.BattleStatIDs = {
 	spd: 'spd',
 	Spe: 'spe',
 	Spd: 'spe',
-	spe: 'spe'
+	spe: 'spe',
 };
 
-var BattleStatNames = exports.BattleStatNames = {
+const BattleStatNames: Record<Stat, string> = {
 	hp: 'HP',
 	atk: 'Atk',
 	def: 'Def',
 	spa: 'SpA',
 	spd: 'SpD',
-	spe: 'Spe'
+	spe: 'Spe',
 };
 
-var BattleTypeChart = exports.BattleTypeChart = require('./data/typechart.ts').typechart;
+interface PokeSet {
+	name: string;
+	species: string;
+	item: string;
+	ability: string;
+	moves: string[];
+	nature: string;
+	evs?: Record<Stat, number>;
+	gender?: string;
+	ivs?: Partial<Record<Stat, number>>;
+	shiny?: boolean;
+	level?: number;
+	happiness?: number;
+	pokeball?: string;
+	hpType?: string;
+	gigantamax?: boolean;
+	dynamaxLevel?: number;
+	teraType?: string;
+}
 
-/* Teams - Pokemon Showdown format */
+export class Tools {
+	watchFile = fsWatchFile;
+	translations: Record<string, {
+		commands: Record<string, Record<string, string>>
+	} & (Record<string, Record<string, string>> | Record<string, Record<string, string>>)> = {};
 
-var teamToJSON = exports.teamToJSON = function (text) {
-	text = text.split("\n");
-	var team = [];
-	var curSet = null;
-	for (var i = 0; i < text.length; i++) {
-		var line = text[i].trim();
-		if (line === '' || line === '---') {
-			curSet = null;
-		} else if (!curSet) {
-			curSet = { name: '', species: '', gender: '', item: '', ability: '', nature: '' };
-			team.push(curSet);
-			var atIndex = line.lastIndexOf(' @ ');
-			if (atIndex !== -1) {
-				curSet.item = line.substr(atIndex + 3);
-				if (toId(curSet.item) === 'noitem') curSet.item = '';
-				line = line.substr(0, atIndex);
+	toName(text?: string): string {
+		if (!text) return '';
+		return text.trim();
+	};
+
+	addLeftZero(num: number, numOfZeros: number): string {
+		let str = num.toString();
+		while (str.length < numOfZeros) str = "0" + str;
+		return str;
+	};
+
+	escapeHTML(str?: string): string {
+		if (!str) return '';
+		return ('' + str).escapeHTML();
+	};
+
+	generateRandomNick(numChars: number): string {
+		let chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+		let str = '';
+		for (let i = 0, l = chars.length; i < numChars; i++) {
+			str += chars.charAt(~~(Math.random() * l));
+		}
+		return str;
+	};
+
+	levenshtein(s: string, t: string, l: number): number { // s = string 1, t = string 2, l = limit
+		// Original levenshtein distance function by James Westgate, turned out to be the fastest
+		const d: number[][] = []; // 2d matrix
+		// Step 1
+		const n = s.length;
+		const m = t.length;
+		if (n === 0) return m;
+		if (m === 0) return n;
+		if (l && Math.abs(m - n) > l) return Math.abs(m - n);
+		// Create an array of arrays in javascript (a descending loop is quicker)
+		for (let i = n; i >= 0; i--) d[i] = [];
+		// Step 2
+		for (let i = n; i >= 0; i--) d[i][0] = i;
+		for (let j = m; j >= 0; j--) d[0][j] = j;
+		// Step 3
+		for (let i = 1; i <= n; i++) {
+			let s_i = s.charAt(i - 1);
+			// Step 4
+			for (let j = 1; j <= m; j++) {
+				// Check the jagged ld total so far
+				if (i === j && d[i][j] > 4) return n;
+				let t_j = t.charAt(j - 1);
+				let cost = (s_i === t_j) ? 0 : 1; // Step 5
+				// Calculate the minimum
+				let mi = d[i - 1][j] + 1;
+				let b = d[i][j - 1] + 1;
+				let c = d[i - 1][j - 1] + cost;
+				if (b < mi) mi = b;
+				if (c < mi) mi = c;
+				d[i][j] = mi; // Step 6
 			}
-			if (line.substr(line.length - 4) === ' (M)') {
-				curSet.gender = 'M';
-				line = line.substr(0, line.length - 4);
-			}
-			if (line.substr(line.length - 4) === ' (F)') {
-				curSet.gender = 'F';
-				line = line.substr(0, line.length - 4);
-			}
-			var parenIndex = line.lastIndexOf(' (');
-			if (line.substr(line.length - 1) === ')' && parenIndex !== -1) {
-				line = line.substr(0, line.length - 1);
-				curSet.species = line.substr(parenIndex + 2);
-				line = line.substr(0, parenIndex);
-				curSet.name = line;
-			} else {
-				curSet.species = line;
-				curSet.name = curSet.species;
-			}
-		} else if (line.substr(0, 7) === 'Trait: ') {
-			line = line.substr(7);
-			curSet.ability = line;
-		} else if (line.substr(0, 9) === 'Ability: ') {
-			line = line.substr(9);
-			curSet.ability = line;
-		} else if (line === 'Shiny: Yes') {
-			curSet.shiny = true;
-		} else if (line.substr(0, 7) === 'Level: ') {
-			line = line.substr(7);
-			curSet.level = parseInt(line);
-		} else if (line.substr(0, 11) === 'Happiness: ') {
-			line = line.substr(11);
-			curSet.happiness = parseInt(line);
-		} else if (line.substr(0, 9) === 'Ability: ') {
-			line = line.substr(9);
-			curSet.ability = line;
-		} else if (line.substr(0, 5) === 'EVs: ') {
-			line = line.substr(5);
-			var evLines = line.split('/');
-			curSet.evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
-			for (let j = 0; j < evLines.length; j++) {
-				var evLine = evLines[j].trim();
-				var spaceIndex = evLine.indexOf(' ');
-				if (spaceIndex === -1) continue;
-				var statid = BattleStatIDs[evLine.substr(spaceIndex + 1)];
-				var statval = parseInt(evLine.substr(0, spaceIndex));
-				if (!statid) continue;
-				curSet.evs[statid] = statval;
-			}
-		} else if (line.substr(0, 5) === 'IVs: ') {
-			line = line.substr(5);
-			var ivLines = line.split(' / ');
-			curSet.ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
-			for (let j = 0; j < ivLines.length; j++) {
-				var ivLine = ivLines[j];
-				var spaceIndex = ivLine.indexOf(' ');
-				if (spaceIndex === -1) continue;
-				var statid = BattleStatIDs[ivLine.substr(spaceIndex + 1)];
-				var statval = parseInt(ivLine.substr(0, spaceIndex));
-				if (!statid) continue;
-				curSet.ivs[statid] = statval;
-			}
-		} else if (line.match(/^[A-Za-z]+ (N|n)ature/)) {
-			var natureIndex = line.indexOf(' Nature');
-			if (natureIndex === -1) natureIndex = line.indexOf(' nature');
-			if (natureIndex === -1) continue;
-			line = line.substr(0, natureIndex);
-			curSet.nature = line;
-		} else if (line.substr(0, 1) === '-' || line.substr(0, 1) === '~') {
-			line = line.substr(1);
-			if (line.substr(0, 1) === ' ') line = line.substr(1);
-			if (!curSet.moves) curSet.moves = [];
-			if (line.substr(0, 14) === 'Hidden Power [') {
-				var hptype = line.substr(14, line.length - 15);
-				line = 'Hidden Power ' + hptype;
-				if (!curSet.ivs) {
-					curSet.ivs = {};
-					for (var stat in BattleTypeChart[hptype].HPivs) {
-						curSet.ivs[stat] = BattleTypeChart[hptype].HPivs[stat];
-					}
+		}
+		// Step 7
+		return d[n][m];
+	};
+
+	/* Process arguments */
+
+	paseArguments(arr: string[]): AppOptionsType {
+		const opts: AppOptionsType = {};
+		let arg = '';
+		for (let i = 0; i < arr.length; i++) {
+			arg = arr[i].toLowerCase().trim();
+			if (arg.charAt(0) === '-') {
+				switch (arg) {
+					case '-h':
+					case '-help':
+						opts.help = true;
+						break;
+					case '-production':
+					case '-p':
+						opts.debugmode = 3;
+						break;
+					case '-monitor':
+					case '-m':
+						opts.debugmode = 2;
+						break;
+					case '-debug':
+					case '-d':
+						opts.debugmode = 1;
+						break;
+					case '-test':
+					case '-t':
+						opts.testmode = true;
+						break;
+					case '-c':
+					case '-config':
+						if (!arr[i + 1]) opts.help = true;
+						opts.config = arr[i + 1];
+						i++;
+						break;
+					case '-dt':
+					case '-data':
+						if (!arr[i + 1]) opts.help = true;
+						opts.data = arr[i + 1];
+						i++;
+						break;
+					default:
+						console.log('unknown parametter: ' + arg);
+						opts.help = true;
 				}
 			}
-			if (line === 'Frustration') {
-				curSet.happiness = 0;
-			}
-			curSet.moves.push(line);
 		}
-	}
-	return team;
-};
+		return opts;
+	};
 
-var packTeam = exports.packTeam = function (team) {
-	var buf = '';
-	if (!team) return '';
-	for (var i = 0; i < team.length; i++) {
-		var set = team[i];
-		if (buf) buf += ']';
-		// name
-		buf += (set.name || set.species);
-		// species
-		var id = toId(set.species || set.name);
-		buf += '|' + (toId(set.name || set.species) === id ? '' : id);
-		// item
-		buf += '|' + toId(set.item);
-		// ability
-		var template = set.species || set.name;
-		try {
-			template = DataDownloader.getPokedex()[toId(template)];
-		} catch (e) {
-			errlog(e.stack);
-			template = null;
+	/* Commands and Permissions */
+
+	stripCommands(text: string): string {
+		return ((text.trim().charAt(0) === '/') ? '/' : ((text.trim().charAt(0) === '!') ? ' ' : '')) + text.trim();
+	};
+
+	getTargetRoom(arg?: string): { arg: string, room: string } | null {
+		if (!arg) return null;
+		if (arg.indexOf("[") !== 0) return null;
+		if (arg.indexOf("]") < 0) return null;
+		const newArg = toRoomid(arg.substr(arg.indexOf("[") + 1, arg.indexOf("]") - arg.indexOf("[") - 1));
+		const room = arg.substr(arg.indexOf("]") + 1);
+		return { arg: newArg, room };
+	};
+
+	equalOrHigherRank(userIdentity: string, rank: string | true): boolean {
+		if (typeof rank === "string" && rank.length > 1) rank = this.getGroup(rank);
+		if (rank === ' ') return true;
+		if (!Config.ranks) Config.ranks = [];
+		let userId = toId(userIdentity);
+		let userRank: string | true = '';
+		if (userId in Config.exceptions) {
+			userRank = Config.exceptions[userId];
+		} else {
+			userRank = userIdentity.charAt(0);
 		}
-		if (!template) return '';
-		var abilities = template.abilities;
-		id = toId(set.ability);
-		if (abilities) {
-			if (abilities['0'] && id === toId(abilities['0'])) {
-				buf += '|';
-			} else if (abilities['1'] && id === toId(abilities['1'])) {
-				buf += '|1';
-			} else if (abilities['H'] && id === toId(abilities['H'])) {
-				buf += '|H';
+		if (userRank === true) return true;
+		if (rank === true) return false;
+		if (Config.ranks.indexOf(userRank) === -1) return false;
+		if (Config.ranks.indexOf(userRank) >= Config.ranks.indexOf(rank)) return true;
+		return false;
+	} static getGroup(rank: string): string | true {
+		throw new Error("Method not implemented.");
+	}
+	;
+
+	getGroup(perm?: string): string | true {
+		if (!perm) return true;
+		return DefaultPermissions[perm] || Config.globalPermissions[perm] || true;
+	};
+
+	/* Time and Dates */
+
+	getDateString(): string {
+		let date = new Date();
+		return (this.addLeftZero(date.getDate(), 2) + '/' + this.addLeftZero(date.getMonth() + 1, 2) + '/' + this.addLeftZero(date.getFullYear(), 4) + ' ' + this.addLeftZero(date.getHours(), 2) + ':' + this.addLeftZero(date.getMinutes(), 2) + ':' + this.addLeftZero(date.getSeconds(), 2));
+	} static addLeftZero(arg0: number, arg1: number) {
+		throw new Error("Method not implemented.");
+	}
+	;
+
+	getTimeAgo(time: number, lang?: string): string {
+		time = Date.now() - time;
+		time = Math.round(time / 1000); // rounds to nearest second
+		let seconds = time % 60;
+		let times = [];
+		const trans = (data: string): string => {
+			if (!lang) lang = Config.language || 'english';
+			return this.translateGlobal('time', data, lang);
+		};
+		if (seconds) times.push(String(seconds) + ' ' + (seconds === 1 ? trans('second') : trans('seconds')));
+		let minutes, hours, days;
+		if (time >= 60) {
+			time = (time - seconds) / 60; // converts to minutes
+			minutes = time % 60;
+			if (minutes) times = [String(minutes) + ' ' + (minutes === 1 ? trans('minute') : trans('minutes'))].concat(times);
+			if (time >= 60) {
+				time = (time - minutes) / 60; // converts to hours
+				hours = time % 24;
+				if (hours) times = [String(hours) + ' ' + (hours === 1 ? trans('hour') : trans('hours'))].concat(times);
+				if (time >= 24) {
+					days = (time - hours) / 24; // you can probably guess this one
+					if (days) times = [String(days) + ' ' + (days === 1 ? trans('day') : trans('days'))].concat(times);
+				}
+			}
+		}
+		if (!times.length) times.push('0 ' + trans('seconds'));
+		return times.join(', ');
+	} static translateGlobal(arg0: string, data: string, lang: string): string {
+		throw new Error("Method not implemented.");
+	}
+	;
+
+	/* File system utils */
+
+	uncacheTree(root: string) {
+		let uncache = [require.resolve(root)];
+		do {
+			let newuncache: string[] = [];
+			for (let i = 0; i < uncache.length; ++i) {
+				const cache = require.cache[uncache[i]];
+				if (cache) {
+					newuncache.push.apply(newuncache, cache.children.map((module) => {
+						return module.filename;
+					}));
+					delete require.cache[uncache[i]];
+				}
+			}
+			uncache = newuncache;
+		} while (uncache.length > 0);
+	};
+
+	/* Http utils */
+
+	httpGet(url: string, callback?: (data: string | null, e?: Error) => void) {
+		if (!callback) return;
+		http.get(url, (res) => {
+			const data = { data: '' };
+			res.on('data', (part: any) => {
+				data.data += part;
+			});
+			res.on('end', () => {
+				callback(data.data);
+			});
+			res.on('error', (e: Error) => {
+				callback(null, e);
+			});
+		}).on('error', (e: Error) => {
+			callback(null, e);
+		});
+	};
+
+	uploadToHastebin(toUpload: any, callback?: (success: boolean, linkStr: any) => void) {
+		const reqOpts: https.RequestOptions = {
+			hostname: "hastebin.com",
+			method: "POST",
+			path: '/documents'
+		};
+		const req = https.request(reqOpts, (res: http.IncomingMessage) => {
+			res.on('data', (chunk: any) => {
+				try {
+					const linkStr = "hastebin.com/" + JSON.parse(chunk.toString())['key'];
+					if (callback) callback(true, linkStr);
+				} catch (e: any) {
+					if (callback) callback(false, e);
+				}
+			});
+		});
+		req.on('error', (e: Error) => {
+			if (typeof callback === "function") callback(false, e);
+		});
+		req.write(toUpload);
+		req.end();
+	};
+
+	/* Languages */
+
+	loadLang(lang: string, reloading?: boolean): Tools['translations'][string] {
+		const translationDataObj: Tools['translations'][string] = { commands: {} };
+		const commandsTranslation: Record<string, Record<string, string>> = {};
+		readdirSync('./languages/' + lang).forEach(file => {
+			if (!file.endsWith('.ts')) return;
+			if (reloading) this.uncacheTree('./languages/' + lang + '/' + file);
+			const tempObj = require('./languages/' + lang + '/' + file).translations as Record<string, Record<string, string>>;
+			Object.assign(commandsTranslation, tempObj.commands);
+			Object.assign(translationDataObj, tempObj);
+		});
+		translationDataObj.commands = translationDataObj;
+		return translationDataObj;
+	} static uncacheTree(arg0: string) {
+		throw new Error("Method not implemented.");
+	}
+	;
+
+	loadTranslations(reloading?: boolean): string[] {
+		const errs: string[] = [];
+		readdirSync('./languages').forEach(lang => {
+			if (lstatSync('./languages/' + lang).isDirectory()) {
+				try {
+					this.translations[lang] = this.loadLang(lang, reloading);
+				} catch (e: any) {
+					errlog(e.stack);
+					error("Could not import language: ./languages/" + lang + "/ | " + inspect(e));
+					errs.push(lang);
+				}
+			}
+		});
+		if (reloading) info('Languages reloaded' + (errs.length ? ('. Errors: ' + errs.join(', ')) : '') + '. Languages: ' + Object.keys(this.translations).join(', '));
+		else ok('Loaded languages' + (errs.length ? ('. Errors: ' + errs.join(', ')) : '') + '. Languages: ' + Object.keys(this.translations).join(', '));
+		return errs;
+	};
+
+	translateCmd(cmd: string, data: string, lang: string): string {
+		if (this.translations[lang] && this.translations[lang].commands && this.translations[lang].commands[cmd]) {
+			return this.translations[lang].commands[cmd][data];
+		} else {
+			lang = 'english';
+			if (!this.translations[lang] || !this.translations[lang].commands || !this.translations[lang].commands[cmd]) {
+				return '__(not found)__';
+			} else {
+				return this.translations[lang].commands[cmd][data];
+			}
+		}
+	};
+
+	translateGlobal(glob: string, data: string, lang: string): string {
+		if (this.translations[lang] && this.translations[lang][glob] && typeof this.translations[lang][glob][data] !== "undefined") {
+			return this.translations[lang][glob][data];
+		} else {
+			lang = 'english';
+			if (!this.translations[lang] || !this.translations[lang][glob] || typeof this.translations[lang][glob][data] === "undefined") {
+				return '__(not found)__';
+			} else {
+				return this.translations[lang][glob][data];
+			}
+		}
+	};
+
+	tryTranslate(type: string, name: string, lang?: string): string {
+		if (!lang) return name;
+		let id = toId(name);
+		if (this.translations[lang] && this.translations[lang][type] && this.translations[lang][type][id]) {
+			return this.translations[lang][type][id];
+		}
+		return name;
+	};
+
+	/* Battle formats and data */
+
+	parseAliases(format?: string): string {
+		if (!format) return '';
+		format = toId(format);
+		let aliases = Config.formatAliases || {};
+		if (Formats[format]) return format;
+		if (aliases[format]) format = toId(aliases[format]);
+		if (Formats[format]) return format;
+		try {
+			let psAliases = DataDownloader.getAliases();
+			if (psAliases[format]) format = toId(psAliases[format]);
+		} catch (e) { }
+		return format;
+	};
+
+	/* Teams - Pokemon Showdown format */
+
+	teamToJSON(text: string): any[] {
+		const lines = text.split("\n");
+		const team = [];
+		let curSet: PokeSet | null = null;
+		for (let i = 0; i < lines.length; i++) {
+			let line = lines[i].trim();
+			if (line === '' || line === '---') {
+				curSet = null;
+			} else if (!curSet) {
+				curSet = { name: '', species: '', gender: '', item: '', ability: '', nature: '', moves: [] };
+				team.push(curSet);
+				let atIndex = line.lastIndexOf(' @ ');
+				if (atIndex !== -1) {
+					curSet.item = line.substr(atIndex + 3);
+					if (toId(curSet.item) === 'noitem') curSet.item = '';
+					line = line.substr(0, atIndex);
+				}
+				if (line.substr(line.length - 4) === ' (M)') {
+					curSet.gender = 'M';
+					line = line.substr(0, line.length - 4);
+				}
+				if (line.substr(line.length - 4) === ' (F)') {
+					curSet.gender = 'F';
+					line = line.substr(0, line.length - 4);
+				}
+				let parenIndex = line.lastIndexOf(' (');
+				if (line.substr(line.length - 1) === ')' && parenIndex !== -1) {
+					line = line.substr(0, line.length - 1);
+					curSet.species = line.substr(parenIndex + 2);
+					line = line.substr(0, parenIndex);
+					curSet.name = line;
+				} else {
+					curSet.species = line;
+					curSet.name = curSet.species;
+				}
+			} else if (line.substr(0, 7) === 'Trait: ') {
+				line = line.substr(7);
+				curSet.ability = line;
+			} else if (line.substr(0, 9) === 'Ability: ') {
+				line = line.substr(9);
+				curSet.ability = line;
+			} else if (line === 'Shiny: Yes') {
+				curSet.shiny = true;
+			} else if (line.substr(0, 7) === 'Level: ') {
+				line = line.substr(7);
+				curSet.level = parseInt(line);
+			} else if (line.substr(0, 11) === 'Happiness: ') {
+				line = line.substr(11);
+				curSet.happiness = parseInt(line);
+			} else if (line.substr(0, 9) === 'Ability: ') {
+				line = line.substr(9);
+				curSet.ability = line;
+			} else if (line.substr(0, 5) === 'EVs: ') {
+				line = line.substr(5);
+				let evLines = line.split('/');
+				curSet.evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+				for (let j = 0; j < evLines.length; j++) {
+					let evLine = evLines[j].trim();
+					let spaceIndex = evLine.indexOf(' ');
+					if (spaceIndex === -1) continue;
+					let statid = BattleStatIDs[evLine.substr(spaceIndex + 1)];
+					let statval = parseInt(evLine.substr(0, spaceIndex));
+					if (!statid) continue;
+					curSet.evs[statid] = statval;
+				}
+			} else if (line.substr(0, 5) === 'IVs: ') {
+				line = line.substr(5);
+				let ivLines = line.split(' / ');
+				curSet.ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
+				for (let j = 0; j < ivLines.length; j++) {
+					let ivLine = ivLines[j];
+					let spaceIndex = ivLine.indexOf(' ');
+					if (spaceIndex === -1) continue;
+					let statid = BattleStatIDs[ivLine.substr(spaceIndex + 1)];
+					let statval = parseInt(ivLine.substr(0, spaceIndex));
+					if (!statid) continue;
+					curSet.ivs[statid] = statval;
+				}
+			} else if (line.match(/^[A-Za-z]+ (N|n)ature/)) {
+				let natureIndex = line.indexOf(' Nature');
+				if (natureIndex === -1) natureIndex = line.indexOf(' nature');
+				if (natureIndex === -1) continue;
+				line = line.substr(0, natureIndex);
+				curSet.nature = line;
+			} else if (line.substr(0, 1) === '-' || line.substr(0, 1) === '~') {
+				line = line.substr(1);
+				if (line.substr(0, 1) === ' ') line = line.substr(1);
+				if (line.substr(0, 14) === 'Hidden Power [') {
+					let hptype = line.substr(14, line.length - 15);
+					line = 'Hidden Power ' + hptype;
+					if (!curSet.ivs) {
+						curSet.ivs = { ...typechart[hptype].HPivs };
+					}
+				}
+				if (line === 'Frustration') {
+					curSet.happiness = 0;
+				}
+				curSet.moves.push(line);
+			}
+		}
+		return team;
+	};
+
+	isUndefinedOrDefault<T>(v: T | undefined, defaultValue: T): boolean {
+		return typeof v === 'undefined' || v === defaultValue;
+	}
+
+	packTeam(team?: PokeSet[]): string {
+		if (!team) return '';
+		let buf = '';
+		for (let i = 0; i < team.length; i++) {
+			const set = team[i];
+			if (buf) buf += ']';
+			// name
+			buf += (set.name || set.species);
+			// species
+			let id = toId(set.species || set.name);
+			buf += '|' + (toId(set.name || set.species) === id ? '' : id);
+			// item
+			buf += '|' + toId(set.item);
+			// ability
+			let template: Record<string, any> | null = null;
+			try {
+				template = DataDownloader.getPokedex()[toId(set.species || set.name)];
+			} catch (e: any) {
+				errlog(e.stack);
+			}
+			if (!template) return '';
+			let abilities = template.abilities;
+			id = toId(set.ability);
+			if (abilities) {
+				if (abilities['0'] && id === toId(abilities['0'])) {
+					buf += '|';
+				} else if (abilities['1'] && id === toId(abilities['1'])) {
+					buf += '|1';
+				} else if (abilities['H'] && id === toId(abilities['H'])) {
+					buf += '|H';
+				} else {
+					buf += '|' + id;
+				}
 			} else {
 				buf += '|' + id;
 			}
-		} else {
-			buf += '|' + id;
-		}
-		// moves
-		buf += '|' + set.moves.map(toId).join(',');
-		// nature
-		buf += '|' + set.nature;
-		// evs
-		var evs = '|';
-		if (set.evs) {
-			evs = '|' + (set.evs['hp'] || '') + ',' + (set.evs['atk'] || '') + ',' + (set.evs['def'] || '') + ',' + (set.evs['spa'] || '') + ',' + (set.evs['spd'] || '') + ',' + (set.evs['spe'] || '');
-		}
-		if (evs === '|,,,,,') {
-			buf += '|';
-		} else {
-			buf += evs;
-		}
-		// gender
-		if (set.gender && set.gender !== template.gender) {
-			buf += '|' + set.gender;
-		} else {
-			buf += '|';
-		}
-		// ivs
-		var ivs = '|';
-		if (set.ivs) {
-			ivs = '|' + (set.ivs['hp'] === 31 || set.ivs['hp'] === undefined ? '' : set.ivs['hp']) + ',' + (set.ivs['atk'] === 31 || set.ivs['atk'] === undefined ? '' : set.ivs['atk']) + ',' + (set.ivs['def'] === 31 || set.ivs['def'] === undefined ? '' : set.ivs['def']) + ',' + (set.ivs['spa'] === 31 || set.ivs['spa'] === undefined ? '' : set.ivs['spa']) + ',' + (set.ivs['spd'] === 31 || set.ivs['spd'] === undefined ? '' : set.ivs['spd']) + ',' + (set.ivs['spe'] === 31 || set.ivs['spe'] === undefined ? '' : set.ivs['spe']);
-		}
-		if (ivs === '|,,,,,') {
-			buf += '|';
-		} else {
-			buf += ivs;
-		}
-		// shiny
-		if (set.shiny) {
-			buf += '|S';
-		} else {
-			buf += '|';
-		}
-		// level
-		if (set.level && set.level !== 100) {
-			buf += '|' + set.level;
-		} else {
-			buf += '|';
-		}
-		// happiness
-		if (set.happiness !== undefined && set.happiness !== 255) {
-			buf += '|' + set.happiness;
-		} else {
-			buf += '|';
-		}
-
-		if (set.pokeball || (set.hpType && !hasHP) || set.gigantamax || (set.dynamaxLevel !== undefined && set.dynamaxLevel !== 10) || set.teraType) {
-			buf += ',' + (set.hpType || '');
-			buf += ',' + toId(set.pokeball);
-			buf += ',' + (set.gigantamax ? 'G' : '');
-			buf += ',' + (set.dynamaxLevel !== undefined && set.dynamaxLevel !== 10 ? set.dynamaxLevel : '');
-			buf += ',' + (set.teraType || '');
-		}
-	}
-	return buf;
-};
-
-var fastUnpackTeam = exports.fastUnpackTeam = function (buf) {
-	if (!buf) return [];
-
-	var team = [];
-	var i = 0, j = 0;
-
-	while (true) {
-		var set = {};
-		team.push(set);
-
-		// name
-		j = buf.indexOf('|', i);
-		set.name = buf.substring(i, j);
-		i = j + 1;
-
-		// species
-		j = buf.indexOf('|', i);
-		set.species = buf.substring(i, j) || set.name;
-		i = j + 1;
-
-		// item
-		j = buf.indexOf('|', i);
-		set.item = buf.substring(i, j);
-		i = j + 1;
-
-		// ability
-		j = buf.indexOf('|', i);
-		var ability = buf.substring(i, j);
-		var template = Tools.getTemplate(set.species);
-		set.ability = (template.abilities && ability in { '': 1, 0: 1, 1: 1, H: 1 } ? template.abilities[ability || '0'] : ability);
-		i = j + 1;
-
-		// moves
-		j = buf.indexOf('|', i);
-		set.moves = buf.substring(i, j).split(',');
-		i = j + 1;
-
-		// nature
-		j = buf.indexOf('|', i);
-		set.nature = buf.substring(i, j);
-		i = j + 1;
-
-		// evs
-		j = buf.indexOf('|', i);
-		if (j !== i) {
-			var evs = buf.substring(i, j).split(',');
-			set.evs = {
-				hp: Number(evs[0]) || 0,
-				atk: Number(evs[1]) || 0,
-				def: Number(evs[2]) || 0,
-				spa: Number(evs[3]) || 0,
-				spd: Number(evs[4]) || 0,
-				spe: Number(evs[5]) || 0
-			};
-		}
-		i = j + 1;
-
-		// gender
-		j = buf.indexOf('|', i);
-		if (i !== j) set.gender = buf.substring(i, j);
-		i = j + 1;
-
-		// ivs
-		j = buf.indexOf('|', i);
-		if (j !== i) {
-			var ivs = buf.substring(i, j).split(',');
-			set.ivs = {
-				hp: ivs[0] === '' ? 31 : Number(ivs[0]),
-				atk: ivs[1] === '' ? 31 : Number(ivs[1]),
-				def: ivs[2] === '' ? 31 : Number(ivs[2]),
-				spa: ivs[3] === '' ? 31 : Number(ivs[3]),
-				spd: ivs[4] === '' ? 31 : Number(ivs[4]),
-				spe: ivs[5] === '' ? 31 : Number(ivs[5])
-			};
-		}
-		i = j + 1;
-
-		// shiny
-		j = buf.indexOf('|', i);
-		if (i !== j) set.shiny = true;
-		i = j + 1;
-
-		// level
-		j = buf.indexOf('|', i);
-		if (i !== j) set.level = parseInt(buf.substring(i, j), 10);
-		i = j + 1;
-
-		// happiness
-		j = buf.indexOf(']', i);
-		if (j < 0) {
-			if (buf.substring(i)) {
-				set.happiness = Number(buf.substring(i));
+			// moves
+			buf += '|' + set.moves.map(toId).join(',');
+			// nature
+			buf += '|' + set.nature;
+			// evs
+			let evs = '|';
+			if (set.evs) {
+				evs = '|' + (set.evs['hp'] || '') + ',' + (set.evs['atk'] || '') + ',' + (set.evs['def'] || '') + ',' + (set.evs['spa'] || '') + ',' + (set.evs['spd'] || '') + ',' + (set.evs['spe'] || '');
 			}
-			break;
-		}
-		if (i !== j) set.happiness = Number(buf.substring(i, j));
-		i = j + 1;
-	}
-	return team;
-};
+			if (evs === '|,,,,,') {
+				buf += '|';
+			} else {
+				buf += evs;
+			}
+			// gender
+			if (set.gender && set.gender !== template.gender) {
+				buf += '|' + set.gender;
+			} else {
+				buf += '|';
+			}
+			// ivs
+			let ivs = '|';
+			const setIvs = set.ivs;
+			if (setIvs) {
+				Stats.map(stat => setIvs[stat]).map(v => this.isUndefinedOrDefault(v, 31) ? '' : v).join(',');
+				ivs = '|' + Stats.map(stat => setIvs[stat]).map(v => this.isUndefinedOrDefault(v, 31) ? '' : v).join(',')
+			}
+			if (ivs === '|,,,,,') {
+				buf += '|';
+			} else {
+				buf += ivs;
+			}
+			// shiny
+			if (set.shiny) {
+				buf += '|S';
+			} else {
+				buf += '|';
+			}
+			// level
+			if (set.level && set.level !== 100) {
+				buf += '|' + set.level;
+			} else {
+				buf += '|';
+			}
+			// happiness
+			if (!this.isUndefinedOrDefault(set.happiness, 255)) {
+				buf += '|' + set.happiness;
+			} else {
+				buf += '|';
+			}
 
-var teamOverview = exports.teamOverview = function (buf) {
-	var team = fastUnpackTeam(buf);
-	if (!team) return '(empty)';
-	var pokes = [];
-	for (var i = 0; i < team.length; i++) {
-		pokes.push(team[i].species);
-	}
-	if (!pokes.length) return '(empty)';
-	return pokes.join(', ');
-};
+			if (set.pokeball || set.hpType || set.gigantamax || !this.isUndefinedOrDefault(set.dynamaxLevel, 10) || set.teraType) {
+				buf += ',' + (set.hpType || '');
+				buf += ',' + toId(set.pokeball);
+				buf += ',' + (set.gigantamax ? 'G' : '');
+				buf += ',' + (!this.isUndefinedOrDefault(set.dynamaxLevel, 10) ? set.dynamaxLevel : '');
+				buf += ',' + (set.teraType || '');
+			}
+		}
+		return buf;
+	};
 
-exports.getTemplate = function (name) {
-	name = toId(name || '');
-	try {
-		return (DataDownloader.getPokedex()[name] || {});
-	} catch (e) { }
-	return {};
-};
+	fastUnpackTeam(buf?: string): PokeSet[] {
+		if (!buf) return [];
 
-exports.getItem = function (name) {
-	name = toId(name || '');
-	try {
-		return (DataDownloader.getItems()[name] || {});
-	} catch (e) { }
-	return {};
-};
+		const team: PokeSet[] = [];
+		let i = 0, j = 0;
 
-exports.getAbility = function (name) {
-	name = toId(name || '');
-	try {
-		return (DataDownloader.getAbilities()[name] || {});
-	} catch (e) { }
-	return {};
-};
+		while (true) {
+			const set: PokeSet = {
+				name: '',
+				species: '',
+				item: '',
+				ability: '',
+				moves: [],
+				nature: '',
+				gender: '',
+				level: 100,
+				happiness: 0,
+			};
+			team.push(set);
 
-exports.getMove = function (name) {
-	name = toId(name || '');
-	try {
-		return (DataDownloader.getMovedex()[name] || {});
-	} catch (e) { }
-	return {};
-};
+			// name
+			j = buf.indexOf('|', i);
+			set.name = buf.substring(i, j);
+			i = j + 1;
 
-exports.exportTeam = function (team) {
-	if (!team) return "";
-	if (typeof team === 'string') {
-		if (team.indexOf('\n') >= 0) return team;
-		team = Tools.fastUnpackTeam(team);
-	}
-	var text = '';
-	for (var i = 0; i < team.length; i++) {
-		var curSet = team[i];
-		if (curSet.name !== curSet.species) {
-			text += '' + curSet.name + ' (' + (Tools.getTemplate(curSet.species).name || curSet.species) + ')';
-		} else {
-			text += '' + (Tools.getTemplate(curSet.species).name || curSet.species);
-		}
-		if (curSet.gender === 'M') text += ' (M)';
-		if (curSet.gender === 'F') text += ' (F)';
-		if (curSet.item) {
-			curSet.item = Tools.getItem(curSet.item).name || curSet.item;
-			text += ' @ ' + curSet.item;
-		}
-		text += "\n";
-		if (curSet.ability) {
-			text += 'Ability: ' + curSet.ability + "\n";
-		}
-		if (curSet.level && curSet.level !== 100) {
-			text += 'Level: ' + curSet.level + "\n";
-		}
-		if (curSet.shiny) {
-			text += 'Shiny: Yes\n';
-		}
-		if (typeof curSet.happiness === 'number' && curSet.happiness !== 255) {
-			text += 'Happiness: ' + curSet.happiness + "\n";
-		}
-		var first = true;
-		if (curSet.evs) {
-			for (let j in BattleStatNames) {
-				if (!curSet.evs[j]) continue;
-				if (first) {
-					text += 'EVs: ';
-					first = false;
-				} else {
-					text += ' / ';
+			// species
+			j = buf.indexOf('|', i);
+			set.species = buf.substring(i, j) || set.name;
+			i = j + 1;
+
+			// item
+			j = buf.indexOf('|', i);
+			set.item = buf.substring(i, j);
+			i = j + 1;
+
+			// ability
+			j = buf.indexOf('|', i);
+			let ability = buf.substring(i, j);
+			let template = this.getTemplate(set.species);
+			set.ability = (template.abilities && ability in { '': 1, 0: 1, 1: 1, H: 1 } ? template.abilities[ability || '0'] : ability);
+			i = j + 1;
+
+			// moves
+			j = buf.indexOf('|', i);
+			set.moves = buf.substring(i, j).split(',');
+			i = j + 1;
+
+			// nature
+			j = buf.indexOf('|', i);
+			set.nature = buf.substring(i, j);
+			i = j + 1;
+
+			// evs
+			j = buf.indexOf('|', i);
+			if (j !== i) {
+				let evs = buf.substring(i, j).split(',');
+				set.evs = {
+					hp: Number(evs[0]) || 0,
+					atk: Number(evs[1]) || 0,
+					def: Number(evs[2]) || 0,
+					spa: Number(evs[3]) || 0,
+					spd: Number(evs[4]) || 0,
+					spe: Number(evs[5]) || 0
+				};
+			}
+			i = j + 1;
+
+			// gender
+			j = buf.indexOf('|', i);
+			if (i !== j) set.gender = buf.substring(i, j);
+			i = j + 1;
+
+			// ivs
+			j = buf.indexOf('|', i);
+			if (j !== i) {
+				let ivs = buf.substring(i, j).split(',');
+				set.ivs = {
+					hp: ivs[0] === '' ? 31 : Number(ivs[0]),
+					atk: ivs[1] === '' ? 31 : Number(ivs[1]),
+					def: ivs[2] === '' ? 31 : Number(ivs[2]),
+					spa: ivs[3] === '' ? 31 : Number(ivs[3]),
+					spd: ivs[4] === '' ? 31 : Number(ivs[4]),
+					spe: ivs[5] === '' ? 31 : Number(ivs[5])
+				};
+			}
+			i = j + 1;
+
+			// shiny
+			j = buf.indexOf('|', i);
+			if (i !== j) set.shiny = true;
+			i = j + 1;
+
+			// level
+			j = buf.indexOf('|', i);
+			if (i !== j) set.level = parseInt(buf.substring(i, j), 10);
+			i = j + 1;
+
+			// happiness
+			j = buf.indexOf(']', i);
+			if (j < 0) {
+				if (buf.substring(i)) {
+					set.happiness = Number(buf.substring(i));
 				}
-				text += '' + curSet.evs[j] + ' ' + BattleStatNames[j];
+				break;
 			}
+			if (i !== j) set.happiness = Number(buf.substring(i, j));
+			i = j + 1;
 		}
-		if (!first) {
+		return team;
+	}
+
+	teamOverview(buf?: string): string {
+		let team = this.fastUnpackTeam(buf);
+		if (!team) return '(empty)';
+		let pokes = [];
+		for (let i = 0; i < team.length; i++) {
+			pokes.push(team[i].species);
+		}
+		if (!pokes.length) return '(empty)';
+		return pokes.join(', ');
+	};
+
+	getTemplate(name?: string): Record<string, any> {
+		name = toId(name || '');
+		try {
+			return (DataDownloader.getPokedex()[name] || {});
+		} catch (e) { }
+		return {};
+	};
+
+	getItem(name?: string): Record<string, any> {
+		name = toId(name || '');
+		try {
+			return (DataDownloader.getItems()[name] || {});
+		} catch (e) { }
+		return {};
+	};
+
+	getAbility(name?: string): Record<string, any> {
+		name = toId(name || '');
+		try {
+			return (DataDownloader.getAbilities()[name] || {});
+		} catch (e) { }
+		return {};
+	};
+
+	getMove(name?: string): Record<string, any> {
+		name = toId(name || '');
+		try {
+			return (DataDownloader.getMovedex()[name] || {});
+		} catch (e) { }
+		return {};
+	};
+
+	exportTeam(team?: string | PokeSet[]) {
+		if (!team) return "";
+		if (typeof team === 'string') {
+			if (team.indexOf('\n') >= 0) return team;
+			team = this.fastUnpackTeam(team);
+		}
+		let text = '';
+		for (let i = 0; i < team.length; i++) {
+			const curSet = team[i];
+			if (curSet.name !== curSet.species) {
+				text += '' + curSet.name + ' (' + (this.getTemplate(curSet.species).name || curSet.species) + ')';
+			} else {
+				text += '' + (this.getTemplate(curSet.species).name || curSet.species);
+			}
+			if (curSet.gender === 'M') text += ' (M)';
+			if (curSet.gender === 'F') text += ' (F)';
+			if (curSet.item) {
+				curSet.item = this.getItem(curSet.item).name || curSet.item;
+				text += ' @ ' + curSet.item;
+			}
 			text += "\n";
-		}
-		if (curSet.nature) {
-			text += '' + curSet.nature + ' Nature' + "\n";
-		}
-		first = true;
-		if (curSet.ivs) {
-			var defaultIvs = true;
-			var hpType = false;
-			for (let j = 0; j < curSet.moves.length; j++) {
-				var move = curSet.moves[j];
-				if (move.substr(0, 13) === 'Hidden Power ' && move.substr(0, 14) !== 'Hidden Power [') {
-					hpType = move.substr(13);
-					if (!exports.BattleTypeChart[hpType].HPivs) {
-						continue;
-					}
-					for (var stat in BattleStatNames) {
-						if ((curSet.ivs[stat] === undefined ? 31 : curSet.ivs[stat]) !== (exports.BattleTypeChart[hpType].HPivs[stat] || 31)) {
-							defaultIvs = false;
-							break;
-						}
-					}
-				}
+			if (curSet.ability) {
+				text += 'Ability: ' + curSet.ability + "\n";
 			}
-			if (defaultIvs && !hpType) {
-				for (var stat in BattleStatNames) {
-					if (curSet.ivs[stat] !== 31 && typeof curSet.ivs[stat] !== undefined) {
-						defaultIvs = false;
-						break;
-					}
-				}
+			if (curSet.level && curSet.level !== 100) {
+				text += 'Level: ' + curSet.level + "\n";
 			}
-			if (!defaultIvs) {
-				for (var stat in BattleStatNames) {
-					if (typeof curSet.ivs[stat] === 'undefined' || isNaN(curSet.ivs[stat]) || curSet.ivs[stat] === 31) continue;
+			if (curSet.shiny) {
+				text += 'Shiny: Yes\n';
+			}
+			if (typeof curSet.happiness === 'number' && curSet.happiness !== 255) {
+				text += 'Happiness: ' + curSet.happiness + "\n";
+			}
+			let first = true;
+			const { evs } = curSet;
+			if (evs) {
+				Stats.forEach((j) => {
+					if (!evs[j]) return;
 					if (first) {
-						text += 'IVs: ';
+						text += 'EVs: ';
 						first = false;
 					} else {
 						text += ' / ';
 					}
-					text += '' + curSet.ivs[stat] + ' ' + BattleStatNames[stat];
+					text += '' + evs[j] + ' ' + BattleStatNames[j];
+				});
+			}
+			if (!first) {
+				text += "\n";
+			}
+			if (curSet.nature) {
+				text += '' + curSet.nature + ' Nature' + "\n";
+			}
+			first = true;
+			const { ivs } = curSet;
+			if (ivs) {
+				let defaultIvs = true;
+				let hpType: string | null = null;
+				for (let j = 0; j < curSet.moves.length; j++) {
+					let move = curSet.moves[j];
+					if (move.substr(0, 13) === 'Hidden Power ' && move.substr(0, 14) !== 'Hidden Power [') {
+						hpType = move.substr(13);
+						if (!hpType || !typechart[hpType]?.HPivs) {
+							continue;
+						}
+						if (Stats.some((stat) => (ivs[stat] ?? 31) !== (typechart[hpType as string].HPivs?.[stat] || 31))) {
+							defaultIvs = false;
+						}
+					}
+				}
+				if (defaultIvs && !hpType) {
+					if (Stats.some((stat) => !this.isUndefinedOrDefault(ivs[stat], 31))) {
+						defaultIvs = false;
+					}
+				}
+				if (!defaultIvs) {
+					Stats.forEach((stat) => {
+						const iv = ivs[stat];
+						if (!iv || isNaN(iv) || iv === 31) return;
+						if (first) {
+							text += 'IVs: ';
+							first = false;
+						} else {
+							text += ' / ';
+						}
+						text += '' + iv + ' ' + BattleStatNames[stat];
+					});
 				}
 			}
-		}
-		if (!first) {
-			text += "\n";
-		}
-		if (curSet.moves) {
+			if (!first) {
+				text += "\n";
+			}
 			for (let j = 0; j < curSet.moves.length; j++) {
-				var move = curSet.moves[j];
+				let move = curSet.moves[j];
 				if (move.substr(0, 13) === 'Hidden Power ') {
 					move = move.substr(0, 13) + '[' + move.substr(13) + ']';
 				}
-				text += '- ' + (Tools.getMove(move).name || move) + "\n";
+				text += '- ' + (this.getMove(move).name || move) + "\n";
 			}
+			text += "\n";
 		}
-		text += "\n";
+		return text;
 	}
-	return text;
-};
 
-/* Other tools */
+	/* Other tools */
 
-exports.checkConfig = function () {
-	var issue = function (text) {
-		console.log('issue'.yellow + '\t' + text);
+	checkConfig() {
+		const issue = (text: string): void => {
+			console.log('issue'.yellow + '\t' + text);
+		};
+		if (Config.server && Config.server.substr(-8) === ".psim.us") {
+			issue('WARNING: YOUR SERVER URL ' + Config.server.red + ' SEEMS A CLIENT URL, NOT A SERVER ONE. USE ' + 'node serverconfig.js'.cyan + ' TO GET THE CORRECT SERVER, PORT AND SERVERID VALUES\n');
+		}
+		if (typeof Config.rooms !== 'string' && !Array.isArray(Config.rooms) || (typeof Config.rooms === 'string' && !['all', 'official', 'public'].includes(Config.rooms))) {
+			issue('Config.rooms is not an array');
+			Config.rooms = [];
+		}
+		if (!Array.isArray(Config.privateRooms)) {
+			issue('Config.privateRooms is not an array');
+			Config.privateRooms = [];
+		}
+		if (!Array.isArray(Config.ignoreRooms)) {
+			issue('Config.ignoreRooms is not an array');
+			Config.ignoreRooms = [];
+		}
+		if (!Array.isArray(Config.initCmds)) {
+			issue('Config.initCmds is not an array');
+			Config.initCmds = [];
+		}
+		if (typeof Config.exceptions !== 'object') {
+			issue('Config.exceptions is not an object');
+			Config.exceptions = {};
+		}
+		if (!Array.isArray(Config.ranks)) {
+			issue('Config.ranks is not an array');
+			Config.ranks = [];
+		}
+		if (typeof Config.permissionExceptions !== 'object') {
+			issue('Config.permissionExceptions is not an object');
+			Config.permissionExceptions = {};
+		}
+		if (typeof Config.debug !== 'object') {
+			issue('Config.debug is not an object');
+			Config.debug = {
+				error: false,
+				ok: false,
+				errlog: false,
+				info: false,
+				room: false,
+				monitor: false,
+				status: false,
+				battle: false,
+				debug: false,
+				cmdr: false,
+				recv: false,
+				sent: false,
+			};
+		}
 	};
-	if (Config.server && Config.server.substr(-8) === ".psim.us") {
-		issue('WARNING: YOUR SERVER URL ' + Config.server.red + ' SEEMS A CLIENT URL, NOT A SERVER ONE. USE ' + 'node serverconfig.js'.cyan + ' TO GET THE CORRECT SERVER, PORT AND SERVERID VALUES\n');
-	}
-	if (typeof Config.rooms !== 'string' && (typeof Config.rooms !== 'object' || typeof Config.rooms.length !== 'number')) {
-		issue('Config.rooms is not an array');
-		Config.rooms = [];
-	}
-	if (typeof Config.privateRooms !== 'object') {
-		issue('Config.privateRooms is not an object');
-		Config.privateRooms = {};
-	}
-	if (typeof Config.initCmds !== 'object' || typeof Config.initCmds.length !== 'number') {
-		issue('Config.initCmds is not an array');
-		Config.initCmds = [];
-	}
-	if (typeof Config.exceptions !== 'object') {
-		issue('Config.exceptions is not an object');
-		Config.exceptions = {};
-	}
-	if (typeof Config.ranks !== 'object' || typeof Config.ranks.length !== 'number') {
-		issue('Config.ranks is not an array');
-		Config.ranks = [];
-	}
-	if (typeof Config.permissionExceptions !== 'object') {
-		issue('Config.permissionExceptions is not an object');
-		Config.permissionExceptions = {};
-	}
-	if (typeof Config.debug !== 'object') {
-		issue('Config.debug is not an object');
-		Config.debug = {};
-	}
-};
 
-exports.reloadFeature = function (feature) {
-	try {
-		const f = require('./features/index.ts').initFeature(feature);
+	reloadFeature(feature: string): void {
+		const f = initFeature(feature);
 		if (f?.id) {
-			if (typeof Features[feature].destroy === "function") Features[feature].destroy();
+			if (Features[feature]) Features[feature].destroy();
 			Features[feature] = f;
-			if (typeof f.init === "function") f.init();
+			if (f.init) f.init();
 		} else {
-			return -1;
+			throw new Error('Error: Feature ' + feature + ' not found');
 		}
-		return false;
-	} catch (e) {
-		return e;
-	}
-};
+	};
+}

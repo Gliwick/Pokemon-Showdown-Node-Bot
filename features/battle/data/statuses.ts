@@ -87,11 +87,12 @@ interface BasicEffect extends EffectData {
 }
 
 // type stabs to emulate missing types
-type EventMethod = `on${string}`;
+type EventListener = `on${string}`;
+type EventOrder = `on${string}Order` | `on${string}Priority`;
 type AnyFunction = (this: Record<string, any>, arg1?: any, arg2?: any, arg3?: any, arg4?: any) => void;
 type ActiveMove = Record<string, any>;
 
-type Condition = BasicEffect & Record<EventMethod, AnyFunction | number | string> & {
+type Condition = BasicEffect & Record<EventListener, AnyFunction | string | number> & Record<EventOrder, number> & {
 	readonly effectType: 'Condition' | 'Weather' | 'Status' | 'Terastal';
 	readonly counterMax?: number;
 	readonly durationCallback?: (this: Record<string, any>, target: Record<string, any>, source: Record<string, any>, effect: Condition | null) => number;
