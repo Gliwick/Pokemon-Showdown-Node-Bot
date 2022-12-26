@@ -6,7 +6,7 @@ import * as http from "http";
 import * as https from "https";
 import { inspect } from "util";
 import { errlog, error, info, ok } from "./console-reports";
-import { ConfigType } from "./global-types";
+import { ConfigType } from "./config";
 import { typechart } from "./data/typechart";
 import { initFeature } from "./features";
 
@@ -856,60 +856,6 @@ export class Tools {
 	}
 
 	/* Other tools */
-
-	checkConfig() {
-		const issue = (text: string): void => {
-			console.log('issue'.yellow + '\t' + text);
-		};
-		if (Config.server && Config.server.substr(-8) === ".psim.us") {
-			issue('WARNING: YOUR SERVER URL ' + Config.server.red + ' SEEMS A CLIENT URL, NOT A SERVER ONE. USE ' + 'node serverconfig.js'.cyan + ' TO GET THE CORRECT SERVER, PORT AND SERVERID VALUES\n');
-		}
-		if (typeof Config.rooms !== 'string' && !Array.isArray(Config.rooms) || (typeof Config.rooms === 'string' && !['all', 'official', 'public'].includes(Config.rooms))) {
-			issue('Config.rooms is not an array');
-			Config.rooms = [];
-		}
-		if (!Array.isArray(Config.privateRooms)) {
-			issue('Config.privateRooms is not an array');
-			Config.privateRooms = [];
-		}
-		if (!Array.isArray(Config.ignoreRooms)) {
-			issue('Config.ignoreRooms is not an array');
-			Config.ignoreRooms = [];
-		}
-		if (!Array.isArray(Config.initCmds)) {
-			issue('Config.initCmds is not an array');
-			Config.initCmds = [];
-		}
-		if (typeof Config.exceptions !== 'object') {
-			issue('Config.exceptions is not an object');
-			Config.exceptions = {};
-		}
-		if (!Array.isArray(Config.ranks)) {
-			issue('Config.ranks is not an array');
-			Config.ranks = [];
-		}
-		if (typeof Config.permissionExceptions !== 'object') {
-			issue('Config.permissionExceptions is not an object');
-			Config.permissionExceptions = {};
-		}
-		if (typeof Config.debug !== 'object') {
-			issue('Config.debug is not an object');
-			Config.debug = {
-				error: false,
-				ok: false,
-				errlog: false,
-				info: false,
-				room: false,
-				monitor: false,
-				status: false,
-				battle: false,
-				debug: false,
-				cmdr: false,
-				recv: false,
-				sent: false,
-			};
-		}
-	};
 
 	reloadFeature(feature: string): void {
 		const f = initFeature(feature);

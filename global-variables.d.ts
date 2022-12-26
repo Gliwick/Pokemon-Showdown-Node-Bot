@@ -1,11 +1,11 @@
-import { AppOptionsType } from "./app-options";
+import { AppOptionsType, ConfigType } from "./config";
 import { Client } from "./showdown-client";
 import { CommandParser as CommandParserClass } from "./command-parser";
-import { ConfigType, Format } from "./global-types";
 import { DataDownloader as DataDownloaderClass } from "./data-downloader"
 import { Feature } from "./features";
+import { Format } from "./global-types";
 import { SecurityLogger } from "./security-log"
-import { Tools as ToolsManager } from "./tools";
+import { Tools as ToolsType } from "./tools";
 import { FlatFileManager as FlatFileManagerClass, SettingsManager } from "./settings";
 
 declare global {
@@ -22,7 +22,7 @@ declare global {
             PSClient: new () => Client;
             SecurityLog: SecurityLogger;
             Settings: SettingsManager;
-            Tools: ToolsManager;
+            Tools: ToolsType;
         }
     }
     const AppOptions: AppOptionsType;
@@ -36,5 +36,5 @@ declare global {
     const PSClient: new () => Client;
     const SecurityLog: SecurityLogger;
     const Settings: SettingsManager;
-    const Tools: ToolsManager;
+    const Tools: ToolsType;
 }

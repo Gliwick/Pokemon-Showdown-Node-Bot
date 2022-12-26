@@ -24,7 +24,10 @@ console.log((
 ).yellow);
 
 var cmdArgs = process.argv.slice(2);
-if (!global.AppOptions) global.AppOptions = require('./app-options.ts').parseArguments(cmdArgs);
+if (!global.AppOptions) global.AppOptions = require('./config.ts').parseArguments(cmdArgs);
+
+global.Config = require(AppOptions.config);
+require('./config').checkConfig();
 
 global.Tools = new require('./tools.ts').Tools();
 
@@ -60,9 +63,6 @@ if (!fs.existsSync(AppOptions.config)) {
 	console.log(AppOptions.config + " does not exist - creating one with default settings...");
 	fs.writeFileSync(AppOptions.config, fs.readFileSync('./config-example.js'));
 }
-
-global.Config = require(AppOptions.config);
-Tools.checkConfig();
 
 if (AppOptions.debugmode) info((['Debug', 'Monitor', 'Production'])[AppOptions.debugmode - 1] + ' mode');
 
