@@ -24,10 +24,10 @@ console.log((
 ).yellow);
 
 var cmdArgs = process.argv.slice(2);
-if (!global.AppOptions) global.AppOptions = require('./config.ts').parseArguments(cmdArgs);
+if (!global.AppOptions) global.AppOptions = require('./app-config.ts').parseArguments(cmdArgs);
 
 global.Config = require(AppOptions.config);
-require('./config').checkConfig();
+require('./app-config.ts').checkConfig();
 
 global.Tools = new require('./tools.ts').Tools();
 
