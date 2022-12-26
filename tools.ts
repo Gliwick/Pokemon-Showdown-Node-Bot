@@ -78,7 +78,7 @@ const BattleStatNames: Record<Stat, string> = {
 	spe: 'Spe',
 };
 
-interface PokeSet {
+export interface PokeSet {
 	name: string;
 	species: string;
 	item: string;

@@ -1,13 +1,21 @@
 import { existsSync, readFileSync, rename, writeFile } from 'fs';
 import { inspect } from 'util';
 import { debug, error } from '../../console-reports';
-import { toId } from '../../tools';
+import { PokeSet, toId } from '../../tools';
 
 const teamsDataFile = AppOptions.data + 'teams.json';
 
+interface RandomTeam {
+	maxPokemon: number;
+	pokemon: PokeSet[];
+	essentialPokemon?: PokeSet[];
+}
+
+type Team = string | PokeSet[] | RandomTeam;
+
 export class TeamBuilder {
-	teams: Record<string, any> = {};
-	staticTeams: Record<string, any> = {};
+	teams: Record<string, Team[]> = {};
+	staticTeams: Record<string, Team[]> = {};
 	dynTeams: Record<string, { format: string, packed: string }> = {};
 
 	writing: boolean = false;
@@ -97,6 +105,9 @@ export class TeamBuilder {
 			if (typeof teamChosen === 'string') {
 				// already parsed
 				teamStr = teamChosen;
+			} else if (Array.isArray(teamChosen)) {
+				//parse team
+				teamStr = this.packTeam(teamChosen);
 			} else if (typeof teamChosen === 'object') {
 				if (teamChosen.maxPokemon && teamChosen.pokemon) {
 					// generate random team
@@ -117,9 +128,6 @@ export class TeamBuilder {
 					}
 					if (Config.debug.debug) debug("Packed Team: " + JSON.stringify(team));
 					teamStr = this.packTeam(team);
-				} else if (teamChosen.length) {
-					//parse team
-					teamStr = this.packTeam(teamChosen);
 				} else {
 					error("invalid team data type: " + JSON.stringify(teamChosen));
 					return false;
@@ -143,7 +151,7 @@ export class TeamBuilder {
 
 	/* Pack Team function - from Pokemon-Showdown-Client */
 
-	packTeam(team: Record<string, any>[]): string {
+	packTeam(team?: PokeSet[]): string {
 		return Tools.packTeam(team);
 	}
 };
