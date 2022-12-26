@@ -115,8 +115,8 @@ export class Pokemon {
 		return statValue;
 	};
 
-	getTypes(conditions: Conditions): Type[] {
-		if (this.terastallize) return [this.terastallize];
+	getTypes(conditions: Conditions, preterastallized: boolean = false): Type[] {
+		if (!preterastallized && this.terastallize) return [this.terastallize];
 
 		let types = [...(this.template.types || [])];
 		if (conditions && conditions.volatiles) {
@@ -1021,9 +1021,9 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 			case 'lightball':
 				if (atkPoke.template.species.startsWith('Pikachu')) atk = Math.floor(atk * 2);
 			case 'thickclub':
-				if (category === 'Physical' && ['Cubone', 'Marowak', 'Marowak-Alola'].includes(atkPoke.template.species)) atk *= 2;
+				if (['Cubone', 'Marowak', 'Marowak-Alola'].includes(atkPoke.template.species) && category === 'Physical') atk *= 2;
 			case 'deepseatooth':
-				if (category === 'Special' && atkPoke.template.species === 'Clamperl') atk *= 2;
+				if (atkPoke.template.species === 'Clamperl' && category === 'Special') atk *= 2;
 			case 'choiceband':
 				if (category === 'Physical') atk = Math.floor(atk * 1.5);
 				break;
@@ -1031,10 +1031,21 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 				if (category === 'Special') atk = Math.floor(atk * 1.5);
 				break;
 			case 'souldew':
+				if (atkPoke.template.species.startsWith('Latias') || atkPoke.template.species.startsWith('Latios')) {
+					if (gen >= 7) {
+						if (['Dragon', 'Psychic'].includes(moveType)) bp = Math.floor(bp * 1.2);
+					} else {
+						if (category === 'Special') atk = Math.floor(atk * 1.5);
+					}
+				}
+				break;
 			case 'adamantorb':
+			case 'adamantcrystal':
 			case 'lustrousorb':
+			case 'lustrousglobe':
 			case 'griseousorb':
-				if (atkPoke.template.types.indexOf(moveType) >= 0) bp = Math.floor(bp * 1.2);
+			case 'griseouscore':
+				if (atkPoke.template.types.includes(moveType)) bp = Math.floor(bp * 1.2);
 				break;
 			case 'silkscarf':
 				if (moveType === 'Normal') bp = Math.floor(bp * 1.2);
@@ -1082,8 +1093,8 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 	/* STAB */
 	let stab = 1;
 	if (atkPoke.terastallize) {
-		let originalStab = (atkPoke.template.types.includes(moveType) >= 0);
-		let teraStab = (move.type === atkPoke.terastallize);
+		const originalStab = atkPoke.getTypes(atkConditions, true).includes(moveType);
+		const teraStab = (move.type === atkPoke.terastallize);
 		if (originalStab && teraStab && !['firepledge', 'grasspledge', 'waterpledge'].includes(move.id)) {
 			debug('applying double ' + move.type + ' stab from terastallization');
 			stab = atkPoke.hasAbility('adaptability') ? 2.25 : 2;
@@ -1173,7 +1184,9 @@ export function calculate(attacker: PokemonWithConditions, defender: PokemonWith
 		else atk = atkPoke.getBoostedStat(atkStat, atk, atkConditions.boosts);
 	}
 
-	const willCrit = atkConditions.immediate.crit || move.willCrit || atkPoke.hasItem({ 'leek': 1, 'luckypunch': 1, 'stick': 1 });
+	const willCrit = atkConditions.immediate.crit || move.willCrit ||
+		(['farfetchd', 'farfetchdgalar', 'sirfetchd'].includes(atkPoke.template.id) && atkPoke.hasItem({ 'leek': 1, 'stick': 1 })) ||
+		(atkPoke.template.species === 'Chansey' && atkPoke.hasItem('luckypunch'));
 
 	if (defConditions.boosts[defStat]) {
 		if (!willCrit && !move.ignoreDefensive && !atkPoke.hasAbility('unaware')) {

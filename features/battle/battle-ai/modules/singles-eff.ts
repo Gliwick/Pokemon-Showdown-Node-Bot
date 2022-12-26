@@ -49,9 +49,9 @@ export class SinglesEffective implements BattleModule {
 	constructor() { };
 
 	supposeActiveFoe(battle: Battle): Pokemon {
-		let target = battle.foe.active[0];
-		let pokeId = target.name + '|' + target.species;
-		let foePoke = new Pokemon(target.template, {
+		const target = battle.foe.active[0];
+		const pokeId = target.name + '|' + target.species;
+		const foePoke = new Pokemon(target.template, {
 			gender: target.gender,
 			evs: {},
 			level: target.level,
@@ -62,12 +62,12 @@ export class SinglesEffective implements BattleModule {
 		foePoke.hp = target.hp;
 		foePoke.status = target.status;
 
-		let hackmonsBattle = (battle.id.indexOf('hackmon') >= 0);
+		const isHackmonsBattle = (battle.id.indexOf('hackmon') >= 0);
 
 		// ability
 		if (battle.gen >= 3 && !target.supressedAbility) {
 			if (!target.ability || target.ability === '&unknown') {
-				if (!hackmonsBattle && foePoke.template.abilities) {
+				if (!isHackmonsBattle && foePoke.template.abilities) {
 					let abilities = Object.values(foePoke.template.abilities);
 					abilities.sort((a, b) => getAbility(b, battle.gen, battle.id).rating - getAbility(a, battle.gen, battle.id).rating);
 					foePoke.ability = getAbility(abilities[0], battle.gen, battle.id);
@@ -82,20 +82,18 @@ export class SinglesEffective implements BattleModule {
 		// item
 		if (!target.item || target.item === '&unknown') {
 			let itemId = null;
-			if (battle.gen >= 2 && !hackmonsBattle) {
+			if (battle.gen >= 2 && !isHackmonsBattle) {
 				if (foePoke.template.requiredItem) {
 					itemId = foePoke.template.requiredItem;
 				} else if (foePoke.template.requiredItems) {
 					itemId = foePoke.template.requiredItems[0];
 				} else if (foePoke.template.evos && !(foePoke.template.id in { 'cubone': 1, 'farfetchdgalar': 1, 'pikachu': 1 })) {
 					if (battle.gen === 7 && foePoke.template.id === 'eevee' && battle.id.indexOf('lc') < 0) itemId = 'eeviumz';
-					else foePoke.item = itemId = 'eviolite';
+					else itemId = 'eviolite';
+				} else if (foePoke.template.id.startsWith('pikachu')) {
+					itemId = 'lightball';
 				} else {
-					foePoke.item = null;
 					switch (foePoke.template.id) {
-						case 'pikachu':
-							if (battle.id.indexOf('nfe') < 0) itemId = 'lightball';
-							break;
 						case 'farfetchd':
 						case 'farfetchdgalar':
 						case 'sirfetchd':
@@ -161,7 +159,7 @@ export class SinglesEffective implements BattleModule {
 		} else if (battle.id.indexOf('random') > 0) {
 			foePoke.evs = { hp: 84, atk: 84, def: 84, spa: 84, spd: 84, spe: 84 };
 		} else {
-			if (hackmonsBattle && battle.gen !== 6) {
+			if (isHackmonsBattle && battle.gen !== 6) {
 				foePoke.evs = { hp: 252, atk: 252, def: 252, spa: 252, spd: 252, spe: 252 };
 			} else if ((foePoke.template.baseStats.spe >= 70 || foePoke.hasItem('choicescarf')) && !foePoke.hasAbility({ 'myceliummight': 1, 'slowstart': 1, 'stall': 1 }) && !foePoke.hasItem({ 'fullincense': 1, 'ironball': 1, 'laggingtail': 1, 'machobrace': 1 })) {
 				foePoke.evs = { hp: 0, atk: 252, def: 4, spa: 252, spd: 4, spe: 252 };
