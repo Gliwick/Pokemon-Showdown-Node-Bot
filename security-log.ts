@@ -5,6 +5,7 @@
 import { createWriteStream, existsSync, mkdirSync, PathLike, readdirSync, unlinkSync, WriteStream } from 'fs';
 
 import { errlog, error } from './console-reports';
+import { LogConfig } from './options';
 
 const LOGS_PATH = './logs/';
 
@@ -27,17 +28,50 @@ export function dateDifference(date1: Date, date2: Date): number {
 	return dif;
 }
 
-function checkDir(dir: PathLike): void {
+export function sweep(dir: PathLike, config?: LogConfig): void {
+	//delete previous logs
+	const ageOfLogs = config?.ageOfLogs || 15;
+	const f = new Date();
+	try {
+		const logs = readdirSync(dir);
+		let aux;
+		for (let i = 0; i < logs.length; i++) {
+			if (logs[i].substr(-4) !== '.log') continue;
+			aux = logs[i].substr(0, logs[i].indexOf('.'));
+			aux = aux.split('_');
+			if (aux.length < 4) continue;
+			if (
+				dateDifference(
+					{ day: parseInt(aux[3]), month: parseInt(aux[2]), year: parseInt(aux[1]) },
+					{ day: f.getDate(), month: f.getMonth() + 1, year: f.getFullYear() }
+				) > ageOfLogs
+			) {
+				try {
+					unlinkSync(dir + logs[i]);
+				} catch (e: any) {
+					error('failed to delete old security logs\n' + e.stack);
+				}
+			}
+		}
+	} catch (e: any) {
+		errlog(e.message);
+		errlog(e.stack);
+	}
+}
+
+export function checkDir(dir: PathLike): void {
 	try {
 		if (!existsSync(dir)) mkdirSync(dir);
 	} catch (e) {}
 }
 
-checkDir(LOGS_PATH);
-
 export class SecurityLogger {
 	logStream: WriteStream | null = null;
 	logDate: string | null = null;
+
+	constructor() {
+		checkDir(LOGS_PATH);
+	}
 
 	write(message: string): void {
 		const f = new Date();
@@ -58,7 +92,7 @@ export class SecurityLogger {
 			this.logStream = createWriteStream(LOGS_PATH + 'security-log' + '/' + 'security' + '_' + fstr + '.log', {
 				flags: 'a+',
 			});
-			this.sweep(LOGS_PATH + 'security-log' + '/');
+			sweep(LOGS_PATH + 'security-log' + '/', Config.securityLog);
 		}
 		this.logStream.write(
 			'[' +
@@ -79,37 +113,6 @@ export class SecurityLogger {
 		} catch (e: any) {
 			errlog(e.stack);
 			error('Failed to write security log: ' + e.message);
-		}
-	}
-
-	sweep(dir: PathLike): void {
-		//delete previous logs
-		const ageOfLogs = Config.securityLog?.ageOfLogs || 15;
-		const f = new Date();
-		try {
-			const logs = readdirSync(dir);
-			let aux;
-			for (let i = 0; i < logs.length; i++) {
-				if (logs[i].substr(-4) !== '.log') continue;
-				aux = logs[i].substr(0, logs[i].indexOf('.'));
-				aux = aux.split('_');
-				if (aux.length < 4) continue;
-				if (
-					dateDifference(
-						{ day: parseInt(aux[3]), month: parseInt(aux[2]), year: parseInt(aux[1]) },
-						{ day: f.getDate(), month: f.getMonth() + 1, year: f.getFullYear() }
-					) > ageOfLogs
-				) {
-					try {
-						unlinkSync(dir + logs[i]);
-					} catch (e: any) {
-						error('failed to delete old security logs\n' + e.stack);
-					}
-				}
-			}
-		} catch (e: any) {
-			errlog(e.message);
-			errlog(e.stack);
 		}
 	}
 }

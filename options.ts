@@ -60,7 +60,7 @@ export function parseArguments(arr: string[]): AppOptionsType {
 	return opts;
 }
 
-interface LogConfig {
+export interface LogConfig {
 	ageOfLogs: number;
 }
 
