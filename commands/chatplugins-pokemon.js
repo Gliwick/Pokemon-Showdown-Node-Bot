@@ -2,9 +2,9 @@
  * Pokemon-related commands
  */
 
-function normalize_init () {
-	var str1 = "ÃÀÁÄÂÈÉËÊÌÍÏÎÒÓÖÔÙÚÜÛãàáäâèéëêìíïîòóöôùúüûÑÇç";
-	var str2 = "AAAAAEEEEIIIIOOOOUUUUaaaaaeeeeiiiioooouuuuñcc";
+function normalize_init() {
+	var str1 = 'ÃÀÁÄÂÈÉËÊÌÍÏÎÒÓÖÔÙÚÜÛãàáäâèéëêìíïîòóöôùúüûÑÇç';
+	var str2 = 'AAAAAEEEEIIIIOOOOUUUUaaaaaeeeeiiiioooouuuuñcc';
 	var map = {};
 	for (var i = 0; i < str1.length; i++) {
 		map[str1.charAt(i)] = str2.charAt(i);
@@ -13,7 +13,7 @@ function normalize_init () {
 }
 
 var normalObj = normalize_init();
-function normalize (str) {
+function normalize(str) {
 	if (!str) return '';
 	var res = '';
 	for (var i = 0; i < str.length; i++) {
@@ -22,8 +22,8 @@ function normalize (str) {
 	return toId(res);
 }
 
-function searchInLanguage (lang, word, keys) {
-	var dataLang = Tools.translations[lang];
+function searchInLanguage(lang, word, keys) {
+	var dataLang = Tools.translations[lang]?.global;
 	var translationTemp;
 	var results = [];
 	var searchResults = [];
@@ -36,22 +36,22 @@ function searchInLanguage (lang, word, keys) {
 	} else if (word.length <= 6) {
 		maxLd = 2;
 	}
-	if (!Tools.translations[lang]) return null;
+	if (!dataLang) return null;
 	for (var i = 0; i < keys.length; i++) {
-		if (!Tools.translations[lang][keys[i]]) continue;
-		for (var k in Tools.translations[lang][keys[i]]) {
-			translationTemp = Tools.translations[lang][keys[i]][k];
+		if (!dataLang[keys[i]]) continue;
+		for (var k in dataLang[keys[i]]) {
+			translationTemp = dataLang[keys[i]][k];
 			if (!translationTemp) continue;
-			if (typeof translationTemp === "string") {
+			if (typeof translationTemp === 'string') {
 				ld = Tools.levenshtein(word, normalize(translationTemp), maxLd);
 				if (ld <= maxLd) {
-					results.push({type: keys[i], id: k, title: translationTemp, ld: ld});
+					results.push({ type: keys[i], id: k, title: translationTemp, ld: ld });
 				}
-			} else if (typeof translationTemp === "object" && typeof translationTemp.length) {
+			} else if (typeof translationTemp === 'object' && typeof translationTemp.length) {
 				for (var j = 0; j < translationTemp.length; j++) {
 					ld = Tools.levenshtein(word, normalize(translationTemp[j]), maxLd);
 					if (ld <= maxLd) {
-						results.push({type: keys[i], id: k, title: translationTemp[j], ld: ld});
+						results.push({ type: keys[i], id: k, title: translationTemp[j], ld: ld });
 					}
 				}
 			}
@@ -74,10 +74,10 @@ function searchInLanguage (lang, word, keys) {
 	return newResults;
 }
 
-function getTranslations (from, to, word) {
+function getTranslations(from, to, word) {
 	word = normalize(word);
 	var results = [];
-	var toLangData = Tools.translations[to];
+	var toLangData = Tools.translations[to]?.global;
 	if (!toLangData) return null;
 	var ids = searchInLanguage(from, word, ['abilities', 'items', 'moves', 'natures', 'pokemon']);
 	if (!ids || !ids.length) return null;
@@ -86,7 +86,7 @@ function getTranslations (from, to, word) {
 		id = ids[i].id;
 		type = ids[i].type;
 		if (!toLangData[type] || !toLangData[type][id]) continue;
-		results.push({type: type, from: ids[i].title, to: toLangData[type][id], ld: ids[i].ld});
+		results.push({ type: type, from: ids[i].title, to: toLangData[type][id], ld: ids[i].ld });
 	}
 	return results;
 }
@@ -97,39 +97,64 @@ exports.commands = {
 	tra: 'translate',
 	trans: 'translate',
 	translate: function (arg) {
-		if (!arg) return this.restrictReply(this.trad('u1') + ": " + this.cmdToken + this.cmd + " " + this.trad('u2'), "pokemon");
+		if (!arg)
+			return this.restrictReply(
+				this.trad('u1') + ': ' + this.cmdToken + this.cmd + ' ' + this.trad('u2'),
+				'pokemon'
+			);
 		var args = arg.split(',');
 		var word = args[0];
 		var from = toId(args[1] || '');
 		var to = toId(args[2] || '');
 		var bidirectional = false;
-		if (this.language !== "english" && !from && !to) {
+		if (this.language !== 'english' && !from && !to) {
 			from = this.language;
-			to = "english";
+			to = 'english';
 			bidirectional = true;
 		}
-		if (from && !to && from !== "english") {
-			to = "english";
+		if (from && !to && from !== 'english') {
+			to = 'english';
 		}
 		var langAliases = {
-			'en': 'english',
-			'es': 'spanish',
-			'de': 'german',
-			'fr': 'french',
-			'it': 'italian'
+			en: 'english',
+			es: 'spanish',
+			de: 'german',
+			fr: 'french',
+			it: 'italian'
 		};
 		if (langAliases[from]) from = langAliases[from];
 		if (langAliases[to]) to = langAliases[to];
-		if (!from || !to || from === to || !word) return this.restrictReply(this.trad('u1') + ": " + this.cmdToken + this.cmd + " " + this.trad('u2'), "pokemon");
+		if (!from || !to || from === to || !word)
+			return this.restrictReply(
+				this.trad('u1') + ': ' + this.cmdToken + this.cmd + ' ' + this.trad('u2'),
+				'pokemon'
+			);
 		var validlangs = Object.keys(Tools.translations);
-		if (validlangs.indexOf(from) < 0) return this.restrictReply(this.trad('lnot1') + " \"" + from + "\" " + this.trad('lnot2') + ": " + validlangs.join(', '), "pokemon");
-		if (validlangs.indexOf(to) < 0) return this.restrictReply(this.trad('lnot1') + " \"" + to + "\" " +  this.trad('lnot2') + ": " + validlangs.join(', '), "pokemon");
-		if (from === "english" || (to === "english" && bidirectional)) {
+		if (validlangs.indexOf(from) < 0)
+			return this.restrictReply(
+				this.trad('lnot1') + ' "' + from + '" ' + this.trad('lnot2') + ': ' + validlangs.join(', '),
+				'pokemon'
+			);
+		if (validlangs.indexOf(to) < 0)
+			return this.restrictReply(
+				this.trad('lnot1') + ' "' + to + '" ' + this.trad('lnot2') + ': ' + validlangs.join(', '),
+				'pokemon'
+			);
+		if (from === 'english' || (to === 'english' && bidirectional)) {
 			try {
 				var aliases = DataDownloader.getAliases();
 				if (aliases[toId(word)]) word = aliases[toId(word)];
 			} catch (e) {
-				debug("Could not fetch aliases. Cmd: " + this.cmd + " " + arg + " | Room: " + this.room + " | By: " + this.by);
+				debug(
+					'Could not fetch aliases. Cmd: ' +
+						this.cmd +
+						' ' +
+						arg +
+						' | Room: ' +
+						this.room +
+						' | By: ' +
+						this.by
+				);
 			}
 		}
 		//translation itself
@@ -137,7 +162,7 @@ exports.commands = {
 		if (bidirectional) {
 			var translationsInv = getTranslations(to, from, word);
 			if (translationsInv && translationsInv.length) {
-				if ((!translations || !translations.length) || (translationsInv[0].ld < translations[0].ld)) {
+				if (!translations || !translations.length || translationsInv[0].ld < translations[0].ld) {
 					translations = translationsInv;
 					var temp = to;
 					to = from;
@@ -145,20 +170,35 @@ exports.commands = {
 				}
 			}
 		}
-		if (!translations || !translations.length) return this.restrictReply(this.trad('not1') + " \"" + word + "\" " + this.trad('not2') + " (" + from + " - " + to + ")", "pokemon");
-		var text = "";
-		if (normalize(translations[0].from) !== normalize(word)) text += this.trad('not1') + " \"" + word + "\" " + this.trad('not3') + ". ";
-		text += this.trad('tra') + " **" + Tools.toName(translations[0].from) + "** (" + from + " - " + to + "): ";
+		if (!translations || !translations.length)
+			return this.restrictReply(
+				this.trad('not1') + ' "' + word + '" ' + this.trad('not2') + ' (' + from + ' - ' + to + ')',
+				'pokemon'
+			);
+		var text = '';
+		if (normalize(translations[0].from) !== normalize(word))
+			text += this.trad('not1') + ' "' + word + '" ' + this.trad('not3') + '. ';
+		text += this.trad('tra') + ' **' + Tools.toName(translations[0].from) + '** (' + from + ' - ' + to + '): ';
 		for (var i = 0; i < translations.length; i++) {
 			if (normalize(translations[0].from) !== normalize(translations[i].from)) continue;
-			if (typeof translations[i].to === "string") {
-				text += "**" + Tools.toName(translations[i].to) + "** (" + (this.trad(translations[i].type) || translations[i].type) + ")";
+			if (typeof translations[i].to === 'string') {
+				text +=
+					'**' +
+					Tools.toName(translations[i].to) +
+					'** (' +
+					(this.trad(translations[i].type) || translations[i].type) +
+					')';
 			} else {
-				text += "**" + Tools.toName(translations[i].to[0]) + "** (" + (this.trad(translations[i].type) || translations[i].type) + ")";
+				text +=
+					'**' +
+					Tools.toName(translations[i].to[0]) +
+					'** (' +
+					(this.trad(translations[i].type) || translations[i].type) +
+					')';
 			}
-			if (i < translations.length - 1) text += ", ";
+			if (i < translations.length - 1) text += ', ';
 		}
-		this.restrictReply(text, "pokemon");
+		this.restrictReply(text, 'pokemon');
 	},
 
 	poke: 'randompokemon',
@@ -239,8 +279,8 @@ exports.commands = {
 		var args = arg.split(',');
 		var text = '__' + this.trad('r') + '__: ';
 		var whichRandom = 'randomBattleMoves';
-		if (args[1] && toId(args[1]) in {'doubles': 1, '2': 1, 'double': 1, 'triples': 1, 'triple': 1, '3': 1}) {
-			whichRandom = "randomDoubleBattleMoves";
+		if (args[1] && toId(args[1]) in { doubles: 1, 2: 1, double: 1, triples: 1, triple: 1, 3: 1 }) {
+			whichRandom = 'randomDoubleBattleMoves';
 			text = '__' + this.trad('rd') + '__: ';
 		}
 		var pokemon = toId(args[0]);
@@ -279,12 +319,12 @@ exports.commands = {
 		else return this.restrictReply(this.trad('n1'), 'pokemon');
 		if (pokedex[pokemon[1]]) weight1 = pokedex[pokemon[1]].weightkg;
 		else return this.restrictReply(this.trad('n2'), 'pokemon');
-		text += this.trad('s') + ": ";
-		if (weight0 / weight1 <= 2) text += "40";
-		else if (weight0 / weight1 <= 3) text += "60";
-		else if (weight0 / weight1 <= 4) text += "80";
-		else if (weight0 / weight1 <= 5) text += "100";
-		else text += "120";
+		text += this.trad('s') + ': ';
+		if (weight0 / weight1 <= 2) text += '40';
+		else if (weight0 / weight1 <= 3) text += '60';
+		else if (weight0 / weight1 <= 4) text += '80';
+		else if (weight0 / weight1 <= 5) text += '100';
+		else text += '120';
 		this.restrictReply(text, 'pokemon');
 	},
 
@@ -328,7 +368,8 @@ exports.commands = {
 			var pokemonToCheck = [arg];
 			var i = true;
 			while (i) {
-				if (pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo) pokemonToCheck.push(pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo.toLowerCase());
+				if (pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo)
+					pokemonToCheck.push(pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo.toLowerCase());
 				else i = false;
 			}
 			for (var j in pokemonToCheck) {
@@ -371,14 +412,25 @@ exports.commands = {
 			var pokemonToCheck = [arg];
 			var i = true;
 			while (i) {
-				if (pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo) pokemonToCheck.push(pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo);
+				if (pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo)
+					pokemonToCheck.push(pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo);
 				else i = false;
 			}
 			for (var j in pokemonToCheck) {
 				if (learnsets[pokemonToCheck[j]]) {
 					for (var k in learnsets[pokemonToCheck[j]].learnset) {
 						if (movedex[k]) {
-							if ((movedex[k].boosts && movedex[k].target === 'self' && k !== 'doubleteam' && k !== 'minimize') || k === 'bellydrum' || (movedex[k].secondary && movedex[k].secondary.chance === 100 && movedex[k].secondary.self && movedex[k].secondary.self.boosts)) {
+							if (
+								(movedex[k].boosts &&
+									movedex[k].target === 'self' &&
+									k !== 'doubleteam' &&
+									k !== 'minimize') ||
+								k === 'bellydrum' ||
+								(movedex[k].secondary &&
+									movedex[k].secondary.chance === 100 &&
+									movedex[k].secondary.self &&
+									movedex[k].secondary.self.boosts)
+							) {
 								if (boostingmoves.indexOf(movedex[k].name) === -1) {
 									boostingmoves.push(movedex[k].name);
 								}
@@ -415,14 +467,23 @@ exports.commands = {
 			var pokemonToCheck = [arg];
 			var i = true;
 			while (i) {
-				if (pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo) pokemonToCheck.push(pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo);
+				if (pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo)
+					pokemonToCheck.push(pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo);
 				else i = false;
 			}
 			for (var j in pokemonToCheck) {
 				if (learnsets[pokemonToCheck[j]]) {
 					for (var k in learnsets[pokemonToCheck[j]].learnset) {
 						if (movedex[k]) {
-							if (movedex[k].heal || k === "synthesis" || k === "moonlight" || k === "morningsun" || k === "wish" || k === "swallow" || k === "rest") {
+							if (
+								movedex[k].heal ||
+								k === 'synthesis' ||
+								k === 'moonlight' ||
+								k === 'morningsun' ||
+								k === 'wish' ||
+								k === 'swallow' ||
+								k === 'rest'
+							) {
 								if (recoverymoves.indexOf(movedex[k].name) === -1) {
 									recoverymoves.push(movedex[k].name);
 								}
@@ -466,14 +527,15 @@ exports.commands = {
 			var pokemonToCheck = [arg];
 			var i = true;
 			while (i) {
-				if (pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo) pokemonToCheck.push(pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo);
+				if (pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo)
+					pokemonToCheck.push(pokedex[pokemonToCheck[pokemonToCheck.length - 1]].prevo);
 				else i = false;
 			}
 			for (var j in pokemonToCheck) {
 				if (learnsets[pokemonToCheck[j]]) {
 					for (var k in learnsets[pokemonToCheck[j]].learnset) {
 						if (movedex[k]) {
-							if (k === "stealthrock" || k === "spikes" || k === "toxicspikes" || k === "stickyweb") {
+							if (k === 'stealthrock' || k === 'spikes' || k === 'toxicspikes' || k === 'stickyweb') {
 								if (hazards.indexOf(movedex[k].name) === -1) {
 									hazards.push(movedex[k].name);
 								}

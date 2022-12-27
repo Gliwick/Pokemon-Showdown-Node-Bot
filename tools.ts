@@ -97,7 +97,8 @@ export class Tools {
 		string,
 		{
 			commands: Record<string, Record<string, string>>;
-		} & (Record<string, Record<string, string>> | Record<string, Record<string, string>>)
+			globals: Record<string, Record<string, string>>;
+		}
 	> = {};
 
 	toName(text?: string): string {
@@ -312,20 +313,16 @@ export class Tools {
 	/* Languages */
 
 	loadLang(lang: string, reloading?: boolean): Tools['translations'][string] {
-		const translationDataObj: Tools['translations'][string] = { commands: {} };
-		const commandsTranslation: Record<string, Record<string, string>> = {};
+		const langToGlobals: Record<string, Record<string, string>> = {};
+		const langToCommands: Record<string, Record<string, string>> = {};
 		readdirSync('./languages/' + lang).forEach((file) => {
 			if (!file.endsWith('.ts')) return;
 			if (reloading) this.uncacheTree('./languages/' + lang + '/' + file);
-			const tempObj = require('./languages/' + lang + '/' + file).translations as Record<
-				string,
-				Record<string, string>
-			>;
-			Object.assign(commandsTranslation, tempObj.commands);
-			Object.assign(translationDataObj, tempObj);
+			const { commands, ...globals } = require('./languages/' + lang + '/' + file).translations;
+			Object.assign(langToCommands, commands || {});
+			Object.assign(langToGlobals, globals);
 		});
-		translationDataObj.commands = translationDataObj;
-		return translationDataObj;
+		return { commands: langToCommands, globals: langToGlobals };
 	}
 
 	loadTranslations(reloading?: boolean): string[] {
@@ -376,33 +373,11 @@ export class Tools {
 	}
 
 	translateGlobal(glob: string, data: string, lang: string): string {
-		if (
-			this.translations[lang] &&
-			this.translations[lang][glob] &&
-			typeof this.translations[lang][glob][data] !== 'undefined'
-		) {
-			return this.translations[lang][glob][data];
-		} else {
-			lang = 'english';
-			if (
-				!this.translations[lang] ||
-				!this.translations[lang][glob] ||
-				typeof this.translations[lang][glob][data] === 'undefined'
-			) {
-				return '__(not found)__';
-			} else {
-				return this.translations[lang][glob][data];
-			}
-		}
-	}
-
-	tryTranslate(type: string, name: string, lang?: string): string {
-		if (!lang) return name;
-		const id = toId(name);
-		if (this.translations[lang] && this.translations[lang][type] && this.translations[lang][type][id]) {
-			return this.translations[lang][type][id];
-		}
-		return name;
+		return (
+			this.translations[lang]?.globals?.[glob]?.[data] ||
+			this.translations['english']?.globals?.[glob]?.[data] ||
+			'__(not found)__'
+		);
 	}
 
 	/* Battle formats and data */

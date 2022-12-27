@@ -18,16 +18,16 @@ exports.commands = {
 	sendpm: 'pm',
 	pm: function (arg, by, room, cmd) {
 		if (!this.isRanked('admin')) return false;
-		var args = arg.split(",");
-		if (args.length < 2) return this.reply("Usage: " + this.cmdToken + cmd + " [user], [message]");
+		var args = arg.split(',');
+		if (args.length < 2) return this.reply('Usage: ' + this.cmdToken + cmd + ' [user], [message]');
 		var targetUser = toId(args.shift());
-		var msg = args.join(",").trim();
-		if (!targetUser || !msg) return this.reply("Usage: " + this.cmdToken + cmd + " [user], [message]");
+		var msg = args.join(',').trim();
+		if (!targetUser || !msg) return this.reply('Usage: ' + this.cmdToken + cmd + ' [user], [message]');
 		this.sclog();
 		this.sendPM(targetUser, msg);
 	},
 
-	"join": function (arg, by, room, cmd) {
+	join: function (arg, by, room, cmd) {
 		if (!this.isRanked('admin')) return false;
 		if (!arg) return;
 		arg = arg.split(',');
@@ -75,7 +75,8 @@ exports.commands = {
 				var cmds = [];
 				try {
 					var rooms = JSON.parse(str);
-					var offRooms = [], publicRooms = [];
+					var offRooms = [],
+						publicRooms = [];
 					if (rooms.official) {
 						for (var i = 0; i < rooms.official.length; i++) {
 							if (rooms.official[i].title) offRooms.push(toId(rooms.official[i].title));
@@ -113,10 +114,15 @@ exports.commands = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
+		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
+			return this.reply(this.trad('notchat') + textHelper);
 		var lang = toId(arg);
-		if (!lang.length) return this.reply(this.trad('nolang') + ". " + this.trad('v') + ': ' + Object.keys(Tools.translations).join(', '));
-		if (!Tools.translations[lang]) return this.reply(this.trad('v') + ': ' + Object.keys(Tools.translations).join(', '));
+		if (!lang.length)
+			return this.reply(
+				this.trad('nolang') + '. ' + this.trad('v') + ': ' + Object.keys(Tools.translations).join(', ')
+			);
+		if (!Tools.translations[lang])
+			return this.reply(this.trad('v') + ': ' + Object.keys(Tools.translations).join(', '));
 		if (!Settings.settings['language']) Settings.settings['language'] = {};
 		Settings.settings['language'][tarRoom] = lang;
 		Settings.save();
@@ -136,36 +142,39 @@ exports.commands = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
-		var args = arg.split(",");
-		if (args.length < 2) return this.reply(this.trad('u1') + ": " + this.cmdToken + cmd + " " + this.trad('u2'));
+		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
+			return this.reply(this.trad('notchat') + textHelper);
+		var args = arg.split(',');
+		if (args.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 		var perm = toId(args[0]);
 		var rank = args[1].trim();
 		if (!(perm in Settings.permissions)) {
-			return this.reply(this.trad('ps') + ": " + Object.keys(Settings.permissions).sort().join(", "));
+			return this.reply(this.trad('ps') + ': ' + Object.keys(Settings.permissions).sort().join(', '));
 		}
-		if (rank in {'off': 1, 'disable': 1}) {
+		if (rank in { off: 1, disable: 1 }) {
 			if (!this.canSet(perm, true)) return this.reply(this.trad('denied'));
 			Settings.setPermission(tarRoom, perm, true);
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('p') + " **" + perm + "** " + this.trad('d') + textHelper);
+			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('d') + textHelper);
 		}
-		if (rank in {'on': 1, 'all': 1, 'enable': 1}) {
+		if (rank in { on: 1, all: 1, enable: 1 }) {
 			if (!this.canSet(perm, ' ')) return this.reply(this.trad('denied'));
 			Settings.setPermission(tarRoom, perm, ' ');
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('p') + " **" + perm + "** " + this.trad('a') + textHelper);
+			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('a') + textHelper);
 		}
 		if (Config.ranks.indexOf(rank) >= 0) {
 			if (!this.canSet(perm, rank)) return this.reply(this.trad('denied'));
 			Settings.setPermission(tarRoom, perm, rank);
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('p') + " **" + perm + "** " + this.trad('r') + ' ' + rank + " " + this.trad('r2') + textHelper);
+			return this.reply(
+				this.trad('p') + ' **' + perm + '** ' + this.trad('r') + ' ' + rank + ' ' + this.trad('r2') + textHelper
+			);
 		} else {
-			return this.reply(this.trad('not1') + " " + rank + " " + this.trad('not2'));
+			return this.reply(this.trad('not1') + ' ' + rank + ' ' + this.trad('not2'));
 		}
 	},
 
@@ -173,32 +182,34 @@ exports.commands = {
 	battlesettings: 'battleset',
 	battleset: function (arg, by, room, cmd) {
 		if (!this.isRanked('admin')) return false;
-		var args = arg.split(",");
-		if (args.length < 2) return this.reply(this.trad('u1') + ": " + this.cmdToken + cmd + " " + this.trad('u2'));
+		var args = arg.split(',');
+		if (args.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 		var perm = toId(args[0]);
 		var rank = args[1].trim();
 		if (!(perm in Settings.permissions)) {
-			return this.reply(this.trad('ps') + ": " + Object.keys(Settings.permissions).sort().join(", "));
+			return this.reply(this.trad('ps') + ': ' + Object.keys(Settings.permissions).sort().join(', '));
 		}
-		if (rank in {'off': 1, 'disable': 1}) {
+		if (rank in { off: 1, disable: 1 }) {
 			Settings.setPermission('battle-', perm, true);
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('p') + " **" + perm + "** " + this.trad('d'));
+			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('d'));
 		}
-		if (rank in {'on': 1, 'all': 1, 'enable': 1}) {
+		if (rank in { on: 1, all: 1, enable: 1 }) {
 			Settings.setPermission('battle-', perm, ' ');
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('p') + " **" + perm + "** " + this.trad('a'));
+			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('a'));
 		}
 		if (Config.ranks.indexOf(rank) >= 0) {
 			Settings.setPermission('battle-', perm, rank);
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('p') + " **" + perm + "** " + this.trad('r') + ' ' + rank + " " + this.trad('r2'));
+			return this.reply(
+				this.trad('p') + ' **' + perm + '** ' + this.trad('r') + ' ' + rank + ' ' + this.trad('r2')
+			);
 		} else {
-			return this.reply(this.trad('not1') + " " + rank + " " + this.trad('not2'));
+			return this.reply(this.trad('not1') + ' ' + rank + ' ' + this.trad('not2'));
 		}
 	}
 };
