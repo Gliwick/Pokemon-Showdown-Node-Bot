@@ -74,7 +74,7 @@ export interface LeaderboardConfig {
 }
 
 export interface ConfigType {
-	commandChar: any;
+	commandChar: string;
 	disableSeen?: boolean;
 	disableAlts?: boolean;
 	server: string;
@@ -199,10 +199,30 @@ export interface ConfigType {
 	groupChatTryJoinInterval: number;
 }
 
+function issue(text: string): void {
+	console.log('issue'.yellow + '\t' + text);
+}
+
+type KeyOf<T, V> = { [K in keyof T]-?: V extends T[K] ? K : never }[keyof T];
+
+function enforceConfigArray(key: KeyOf<ConfigType, any[]>): void {
+	if (!Config[key] || !Array.isArray(Config[key])) {
+		issue('Config.' + key + ' is not an array');
+		Config[key] = [];
+	}
+}
+
+export function enforceConfigObject<T extends keyof ConfigType>(
+	key: KeyOf<ConfigType, ConfigType[T]>,
+	defaultValue: ConfigType[KeyOf<ConfigType, ConfigType[T]>]
+): void {
+	if (!Config[key] || typeof Config[key] !== 'object' || Array.isArray(Config[key])) {
+		issue('Config' + key + ' is not an object');
+		Config[key] = defaultValue;
+	}
+}
+
 export function checkConfig(): void {
-	const issue = (text: string): void => {
-		console.log('issue'.yellow + '\t' + text);
-	};
 	if (Config.server && Config.server.substr(-8) === '.psim.us') {
 		issue(
 			'WARNING: YOUR SERVER URL ' +
@@ -212,52 +232,27 @@ export function checkConfig(): void {
 				' TO GET THE CORRECT SERVER, PORT AND SERVERID VALUES\n'
 		);
 	}
-	if (
-		(typeof Config.rooms !== 'string' && !Array.isArray(Config.rooms)) ||
-		(typeof Config.rooms === 'string' && !['all', 'official', 'public'].includes(Config.rooms))
-	) {
-		issue('Config.rooms is not an array');
-		Config.rooms = [];
+	if (typeof Config.rooms !== 'string' || !['all', 'official', 'public'].includes(Config.rooms)) {
+		enforceConfigArray('rooms');
 	}
-	if (!Array.isArray(Config.privateRooms)) {
-		issue('Config.privateRooms is not an array');
-		Config.privateRooms = [];
-	}
-	if (!Array.isArray(Config.ignoreRooms)) {
-		issue('Config.ignoreRooms is not an array');
-		Config.ignoreRooms = [];
-	}
-	if (!Array.isArray(Config.initCmds)) {
-		issue('Config.initCmds is not an array');
-		Config.initCmds = [];
-	}
-	if (typeof Config.exceptions !== 'object') {
-		issue('Config.exceptions is not an object');
-		Config.exceptions = {};
-	}
-	if (!Array.isArray(Config.ranks)) {
-		issue('Config.ranks is not an array');
-		Config.ranks = [];
-	}
-	if (typeof Config.permissionExceptions !== 'object') {
-		issue('Config.permissionExceptions is not an object');
-		Config.permissionExceptions = {};
-	}
-	if (typeof Config.debug !== 'object') {
-		issue('Config.debug is not an object');
-		Config.debug = {
-			error: false,
-			ok: false,
-			errlog: false,
-			info: false,
-			room: false,
-			monitor: false,
-			status: false,
-			battle: false,
-			debug: false,
-			cmdr: false,
-			recv: false,
-			sent: false,
-		};
-	}
+	enforceConfigArray('privateRooms');
+	enforceConfigArray('ignoreRooms');
+	enforceConfigArray('initCmds');
+	enforceConfigObject('exceptions', {});
+	enforceConfigArray('ranks');
+	enforceConfigObject('permissionExceptions', {});
+	enforceConfigObject('debug', {
+		error: false,
+		ok: false,
+		errlog: false,
+		info: false,
+		room: false,
+		monitor: false,
+		status: false,
+		battle: false,
+		debug: false,
+		cmdr: false,
+		recv: false,
+		sent: false,
+	});
 }

@@ -2,7 +2,7 @@
 	Moderation Feature
 */
 
-import { ConfigType } from '../../options';
+import { ConfigType, enforceConfigObject } from '../../options';
 import { toId } from '../../tools';
 import { Feature } from '../index';
 
@@ -575,14 +575,13 @@ export class ModerationManager implements Feature {
 	parse(room: string, message: string, isIntro: boolean, spl: string[]): void {
 		if (isIntro) return;
 		if (!Bot.rooms[room] || Bot.rooms[room].type !== 'chat') return;
-		if (!Config.moderation || typeof Config.moderation !== 'object')
-			Config.moderation = {
-				modException: '%',
-				MOD_CONSTS: { ...DEFAULT_MOD_CONSTS },
-				values: { ...DEFAULT_MOD_VALUES },
-				modDefault: DEFAULT_MOD,
-				punishments: ['warn', 'mute', 'hourmute', 'roomban'],
-			};
+		enforceConfigObject('moderation', {
+			modException: '%',
+			MOD_CONSTS: { ...DEFAULT_MOD_CONSTS },
+			values: { ...DEFAULT_MOD_VALUES },
+			modDefault: DEFAULT_MOD,
+			punishments: ['warn', 'mute', 'hourmute', 'roomban'],
+		});
 		let by, timeOff;
 		switch (spl[0]) {
 			case 'c':
