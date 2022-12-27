@@ -2,12 +2,15 @@
 	Majors
 */
 
-import { error } from '../../../console-reports';
+import { error } from '../../../log';
 import { toId } from '../../../tools';
 import { Battle, BattleType, BattleTypeActiveSlots, PlayerId, Request } from './battle';
-import { Move, Pokemon, getPokemon, getMove, getEffect, BoostedStat } from './battle-data';
+import { BoostedStat, getEffect, getMove, getPokemon, Move, Pokemon } from './battle-data';
 
-export const majors: Record<string, ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void) | string> = {
+export const majors: Record<
+	string,
+	((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void) | string
+> = {
 	rated: function (this: Battle, args, kwargs) {
 		this.rated = true;
 	},
@@ -15,7 +18,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 	request: function (this: Battle, args, kwargs) {
 		args.shift();
 		this.request = null;
-		const arg = args.join("|");
+		const arg = args.join('|');
 		if (arg.length) this.request = JSON.parse(arg) as Request;
 		this.rqid = this.request?.rqid || -1;
 	},
@@ -38,7 +41,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 
 	tier: function (this: Battle, args, kwargs) {
 		if (!args[1]) args[1] = '';
-		for (let key in kwargs) args[1] += '[' + key + '] ' + kwargs[key];
+		for (const key in kwargs) args[1] += '[' + key + '] ' + kwargs[key];
 		this.tier = args[1];
 		this.conditions['inversebattle'] = toId(this.tier).includes('inversebattle');
 		this.start();
@@ -51,7 +54,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 		}
 
 		this.gametype = args[1] as BattleType;
-		this.conditions["gametype"] = this.gametype;
+		this.conditions['gametype'] = this.gametype;
 		this.players.p1.active = Array(BattleTypeActiveSlots[this.gametype]).fill(null);
 		this.players.p2.active = Array(BattleTypeActiveSlots[this.gametype]).fill(null);
 	},
@@ -67,7 +70,12 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 	inactive: function (this: Battle, args, kwargs) {
 		this.timer = true;
 		if (args[1]) {
-			if (args[1].includes('Battle timer is ON') || args[1].includes('You have') || toId(args[1]).includes(toId(Bot.status.nickName))) this.makeDecision();
+			if (
+				args[1].includes('Battle timer is ON') ||
+				args[1].includes('You have') ||
+				toId(args[1]).includes(toId(Bot.status.nickName))
+			)
+				this.makeDecision();
 		}
 	},
 
@@ -75,12 +83,12 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 		this.timer = false;
 	},
 
-	j: "join",
+	j: 'join',
 	join: function (this: Battle, args, kwargs) {
 		this.users[toId(args[1])] = args[1];
 	},
 
-	l: "leave",
+	l: 'leave',
 	leave: function (this: Battle, args, kwargs) {
 		if (this.users[toId(args[1])]) delete this.users[toId(args[1])];
 	},
@@ -96,7 +104,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 		const avatar = args[3];
 		const player = this.players[id as PlayerId];
 		if (player) {
-			player.setName(name || "");
+			player.setName(name || '');
 			player.avatar = avatar || 0;
 			if (player.userid) {
 				if (player.userid === toId(Bot.status.nickName)) {
@@ -116,7 +124,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 
 	tie: function (this: Battle, args, kwargs, isIntro) {
 		this.ended = true;
-		if (!isIntro) this.message("tie");
+		if (!isIntro) this.message('tie');
 		this.leave();
 	},
 
@@ -165,10 +173,10 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 		this.checkTimer();
 	},
 
-	drag: "switch",
-	"replace": "switch",
-	"switch": function (this: Battle, args, kwargs) {
-		const spl = args[1].split(": ");
+	drag: 'switch',
+	replace: 'switch',
+	switch: function (this: Battle, args, kwargs) {
+		const spl = args[1].split(': ');
 		const p = spl[0].substr(0, 2);
 		if (!(p in this.players)) {
 			error('Unknown side: ' + p);
@@ -219,7 +227,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 				active.removeVolatile('yawn');
 				active.removeVolatile('transform');
 				active.removeVolatile('formechange');
-				for (let vol in active.volatiles) {
+				for (const vol in active.volatiles) {
 					poke.addVolatile(vol);
 				}
 				let stat: BoostedStat;
@@ -248,7 +256,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 		poke.active = false;
 		poke.passing = null;
 		poke.hp = 0;
-		if (!isIntro) this.message("faint", det?.side, poke.name);
+		if (!isIntro) this.message('faint', det?.side, poke.name);
 	},
 
 	swap: function (this: Battle, args, kwargs) {
@@ -310,7 +318,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 				this.players[det.side as PlayerId].side.wish = {
 					move: move.id,
 					turn: this.turn,
-					poke: poke
+					poke: poke,
 				};
 			}
 		}
@@ -318,7 +326,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 			poke.passing = this.turn;
 		}
 		if (!noDeductPP && kwargs.from !== 'lockedmove') {
-			if (args[1] !== args[3] && typeof poke2?.ability !== 'string' && poke2?.ability?.id === "pressure") {
+			if (args[1] !== args[3] && typeof poke2?.ability !== 'string' && poke2?.ability?.id === 'pressure') {
 				move.pp -= 2;
 			} else {
 				move.pp--;
@@ -335,7 +343,7 @@ export const majors: Record<string, ((args: string[], kwargs: Record<string, str
 		if (!poke) return;
 
 		const effect = getEffect(args[2], this.gen);
-		const moveTemplate = getMove(args[3] || "", this.gen, this.id);
+		const moveTemplate = getMove(args[3] || '', this.gen, this.id);
 		const det = this.parsePokemonIdent(args[1]);
 		switch (effect.id) {
 			case 'taunt':

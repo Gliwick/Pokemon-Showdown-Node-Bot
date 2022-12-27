@@ -4,7 +4,7 @@
 import { readdirSync } from 'fs';
 import { inspect } from 'util';
 
-import { cmdr, errlog, error, info, monitor, ok } from './console-reports';
+import { cmdr, errlog, error, info, monitor, ok } from './log';
 import { FlatFileManager } from './settings';
 import { toId, toRoomid } from './tools';
 

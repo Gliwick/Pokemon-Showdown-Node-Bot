@@ -2,7 +2,7 @@
 	Battle Feature
 */
 
-import { errlog, error } from '../../console-reports';
+import { errlog, error } from '../../log';
 import { Feature } from '../index';
 import { BattleBot } from './battle-ai';
 import { ChallengeManager } from './challenges';

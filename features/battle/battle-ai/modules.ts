@@ -2,7 +2,7 @@
  * Battle modules
  */
 
-import { debug } from '../../../console-reports';
+import { debug } from '../../../log';
 import { toId } from '../../../tools';
 import { Battle } from './battle';
 import { Decision } from './decision';

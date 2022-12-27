@@ -1,4 +1,4 @@
-import { debug } from '../../console-reports';
+import { debug } from '../../log';
 import { Parser } from '..';
 import { BattleBot } from './battle-ai';
 import { TeamBuilder } from './teambuilder';

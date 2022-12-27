@@ -2,7 +2,7 @@
 	Log system (battle)
 */
 
-import { errlog } from '../../../console-reports';
+import { errlog } from '../../../log';
 import { checkDir, sweep } from '../../../security-log';
 import { Battle } from './battle';
 

@@ -2,7 +2,7 @@
  * Tournaments points system
  */
 
-import { debug } from '../../console-reports';
+import { debug } from '../../log';
 import { LeaderboardConfig } from '../../options';
 import { FlatFileManager } from '../../settings';
 import { toId } from '../../tools';

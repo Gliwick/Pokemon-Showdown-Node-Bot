@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, rename, writeFile } from 'fs';
 import { inspect } from 'util';
 
-import { debug, error } from '../../console-reports';
+import { debug, error } from '../../log';
 import { PokeSet, toId } from '../../tools';
 
 const teamsDataFile = AppOptions.data + 'teams.json';

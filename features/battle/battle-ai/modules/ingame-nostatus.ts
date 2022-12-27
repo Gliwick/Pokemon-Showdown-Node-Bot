@@ -15,7 +15,7 @@
  *	- Priority -100000 - Moves 0 damage
  */
 
-import { debug } from '../../../../console-reports';
+import { debug } from '../../../../log';
 import { toId } from '../../../../tools';
 import { Battle } from '../battle';
 import { Decision, MoveDecision, SwitchDecision, TeamDecision } from '../decision';

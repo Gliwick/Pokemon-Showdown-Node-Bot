@@ -4,7 +4,7 @@
 import { existsSync, PathLike, readFile, readFileSync, rename, unlinkSync, writeFile, writeFileSync } from 'fs';
 import { inspect } from 'util';
 
-import { debug, errlog, error, ok } from './console-reports';
+import { debug, errlog, error, ok } from './log';
 import { ConfigType, LeaderboardConfig } from './options';
 import type PackageJsonType from './package.json';
 import { toId } from './tools';

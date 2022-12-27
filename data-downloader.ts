@@ -5,7 +5,7 @@ import { writeFile } from 'fs';
 import { IncomingMessage } from 'http';
 import * as https from 'https';
 
-import { debug, errlog, error } from './console-reports';
+import { debug, errlog, error } from './log';
 
 const datenow = Date.now();
 

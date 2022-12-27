@@ -6,9 +6,9 @@ import * as http from 'http';
 import * as https from 'https';
 import { inspect } from 'util';
 
-import { errlog, error, info, ok } from './console-reports';
 import { typechart } from './data/typechart';
 import { initFeature, initFeatures } from './features';
+import { errlog, error, info, ok } from './log';
 import { ConfigType } from './options';
 
 declare global {
