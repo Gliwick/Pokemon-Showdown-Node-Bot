@@ -13,19 +13,44 @@ var jshintStylish = require('jshint-stylish');
 
 var globals = {};
 var globalList = [
-	'Bot', 'AppOptions', 'CommandParser', 'Config', 'DataDownloader', 'Features', 'Formats', 'Settings', 'Tools',
-	'colors', 'sys', 'fs', 'path', 'PSClient', 'reloadFeatures', 'SecurityLog',
-	'toId', 'toRoomid', 'ok', 'info', 'error', 'errlog', 'debug', 'cmdr', 'recv', 'sent', 'monitor'
+	'Bot',
+	'AppOptions',
+	'CommandParser',
+	'Config',
+	'DataDownloader',
+	'Features',
+	'Formats',
+	'Settings',
+	'Tools',
+	'colors',
+	'sys',
+	'fs',
+	'path',
+	'PSClient',
+	'reloadFeatures',
+	'SecurityLog',
+	'toId',
+	'toRoomid',
+	'ok',
+	'info',
+	'error',
+	'errlog',
+	'debug',
+	'cmdr',
+	'recv',
+	'sent',
+	'monitor'
 ];
-globalList.forEach(function (identifier) { globals[identifier] = false; });
+globalList.forEach(function (identifier) {
+	globals[identifier] = false;
+});
 
 function transformLet() {
 	// Replacing `var` with `let` is sort of a hack that stops jsHint from
 	// complaining that I'm using `var` like `let` should be used, but
 	// without having to deal with iffy `let` support.
 
-	return lazypipe()
-		.pipe(replace.bind(null, /\bvar\b/g, 'let'))();
+	return lazypipe().pipe(replace.bind(null, /\bvar\b/g, 'let'))();
 }
 
 function lint(jsHintOptions, jscsOptions) {
@@ -49,74 +74,88 @@ function lint(jsHintOptions, jscsOptions) {
 
 var jsHintOptions = {};
 jsHintOptions.base = {
-	"nonbsp": true,
-	"nonew": true,
-	"noarg": true,
-	"loopfunc": true,
-	"latedef": 'nofunc',
+	nonbsp: true,
+	nonew: true,
+	noarg: true,
+	loopfunc: true,
+	latedef: 'nofunc',
 
-	"freeze": true,
-	"undef": true,
+	freeze: true,
+	undef: true,
 
-	"sub": true,
-	"evil": true,
-	"esnext": true,
-	"node": true,
-	"eqeqeq": true,
+	sub: true,
+	evil: true,
+	esnext: true,
+	node: true,
+	eqeqeq: true,
 
-	"globals": globals
+	globals: globals
 };
 
 jsHintOptions.test = util._extend(util._extend({}, jsHintOptions.base), {
-	"mocha": true
+	mocha: true
 });
 
 jsHintOptions.externalScripts = util._extend(util._extend({}, jsHintOptions.base), {
-	"globals": {}
+	globals: {}
 });
 
 var jscsOptions = {};
-jscsOptions.base = "./test/.jscsrc";
-jscsOptions.config = "./test/.jscsrc";
-
+jscsOptions.base = './test/.jscsrc';
+jscsOptions.config = './test/.jscsrc';
 
 var lintData = [
 	{
-		dirs: ['./command-parser.ts', './data-downloader.ts', './index.ts', './security-log.ts', './settings.ts', 'showdown-client.ts', './tools.ts', './commands/*.js', './features/*/*.ts', './languages/*/*.js', './features/battle/battle-ai/*.ts', './features/battle/battle-ai/modules/*.ts'],
+		dirs: [
+			'./command-parser.ts',
+			'./data-downloader.ts',
+			'./index.ts',
+			'./security-log.ts',
+			'./settings.ts',
+			'showdown-client.ts',
+			'./tools.ts',
+			'./commands/*.js',
+			'./features/*/*.ts',
+			'./languages/*/*.js',
+			'./features/battle/battle-ai/*.ts',
+			'./features/battle/battle-ai/modules/*.ts'
+		],
 		jsHint: jsHintOptions.base,
 		jscs: jscsOptions.base
-	}, {
+	},
+	{
 		dirs: ['./config-example.js', './data/*-example.js', './data/typechart.ts'],
 		jsHint: jsHintOptions.base,
 		jscs: jscsOptions.config
-	}, {
+	},
+	{
 		dirs: ['./test/*.js', './testfiles/*.js'],
 		jsHint: jsHintOptions.test,
 		jscs: jscsOptions.config
-	}, {
-		dirs: ['./getserver.js', './bot-setup.js'],
+	},
+	{
+		dirs: ['./getserver.js', './config-setup.js'],
 		jsHint: jsHintOptions.externalScripts,
 		jscs: jscsOptions.base
 	}
 ];
 
 var linter = function () {
-	return (
-		merge.apply(
+	return merge
+		.apply(
 			null,
 			lintData.map(function (source) {
-				return gulp.src(source.dirs)
-					.pipe(transformLet())
-					.pipe(lint(source.jsHint, source.jscs));
+				return gulp.src(source.dirs).pipe(transformLet()).pipe(lint(source.jsHint, source.jscs));
 			})
-		).pipe(jshint.reporter(jshintStylish))
-			.pipe(jshint.reporter('fail'))
-	);
+		)
+		.pipe(jshint.reporter(jshintStylish))
+		.pipe(jshint.reporter('fail'));
 };
 
 gulp.task('fastlint', function () {
 	var source = lintData[0];
-	return gulp.src(source.dirs)
+	return gulp
+		.src(source.dirs)
 		.pipe(transformLet())
 		.pipe(lint(source.jsHint, source.jscs))
 		.pipe(jshint.reporter(jshintStylish))
