@@ -1,11 +1,11 @@
 import { CommandParser as CommandParserClass } from './command-parser';
 import { DataDownloader as DataDownloaderClass } from './data-downloader';
 import { Feature } from './features';
-import { Format } from './global-types';
+import { FormatData } from './index';
 import { AppOptionsType, ConfigType } from './options';
 import { SecurityLogger } from './security-log';
 import { FlatFileManager as FlatFileManagerClass, SettingsManager } from './settings';
-import { Client } from './showdown-client';
+import { Client, ClientOptions } from './showdown-client';
 import { Tools as ToolsType } from './tools';
 
 declare global {
@@ -18,7 +18,7 @@ declare global {
 			DataDownloader: DataDownloaderClass;
 			Features: Record<string, Feature>;
 			FlatFileManager: new () => FlatFileManagerClass;
-			Formats: Record<string, Format>;
+			Formats: Record<string, FormatData>;
 			PSClient: new () => Client;
 			SecurityLog: SecurityLogger;
 			Settings: SettingsManager;
@@ -30,10 +30,10 @@ declare global {
 	const Config: ConfigType;
 	const CommandParser: CommandParserClass;
 	const DataDownloader: DataDownloaderClass;
-	const Features: Record<string, Feature>;
+	let Features: Record<string, Feature>;
 	const FlatFileManager: new () => FlatFileManagerClass;
-	const Formats: Record<string, Format>;
-	const PSClient: new () => Client;
+	const Formats: Record<string, FormatData>;
+	const PSClient: new (server: string, port: number, opts: Partial<ClientOptions>) => Client;
 	const SecurityLog: SecurityLogger;
 	const Settings: SettingsManager;
 	const Tools: ToolsType;

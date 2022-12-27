@@ -1,5 +1,7 @@
 /* Process arguments */
 
+import { colors } from '.';
+
 export interface AppOptionsType {
 	help?: boolean;
 	debugmode?: number;
@@ -74,9 +76,6 @@ export interface LeaderboardConfig {
 }
 
 export interface ConfigType {
-	commandChar: string;
-	disableSeen?: boolean;
-	disableAlts?: boolean;
 	server: string;
 	port: number;
 	serverid: string;
@@ -197,10 +196,14 @@ export interface ConfigType {
 	};
 	groupchats: Record<string, { toJoin: string[]; onJoin: string[]; onLeave: string[] }>;
 	groupChatTryJoinInterval: number;
+	disableDownload?: boolean;
+	commandChar: string;
+	disableSeen?: boolean;
+	disableAlts?: boolean;
 }
 
 function issue(text: string): void {
-	console.log('issue'.yellow + '\t' + text);
+	console.log(colors.yellow('issue') + '\t' + text);
 }
 
 type KeyOf<T, V> = { [K in keyof T]-?: V extends T[K] ? K : never }[keyof T];
@@ -226,9 +229,9 @@ export function checkConfig(): void {
 	if (Config.server && Config.server.substr(-8) === '.psim.us') {
 		issue(
 			'WARNING: YOUR SERVER URL ' +
-				Config.server.red +
+				colors.red(Config.server) +
 				' SEEMS A CLIENT URL, NOT A SERVER ONE. USE ' +
-				'node serverconfig.js'.cyan +
+				colors.cyan('node serverconfig.js') +
 				' TO GET THE CORRECT SERVER, PORT AND SERVERID VALUES\n'
 		);
 	}

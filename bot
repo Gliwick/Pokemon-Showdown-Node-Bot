@@ -6,7 +6,12 @@ function installDependencies() {
 }
 
 function registerTSNode() {
-	require('ts-node').register({ project: './tsconfig.json', files: true, transpileOnly: true, transpiler: 'ts-node/transpilers/swc-experimental' });
+	require('ts-node').register({
+		project: './tsconfig.json',
+		files: true,
+		transpileOnly: true,
+		transpiler: 'ts-node/transpilers/swc-experimental'
+	});
 }
 
 function setupTSNode() {
@@ -23,7 +28,7 @@ try {
 	setupTSNode();
 	require('sugar');
 	require('colors');
-	require('websocket')
+	require('websocket');
 } catch (e) {
 	console.log('Installing dependencies...');
 	require('child_process').spawnSync('sh', ['-c', 'npm install --production'], { stdio: 'inherit' });
@@ -31,4 +36,4 @@ try {
 
 // Start the Bot
 
-require('./index.js');
+require('./index.ts');

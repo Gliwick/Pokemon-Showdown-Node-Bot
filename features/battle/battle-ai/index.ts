@@ -30,8 +30,8 @@ export class BattleBot {
 		this.battlesCount = 0;
 	}
 
-	tryJoinAbandonedBattles(): string[] | undefined {
-		if (!Config.abandonedBattleAutojoin) return;
+	tryJoinAbandonedBattles(): string[] {
+		if (!Config.abandonedBattleAutojoin) return [];
 		try {
 			this.autoJoinData = this.autojoinFFM.readObj();
 		} catch (e: any) {

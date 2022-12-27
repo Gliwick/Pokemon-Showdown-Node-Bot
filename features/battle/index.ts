@@ -60,7 +60,7 @@ export class BattleManager implements Feature {
 		}
 	}
 
-	getInitCmds(): string[] | undefined {
+	getInitCmds(): string[] {
 		return this.battleBot.tryJoinAbandonedBattles();
 	}
 

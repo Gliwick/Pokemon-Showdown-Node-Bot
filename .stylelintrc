@@ -1,23 +1,23 @@
 {
-  "extends": "stylelint-config-sass-guidelines",
-  "rules": {
-    "selector-max-id": 1,
-    "max-nesting-depth": 2,
-    "selector-no-qualifying-type": [
-      true,
-      {
-        "ignore": ["attribute", "class"]
-      }
-    ],
-    "selector-class-pattern": null,
-    "color-named": null,
-    "indentation": "tab",
-    "selector-max-compound-selectors": null,
-    "declaration-property-value-disallowed-list": null,
-    "declaration-block-single-line-max-declarations": null,
-    "declaration-block-semicolon-newline-after": null,
-    "declaration-block-trailing-semicolon": null,
-    "scss/selector-no-redundant-nesting-selector": null,
-    "no-missing-end-of-source-newline": null
-  }
+	"extends": "stylelint-config-sass-guidelines",
+	"rules": {
+		"selector-max-id": 1,
+		"max-nesting-depth": 2,
+		"selector-no-qualifying-type": [
+			true,
+			{
+				"ignore": ["attribute", "class"]
+			}
+		],
+		"selector-class-pattern": null,
+		"color-named": null,
+		"indentation": "tab",
+		"selector-max-compound-selectors": null,
+		"declaration-property-value-disallowed-list": null,
+		"declaration-block-single-line-max-declarations": null,
+		"declaration-block-semicolon-newline-after": null,
+		"declaration-block-trailing-semicolon": null,
+		"scss/selector-no-redundant-nesting-selector": null,
+		"no-missing-end-of-source-newline": null
+	}
 }

@@ -8,7 +8,7 @@ import { inspect } from 'util';
 
 import { errlog, error, info, ok } from './console-reports';
 import { typechart } from './data/typechart';
-import { initFeature } from './features';
+import { initFeature, initFeatures } from './features';
 import { ConfigType } from './options';
 
 declare global {
@@ -904,5 +904,20 @@ export class Tools {
 		} else {
 			throw new Error('Error: Feature ' + feature + ' not found');
 		}
+	}
+
+	reloadFeatures(): void {
+		Object.values(Features).forEach((f) => {
+			if (typeof f.destroy === 'function') f.destroy();
+		});
+
+		const features = initFeatures();
+
+		Object.entries(features).forEach(([id, f]) => {
+			Features[id] = f;
+			if (typeof f.init === 'function') f.init();
+		});
+
+		info('Features reloaded');
 	}
 }

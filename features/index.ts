@@ -1,33 +1,34 @@
 export interface Parser {
-    parse: (room: string, message: string, isIntro: boolean, spl: string[]) => void;
+	parse: (room: string, message: string, isIntro: boolean, spl: string[]) => void;
 }
 
 export interface Feature extends Parser {
-    readonly id: string;
-    readonly desc?: string;
-    init: () => void;
-    getInitCmds?: () => string[] | undefined;
-    destroy: () => void;
+	readonly id: string;
+	readonly desc?: string;
+	init: () => void;
+	getInitCmds?: () => string[];
+	destroy: () => void;
 }
 
-import { BattleManager } from './battle/index'
-import { GroupChatsManager } from './groupchats/index'
-import { ModerationManager } from './moderation/index'
-import { TournamentsManager } from './tournaments/index'
+import { BattleManager } from './battle/index';
+import { GroupChatsManager } from './groupchats/index';
+import { ModerationManager } from './moderation/index';
+import { TournamentsManager } from './tournaments/index';
 
 const features: Record<string, new () => Feature> = {
-    battle: BattleManager,
-    groupchats: GroupChatsManager,
-    moderation: ModerationManager,
-    tournament: TournamentsManager,
-}
+	battle: BattleManager,
+	groupchats: GroupChatsManager,
+	moderation: ModerationManager,
+	tournament: TournamentsManager,
+};
 
 export function initFeature(id: string): Feature | undefined {
-    return features[id] && new features[id]();
+	return features[id] && new features[id]();
 }
 
 export function initFeatures(): Record<string, Feature> {
-    return Object.entries(features).reduce((acc: Record<string, Feature>, [id, constructor]) => {
-        acc[id] = new constructor(); return acc;
-    }, {});
+	return Object.entries(features).reduce((acc: Record<string, Feature>, [id, constructor]) => {
+		acc[id] = new constructor();
+		return acc;
+	}, {});
 }

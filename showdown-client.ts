@@ -32,7 +32,7 @@ import { client as WebSocketClient, connection, Message } from 'websocket';
 
 import { toId } from './tools';
 
-interface ClientOptions {
+export interface ClientOptions {
 	server: string;
 	serverid: string;
 	port: number;
@@ -473,7 +473,8 @@ export class Client {
 		} else {
 			this.events.emit('major', room, '', message, isIntro);
 		}
-		let by, timeOff;
+		let by: string;
+		let timeOff: number;
 		switch (spl[0]) {
 			case 'formats':
 				this.events.emit('formats', message.substr(spl[0].length + 2));
