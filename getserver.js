@@ -7,13 +7,13 @@ try {
 	require('colors');
 } catch (e) {
 	console.log('Installing dependencies...');
-	require('child_process').spawnSync('sh', ['-c', 'npm install --production'], {stdio: 'inherit'});
+	require('child_process').spawnSync('sh', ['-c', 'npm install --production'], { stdio: 'inherit' });
 }
 
 require('sugar');
 var colors = require('colors');
 var readline = require('readline');
-var sys = require('sys');
+var sys = require('util');
 var url = require('url');
 var http = require('http');
 var fs = require('fs');
@@ -23,8 +23,8 @@ var rl = readline.createInterface({
 	output: process.stdout
 });
 
-function askUrl () {
-	rl.question("Client url for server (example.psim.us): ", function (serverUrl) {
+function askUrl() {
+	rl.question('Client url for server (example.psim.us): ', function (serverUrl) {
 		if (serverUrl.indexOf('://') !== -1) {
 			serverUrl = url.parse(serverUrl).host;
 		}
@@ -32,7 +32,7 @@ function askUrl () {
 			serverUrl = serverUrl.slice(0, -1);
 		}
 		console.log('Getting data for ' + serverUrl + '...');
-		console.log('This may take some time, depending on Showdown\'s speed.');
+		console.log("This may take some time, depending on Showdown's speed.");
 		var received = false;
 		var requestOptions = {
 			hostname: 'play.pokemonshowdown.com',
@@ -57,7 +57,7 @@ function askUrl () {
 				if (index !== -1) {
 					var data = str.substr(index);
 					data = data.substr(search.length, data.indexOf(';') - search.length);
-					while (typeof data === "string") {
+					while (typeof data === 'string') {
 						try {
 							data = JSON.parse(data);
 						} catch (e) {
@@ -95,16 +95,16 @@ function askUrl () {
 	});
 }
 
-function writeConfig (server, port, serverid) {
-	rl.question("Do you want to write this in config.js? (yes, no): ", function (answer) {
+function writeConfig(server, port, serverid) {
+	rl.question('Do you want to write this in config.js? (yes, no): ', function (answer) {
 		answer = answer.toLowerCase().replace(/[^a-z0-9]/g, '');
-		if (answer in {'no': 1, 'n': 1}) {
+		if (answer in { no: 1, n: 1 }) {
 			rl.close();
 			return process.exit();
 		}
-		if (answer in {'yes': 1, 'y': 1}) {
+		if (answer in { yes: 1, y: 1 }) {
 			if (!fs.existsSync('./config.js')) {
-				console.log("config.js does not exist - creating one with default settings...");
+				console.log('config.js does not exist - creating one with default settings...');
 				fs.writeFileSync('./config.js', fs.readFileSync('./config-example.js'));
 			}
 			var conf = fs.readFileSync('./config.js').toString().split('\n');
@@ -114,22 +114,22 @@ function writeConfig (server, port, serverid) {
 				serverid: 0
 			};
 			for (var i = 0; i < conf.length; i++) {
-				if (conf[i].substr(0, "exports.serverid".length) === "exports.serverid") {
+				if (conf[i].substr(0, 'exports.serverid'.length) === 'exports.serverid') {
 					conf[i] = "exports.serverid = '" + serverid + "';";
 					status.serverid = 1;
-				} else if (conf[i].substr(0, "exports.server".length) === "exports.server") {
+				} else if (conf[i].substr(0, 'exports.server'.length) === 'exports.server') {
 					conf[i] = "exports.server = '" + server + "';";
 					status.server = 1;
-				} else if (conf[i].substr(0, "exports.port".length) === "exports.port") {
-					conf[i] = "exports.port = " + port + ";";
+				} else if (conf[i].substr(0, 'exports.port'.length) === 'exports.port') {
+					conf[i] = 'exports.port = ' + port + ';';
 					status.port = 1;
 				}
 			}
 			if (!status.server) conf.unshift("exports.server = '" + server + "';");
-			if (!status.port) conf.unshift("exports.port = " + port + ";");
+			if (!status.port) conf.unshift('exports.port = ' + port + ';');
 			if (!status.serverid) conf.unshift("exports.serverid = '" + serverid + "';");
 			fs.writeFileSync('./config.js', conf.join('\n'));
-			console.log("Done!".green + "\t" + "successfully created default config");
+			console.log('Done!'.green + '\t' + 'successfully created default config');
 			rl.close();
 			return process.exit();
 		}
@@ -137,10 +137,12 @@ function writeConfig (server, port, serverid) {
 	});
 }
 
-console.log((
-	"\n-------------------------------------------\n" +
-	"       Pokemon-Showdown Servers Helper      \n" +
-	"-------------------------------------------\n"
-).yellow);
+console.log(
+	(
+		'\n-------------------------------------------\n' +
+		'       Pokemon-Showdown Servers Helper      \n' +
+		'-------------------------------------------\n'
+	).yellow
+);
 
 askUrl();

@@ -297,7 +297,7 @@ Bot.on('renamefailure', (e: number | Error): void => {
 	}
 });
 
-Bot.on('rename', (name: string, named: boolean): void => {
+Bot.on('rename', (name: string, named: number): void => {
 	monitor(
 		'Bot nickname has changed: ' + (named ? colors.green(name) : colors.yellow(name)) + (named ? '' : ' [guest]')
 	);

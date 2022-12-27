@@ -271,7 +271,7 @@ export class Client {
 			}
 		} catch (e) {}
 		this.debug('Sending log in trn...');
-		this.send('|/trn ' + nick + ',0,' + data);
+		this.send('|/trn ' + nick + ',0,' + data.data);
 	}
 
 	private onRename(res: IncomingMessage, nick: string, pass?: string | null): void {
@@ -353,21 +353,18 @@ export class Client {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	send(data: any, delay = 1000): NodeJS.Timeout | void {
+	send(data: string | string[], delay = 1000): NodeJS.Timeout | void {
 		const connection = this.connection;
 		if (connection && connection.connected) {
-			if (!Array.isArray(data)) {
-				data = [data.toString()];
-			}
-			if (data.length > 3) {
+			const dataArray = Array.isArray(data) ? data : [data];
+			if (dataArray.length > 3) {
 				let spacer: NodeJS.Timeout | null = null;
 				const nextToSend = (): void => {
-					if (!data.length) {
+					if (!dataArray.length) {
 						if (spacer) clearInterval(spacer);
 						return;
 					}
-					let toSend = data.splice(0, 3);
-					toSend = JSON.stringify(toSend);
+					const toSend = JSON.stringify(dataArray.splice(0, 3));
 					this.events.emit('send', toSend);
 					connection.send(toSend);
 				};
@@ -375,9 +372,9 @@ export class Client {
 				nextToSend();
 				return spacer;
 			} else {
-				data = JSON.stringify(data);
-				this.events.emit('send', data);
-				connection.send(data);
+				const toSend = JSON.stringify(dataArray);
+				this.events.emit('send', toSend);
+				connection.send(toSend);
 			}
 		} else {
 			this.error('Could not send data: ERR_NOT_CONNECTED');
@@ -482,10 +479,7 @@ export class Client {
 			case 'challstr':
 				const id = spl[1];
 				const str = spl[2];
-				this.challstr = {
-					id: id,
-					str: str,
-				};
+				this.challstr = { id, str };
 				if (this.opts.nickName !== null) this.rename(this.opts.nickName, this.opts.pass);
 				this.events.emit('challstr', spl[1] + spl[2]);
 				break;
