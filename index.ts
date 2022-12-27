@@ -360,7 +360,7 @@ Bot.on('userrename', (room: string, old: string, by: string): void => {
 
 /* Features */
 
-Bot.on('line', (room: string, message: string, isIntro: boolean, spl: string): void => {
+Bot.on('line', (room: string, message: string, isIntro: boolean, spl: string[]): void => {
 	for (const f in Features) {
 		try {
 			if (typeof Features[f].parse === 'function') Features[f].parse(room, message, isIntro, spl);
