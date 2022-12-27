@@ -13,7 +13,7 @@ export class BattleBot {
 	battles: Record<string, Battle> = {};
 	battlesCount = 0;
 
-	autojoinFFM;
+	autojoinFFM: FlatFileManager;
 	autoJoinData: Record<string, number> = {};
 
 	constructor() {
