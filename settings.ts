@@ -6,6 +6,7 @@ import { inspect } from 'util';
 
 import { debug, errlog, error, ok } from './console-reports';
 import { ConfigType, LeaderboardConfig } from './options';
+import type PackageJsonType from './package.json';
 import { toId } from './tools';
 
 export class FlatFileManager {
@@ -233,10 +234,21 @@ class UserManager {
 	}
 }
 
+interface Autopromote {
+	enabled: boolean;
+	users: Record<string, string>;
+	all: boolean;
+}
+
+interface PmWelcomeMessage {
+	enabled: boolean;
+	msg: string;
+}
+
 export class SettingsManager {
 	settings: {
 		autoban?: Record<string, Record<string, number>>;
-		autopromote?: Record<string, any>;
+		autopromote?: Record<string, Autopromote>;
 		bannedphrases?: Record<string, Record<string, boolean>>;
 		commands?: Record<string, Record<string, string>>;
 		inapropiatephrases?: Record<string, Record<string, boolean>>;
@@ -248,7 +260,7 @@ export class SettingsManager {
 		modding?: Record<string, ConfigType['moderation']['modDefault']>;
 		modexception?: Record<string, boolean>;
 		regexautoban?: Record<string, Record<string, boolean>>;
-		pmwmsg?: Record<string, any>;
+		pmwmsg?: Record<string, PmWelcomeMessage>;
 		sleep?: Record<string, boolean>;
 		zerotol?: Record<string, string>;
 	};
@@ -259,7 +271,7 @@ export class SettingsManager {
 	httpCache: Record<string, { url: string; time: number }> = {};
 	cacheFFM = new FlatFileManager(AppOptions.data + '_temp/' + 'http-cache.json');
 	lockdown = false;
-	package: Record<string, any>;
+	package: typeof PackageJsonType;
 
 	constructor() {
 		try {

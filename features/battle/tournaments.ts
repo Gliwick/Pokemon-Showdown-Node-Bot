@@ -8,8 +8,16 @@ import { TeamBuilder } from './teambuilder';
 
 const ACTION_INTERVAL = 1500;
 
+interface TourData {
+	format: string;
+	isJoined: boolean;
+	isStarted: boolean;
+	challenges: string[];
+	challenged: string[];
+}
+
 export class TourManager implements Parser {
-	tourData: Record<string, Record<string, any>> = {};
+	tourData: Record<string, TourData> = {};
 	lastAction: Record<string, number> = {};
 
 	teamBuilder: TeamBuilder;
@@ -31,12 +39,11 @@ export class TourManager implements Parser {
 
 	parse(room: string, message: string, isIntro: boolean, spl: string[]): void {
 		if (spl[0] !== 'tournament') return;
-		if (!this.tourData[room]) this.tourData[room] = {};
 		switch (spl[1]) {
 			case 'update':
 				try {
 					const data = JSON.parse(spl[2]);
-					Object.assign(this.tourData[room], data);
+					this.tourData[room] = Object.assign(this.tourData[room] || {}, data);
 				} catch (e) {}
 				break;
 			case 'updateEnd':

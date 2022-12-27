@@ -1,34 +1,33 @@
 {
-    "compilerOptions": {
-        "lib": ["es2020"],
-        "noEmit": true,
-        "jsx": "react",
-        "jsxFactory": "Chat.h",
-        "jsxFragmentFactory": "Chat.Fragment",
-        "target": "es2020",
-        "skipLibCheck": true,
-        "module": "CommonJS",
-        "moduleResolution": "node",
-        "strict": true,
-        "allowJs": true,
-        "checkJs": true,
-        "incremental": true,
-        "allowUnreachableCode": false,
-        "esModuleInterop": true
-    },
-    "types": ["node"],
-    "include": [
-        "./features/battle/*.ts",
-        "./features/battle/battle-ai/*.ts",
-        "./features/battle/battle-ai/modules/*.ts",
-        "./features/battle/data/*.ts",
-    ],
-    "ts-node": {
-        "files": true,
-        "transpileOnly": true,
-        "transpiler": "ts-node/transpilers/swc-experimental",
-    },
-    "files": [
-        "./global-variables.d.ts"
-    ]
+	"compilerOptions": {
+		"lib": ["es2020"],
+		"noEmit": true,
+		"jsx": "react",
+		"jsxFactory": "Chat.h",
+		"jsxFragmentFactory": "Chat.Fragment",
+		"target": "es2020",
+		"skipLibCheck": true,
+		"module": "CommonJS",
+		"moduleResolution": "node",
+		"strict": true,
+		"allowJs": true,
+		"checkJs": true,
+		"incremental": true,
+		"allowUnreachableCode": false,
+		"esModuleInterop": true,
+		"resolveJsonModule": true
+	},
+	"types": ["node"],
+	"include": [
+		"./features/battle/*.ts",
+		"./features/battle/battle-ai/*.ts",
+		"./features/battle/battle-ai/modules/*.ts",
+		"./features/battle/data/*.ts"
+	],
+	"ts-node": {
+		"files": true,
+		"transpileOnly": true,
+		"transpiler": "ts-node/transpilers/swc-experimental"
+	},
+	"files": ["./global-variables.d.ts"]
 }
