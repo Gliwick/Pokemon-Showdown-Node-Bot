@@ -2,7 +2,7 @@
 	Moderation Feature
 */
 
-import { ConfigType, enforceConfigObject } from '../../options';
+import { ConfigType, enforceConfigObject } from '../../config-tools';
 import { toId } from '../../tools';
 import { Feature } from '../index';
 

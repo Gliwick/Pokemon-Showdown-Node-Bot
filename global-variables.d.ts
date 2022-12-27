@@ -1,8 +1,8 @@
 import { CommandParser as CommandParserClass } from './command-parser';
+import { AppOptionsType, ConfigType } from './config-tools';
 import { DataDownloader as DataDownloaderClass } from './data-downloader';
 import { Feature } from './features';
 import { FormatData } from './index';
-import { AppOptionsType, ConfigType } from './options';
 import { SecurityLogger } from './security-log';
 import { FlatFileManager as FlatFileManagerClass, SettingsManager } from './settings';
 import { Client, ClientOptions } from './showdown-client';

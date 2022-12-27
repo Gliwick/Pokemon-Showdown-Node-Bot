@@ -4,8 +4,8 @@
 
 import { createWriteStream, existsSync, mkdirSync, PathLike, readdirSync, unlinkSync, WriteStream } from 'fs';
 
+import { LogConfig } from './config-tools';
 import { errlog, error } from './log';
-import { LogConfig } from './options';
 
 const LOGS_PATH = './logs/';
 

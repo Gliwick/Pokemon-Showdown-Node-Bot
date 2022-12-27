@@ -2,8 +2,8 @@
  * Tournaments points system
  */
 
+import { LeaderboardConfig } from '../../config-tools';
 import { debug } from '../../log';
-import { LeaderboardConfig } from '../../options';
 import { FlatFileManager } from '../../settings';
 import { toId } from '../../tools';
 import { BracketNode, TourData } from '.';

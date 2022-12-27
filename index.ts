@@ -10,7 +10,7 @@ import 'sugar';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { inspect } from 'util';
 
-import { checkConfig, parseArguments } from './options';
+import { checkConfig, parseArguments } from './config-tools';
 
 export const colors = require('colors') as Record<string, (s: string) => string>;
 
