@@ -42,8 +42,7 @@ export class TourManager implements Parser {
 			case 'updateEnd':
 				if (
 					!Settings.lockdown &&
-					Settings.settings.jointours &&
-					Settings.settings.jointours[room] &&
+					Settings.settings.jointours?.[room] &&
 					this.tourData[room].format &&
 					!this.tourData[room].isJoined &&
 					!this.tourData[room].isStarted

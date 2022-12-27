@@ -53,7 +53,7 @@ class Context {
 		this.botName = Bot.status.nickName;
 		this.isExcepted = Tools.equalOrHigherRank(this.by, true);
 		let lang = Config.language || 'english';
-		if (this.roomType === 'chat' && Settings.settings.language && Settings.settings.language[this.room])
+		if (this.roomType === 'chat' && Settings.settings.language?.[this.room])
 			lang = Settings.settings['language'][this.room];
 		this.language = lang;
 		this.parser = parser;
@@ -114,17 +114,11 @@ class Context {
 	}
 
 	canSet(permission: string, rank: string | true): boolean {
-		let rankSet;
-		if (
-			!Settings.settings.commands ||
-			!Settings.settings.commands[this.room] ||
-			typeof Settings.settings.commands[this.room][permission] === 'undefined'
-		) {
-			rankSet = Config.defaultPermission;
-			if (Config.permissionExceptions[permission]) rankSet = Config.permissionExceptions[permission];
-		} else {
-			rankSet = Settings.settings.commands[this.room][permission];
-		}
+		const rankSet =
+			Settings.settings.commands?.[this.room]?.[permission] ||
+			Config.permissionExceptions[permission] ||
+			Config.defaultPermission;
+
 		if (Tools.equalOrHigherRank(this.by, rankSet) && Tools.equalOrHigherRank(this.by, rank)) return true;
 		return false;
 	}

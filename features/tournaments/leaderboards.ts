@@ -45,11 +45,7 @@ export class LeaderboardsManager {
 	}
 
 	isConfigured(room: string): boolean {
-		if (
-			(!Config.leaderboards || !Config.leaderboards[room]) &&
-			(!Settings.settings.leaderboards || !Settings.settings.leaderboards[room])
-		)
-			return false;
+		if (!Config.leaderboards?.[room] && !Settings.settings.leaderboards?.[room]) return false;
 		return true;
 	}
 
