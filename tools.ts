@@ -1,14 +1,15 @@
 /*
-* Tools file
-*/
-import { lstatSync, readdirSync, watchFile as fsWatchFile } from "fs";
-import * as http from "http";
-import * as https from "https";
-import { inspect } from "util";
-import { errlog, error, info, ok } from "./console-reports";
-import { ConfigType } from "./options";
-import { typechart } from "./data/typechart";
-import { initFeature } from "./features";
+ * Tools file
+ */
+import { lstatSync, readdirSync, watchFile as fsWatchFile } from 'fs';
+import * as http from 'http';
+import * as https from 'https';
+import { inspect } from 'util';
+
+import { errlog, error, info, ok } from './console-reports';
+import { typechart } from './data/typechart';
+import { initFeature } from './features';
+import { ConfigType } from './options';
 
 declare global {
 	interface String {
@@ -21,20 +22,20 @@ declare global {
 export function toId(text?: string): string {
 	if (!text) return '';
 	return text.toLowerCase().replace(/[^a-z0-9]/g, '');
-};
+}
 global.toId = toId;
 
 export function toRoomid(roomid: string): string {
 	return roomid.replace(/[^a-zA-Z0-9-]+/g, '').toLowerCase();
-};
+}
 global.toRoomid = toRoomid;
 
 const DefaultPermissions: ConfigType['globalPermissions'] = {
-	'voice': '+',
-	'driver': '%',
-	'moderator': '@',
-	'roomowner': '#',
-	'admin': '~',
+	voice: '+',
+	driver: '%',
+	moderator: '@',
+	roomowner: '#',
+	admin: '~',
 };
 
 export type Stat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
@@ -92,36 +93,40 @@ export interface PokeSet {
 
 export class Tools {
 	watchFile = fsWatchFile;
-	translations: Record<string, {
-		commands: Record<string, Record<string, string>>
-	} & (Record<string, Record<string, string>> | Record<string, Record<string, string>>)> = {};
+	translations: Record<
+		string,
+		{
+			commands: Record<string, Record<string, string>>;
+		} & (Record<string, Record<string, string>> | Record<string, Record<string, string>>)
+	> = {};
 
 	toName(text?: string): string {
 		if (!text) return '';
 		return text.trim();
-	};
+	}
 
 	addLeftZero(num: number, numOfZeros: number): string {
 		let str = num.toString();
-		while (str.length < numOfZeros) str = "0" + str;
+		while (str.length < numOfZeros) str = '0' + str;
 		return str;
-	};
+	}
 
 	escapeHTML(str?: string): string {
 		if (!str) return '';
 		return ('' + str).escapeHTML();
-	};
+	}
 
 	generateRandomNick(numChars: number): string {
-		let chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+		const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
 		let str = '';
 		for (let i = 0, l = chars.length; i < numChars; i++) {
 			str += chars.charAt(~~(Math.random() * l));
 		}
 		return str;
-	};
+	}
 
-	levenshtein(s: string, t: string, l: number): number { // s = string 1, t = string 2, l = limit
+	levenshtein(s: string, t: string, l: number): number {
+		// s = string 1, t = string 2, l = limit
 		// Original levenshtein distance function by James Westgate, turned out to be the fastest
 		const d: number[][] = []; // 2d matrix
 		// Step 1
@@ -137,17 +142,17 @@ export class Tools {
 		for (let j = m; j >= 0; j--) d[0][j] = j;
 		// Step 3
 		for (let i = 1; i <= n; i++) {
-			let s_i = s.charAt(i - 1);
+			const s_i = s.charAt(i - 1);
 			// Step 4
 			for (let j = 1; j <= m; j++) {
 				// Check the jagged ld total so far
 				if (i === j && d[i][j] > 4) return n;
-				let t_j = t.charAt(j - 1);
-				let cost = (s_i === t_j) ? 0 : 1; // Step 5
+				const t_j = t.charAt(j - 1);
+				const cost = s_i === t_j ? 0 : 1; // Step 5
 				// Calculate the minimum
 				let mi = d[i - 1][j] + 1;
-				let b = d[i][j - 1] + 1;
-				let c = d[i - 1][j - 1] + cost;
+				const b = d[i][j - 1] + 1;
+				const c = d[i - 1][j - 1] + cost;
 				if (b < mi) mi = b;
 				if (c < mi) mi = c;
 				d[i][j] = mi; // Step 6
@@ -155,28 +160,28 @@ export class Tools {
 		}
 		// Step 7
 		return d[n][m];
-	};
+	}
 
 	/* Commands and Permissions */
 
 	stripCommands(text: string): string {
-		return ((text.trim().charAt(0) === '/') ? '/' : ((text.trim().charAt(0) === '!') ? ' ' : '')) + text.trim();
-	};
+		return (text.trim().charAt(0) === '/' ? '/' : text.trim().charAt(0) === '!' ? ' ' : '') + text.trim();
+	}
 
-	getTargetRoom(arg?: string): { arg: string, room: string } | null {
+	getTargetRoom(arg?: string): { arg: string; room: string } | null {
 		if (!arg) return null;
-		if (arg.indexOf("[") !== 0) return null;
-		if (arg.indexOf("]") < 0) return null;
-		const newArg = toRoomid(arg.substr(arg.indexOf("[") + 1, arg.indexOf("]") - arg.indexOf("[") - 1));
-		const room = arg.substr(arg.indexOf("]") + 1);
+		if (arg.indexOf('[') !== 0) return null;
+		if (arg.indexOf(']') < 0) return null;
+		const newArg = toRoomid(arg.substr(arg.indexOf('[') + 1, arg.indexOf(']') - arg.indexOf('[') - 1));
+		const room = arg.substr(arg.indexOf(']') + 1);
 		return { arg: newArg, room };
-	};
+	}
 
 	equalOrHigherRank(userIdentity: string, rank: string | true): boolean {
-		if (typeof rank === "string" && rank.length > 1) rank = this.getGroup(rank);
+		if (typeof rank === 'string' && rank.length > 1) rank = this.getGroup(rank);
 		if (rank === ' ') return true;
 		if (!Config.ranks) Config.ranks = [];
-		let userId = toId(userIdentity);
+		const userId = toId(userIdentity);
 		let userRank: string | true = '';
 		if (userId in Config.exceptions) {
 			userRank = Config.exceptions[userId];
@@ -188,30 +193,36 @@ export class Tools {
 		if (Config.ranks.indexOf(userRank) === -1) return false;
 		if (Config.ranks.indexOf(userRank) >= Config.ranks.indexOf(rank)) return true;
 		return false;
-	} static getGroup(rank: string): string | true {
-		throw new Error("Method not implemented.");
 	}
-	;
 
 	getGroup(perm?: string): string | true {
 		if (!perm) return true;
-		return DefaultPermissions[perm] || Config.globalPermissions[perm] || true;
-	};
+		return Config.globalPermissions[perm] || DefaultPermissions[perm] || true;
+	}
 
 	/* Time and Dates */
 
 	getDateString(): string {
-		let date = new Date();
-		return (this.addLeftZero(date.getDate(), 2) + '/' + this.addLeftZero(date.getMonth() + 1, 2) + '/' + this.addLeftZero(date.getFullYear(), 4) + ' ' + this.addLeftZero(date.getHours(), 2) + ':' + this.addLeftZero(date.getMinutes(), 2) + ':' + this.addLeftZero(date.getSeconds(), 2));
-	} static addLeftZero(arg0: number, arg1: number) {
-		throw new Error("Method not implemented.");
+		const date = new Date();
+		return (
+			this.addLeftZero(date.getDate(), 2) +
+			'/' +
+			this.addLeftZero(date.getMonth() + 1, 2) +
+			'/' +
+			this.addLeftZero(date.getFullYear(), 4) +
+			' ' +
+			this.addLeftZero(date.getHours(), 2) +
+			':' +
+			this.addLeftZero(date.getMinutes(), 2) +
+			':' +
+			this.addLeftZero(date.getSeconds(), 2)
+		);
 	}
-	;
 
 	getTimeAgo(time: number, lang?: string): string {
 		time = Date.now() - time;
 		time = Math.round(time / 1000); // rounds to nearest second
-		let seconds = time % 60;
+		const seconds = time % 60;
 		let times = [];
 		const trans = (data: string): string => {
 			if (!lang) lang = Config.language || 'english';
@@ -222,7 +233,8 @@ export class Tools {
 		if (time >= 60) {
 			time = (time - seconds) / 60; // converts to minutes
 			minutes = time % 60;
-			if (minutes) times = [String(minutes) + ' ' + (minutes === 1 ? trans('minute') : trans('minutes'))].concat(times);
+			if (minutes)
+				times = [String(minutes) + ' ' + (minutes === 1 ? trans('minute') : trans('minutes'))].concat(times);
 			if (time >= 60) {
 				time = (time - minutes) / 60; // converts to hours
 				hours = time % 24;
@@ -235,33 +247,28 @@ export class Tools {
 		}
 		if (!times.length) times.push('0 ' + trans('seconds'));
 		return times.join(', ');
-	} static translateGlobal(arg0: string, data: string, lang: string): string {
-		throw new Error("Method not implemented.");
 	}
-	;
 
 	/* File system utils */
 
-	uncacheTree(root: string) {
+	uncacheTree(root: string): void {
 		let uncache = [require.resolve(root)];
 		do {
 			let newuncache: string[] = [];
 			for (let i = 0; i < uncache.length; ++i) {
 				const cache = require.cache[uncache[i]];
 				if (cache) {
-					newuncache.push.apply(newuncache, cache.children.map((module) => {
-						return module.filename;
-					}));
+					newuncache = [...newuncache, ...cache.children.map((module) => module.filename)];
 					delete require.cache[uncache[i]];
 				}
 			}
 			uncache = newuncache;
 		} while (uncache.length > 0);
-	};
+	}
 
 	/* Http utils */
 
-	httpGet(url: string, callback?: (data: string | null, e?: Error) => void) {
+	httpGet(url: string, callback?: (data: string | null, e?: Error) => void): void {
 		if (!callback) return;
 		http.get(url, (res) => {
 			const data = { data: '' };
@@ -277,18 +284,18 @@ export class Tools {
 		}).on('error', (e: Error) => {
 			callback(null, e);
 		});
-	};
+	}
 
-	uploadToHastebin(toUpload: any, callback?: (success: boolean, linkStr: any) => void) {
+	uploadToHastebin(toUpload: string, callback?: (success: boolean, linkStr: any) => void): void {
 		const reqOpts: https.RequestOptions = {
-			hostname: "hastebin.com",
-			method: "POST",
-			path: '/documents'
+			hostname: 'hastebin.com',
+			method: 'POST',
+			path: '/documents',
 		};
 		const req = https.request(reqOpts, (res: http.IncomingMessage) => {
 			res.on('data', (chunk: any) => {
 				try {
-					const linkStr = "hastebin.com/" + JSON.parse(chunk.toString())['key'];
+					const linkStr = 'hastebin.com/' + JSON.parse(chunk.toString())['key'];
 					if (callback) callback(true, linkStr);
 				} catch (e: any) {
 					if (callback) callback(false, e);
@@ -296,104 +303,128 @@ export class Tools {
 			});
 		});
 		req.on('error', (e: Error) => {
-			if (typeof callback === "function") callback(false, e);
+			if (typeof callback === 'function') callback(false, e);
 		});
 		req.write(toUpload);
 		req.end();
-	};
+	}
 
 	/* Languages */
 
 	loadLang(lang: string, reloading?: boolean): Tools['translations'][string] {
 		const translationDataObj: Tools['translations'][string] = { commands: {} };
 		const commandsTranslation: Record<string, Record<string, string>> = {};
-		readdirSync('./languages/' + lang).forEach(file => {
+		readdirSync('./languages/' + lang).forEach((file) => {
 			if (!file.endsWith('.ts')) return;
 			if (reloading) this.uncacheTree('./languages/' + lang + '/' + file);
-			const tempObj = require('./languages/' + lang + '/' + file).translations as Record<string, Record<string, string>>;
+			const tempObj = require('./languages/' + lang + '/' + file).translations as Record<
+				string,
+				Record<string, string>
+			>;
 			Object.assign(commandsTranslation, tempObj.commands);
 			Object.assign(translationDataObj, tempObj);
 		});
 		translationDataObj.commands = translationDataObj;
 		return translationDataObj;
-	} static uncacheTree(arg0: string) {
-		throw new Error("Method not implemented.");
 	}
-	;
 
 	loadTranslations(reloading?: boolean): string[] {
 		const errs: string[] = [];
-		readdirSync('./languages').forEach(lang => {
+		readdirSync('./languages').forEach((lang) => {
 			if (lstatSync('./languages/' + lang).isDirectory()) {
 				try {
 					this.translations[lang] = this.loadLang(lang, reloading);
 				} catch (e: any) {
 					errlog(e.stack);
-					error("Could not import language: ./languages/" + lang + "/ | " + inspect(e));
+					error('Could not import language: ./languages/' + lang + '/ | ' + inspect(e));
 					errs.push(lang);
 				}
 			}
 		});
-		if (reloading) info('Languages reloaded' + (errs.length ? ('. Errors: ' + errs.join(', ')) : '') + '. Languages: ' + Object.keys(this.translations).join(', '));
-		else ok('Loaded languages' + (errs.length ? ('. Errors: ' + errs.join(', ')) : '') + '. Languages: ' + Object.keys(this.translations).join(', '));
+		if (reloading)
+			info(
+				'Languages reloaded' +
+					(errs.length ? '. Errors: ' + errs.join(', ') : '') +
+					'. Languages: ' +
+					Object.keys(this.translations).join(', ')
+			);
+		else
+			ok(
+				'Loaded languages' +
+					(errs.length ? '. Errors: ' + errs.join(', ') : '') +
+					'. Languages: ' +
+					Object.keys(this.translations).join(', ')
+			);
 		return errs;
-	};
+	}
 
 	translateCmd(cmd: string, data: string, lang: string): string {
 		if (this.translations[lang] && this.translations[lang].commands && this.translations[lang].commands[cmd]) {
 			return this.translations[lang].commands[cmd][data];
 		} else {
 			lang = 'english';
-			if (!this.translations[lang] || !this.translations[lang].commands || !this.translations[lang].commands[cmd]) {
+			if (
+				!this.translations[lang] ||
+				!this.translations[lang].commands ||
+				!this.translations[lang].commands[cmd]
+			) {
 				return '__(not found)__';
 			} else {
 				return this.translations[lang].commands[cmd][data];
 			}
 		}
-	};
+	}
 
 	translateGlobal(glob: string, data: string, lang: string): string {
-		if (this.translations[lang] && this.translations[lang][glob] && typeof this.translations[lang][glob][data] !== "undefined") {
+		if (
+			this.translations[lang] &&
+			this.translations[lang][glob] &&
+			typeof this.translations[lang][glob][data] !== 'undefined'
+		) {
 			return this.translations[lang][glob][data];
 		} else {
 			lang = 'english';
-			if (!this.translations[lang] || !this.translations[lang][glob] || typeof this.translations[lang][glob][data] === "undefined") {
+			if (
+				!this.translations[lang] ||
+				!this.translations[lang][glob] ||
+				typeof this.translations[lang][glob][data] === 'undefined'
+			) {
 				return '__(not found)__';
 			} else {
 				return this.translations[lang][glob][data];
 			}
 		}
-	};
+	}
 
 	tryTranslate(type: string, name: string, lang?: string): string {
 		if (!lang) return name;
-		let id = toId(name);
+		const id = toId(name);
 		if (this.translations[lang] && this.translations[lang][type] && this.translations[lang][type][id]) {
 			return this.translations[lang][type][id];
 		}
 		return name;
-	};
+	}
 
 	/* Battle formats and data */
 
 	parseAliases(format?: string): string {
 		if (!format) return '';
 		format = toId(format);
-		let aliases = Config.formatAliases || {};
+		const aliases = Config.formatAliases || {};
 		if (Formats[format]) return format;
 		if (aliases[format]) format = toId(aliases[format]);
 		if (Formats[format]) return format;
 		try {
-			let psAliases = DataDownloader.getAliases();
+			const psAliases = DataDownloader.getAliases();
 			if (psAliases[format]) format = toId(psAliases[format]);
-		} catch (e) { }
+		} catch (e) {}
 		return format;
-	};
+	}
 
 	/* Teams - Pokemon Showdown format */
 
 	teamToJSON(text: string): any[] {
-		const lines = text.split("\n");
+		const lines = text.split('\n');
 		const team = [];
 		let curSet: PokeSet | null = null;
 		for (let i = 0; i < lines.length; i++) {
@@ -403,7 +434,7 @@ export class Tools {
 			} else if (!curSet) {
 				curSet = { name: '', species: '', gender: '', item: '', ability: '', nature: '', moves: [] };
 				team.push(curSet);
-				let atIndex = line.lastIndexOf(' @ ');
+				const atIndex = line.lastIndexOf(' @ ');
 				if (atIndex !== -1) {
 					curSet.item = line.substr(atIndex + 3);
 					if (toId(curSet.item) === 'noitem') curSet.item = '';
@@ -417,7 +448,7 @@ export class Tools {
 					curSet.gender = 'F';
 					line = line.substr(0, line.length - 4);
 				}
-				let parenIndex = line.lastIndexOf(' (');
+				const parenIndex = line.lastIndexOf(' (');
 				if (line.substr(line.length - 1) === ')' && parenIndex !== -1) {
 					line = line.substr(0, line.length - 1);
 					curSet.species = line.substr(parenIndex + 2);
@@ -446,27 +477,27 @@ export class Tools {
 				curSet.ability = line;
 			} else if (line.substr(0, 5) === 'EVs: ') {
 				line = line.substr(5);
-				let evLines = line.split('/');
+				const evLines = line.split('/');
 				curSet.evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 				for (let j = 0; j < evLines.length; j++) {
-					let evLine = evLines[j].trim();
-					let spaceIndex = evLine.indexOf(' ');
+					const evLine = evLines[j].trim();
+					const spaceIndex = evLine.indexOf(' ');
 					if (spaceIndex === -1) continue;
-					let statid = BattleStatIDs[evLine.substr(spaceIndex + 1)];
-					let statval = parseInt(evLine.substr(0, spaceIndex));
+					const statid = BattleStatIDs[evLine.substr(spaceIndex + 1)];
+					const statval = parseInt(evLine.substr(0, spaceIndex));
 					if (!statid) continue;
 					curSet.evs[statid] = statval;
 				}
 			} else if (line.substr(0, 5) === 'IVs: ') {
 				line = line.substr(5);
-				let ivLines = line.split(' / ');
+				const ivLines = line.split(' / ');
 				curSet.ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 				for (let j = 0; j < ivLines.length; j++) {
-					let ivLine = ivLines[j];
-					let spaceIndex = ivLine.indexOf(' ');
+					const ivLine = ivLines[j];
+					const spaceIndex = ivLine.indexOf(' ');
 					if (spaceIndex === -1) continue;
-					let statid = BattleStatIDs[ivLine.substr(spaceIndex + 1)];
-					let statval = parseInt(ivLine.substr(0, spaceIndex));
+					const statid = BattleStatIDs[ivLine.substr(spaceIndex + 1)];
+					const statval = parseInt(ivLine.substr(0, spaceIndex));
 					if (!statid) continue;
 					curSet.ivs[statid] = statval;
 				}
@@ -480,7 +511,7 @@ export class Tools {
 				line = line.substr(1);
 				if (line.substr(0, 1) === ' ') line = line.substr(1);
 				if (line.substr(0, 14) === 'Hidden Power [') {
-					let hptype = line.substr(14, line.length - 15);
+					const hptype = line.substr(14, line.length - 15);
 					line = 'Hidden Power ' + hptype;
 					if (!curSet.ivs) {
 						curSet.ivs = { ...typechart[hptype].HPivs };
@@ -493,7 +524,7 @@ export class Tools {
 			}
 		}
 		return team;
-	};
+	}
 
 	isUndefinedOrDefault<T>(v: T | undefined, defaultValue: T): boolean {
 		return typeof v === 'undefined' || v === defaultValue;
@@ -506,7 +537,7 @@ export class Tools {
 			const set = team[i];
 			if (buf) buf += ']';
 			// name
-			buf += (set.name || set.species);
+			buf += set.name || set.species;
 			// species
 			let id = toId(set.species || set.name);
 			buf += '|' + (toId(set.name || set.species) === id ? '' : id);
@@ -520,7 +551,7 @@ export class Tools {
 				errlog(e.stack);
 			}
 			if (!template) return '';
-			let abilities = template.abilities;
+			const abilities = template.abilities;
 			id = toId(set.ability);
 			if (abilities) {
 				if (abilities['0'] && id === toId(abilities['0'])) {
@@ -542,7 +573,19 @@ export class Tools {
 			// evs
 			let evs = '|';
 			if (set.evs) {
-				evs = '|' + (set.evs['hp'] || '') + ',' + (set.evs['atk'] || '') + ',' + (set.evs['def'] || '') + ',' + (set.evs['spa'] || '') + ',' + (set.evs['spd'] || '') + ',' + (set.evs['spe'] || '');
+				evs =
+					'|' +
+					(set.evs['hp'] || '') +
+					',' +
+					(set.evs['atk'] || '') +
+					',' +
+					(set.evs['def'] || '') +
+					',' +
+					(set.evs['spa'] || '') +
+					',' +
+					(set.evs['spd'] || '') +
+					',' +
+					(set.evs['spe'] || '');
 			}
 			if (evs === '|,,,,,') {
 				buf += '|';
@@ -559,8 +602,14 @@ export class Tools {
 			let ivs = '|';
 			const setIvs = set.ivs;
 			if (setIvs) {
-				Stats.map(stat => setIvs[stat]).map(v => this.isUndefinedOrDefault(v, 31) ? '' : v).join(',');
-				ivs = '|' + Stats.map(stat => setIvs[stat]).map(v => this.isUndefinedOrDefault(v, 31) ? '' : v).join(',')
+				Stats.map((stat) => setIvs[stat])
+					.map((v) => (this.isUndefinedOrDefault(v, 31) ? '' : v))
+					.join(',');
+				ivs =
+					'|' +
+					Stats.map((stat) => setIvs[stat])
+						.map((v) => (this.isUndefinedOrDefault(v, 31) ? '' : v))
+						.join(',');
 			}
 			if (ivs === '|,,,,,') {
 				buf += '|';
@@ -586,7 +635,13 @@ export class Tools {
 				buf += '|';
 			}
 
-			if (set.pokeball || set.hpType || set.gigantamax || !this.isUndefinedOrDefault(set.dynamaxLevel, 10) || set.teraType) {
+			if (
+				set.pokeball ||
+				set.hpType ||
+				set.gigantamax ||
+				!this.isUndefinedOrDefault(set.dynamaxLevel, 10) ||
+				set.teraType
+			) {
 				buf += ',' + (set.hpType || '');
 				buf += ',' + toId(set.pokeball);
 				buf += ',' + (set.gigantamax ? 'G' : '');
@@ -595,13 +650,14 @@ export class Tools {
 			}
 		}
 		return buf;
-	};
+	}
 
 	fastUnpackTeam(buf?: string): PokeSet[] {
 		if (!buf) return [];
 
 		const team: PokeSet[] = [];
-		let i = 0, j = 0;
+		let i = 0,
+			j = 0;
 
 		while (true) {
 			const set: PokeSet = {
@@ -634,9 +690,12 @@ export class Tools {
 
 			// ability
 			j = buf.indexOf('|', i);
-			let ability = buf.substring(i, j);
-			let template = this.getTemplate(set.species);
-			set.ability = (template.abilities && ability in { '': 1, 0: 1, 1: 1, H: 1 } ? template.abilities[ability || '0'] : ability);
+			const ability = buf.substring(i, j);
+			const template = this.getTemplate(set.species);
+			set.ability =
+				template.abilities && ability in { '': 1, 0: 1, 1: 1, H: 1 }
+					? template.abilities[ability || '0']
+					: ability;
 			i = j + 1;
 
 			// moves
@@ -652,14 +711,14 @@ export class Tools {
 			// evs
 			j = buf.indexOf('|', i);
 			if (j !== i) {
-				let evs = buf.substring(i, j).split(',');
+				const evs = buf.substring(i, j).split(',');
 				set.evs = {
 					hp: Number(evs[0]) || 0,
 					atk: Number(evs[1]) || 0,
 					def: Number(evs[2]) || 0,
 					spa: Number(evs[3]) || 0,
 					spd: Number(evs[4]) || 0,
-					spe: Number(evs[5]) || 0
+					spe: Number(evs[5]) || 0,
 				};
 			}
 			i = j + 1;
@@ -672,14 +731,14 @@ export class Tools {
 			// ivs
 			j = buf.indexOf('|', i);
 			if (j !== i) {
-				let ivs = buf.substring(i, j).split(',');
+				const ivs = buf.substring(i, j).split(',');
 				set.ivs = {
 					hp: ivs[0] === '' ? 31 : Number(ivs[0]),
 					atk: ivs[1] === '' ? 31 : Number(ivs[1]),
 					def: ivs[2] === '' ? 31 : Number(ivs[2]),
 					spa: ivs[3] === '' ? 31 : Number(ivs[3]),
 					spd: ivs[4] === '' ? 31 : Number(ivs[4]),
-					spe: ivs[5] === '' ? 31 : Number(ivs[5])
+					spe: ivs[5] === '' ? 31 : Number(ivs[5]),
 				};
 			}
 			i = j + 1;
@@ -709,50 +768,50 @@ export class Tools {
 	}
 
 	teamOverview(buf?: string): string {
-		let team = this.fastUnpackTeam(buf);
+		const team = this.fastUnpackTeam(buf);
 		if (!team) return '(empty)';
-		let pokes = [];
+		const pokes = [];
 		for (let i = 0; i < team.length; i++) {
 			pokes.push(team[i].species);
 		}
 		if (!pokes.length) return '(empty)';
 		return pokes.join(', ');
-	};
+	}
 
 	getTemplate(name?: string): Record<string, any> {
 		name = toId(name || '');
 		try {
-			return (DataDownloader.getPokedex()[name] || {});
-		} catch (e) { }
+			return DataDownloader.getPokedex()[name] || {};
+		} catch (e) {}
 		return {};
-	};
+	}
 
 	getItem(name?: string): Record<string, any> {
 		name = toId(name || '');
 		try {
-			return (DataDownloader.getItems()[name] || {});
-		} catch (e) { }
+			return DataDownloader.getItems()[name] || {};
+		} catch (e) {}
 		return {};
-	};
+	}
 
 	getAbility(name?: string): Record<string, any> {
 		name = toId(name || '');
 		try {
-			return (DataDownloader.getAbilities()[name] || {});
-		} catch (e) { }
+			return DataDownloader.getAbilities()[name] || {};
+		} catch (e) {}
 		return {};
-	};
+	}
 
 	getMove(name?: string): Record<string, any> {
 		name = toId(name || '');
 		try {
-			return (DataDownloader.getMovedex()[name] || {});
-		} catch (e) { }
+			return DataDownloader.getMovedex()[name] || {};
+		} catch (e) {}
 		return {};
-	};
+	}
 
-	exportTeam(team?: string | PokeSet[]) {
-		if (!team) return "";
+	exportTeam(team?: string | PokeSet[]): string {
+		if (!team) return '';
 		if (typeof team === 'string') {
 			if (team.indexOf('\n') >= 0) return team;
 			team = this.fastUnpackTeam(team);
@@ -771,18 +830,18 @@ export class Tools {
 				curSet.item = this.getItem(curSet.item).name || curSet.item;
 				text += ' @ ' + curSet.item;
 			}
-			text += "\n";
+			text += '\n';
 			if (curSet.ability) {
-				text += 'Ability: ' + curSet.ability + "\n";
+				text += 'Ability: ' + curSet.ability + '\n';
 			}
 			if (curSet.level && curSet.level !== 100) {
-				text += 'Level: ' + curSet.level + "\n";
+				text += 'Level: ' + curSet.level + '\n';
 			}
 			if (curSet.shiny) {
 				text += 'Shiny: Yes\n';
 			}
 			if (typeof curSet.happiness === 'number' && curSet.happiness !== 255) {
-				text += 'Happiness: ' + curSet.happiness + "\n";
+				text += 'Happiness: ' + curSet.happiness + '\n';
 			}
 			let first = true;
 			const { evs } = curSet;
@@ -799,10 +858,10 @@ export class Tools {
 				});
 			}
 			if (!first) {
-				text += "\n";
+				text += '\n';
 			}
 			if (curSet.nature) {
-				text += '' + curSet.nature + ' Nature' + "\n";
+				text += '' + curSet.nature + ' Nature' + '\n';
 			}
 			first = true;
 			const { ivs } = curSet;
@@ -810,13 +869,17 @@ export class Tools {
 				let defaultIvs = true;
 				let hpType: string | null = null;
 				for (let j = 0; j < curSet.moves.length; j++) {
-					let move = curSet.moves[j];
+					const move = curSet.moves[j];
 					if (move.substr(0, 13) === 'Hidden Power ' && move.substr(0, 14) !== 'Hidden Power [') {
 						hpType = move.substr(13);
 						if (!hpType || !typechart[hpType]?.HPivs) {
 							continue;
 						}
-						if (Stats.some((stat) => (ivs[stat] ?? 31) !== (typechart[hpType as string].HPivs?.[stat] || 31))) {
+						if (
+							Stats.some(
+								(stat) => (ivs[stat] ?? 31) !== (typechart[hpType as string].HPivs?.[stat] || 31)
+							)
+						) {
 							defaultIvs = false;
 						}
 					}
@@ -841,16 +904,16 @@ export class Tools {
 				}
 			}
 			if (!first) {
-				text += "\n";
+				text += '\n';
 			}
 			for (let j = 0; j < curSet.moves.length; j++) {
 				let move = curSet.moves[j];
 				if (move.substr(0, 13) === 'Hidden Power ') {
 					move = move.substr(0, 13) + '[' + move.substr(13) + ']';
 				}
-				text += '- ' + (this.getMove(move).name || move) + "\n";
+				text += '- ' + (this.getMove(move).name || move) + '\n';
 			}
-			text += "\n";
+			text += '\n';
 		}
 		return text;
 	}
@@ -866,5 +929,5 @@ export class Tools {
 		} else {
 			throw new Error('Error: Feature ' + feature + ' not found');
 		}
-	};
+	}
 }

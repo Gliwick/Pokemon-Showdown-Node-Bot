@@ -1,38 +1,64 @@
 /*
-* Tournaments points system
-*/
+ * Tournaments points system
+ */
 
+import { debug } from '../../console-reports';
+import { LeaderboardConfig } from '../../options';
 import { FlatFileManager } from '../../settings';
 import { toId } from '../../tools';
+import { BracketNode, TourData } from '.';
 
 const toursDataFile = AppOptions.data + 'leaderboards.json';
 
+interface TournamentResult {
+	players: string[];
+	general: Record<string, number>;
+	winner: string;
+	finalist: string;
+	semiFinalists: string[];
+}
+
+interface Points {
+	name: string;
+	room: string;
+	wins: number;
+	finals: number;
+	semis: number;
+	battles: number;
+	tours: number;
+	points: number;
+}
+
 export class LeaderboardsManager {
 	toursFFM;
-	ladder;
+	ladder: Record<string, Record<string, [string, number, number, number, number, number]>>;
 
-	resetCodes = {};
+	resetCodes: Record<string, string> = {};
 
 	constructor() {
 		this.toursFFM = new FlatFileManager(toursDataFile);
 		this.ladder = this.toursFFM.readObjSafe();
 	}
 
-	save() {
+	save(): void {
 		this.toursFFM.writeObj(this.ladder);
-	};
+	}
 
-	isConfigured(room: string) {
-		if ((!Config.leaderboards || !Config.leaderboards[room]) && (!Settings.settings.leaderboards || !Settings.settings.leaderboards[room])) return false;
+	isConfigured(room: string): boolean {
+		if (
+			(!Config.leaderboards || !Config.leaderboards[room]) &&
+			(!Settings.settings.leaderboards || !Settings.settings.leaderboards[room])
+		)
+			return false;
 		return true;
-	};
+	}
 
-	filterTier(tier: string, filter: string | string[] | RegExp) {
-		tier = toId(tier || "");
-		if (typeof filter === "string") {
-			return (tier === toId(filter));
-		} else if (filter !== null && typeof filter === "object") {
-			if (filter instanceof Array) {
+	filterTier(tier: string, filter: string | string[] | RegExp | Record<string, boolean>): boolean {
+		tier = toId(tier || '');
+		if (typeof filter === 'string') {
+			return tier === toId(filter);
+		} else if (filter !== null && typeof filter === 'object') {
+			if (Array.isArray(filter)) {
 				if (filter.indexOf(tier) >= 0) return true;
 				return false;
 			} else if (filter instanceof RegExp) {
@@ -44,132 +70,127 @@ export class LeaderboardsManager {
 		} else {
 			return true;
 		}
-	};
+	}
 
-	getConfig(room) {
-		var res = {
-			tierFilter: null,
+	getConfig(room: string): LeaderboardConfig {
+		const res = {
 			onlyOfficial: false,
 			winnerPoints: 5,
 			finalistPoints: 3,
 			semiFinalistPoints: 1,
-			battlePoints: 0
+			battlePoints: 0,
 		};
-		if (Config.leaderboards && Config.leaderboards[room]) {
-			res.winnerPoints = parseInt(Config.leaderboards[room].winnerPoints) || 0;
-			res.finalistPoints = parseInt(Config.leaderboards[room].finalistPoints) || 0;
-			res.semiFinalistPoints = parseInt(Config.leaderboards[room].semiFinalistPoints) || 0;
-			res.battlePoints = parseInt(Config.leaderboards[room].battlePoints) || 0;
-			res.tierFilter = Config.leaderboards[room].tierFilter;
-			res.onlyOfficial = Config.leaderboards[room].onlyOfficial || false;
-		} else if (Settings.settings.leaderboards && Settings.settings.leaderboards[room]) {
-			res.winnerPoints = parseInt(Settings.settings.leaderboards[room].winnerPoints) || 0;
-			res.finalistPoints = parseInt(Settings.settings.leaderboards[room].finalistPoints) || 0;
-			res.semiFinalistPoints = parseInt(Settings.settings.leaderboards[room].semiFinalistPoints) || 0;
-			res.battlePoints = parseInt(Settings.settings.leaderboards[room].battlePoints) || 0;
-			res.onlyOfficial = Settings.settings.leaderboards[room].onlyOfficial || false;
-		}
+		Object.assign(res, Config.leaderboards[room] || Settings.settings.leaderboards?.[room] || {});
 		return res;
-	};
+	}
 
-	parseTourTree(tree) {
-		var auxobj = {};
-		var team = tree.team;
-		var state = tree.state;
-		var children = tree.children;
+	parseTourTree(tree: BracketNode): Record<string, number> {
+		const auxobj: Record<string, number> = {};
+		const team = tree.team;
+		const state = tree.state;
+		let children = tree.children;
 		if (!children) children = [];
 		if (!auxobj[team]) auxobj[team] = 0;
-		if (state && state === "finished") {
+		if (state && state === 'finished') {
 			auxobj[team] += 1;
 		}
-		var aux;
-		for (var i = 0; i < children.length; i++) {
+		let aux;
+		for (let i = 0; i < children.length; i++) {
 			aux = this.parseTourTree(children[i]);
-			for (var j in aux) {
+			for (const j in aux) {
 				if (!auxobj[j]) auxobj[j] = 0;
 				auxobj[j] += aux[j];
 			}
 		}
 		return auxobj;
-	};
+	}
 
-	parseTournamentResults(data) {
-		var generator = toId(data.generator || "");
-		if (generator === "singleelimination") {
-			var res = {};
-			var parsedTree = this.parseTourTree(data.bracketData.rootNode);
-			res.players = Object.keys(parsedTree);
-			res.general = {};
-			for (var i in parsedTree) res.general[toId(i)] = parsedTree[i];
+	parseTournamentResults(data: TourData): TournamentResult | null {
+		const generator = toId(data.generator || '');
+		if (generator === 'singleelimination') {
+			const parsedTree = this.parseTourTree(data.bracketData.rootNode);
+			const players = Object.keys(parsedTree);
+			const general = { ...parsedTree };
 			//winners
-			res.winner = toId(data.results[0][0]);
-			res.finalist = "";
-			res.semiFinalists = [];
-			var aux, aux2;
+			const winner = toId(data.results[0][0]);
+			let finalist = '';
+			const semiFinalists: string[] = [];
+			let aux, aux2;
 			if (data.bracketData.rootNode.children) {
-				for (var f = 0; f < data.bracketData.rootNode.children.length; f++) {
-					aux = toId(data.bracketData.rootNode.children[f].team || "");
-					if (aux && aux !== res.winner) {
-						res.finalist = aux;
+				for (let f = 0; f < data.bracketData.rootNode.children.length; f++) {
+					aux = toId(data.bracketData.rootNode.children[f].team || '');
+					if (aux && aux !== winner) {
+						finalist = aux;
 					}
-					if (data.bracketData.rootNode.children[f].children) {
-						for (var j = 0; j < data.bracketData.rootNode.children[f].children.length; j++) {
-							aux2 = toId(data.bracketData.rootNode.children[f].children[j].team || "");
-							if (aux2 && aux2 !== res.winner && aux2 !== res.finalist && res.semiFinalists.indexOf(aux2) < 0) {
-								res.semiFinalists.push(aux2);
+					const children = data.bracketData.rootNode.children[f].children;
+					if (children) {
+						for (let j = 0; j < children.length; j++) {
+							aux2 = toId(children[j].team || '');
+							if (aux2 && aux2 !== winner && aux2 !== finalist && semiFinalists.indexOf(aux2) < 0) {
+								semiFinalists.push(aux2);
 							}
 						}
 					}
 				}
 			}
-			return res;
+			return { players, general, winner, finalist, semiFinalists };
 		} else {
-			debug("Incompatible generator: " + data.generator);
+			debug('Incompatible generator: ' + data.generator);
 			return null; //Not compatible generator
 		}
-	};
+	}
 
-	getPoints(room, user) {
-		var userid = toId(user);
-		var roomConfig = this.getConfig(room);
-		var pWin = roomConfig.winnerPoints;
-		var pFinal = roomConfig.finalistPoints;
-		var pSemiFinal = roomConfig.semiFinalistPoints;
-		var pBattle = roomConfig.battlePoints;
-		var res = {
-			name: user,
-			room: room,
-			wins: 0,
-			finals: 0,
-			semis: 0,
-			battles: 0,
-			tours: 0,
-			points: 0
+	getPoints(room: string, user: string): Points {
+		const userid = toId(user);
+		const roomConfig = this.getConfig(room);
+		const pWin = roomConfig.winnerPoints;
+		const pFinal = roomConfig.finalistPoints;
+		const pSemiFinal = roomConfig.semiFinalistPoints;
+		const pBattle = roomConfig.battlePoints;
+		let name = user;
+		let wins = 0;
+		let finals = 0;
+		let semis = 0;
+		let battles = 0;
+		let tours = 0;
+		const ladder = this.ladder[room] && this.ladder[room][userid];
+		if (ladder) {
+			name = ladder[0];
+			wins = ladder[1];
+			finals = ladder[2];
+			semis = ladder[3];
+			battles = ladder[4];
+			tours = ladder[5];
+		}
+		return {
+			name,
+			room,
+			wins,
+			finals,
+			semis,
+			battles,
+			tours,
+			points: pWin * wins + finals * pFinal + semis * pSemiFinal + battles * pBattle,
 		};
-		if (!this.ladder[room] || !this.ladder[room][userid]) return res;
-		res.name = this.ladder[room][userid][0];
-		res.wins = this.ladder[room][userid][1];
-		res.finals = this.ladder[room][userid][2];
-		res.semis = this.ladder[room][userid][3];
-		res.battles = this.ladder[room][userid][4];
-		res.tours = this.ladder[room][userid][5];
-		res.points = (pWin * res.wins) + (res.finals * pFinal) + (res.semis * pSemiFinal) + (res.battles * pBattle);
-		return res;
-	};
+	}
 
-	getTop(room) {
+	getTop(room: string): [string, number, number, number, number, number, number][] | null {
 		if (!this.isConfigured(room)) return null;
-		var roomConfig = this.getConfig(room);
-		var pWin = roomConfig.winnerPoints;
-		var pFinal = roomConfig.finalistPoints;
-		var pSemiFinal = roomConfig.semiFinalistPoints;
-		var pBattle = roomConfig.battlePoints;
+		const roomConfig = this.getConfig(room);
+		const pWin = roomConfig.winnerPoints;
+		const pFinal = roomConfig.finalistPoints;
+		const pSemiFinal = roomConfig.semiFinalistPoints;
+		const pBattle = roomConfig.battlePoints;
 		if (!this.ladder[room]) return [];
-		var top = [];
-		var points = 0;
-		for (var u in this.ladder[room]) {
-			points = (pWin * this.ladder[room][u][1]) + (pFinal * this.ladder[room][u][2]) + (pSemiFinal * this.ladder[room][u][3]) + (pBattle * this.ladder[room][u][4]);
-			top.push(this.ladder[room][u].concat([points]));
+		const top: [string, number, number, number, number, number, number][] = [];
+		let points = 0;
+		for (const u in this.ladder[room]) {
+			points =
+				pWin * this.ladder[room][u][1] +
+				pFinal * this.ladder[room][u][2] +
+				pSemiFinal * this.ladder[room][u][3] +
+				pBattle * this.ladder[room][u][4];
+			top.push([...this.ladder[room][u], points]);
 		}
 		return top.sort(function (a, b) {
 			if (a[6] !== b[6]) return b[6] - a[6]; //Points
@@ -180,25 +201,41 @@ export class LeaderboardsManager {
 			if (a[5] !== b[5]) return b[5] - a[5]; //Tours played
 			return 0;
 		});
-	};
+	}
 
-	getTable(room, n) {
+	getTable(room: string, n: number): string | null {
 		if (!this.isConfigured(room)) return null;
-		var top = this.getTop(room);
+		const top = this.getTop(room);
 		if (!top) return null;
-		var table = "Room: " + room + "\n\n";
-		table += " N\u00BA | Name | Ranking | W | F | SF | Tours Played | Battles won\n";
-		table += "----|------|---------|---|---|----|-------------|-------------\n";
-		for (var i = 0; i < n && i < top.length; i++) {
-			table += (i + 1) + " | " + top[i][0] + " | " + top[i][6] + " | " + top[i][1] + " | " + top[i][2] + " | " + top[i][3] + " | " + top[i][5] + " | " + top[i][4];
-			table += "\n";
+		let table = 'Room: ' + room + '\n\n';
+		table += ' N\u00BA | Name | Ranking | W | F | SF | Tours Played | Battles won\n';
+		table += '----|------|---------|---|---|----|-------------|-------------\n';
+		for (let i = 0; i < n && i < top.length; i++) {
+			table +=
+				i +
+				1 +
+				' | ' +
+				top[i][0] +
+				' | ' +
+				top[i][6] +
+				' | ' +
+				top[i][1] +
+				' | ' +
+				top[i][2] +
+				' | ' +
+				top[i][3] +
+				' | ' +
+				top[i][5] +
+				' | ' +
+				top[i][4];
+			table += '\n';
 		}
 		return table;
-	};
+	}
 
-	addUser(room, user, type, auxData?: string) {
+	addUser(room: string, user: string, type: 'A' | 'W' | 'F' | 'S' | 'B', auxData?: number): void {
 		if (!this.ladder[room]) this.ladder[room] = {};
-		var userid = toId(user);
+		const userid = toId(user);
 		if (!this.ladder[room][userid]) this.ladder[room][userid] = [user, 0, 0, 0, 0, 0];
 		switch (type) {
 			case 'A':
@@ -215,58 +252,57 @@ export class LeaderboardsManager {
 				this.ladder[room][userid][3]++;
 				break;
 			case 'B':
-				const val = auxData && parseInt(auxData);
-				if (!val) return;
-				this.ladder[room][userid][4] += val;
+				if (!auxData) return;
+				this.ladder[room][userid][4] += auxData;
 				break;
 		}
-	};
+	}
 
-	writeResults(room, results) {
+	writeResults(room: string, results: TournamentResult): void {
 		if (!results) return;
-		for (var i = 0; i < results.players.length; i++) this.addUser(room, results.players[i], 'A');
+		results.players.forEach((player) => this.addUser(room, player, 'A'));
 		if (results.winner) this.addUser(room, results.winner, 'W');
 		if (results.finalist) this.addUser(room, results.finalist, 'F');
-		for (var i = 0; i < results.semiFinalists.length; i++) this.addUser(room, results.semiFinalists[i], 'S');
-		for (var user in results.general) this.addUser(room, user, 'B', results.general[user]);
-	};
+		results.semiFinalists.forEach((semiFinalist) => this.addUser(room, semiFinalist, 'S'));
+		Object.entries(results.general).forEach(([user, auxData]) => this.addUser(room, user, 'S', auxData));
+	}
 
-	onTournamentEnd(room, data) {
+	onTournamentEnd(room: string, data: TourData): void {
 		if (!this.isConfigured(room)) return;
 		if (!data.isOfficialTour) {
 			//debug(JSON.stringify(getConfig(room)));
 			if (this.getConfig(room).onlyOfficial) {
-				debug("Discarded tour because it is not official. Tier: " + data.format + " | Room: " + room);
+				debug('Discarded tour because it is not official. Tier: ' + data.format + ' | Room: ' + room);
 				return;
 			}
-			var filter = this.getConfig(room).tierFilter;
-			if (!this.filterTier(data.format, filter)) {
-				debug("Discarded tour because of tier filter. Tier: " + data.format + " | Room: " + room);
+			const filter = this.getConfig(room).tierFilter;
+			if (filter && !this.filterTier(data.format, filter)) {
+				debug('Discarded tour because of tier filter. Tier: ' + data.format + ' | Room: ' + room);
 				return;
 			}
 		}
-		var results = this.parseTournamentResults(data);
+		const results = this.parseTournamentResults(data);
 		//console.log(JSON.stringify(results));
 		if (!results) return;
-		debug("Updating leaderboard...");
+		debug('Updating leaderboard...');
 		this.writeResults(room, results);
 		this.save();
-		debug("Leaderboard updated. " + Tools.getDateString());
-	};
+		debug('Leaderboard updated. ' + Tools.getDateString());
+	}
 
-	getResetHashCode(room) {
+	getResetHashCode(room: string): string | null {
 		if (!this.ladder[room]) return null;
-		for (var i in this.resetCodes) {
+		for (const i in this.resetCodes) {
 			if (this.resetCodes[i] === room) delete this.resetCodes[i];
 		}
-		var code = Tools.generateRandomNick(10);
+		const code = Tools.generateRandomNick(10);
 		this.resetCodes[code] = room;
 		return code;
-	};
+	}
 
-	execResetHashCode(code) {
-		if (this.resetCodes[code]) {
-			var room = this.resetCodes[code];
+	execResetHashCode(code: string): string | false {
+		const room = this.resetCodes[code];
+		if (room) {
 			if (this.ladder[room]) {
 				delete this.ladder[room];
 				this.save();
@@ -275,5 +311,5 @@ export class LeaderboardsManager {
 			return room;
 		}
 		return false;
-	};
-};
+	}
+}

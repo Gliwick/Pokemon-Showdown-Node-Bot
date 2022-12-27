@@ -3,26 +3,35 @@
 */
 
 import { Feature } from '../index';
-
 import { LeaderboardsManager } from './leaderboards';
 
 const CurrentGen = 9;
+
+interface TournamentDetails {
+	format: string;
+	type: string;
+	eliminationCount: number;
+	maxUsers: number;
+	timeToStart: number;
+	autodq: boolean;
+	scoutProtect: boolean;
+}
 
 export class Tournament {
 	format;
 	type;
 	eliminationCount;
 	users = 0;
-	maxUsers;
+	maxUsers: number | null;
 	signups = false;
 	started = false;
-	startTimer: number | null = null;
+	startTimer: NodeJS.Timeout | null = null;
 	room;
 	timeToStart;
 	autodq;
 	scoutProtect;
 
-	constructor(room, details) {
+	constructor(room: string, details: TournamentDetails) {
 		this.format = details.format || 'gen' + CurrentGen + 'randombattle';
 		this.type = details.type || 'elimination';
 		this.eliminationCount = details.eliminationCount || 1;
@@ -33,46 +42,75 @@ export class Tournament {
 		this.scoutProtect = details.scoutProtect || false;
 	}
 
-	createTour() {
-		Bot.say(this.room, '/tournament create ' + this.format + ', ' + this.type + (this.type === 'elimination' ? ',, ' + this.eliminationCount : ''));
-	};
+	createTour(): void {
+		Bot.say(
+			this.room,
+			'/tournament create ' +
+				this.format +
+				', ' +
+				this.type +
+				(this.type === 'elimination' ? ',, ' + this.eliminationCount : '')
+		);
+	}
 
-	startTimeout() {
+	startTimeout(): void {
 		if (!this.timeToStart) return;
 		this.signups = true;
 		if (this.scoutProtect) Bot.say(this.room, '/tournament setscouting disallow');
-		this.startTimer = setTimeout((() => {
-			this.startTour();
-			this.started = true;
-			this.startTimer = null;
-		}).bind(this), this.timeToStart);
-	};
+		this.startTimer = setTimeout(
+			((): void => {
+				this.startTour();
+				this.started = true;
+				this.startTimer = null;
+			}).bind(this),
+			this.timeToStart
+		);
+	}
 
-	startTour() {
+	startTour(): void {
 		Bot.say(this.room, '/tournament start');
-	};
+	}
 
-	checkUsers() {
+	checkUsers(): void {
 		if (!this.maxUsers) return;
 		if (this.maxUsers <= this.users) this.startTour();
-	};
+	}
 
-	setAutodq() {
+	setAutodq(): void {
 		if (!this.autodq) return;
 		Bot.say(this.room, '/tournament autodq ' + this.autodq);
-	};
+	}
 
-	endTour() {
+	endTour(): void {
 		Bot.say(this.room, '/tournament end');
-	};
-};
+	}
+}
+
+export interface BracketNode {
+	team: string;
+	state?: string;
+	children?: BracketNode[];
+}
+
+interface BracketData {
+	rootNode: BracketNode;
+}
+
+export interface TourData {
+	isStarted: boolean;
+	generator: string;
+	bracketData: BracketData;
+	results: string[][];
+	isOfficialTour: boolean;
+	format: string;
+}
 
 export class TournamentsManager implements Feature {
 	id = 'tours';
 	desc = 'A tool to ease tournaments creation';
 
 	tournaments: Record<string, Tournament> = {};
-	tourData = {};
+	tourData: Record<string, TourData> = {};
 
 	leaderboards: LeaderboardsManager;
 
@@ -80,27 +118,26 @@ export class TournamentsManager implements Feature {
 		this.leaderboards = new LeaderboardsManager();
 	}
 
-	newTour(room, details) {
+	newTour(room: string, details: TournamentDetails): void {
 		this.tournaments[room] = new Tournament(room, details);
 		this.tournaments[room].createTour();
-	};
+	}
 
-	init() {
-		for (let i in this.tournaments) {
+	init(): void {
+		for (const i in this.tournaments) {
 			try {
-				if (this.tournaments[i].startTimer) clearTimeout(this.tournaments[i].startTimer);
-			} catch (e) { }
+				const timer = this.tournaments[i].startTimer;
+				if (timer) clearTimeout(timer);
+			} catch (e) {}
 			delete this.tournaments[i];
 		}
-		for (let i in this.tourData) {
-			delete this.tourData[i];
-		}
-	};
+		this.tourData = {};
+	}
 
-	parse(room: string, message: string, isIntro: boolean, spl: string[]) {
+	parse(room: string, message: string, isIntro: boolean, spl: string[]): void {
 		if (spl[0] !== 'tournament') return;
 		if (isIntro) return;
-		if (!this.tourData[room]) this.tourData[room] = {};
+		let timer: NodeJS.Timeout | null;
 		switch (spl[1]) {
 			case 'create':
 				if (!this.tournaments[room]) break;
@@ -120,16 +157,16 @@ export class TournamentsManager implements Feature {
 				if (!this.tournaments[room]) break;
 				if (this.tournaments[room].signups) {
 					this.tournaments[room].signups = false;
-					clearTimeout(this.tournaments[room].startTimer);
+					const timer = this.tournaments[room].startTimer;
+					if (timer) clearTimeout(timer);
 					this.tournaments[room].setAutodq();
 				}
 				break;
 			case 'update':
 				try {
-					var data = JSON.parse(spl[2]);
-					for (var i in data)
-						this.tourData[room][i] = data[i];
-				} catch (e) { }
+					const data = JSON.parse(spl[2]) as TourData;
+					this.tourData[room] = Object.assign(this.tourData[room] || {}, data);
+				} catch (e) {}
 				break;
 			case 'updateEnd':
 				if (!this.tournaments[room]) break;
@@ -139,24 +176,25 @@ export class TournamentsManager implements Feature {
 				break;
 			case 'end':
 				try {
-					var data = JSON.parse(spl[2]);
-					for (var i in data)
-						this.tourData[room][i] = data[i];
-				} catch (e) { }
+					const data = JSON.parse(spl[2]) as TourData;
+					this.tourData[room] = Object.assign(this.tourData[room] || {}, data);
+				} catch (e) {}
 				this.leaderboards.onTournamentEnd(room, this.tourData[room]);
 				delete this.tourData[room];
-				if (this.tournaments[room] && this.tournaments[room].startTimer) clearTimeout(this.tournaments[room].startTimer);
+				timer = this.tournaments[room]?.startTimer;
+				if (timer) clearTimeout(timer);
 				if (this.tournaments[room]) delete this.tournaments[room];
 				break;
 			case 'forceend':
 				delete this.tourData[room];
-				if (this.tournaments[room] && this.tournaments[room].startTimer) clearTimeout(this.tournaments[room].startTimer);
+				timer = this.tournaments[room]?.startTimer;
+				if (timer) clearTimeout(timer);
 				if (this.tournaments[room]) delete this.tournaments[room];
 				break;
 		}
-	};
+	}
 
-	destroy() {
+	destroy(): void {
 		if (Features[this.id]) delete Features[this.id];
-	};
-};
+	}
+}

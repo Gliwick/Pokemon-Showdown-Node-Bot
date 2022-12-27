@@ -1,7 +1,7 @@
-import { Parser } from "..";
-import { debug } from "../../console-reports";
-import { BattleBot } from "./battle-ai";
-import { TeamBuilder } from "./teambuilder";
+import { debug } from '../../console-reports';
+import { Parser } from '..';
+import { BattleBot } from './battle-ai';
+import { TeamBuilder } from './teambuilder';
 
 export class ChallengeManager implements Parser {
 	challenges: string[] = [];
@@ -12,7 +12,7 @@ export class ChallengeManager implements Parser {
 	constructor(battleBot: BattleBot, teamBuilder: TeamBuilder) {
 		this.battleBot = battleBot;
 		this.teamBuilder = teamBuilder;
-	};
+	}
 
 	canChallenge(nBattles: number, user: string): boolean {
 		if (!nBattles) return true; //If it is not busy, accept the challenge
@@ -22,22 +22,22 @@ export class ChallengeManager implements Parser {
 		return false;
 	}
 
-	parse(room: string, message: string, isIntro: boolean, spl: string[]) {
+	parse(room: string, message: string, isIntro: boolean, spl: string[]): void {
 		if (!spl[3].startsWith('/challenge ')) return;
 		let nBattles = Object.keys(this.battleBot.battles).length;
 		this.challenges = [spl[4]];
 		if (this.challenges) {
-			for (let format of this.challenges) {
+			for (const format of this.challenges) {
 				const player = spl[1];
 				if (this.canChallenge(nBattles, player)) {
 					if (Settings.lockdown || !(format in Formats) || !Formats[format].chall) {
 						Bot.say('', '/reject ' + player);
-						debug("rejected battle: " + format);
+						debug('rejected battle: ' + format);
 						continue;
 					}
 					if (Formats[format].team && !this.teamBuilder.hasTeam(format)) {
 						Bot.say('', '/reject ' + player);
-						debug("rejected battle (no team) : " + format);
+						debug('rejected battle (no team) : ' + format);
 						continue;
 					}
 
@@ -45,13 +45,13 @@ export class ChallengeManager implements Parser {
 					Bot.say(spl[1], '/useteam ' + (team || 'null'));
 					Bot.say('', '/accept ' + player);
 					nBattles++;
-					debug("accepted battle: " + format);
+					debug('accepted battle: ' + format);
 				} else {
 					Bot.say('', '/reject ' + player);
-					debug("rejected battle (busy): " + format);
+					debug('rejected battle (busy): ' + format);
 					continue;
 				}
 			}
 		}
-	};
-};
+	}
+}

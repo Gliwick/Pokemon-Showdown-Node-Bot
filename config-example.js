@@ -3,13 +3,13 @@
 */
 
 /*
-* Connection Details
-*
-* NOTE: Do NOT use "[server].psim.us", that is the client url
-* If you don't know what are the server, port or serverid values
-* run 'node getserver.js' to get them
-*
-*/
+ * Connection Details
+ *
+ * NOTE: Do NOT use "[server].psim.us", that is the client url
+ * If you don't know what are the server, port or serverid values
+ * run 'node getserver.js' to get them
+ *
+ */
 
 exports.server = 'localhost';
 
@@ -21,28 +21,28 @@ exports.autoReconnectDelay = 10 * 1000;
 exports.connectionTimeout = 2 * 60 * 1000;
 
 /*
-* Crash Guard
-*
-* If true, write errors to console instead of crashing
-*/
+ * Crash Guard
+ *
+ * If true, write errors to console instead of crashing
+ */
 
 exports.crashguard = true;
 
 /*
-* Security log
-*/
+ * Security log
+ */
 
 exports.securityLog = { ageOfLogs: 7 };
 
 /*
-* Watch Config
-*/
+ * Watch Config
+ */
 
 exports.watchconfig = true;
 
 /*
-* Login Details
-*/
+ * Login Details
+ */
 
 exports.nick = '';
 
@@ -51,60 +51,62 @@ exports.pass = '';
 exports.autoReloginDelay = 60 * 1000;
 
 /*
-* Rooms to join
-*/
+ * Rooms to join
+ */
 
 exports.rooms = ['lobby'];
 
 /*
-* exports.rooms = 'all'; //For joining all rooms
-* exports.rooms = 'official'; //For joining official rooms
-* exports.rooms = 'public'; //For joining not-official rooms
-* exports.rooms = ['room1', 'room2']; //For joining some rooms
-*/
+ * exports.rooms = 'all'; //For joining all rooms
+ * exports.rooms = 'official'; //For joining official rooms
+ * exports.rooms = 'public'; //For joining not-official rooms
+ * exports.rooms = ['room1', 'room2']; //For joining some rooms
+ */
 
-exports.privateRooms = [ //Rooms listed here will be ignored by seen command
+exports.privateRooms = [
+	//Rooms listed here will be ignored by seen command
 	//'privateroomname'
 ];
 
-exports.ignoreRooms = [ //Rooms listed here will be ignored by CommandParser (bot is "asleep" in those rooms)
+exports.ignoreRooms = [
+	//Rooms listed here will be ignored by CommandParser (bot is "asleep" in those rooms)
 	//'roomid'
 ];
 
 exports.initCmds = ['|/avatar 120']; // Other commands (avatar, blockchallenges, etc)
 
 /*
-* Auth configuration
-*/
+ * Auth configuration
+ */
 
 exports.exceptions = {
 	// 'userid': true
 };
 
 /*
-* 'userid': 'rank' or 'userid': true for full access
-* Example:
-*
-* exports.exceptions = {
-*	'ecuacion': true,
-*	'excepted': true
-* };
-*
-*/
+ * 'userid': 'rank' or 'userid': true for full access
+ * Example:
+ *
+ * exports.exceptions = {
+ *	'ecuacion': true,
+ *	'excepted': true
+ * };
+ *
+ */
 
 exports.ranks = ['+', '\u2605', '%', '@', '*', '#', '&', '~'];
 
 exports.globalPermissions = {
-	'voice': '+', //Min rank to broadcast in a server
-	'driver': '%', //Min rank to mute. Also min staff rank
-	'moderator': '@', //Min rank to ban
-	'roomowner': '#', //Rank for using room settings commands like set, lang, mod...
-	'admin': '~' //Rank for using global admin commands
+	voice: '+', //Min rank to broadcast in a server
+	driver: '%', //Min rank to mute. Also min staff rank
+	moderator: '@', //Min rank to ban
+	roomowner: '#', //Rank for using room settings commands like set, lang, mod...
+	admin: '~' //Rank for using global admin commands
 };
 
 /*
-* Commands configuration
-*/
+ * Commands configuration
+ */
 
 exports.commandTokens = ['.']; //Array of valid command characters
 
@@ -112,33 +114,34 @@ exports.defaultPermission = '%';
 
 exports.permissionExceptions = {
 	//command: 'rank'
-	'say': '#',
-	'info': '+',
-	'wall': '%',
-	'autoban': '#',
-	'banword': '#',
-	'joinphrase': '#',
-	'challenge': '%',
-	'searchbattle': '~',
-	'tournament': '@',
-	'games': '#'
+	say: '#',
+	info: '+',
+	wall: '%',
+	autoban: '#',
+	banword: '#',
+	joinphrase: '#',
+	challenge: '%',
+	searchbattle: '~',
+	tournament: '@',
+	games: '#'
 };
 
-exports.botguide = "https://github.com/Ecuacion/Pokemon-Showdown-Node-Bot/blob/master/commands/README.md";
+exports.botguide = 'https://github.com/Ecuacion/Pokemon-Showdown-Node-Bot/blob/master/commands/README.md';
 
 //When you pm the bot but don't use a command, it replies you this message. Example: "Hi, I'm a bot. Use .help to view a command guide"
 //The var #USER is replaced with the username that pms it
-exports.pmhelp = "Hi #USER! I am a robot, please PM another staff member if you need help. Command guide: https://github.com/Gliwick/Pokemon-Showdown-Node-Bot/tree/master/commands";
+exports.pmhelp =
+	'Hi #USER! I am a robot, please PM another staff member if you need help. Command guide: https://github.com/Gliwick/Pokemon-Showdown-Node-Bot/tree/master/commands';
 
 /*
-* Language configuration
-*/
+ * Language configuration
+ */
 
 exports.language = 'english';
 
 /*
-* Configuration for console messages
-*/
+ * Configuration for console messages
+ */
 
 exports.debug = {
 	/* Basic messages - Production Mode */
@@ -163,13 +166,13 @@ exports.debug = {
 };
 
 /*
-* Configuration for specific
-* commands and features
-*/
+ * Configuration for specific
+ * commands and features
+ */
 
 /*
-* Moderation
-*/
+ * Moderation
+ */
 
 exports.moderation = {
 	modException: '%', // Min rank for not receive moderation
@@ -191,67 +194,58 @@ exports.moderation = {
 
 	values: {
 		'spam-p': 3,
-		'spam': 4,
+		spam: 4,
 		'spam-link': 4,
 		'flood-hard': 3,
-		'flood': 2,
-		'caps': 1,
-		'stretch': 1,
-		'banwords': 2,
-		'inapwords': 2,
-		'servers': 2,
-		'youtube': 2,
-		'spoiler': 2,
-		'replays': 1
+		flood: 2,
+		caps: 1,
+		stretch: 1,
+		banwords: 2,
+		inapwords: 2,
+		servers: 2,
+		youtube: 2,
+		spoiler: 2,
+		replays: 1
 	},
 
 	modDefault: {
 		//basic mods
-		'caps': 1,
-		'stretching': 1,
-		'flooding': 1,
-		'spam': 1,
+		caps: 1,
+		stretching: 1,
+		flooding: 1,
+		spam: 1,
 
-		'bannedwords': 1,
-		'inapropiate': 1,
+		bannedwords: 1,
+		inapropiate: 1,
 
 		//specific mods
-		'spoiler': 0,
-		'youtube': 0,
-		'psservers': 0,
-		'replays': 0,
+		spoiler: 0,
+		youtube: 0,
+		psservers: 0,
+		replays: 0,
 
 		//multiple infraction
-		'multiple': 1,
+		multiple: 1,
 
 		//zero tolerance
-		'zerotol': 1
+		zerotol: 1
 	},
 
-	punishments: [
-		"warn",
-		"mute",
-		"hourmute",
-		"roomban"
-	],
+	punishments: ['warn', 'mute', 'hourmute', 'roomban'],
 
-	psServersExcepts: [
-		"showdown",
-		"smogtours",
-		"sim"
-	],
+	psServersExcepts: ['showdown', 'smogtours', 'sim'],
 
 	zeroToleranceDefaultLevel: 'h',
 	zeroToleranceLevels: {
-		'l': { name: 'Low', value: 1 },
-		'n': { name: 'Normal', value: 2 },
-		'h': { name: 'High', value: 3 }
+		l: { name: 'Low', value: 1 },
+		n: { name: 'Normal', value: 2 },
+		h: { name: 'High', value: 3 }
 	}
 };
 
 /*
-* Battles
-*/
+ * Battles
+ */
 
 exports.aceptAll = false;
 
@@ -275,13 +269,12 @@ exports.battleMessages = {
 	*/
 };
 
-exports.formatMods = {
-};
+exports.formatMods = {};
 
 exports.battleModules = {
 	/* Algorithms for use in battles */
-	"gen9challengecup1v1": "ingame-nostatus",
-	"gen91v1": "ingame-nostatus",
+	gen9challengecup1v1: 'ingame-nostatus',
+	gen91v1: 'ingame-nostatus'
 };
 
 //exports.battleLog = {ageOfLogs: 1}; // Days
@@ -293,22 +286,22 @@ exports.ladderCheckInterval = 10 * 1000;
 exports.ladderNumberOfBattles = 1;
 
 exports.formatAliases = {
-	'random': '[Gen 8] Random Battle',
-	'randomdoubles': '[Gen 8] Random Doubles Battle',
-	'doubles': '[Gen 8] Doubles OU',
-	'ag': '[Gen 8] Anything Goes',
-	'usum': '[Gen 7] OU',
-	'oras': '[Gen 6] OU',
-	'bw': '[Gen 5] OU',
-	'dpp': '[Gen 4] OU',
-	'adv': '[Gen 3] OU',
-	'gsc': '[Gen 2] OU',
-	'rby': '[Gen 1] OU',
+	random: '[Gen 8] Random Battle',
+	randomdoubles: '[Gen 8] Random Doubles Battle',
+	doubles: '[Gen 8] Doubles OU',
+	ag: '[Gen 8] Anything Goes',
+	usum: '[Gen 7] OU',
+	oras: '[Gen 6] OU',
+	bw: '[Gen 5] OU',
+	dpp: '[Gen 4] OU',
+	adv: '[Gen 3] OU',
+	gsc: '[Gen 2] OU',
+	rby: '[Gen 1] OU'
 };
 
 /*
-* Tournaments
-*/
+ * Tournaments
+ */
 
 exports.tourDefault = {
 	format: 'ou',
@@ -332,19 +325,25 @@ exports.leaderboards['tournaments'] = {
 */
 
 /*
-* Chat Logger
-*/
+ * Chat Logger
+ */
 
 exports.chatLogger = {
 	rooms: [],
-	ignore: { 'tournament': ['update', 'updateEnd'], 'formats': true, 'challstr': true, 'updateuser': true, 'queryresponse': true },
+	ignore: {
+		tournament: ['update', 'updateEnd'],
+		formats: true,
+		challstr: true,
+		updateuser: true,
+		queryresponse: true
+	},
 	logIntroMessages: true,
 	ageOfLogs: 7 //in days (max age of logs, 0 to keep logs infinitely)
 };
 
 /*
-* Groupchats
-*/
+ * Groupchats
+ */
 
 exports.groupchats = {};
 

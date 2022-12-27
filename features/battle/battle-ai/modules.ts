@@ -2,8 +2,8 @@
  * Battle modules
  */
 
-import { toId } from '../../../tools';
 import { debug } from '../../../console-reports';
+import { toId } from '../../../tools';
 import { Battle } from './battle';
 import { Decision } from './decision';
 import { IngameNoStatus } from './modules/ingame-nostatus';
@@ -18,12 +18,12 @@ export interface BattleModule {
 
 export const modules: Record<string, BattleModule> = {
 	'ingame-nostatus': new IngameNoStatus(),
-	'random': new Random(),
+	random: new Random(),
 	'singles-eff': new SinglesEffective(),
 };
 
-Object.values(modules).forEach(mod => {
-	debug("Loaded battle module: " + mod.id + (mod.desc ? (" [" + mod.desc + "]") : ""));
+Object.values(modules).forEach((mod) => {
+	debug('Loaded battle module: ' + mod.id + (mod.desc ? ' [' + mod.desc + ']' : ''));
 });
 
 export function choose(battle: Battle): BattleModule | null {
@@ -33,7 +33,7 @@ export function choose(battle: Battle): BattleModule | null {
 	if (modId) {
 		const mod = modules[modId];
 		if (mod) {
-			debug("Battle module [" + battle.id + "] - Using " + mod);
+			debug('Battle module [' + battle.id + '] - Using ' + mod);
 			return mod;
 		}
 	}
@@ -41,26 +41,26 @@ export function choose(battle: Battle): BattleModule | null {
 	/* Module decision by default */
 
 	if (toId(battle.tier).includes('1v1')) {
-		if (modules["ingame-nostatus"]) {
-			debug("Battle module [" + battle.id + "] - Using ingame-nostatus");
-			return modules["ingame-nostatus"];
+		if (modules['ingame-nostatus']) {
+			debug('Battle module [' + battle.id + '] - Using ingame-nostatus');
+			return modules['ingame-nostatus'];
 		}
 	}
 
-	if (battle.gametype === "singles") {
-		if (modules["singles-eff"]) {
-			debug("Battle module [" + battle.id + "] - Using singles-eff");
-			return modules["singles-eff"];
+	if (battle.gametype === 'singles') {
+		if (modules['singles-eff']) {
+			debug('Battle module [' + battle.id + '] - Using singles-eff');
+			return modules['singles-eff'];
 		}
 	}
 
-	if (modules["ingame-nostatus"]) {
-		debug("Battle module [" + battle.id + "] - Using ingame-nostatus");
-		return modules["ingame-nostatus"];
+	if (modules['ingame-nostatus']) {
+		debug('Battle module [' + battle.id + '] - Using ingame-nostatus');
+		return modules['ingame-nostatus'];
 	}
 
 	/* Random, no module designed */
 
-	debug("Battle module [" + battle.id + "] - Not found, using random");
+	debug('Battle module [' + battle.id + '] - Not found, using random');
 	return null;
-};
+}

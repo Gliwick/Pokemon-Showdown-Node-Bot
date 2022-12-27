@@ -2,13 +2,12 @@
  * Battle manager
  */
 
-const battleAutojoinFile = AppOptions.data + "_temp/" + "battle-autojoin-tmp.json";
+const battleAutojoinFile = AppOptions.data + '_temp/' + 'battle-autojoin-tmp.json';
 
-import { debug, error } from "../../../console-reports";
-import { FlatFileManager } from "../../../settings";
-import { Battle } from "./battle";
-
-import { createStream } from "./battle-log";
+import { debug, error } from '../../../console-reports';
+import { FlatFileManager } from '../../../settings';
+import { Battle } from './battle';
+import { createStream } from './battle-log';
 
 export class BattleBot {
 	battles: Record<string, Battle> = {};
@@ -19,26 +18,28 @@ export class BattleBot {
 
 	constructor() {
 		this.autojoinFFM = new FlatFileManager(battleAutojoinFile);
-	};
+	}
 
-	init() {
-		for (let room in this.battles) {
+	init(): void {
+		for (const room in this.battles) {
 			try {
 				this.battles[room].destroy();
-			} catch (e) { }
+			} catch (e) {}
 			delete this.battles[room];
 		}
 		this.battlesCount = 0;
-	};
+	}
 
 	tryJoinAbandonedBattles(): string[] | undefined {
 		if (!Config.abandonedBattleAutojoin) return;
 		try {
 			this.autoJoinData = this.autojoinFFM.readObj();
-		} catch (e: any) { error(e.stack); }
+		} catch (e: any) {
+			error(e.stack);
+		}
 		debug(JSON.stringify(this.autoJoinData));
 		const cmds: string[] = [];
-		for (let i in this.autoJoinData) {
+		for (const i in this.autoJoinData) {
 			if (!this.battles[i]) {
 				cmds.push('|/join ' + i);
 				cmds.push(i + '|/joinbattle');
@@ -47,27 +48,27 @@ export class BattleBot {
 		}
 		this.autojoinFFM.writeObj(this.autoJoinData);
 		return cmds;
-	};
+	}
 
-	updateBattleAutojoin() {
+	updateBattleAutojoin(): void {
 		if (!Config.abandonedBattleAutojoin) return;
-		for (let i in this.autoJoinData) {
+		for (const i in this.autoJoinData) {
 			delete this.autoJoinData[i];
 		}
-		for (let room in this.battles) {
+		for (const room in this.battles) {
 			this.autoJoinData[room] = 1;
 		}
 		this.autojoinFFM.writeObj(this.autoJoinData);
-	};
+	}
 
-	receive(room: string, data: string, isIntro?: boolean) {
-		if (data.charAt(0) === ">") return;
-		const spl = data.substr(1).split("|");
+	receive(room: string, data: string, isIntro?: boolean): void {
+		if (data.charAt(0) === '>') return;
+		const spl = data.substr(1).split('|');
 		if (spl[0] === 'init') {
 			if (this.battles[room]) {
 				try {
 					this.battles[room].destroy();
-				} catch (e) { }
+				} catch (e) {}
 			}
 			this.battles[room] = new Battle(room);
 			createStream(this.battles[room]);
@@ -81,21 +82,21 @@ export class BattleBot {
 			if (this.battles[room]) {
 				try {
 					this.battles[room].destroy();
-				} catch (e) { }
+				} catch (e) {}
 				delete this.battles[room];
 				this.battlesCount--;
 				this.updateBattleAutojoin();
 			}
 		}
-	};
+	}
 
-	destroy() {
-		for (let room in this.battles) {
+	destroy(): void {
+		for (const room in this.battles) {
 			try {
 				this.battles[room].destroy();
-			} catch (e) { }
+			} catch (e) {}
 			delete this.battles[room];
 			this.battlesCount--;
 		}
 	}
-};
+}

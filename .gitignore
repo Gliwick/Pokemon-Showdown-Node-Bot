@@ -105,3 +105,6 @@ nohup.out
 
 # VS Code
 .vscode/
+
+# ESLint
+.eslintcache

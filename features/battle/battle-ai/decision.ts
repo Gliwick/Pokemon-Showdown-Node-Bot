@@ -1,9 +1,9 @@
 /*
-* Decision maker
-*/
+ * Decision maker
+ */
 
-import { Battle, RequestMove } from "./battle";
-import { Type } from "./battle-data";
+import { Battle, RequestMove } from './battle';
+import { Type } from './battle-data';
 
 type DecisionType = 'move' | 'switch' | 'team' | 'pass' | 'shift';
 
@@ -32,11 +32,17 @@ export class MoveDecision extends Decision {
 	transformation: Transformation | null;
 	moveData: Record<string, any> | null = null;
 
-	constructor(moveId: number, target: number | null, transformation: Transformation | null, move: string, movePP: number) {
+	constructor(
+		moveId: number,
+		target: number | null,
+		transformation: Transformation | null,
+		move: string,
+		movePP: number
+	) {
 		super('move');
 		this.moveId = moveId || 0;
 		this.target = target;
-		this.move = move || "struggle";
+		this.move = move || 'struggle';
 		this.movePP = movePP || 1;
 		this.transformation = transformation;
 	}
@@ -44,17 +50,17 @@ export class MoveDecision extends Decision {
 	protected getArgsStr(): string {
 		let str = (this.moveId + 1).toString();
 		if (typeof this.transformation === 'string') {
-			str += (" " + this.transformation);
+			str += ' ' + this.transformation;
 		} else if (this.transformation) {
-			str += (" " + Object.keys(this.transformation)[0]);
+			str += ' ' + Object.keys(this.transformation)[0];
 		}
 		if (this.target !== null) {
-			if (this.target >= 0) str += " " + (this.target + 1);
-			else str += (" " + this.target);
+			if (this.target >= 0) str += ' ' + (this.target + 1);
+			else str += ' ' + this.target;
 		}
 		return str;
 	}
-};
+}
 
 export class SwitchDecision extends Decision {
 	poke: string;
@@ -62,7 +68,7 @@ export class SwitchDecision extends Decision {
 
 	constructor(pokeId: number, poke: string) {
 		super('switch');
-		this.poke = poke || "pikachu";
+		this.poke = poke || 'pikachu';
 		this.pokeId = pokeId || 0;
 	}
 
@@ -97,9 +103,9 @@ export class TeamDecision extends Decision {
 				}
 			}
 		}
-		return team.join("");
+		return team.join('');
 	}
-};
+}
 
 export class PassDecision extends Decision {
 	constructor() {
@@ -109,7 +115,7 @@ export class PassDecision extends Decision {
 	protected getArgsStr(): string {
 		return '';
 	}
-};
+}
 
 export class ShiftDecision extends Decision {
 	constructor() {
@@ -123,13 +129,13 @@ export class ShiftDecision extends Decision {
 
 function isTooFar(battle: Battle, a: number, b: number): boolean {
 	if (battle.gametype === 'triples') {
-		return ((a === 0 && b === 0) || (a === 2 && b === 2));
+		return (a === 0 && b === 0) || (a === 2 && b === 2);
 	} else {
 		return false;
 	}
 }
 
-function combinateTeamPreview(array: number[], i: number, values: number[], solutions: number[][]) {
+function combinateTeamPreview(array: number[], i: number, values: number[], solutions: number[][]): void {
 	if (i >= array.length) {
 		solutions.push([...array]);
 		return;
@@ -142,7 +148,7 @@ function combinateTeamPreview(array: number[], i: number, values: number[], solu
 	}
 }
 
-function generateTeamCombinations(sideLength: number, requiredLength: number) {
+function generateTeamCombinations(sideLength: number, requiredLength: number): number[][] {
 	const comb: number[][] = [];
 	const values: number[] = [];
 	const array: number[] = [];
@@ -166,24 +172,24 @@ function validateDecision(des: Decision[]): boolean {
 			if (transformed) return false; // 2 mega evolutions at the same time
 			transformed = true;
 		}
-		if (des[i].type === "switch") {
+		if (des[i].type === 'switch') {
 			const pokeId = (des[i] as SwitchDecision).pokeId;
 			if (switched.includes(pokeId)) return false; // Switch to the same pokemon
 			switched.push(pokeId);
-		} else if (des[i].type === "shift") {
+		} else if (des[i].type === 'shift') {
 			if (shiftConsumed) return false; // 2 shifts at the same time
 			shiftConsumed = true;
 		}
-		if (des[i].type !== "pass") passed = false;
+		if (des[i].type !== 'pass') passed = false;
 	}
 	if (passed) return false; // You can't pass the turn
 	return true;
 }
 
 function cartesianProduct(tables: Decision[][]): Decision[][] {
-	return tables.reduce(
-		(a, b) => a.flatMap(d => b.map(e => [d, e].flat())), [[]] as Decision[][]
-	).filter(decisions => validateDecision(decisions));
+	return tables
+		.reduce((a, b) => a.flatMap((d) => b.map((e) => [d, e].flat())), [[]] as Decision[][])
+		.filter((decisions) => validateDecision(decisions));
 }
 
 function getTargets(battle: Battle, activeIndex: number, move: RequestMove): (number | null)[] {
@@ -208,7 +214,7 @@ function getTargets(battle: Battle, activeIndex: number, move: RequestMove): (nu
 				if (move.target !== 'adjacentAllyOrSelf' && tar === activeIndex) continue; // Not self target allowed
 				if (!battle.self.active[tar] || battle.self.active[tar]?.fainted) continue; // Target not found
 				if (move.target !== 'any' && isTooFar(battle, tar, activeIndex)) continue; // Target too far
-				targets.push((-1) * (tar + 1));
+				targets.push(-1 * (tar + 1));
 			}
 		}
 	} else {
@@ -239,7 +245,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 		const fw = req.forceSwitch;
 		const tables: Decision[][] = [];
 		let canSw;
-		const toSw = fw.filter(i => i).length;
+		const toSw = fw.filter((i) => i).length;
 		for (let i = 0; i < fw.length; i++) {
 			tables.push([]);
 			if (!fw[i]) {
@@ -247,7 +253,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 			} else {
 				canSw = 0;
 				for (let k = 0; k < req.side.pokemon.length; k++) {
-					if (req.side.pokemon[k].condition === "0 fnt") continue; // Fainted
+					if (req.side.pokemon[k].condition === '0 fnt') continue; // Fainted
 					if (req.side.pokemon[k].active) continue; // Active
 					canSw++;
 					tables[i].push(new SwitchDecision(k, req.side.pokemon[k].ident));
@@ -264,7 +270,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 		const tables: Decision[][] = [];
 		for (let i = 0; i < req.active.length; i++) {
 			tables.push([]);
-			if (req.side.pokemon[i].condition === "0 fnt") {
+			if (req.side.pokemon[i].condition === '0 fnt') {
 				//fainted, pass
 				tables[i].push(new PassDecision());
 				continue;
@@ -282,16 +288,25 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 					if (active.canMegaEvo) mega = true;
 
 					const targets = getTargets(battle, i, move);
-					for (let target of targets) {
+					for (const target of targets) {
 						tables[i].push(new MoveDecision(j, target, null, move.move, move.pp));
 						if (mega) tables[i].push(new MoveDecision(j, target, 'mega', move.move, move.pp));
-						if (active.canTerastallize) tables[i].push(new MoveDecision(j, target, { terastallize: active.canTerastallize as Type }, move.move, move.pp));;
+						if (active.canTerastallize)
+							tables[i].push(
+								new MoveDecision(
+									j,
+									target,
+									{ terastallize: active.canTerastallize as Type },
+									move.move,
+									move.pp
+								)
+							);
 					}
 
 					if (active.canZMove && active.canZMove[j]) {
 						const zMove = active.canZMove[j];
 						const zTargets = getTargets(battle, i, zMove);
-						for (let target of zTargets) {
+						for (const target of zTargets) {
 							tables[i].push(new MoveDecision(j, target, 'zmove', zMove.move, move.pp));
 						}
 					}
@@ -306,8 +321,10 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 					if (baseMove.disabled || baseMove.pp === 0) continue; // No more moves
 
 					const targets = getTargets(battle, i, maxMove);
-					for (let target of targets) {
-						tables[i].push(new MoveDecision(j, target, active.canDynamax ? 'dynamax' : null, maxMove.move, baseMove.pp));
+					for (const target of targets) {
+						tables[i].push(
+							new MoveDecision(j, target, active.canDynamax ? 'dynamax' : null, maxMove.move, baseMove.pp)
+						);
 					}
 				}
 			}
@@ -315,7 +332,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 			// switches
 			if (!active.trapped) {
 				for (let k = 0; k < req.side.pokemon.length; k++) {
-					if (req.side.pokemon[k].condition === "0 fnt") continue; // Fainted
+					if (req.side.pokemon[k].condition === '0 fnt') continue; // Fainted
 					if (req.side.pokemon[k].active) continue; // Active
 					tables[i].push(new SwitchDecision(k, req.side.pokemon[k].ident));
 				}
@@ -323,12 +340,11 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 
 			// shifts
 			if (req.active.length === 3) {
-				if ((i === 0 || i === 2)) tables[i].push(new ShiftDecision());
+				if (i === 0 || i === 2) tables[i].push(new ShiftDecision());
 			}
-
 		}
 		return cartesianProduct(tables);
 	}
 
 	return [];
-};
+}

@@ -1,10 +1,12 @@
 /*
 	Settings Manager
 */
-import { existsSync, PathLike, readFile, readFileSync, rename, unlinkSync, writeFile, writeFileSync } from "fs";
-import { inspect } from "util";
-import { debug, errlog, error, ok } from "./console-reports";
-import { toId } from "./tools";
+import { existsSync, PathLike, readFile, readFileSync, rename, unlinkSync, writeFile, writeFileSync } from 'fs';
+import { inspect } from 'util';
+
+import { debug, errlog, error, ok } from './console-reports';
+import { ConfigType, LeaderboardConfig } from './options';
+import { toId } from './tools';
 
 export class FlatFileManager {
 	file: PathLike;
@@ -22,53 +24,61 @@ export class FlatFileManager {
 
 	read(): string {
 		return readFileSync(this.file).toString();
-	};
+	}
 
 	readObj(): any {
 		return JSON.parse(this.read());
-	};
+	}
 
 	readObjSafe(): any {
 		try {
 			return this.readObj();
 		} catch (e: any) {
 			errlog(e.stack);
-			error("Could not import read object: " + inspect(e));
+			error('Could not import read object: ' + inspect(e));
 		}
-	};
+	}
 
 	write(data: string): void {
-		const self = this;
-		const finishWriting = () => {
-			self.writing = false;
-			if (self.writePending) {
-				self.writePending = false;
-				if (self.dataPending) self.write(self.dataPending);
-				self.dataPending = null;
+		const finishWriting = ((): void => {
+			this.writing = false;
+			if (this.writePending) {
+				this.writePending = false;
+				if (this.dataPending) this.write(this.dataPending);
+				this.dataPending = null;
 			}
-		};
-		if (self.writing) {
-			self.writePending = true;
-			self.dataPending = data;
+		}).bind(this);
+		if (this.writing) {
+			this.writePending = true;
+			this.dataPending = data;
 			return;
 		}
-		writeFile(self.file + '.0', data, function () {
-			// rename is atomic on POSIX, but will throw an error on Windows
-			rename(self.file + '.0', self.file, function (err) {
-				if (err) {
-					// This should only happen on Windows.
-					writeFile(self.file, data, finishWriting);
-					return;
-				}
-				finishWriting();
-			});
-		});
-	};
+		writeFile(
+			this.file + '.0',
+			data,
+			((): void => {
+				// rename is atomic on POSIX, but will throw an error on Windows
+				rename(
+					this.file + '.0',
+					this.file,
+					((err: NodeJS.ErrnoException | null): void => {
+						if (err) {
+							// This should only happen on Windows.
+							writeFile(this.file, data, finishWriting);
+							return;
+						}
+						finishWriting();
+					}).bind(this)
+				);
+			}).bind(this)
+		);
+	}
 
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	writeObj(obj: any): void {
 		this.write(JSON.stringify(obj));
-	};
-};
+	}
+}
 
 class User {
 	name: string;
@@ -96,20 +106,20 @@ class User {
 	markAlt(alt: User): void {
 		const altId = toId(alt.id);
 		if (altId === this.id) return;
-		if (!this.alts.some(a => a.id === altId)) {
+		if (!this.alts.some((a) => a.id === altId)) {
 			this.alts.push(alt);
-			this.alts.forEach(a => a.markAlt(alt));
+			this.alts.forEach((a) => a.markAlt(alt));
 		}
-	};
+	}
 
 	setOnline(): void {
 		this.online = true;
-	};
+	}
 
 	setOffline(): void {
 		this.online = false;
 		this.rooms = {};
-	};
+	}
 
 	reportSeen(room: string, action: string, args: string[] = []): void {
 		const dSeen: User['lastSeen'] = { name: this.name, time: Date.now() };
@@ -119,66 +129,66 @@ class User {
 			dSeen.args = args;
 		}
 		this.lastSeen = dSeen;
-	};
-};
+	}
+}
 
 class UserManager {
 	users: Record<string, User> = {};
 
 	isOnline(user: string): boolean {
-		var userid = toId(user);
+		const userid = toId(user);
 		if (!this.users[userid]) return false;
 		return !!this.users[userid].online;
-	};
+	}
 
 	getName(user: string): string {
-		var userid = toId(user);
+		const userid = toId(user);
 		if (!this.users[userid]) return userid;
 		return this.users[userid].name;
-	};
+	}
 
 	getSeen(user: string): User['lastSeen'] {
-		var userid = toId(user);
+		const userid = toId(user);
 		if (!this.users[userid]) return null;
 		return this.users[userid].lastSeen;
-	};
+	}
 
 	getAlts(user: string): string[] {
-		var userid = toId(user);
+		const userid = toId(user);
 		if (!this.users[userid]) return [];
-		return this.users[userid].alts.map(alt => alt.id);
-	};
+		return this.users[userid].alts.map((alt) => alt.id);
+	}
 
 	reportJoin(user: string, room: string): void {
 		if (Config.disableSeen) return;
-		var userid = toId(user);
+		const userid = toId(user);
 		if (!this.users[userid]) {
 			this.users[userid] = new User(user.substr(1));
 		}
-		var userObj = this.users[userid];
+		const userObj = this.users[userid];
 		userObj.setOnline();
 		userObj.rooms[room] = { group: user.charAt(0) };
 		userObj.reportSeen(room, 'j', []);
-	};
+	}
 
 	reportChat(user: string, room: string): void {
 		if (Config.disableSeen) return;
-		var userid = toId(user);
+		const userid = toId(user);
 		if (!this.users[userid]) {
 			this.users[userid] = new User(user.substr(1));
 		}
-		var userObj = this.users[userid];
+		const userObj = this.users[userid];
 		userObj.setOnline();
 		userObj.reportSeen(room, 'c', []);
-	};
+	}
 
 	reportLeave(user: string, room: string): void {
 		if (Config.disableSeen) return;
-		var userid = toId(user);
+		const userid = toId(user);
 		if (!this.users[userid]) {
 			this.users[userid] = new User(user.substr(1));
 		}
-		var userObj = this.users[userid];
+		const userObj = this.users[userid];
 		if (userObj.rooms[room]) delete userObj.rooms[room];
 		userObj.reportSeen(room, 'l', []);
 		if (Object.keys(userObj.rooms).length > 0) {
@@ -186,15 +196,15 @@ class UserManager {
 		} else {
 			userObj.setOffline();
 		}
-	};
+	}
 
 	reportRename(user: string, newName: string, room: string): void {
 		if (Config.disableSeen) return;
-		var userid = toId(user);
+		const userid = toId(user);
 		if (!this.users[userid]) {
 			this.users[userid] = new User(user.substr(1));
 		}
-		var userObj = this.users[userid];
+		const userObj = this.users[userid];
 		if (toId(user) === toId(newName)) {
 			// Just a name change
 			userObj.name = newName.substr(1);
@@ -208,7 +218,7 @@ class UserManager {
 				this.users[newUserid] = new User(newName.substr(1));
 			}
 			if (!Config.disableAlts) userObj.markAlt(this.users[newUserid]);
-			var newUserObj = this.users[newUserid];
+			const newUserObj = this.users[newUserid];
 			newUserObj.setOnline();
 			newUserObj.rooms[room] = { group: newName.charAt(0) };
 			if (!Config.disableAlts) {
@@ -221,22 +231,34 @@ class UserManager {
 			newUserObj.reportSeen(room, 'j', []);
 		}
 	}
-};
+}
 
 export class SettingsManager {
 	settings: {
+		autoban?: Record<string, Record<string, number>>;
+		autopromote?: Record<string, any>;
+		bannedphrases?: Record<string, Record<string, boolean>>;
 		commands?: Record<string, Record<string, string>>;
+		inapropiatephrases?: Record<string, Record<string, boolean>>;
+		joinphrases?: Record<string, Record<string, string>>;
 		jointours?: Record<string, boolean>;
+		jpdisable?: Record<string, boolean>;
 		language?: Record<string, string>;
+		leaderboards?: Record<string, LeaderboardConfig>;
+		modding?: Record<string, ConfigType['moderation']['modDefault']>;
+		modexception?: Record<string, boolean>;
+		regexautoban?: Record<string, Record<string, boolean>>;
+		pmwmsg?: Record<string, any>;
 		sleep?: Record<string, boolean>;
+		zerotol?: Record<string, string>;
 	};
 	settingsFFM = new FlatFileManager(AppOptions.data + 'settings.json');
 	permissions: Record<string, number> = {};
 	parserFilters: Record<string, (room: string, by: string, msg: string) => boolean> = {};
 	userManager: UserManager;
-	httpCache: Record<string, { url: string, time: number }> = {};
+	httpCache: Record<string, { url: string; time: number }> = {};
 	cacheFFM = new FlatFileManager(AppOptions.data + '_temp/' + 'http-cache.json');
-	lockdown: boolean = false;
+	lockdown = false;
 	package: Record<string, any>;
 
 	constructor() {
@@ -244,7 +266,7 @@ export class SettingsManager {
 			this.settings = this.settingsFFM.readObj();
 		} catch (e: any) {
 			errlog(e.stack);
-			error("Could not import settings: " + inspect(e));
+			error('Could not import settings: ' + inspect(e));
 			this.settings = {};
 		}
 
@@ -252,7 +274,7 @@ export class SettingsManager {
 			this.httpCache = this.httpCache = this.cacheFFM.readObj();
 		} catch (e: any) {
 			errlog(e.stack);
-			error("Could not import http cache: " + inspect(e));
+			error('Could not import http cache: ' + inspect(e));
 		}
 
 		this.userManager = new UserManager();
@@ -263,59 +285,63 @@ export class SettingsManager {
 
 	save(): void {
 		this.settingsFFM.writeObj(this.settings);
-	};
+	}
 
 	/*
 	 * Permissions
 	 */
 
 	userCan(room: string, user: string, permission: string): boolean {
-		var rank;
-		if (!this.settings.commands || !this.settings.commands[room] || typeof this.settings.commands[room][permission] === "undefined") {
+		let rank;
+		if (
+			!this.settings.commands ||
+			!this.settings.commands[room] ||
+			typeof this.settings.commands[room][permission] === 'undefined'
+		) {
 			rank = Config.defaultPermission;
 			if (Config.permissionExceptions[permission]) rank = Config.permissionExceptions[permission];
 		} else {
 			rank = this.settings.commands[room][permission];
 		}
 		return Tools.equalOrHigherRank(user, rank);
-	};
+	}
 
 	addPermissions(perms: string[]): void {
 		for (let i = 0; i < perms.length; i++) {
 			this.permissions[perms[i]] = 1;
 		}
-	};
+	}
 
 	setPermission(room: string, perm: string, rank: string): void {
 		if (!this.settings.commands) this.settings.commands = {};
 		if (!this.settings.commands[room]) this.settings.commands[room] = {};
 		this.settings.commands[room][perm] = rank;
-	};
+	}
 
 	/*
 	 * Configuration
 	 */
 
 	callParseFilters(room: string, by: string, msg: string): boolean {
-		return Object.values(this.parserFilters).some(f => f.call(this, room, by, msg));
-	};
+		return Object.values(this.parserFilters).some((f) => f.call(this, room, by, msg));
+	}
 
 	addParseFilter(id: string, func: (room: string, by: string, msg: string) => boolean): boolean {
 		this.parserFilters[id] = func;
 		return true;
-	};
+	}
 
 	deleteParseFilter(id: string): boolean {
 		if (!this.parserFilters[id]) return false;
 		delete this.parserFilters[id];
 		return true;
-	};
+	}
 
 	isSleeping(room: string): boolean {
-		if (this.settings.sleep && typeof this.settings.sleep[room] === "boolean") return this.settings.sleep[room];
+		if (this.settings.sleep && typeof this.settings.sleep[room] === 'boolean') return this.settings.sleep[room];
 		if (Config.ignoreRooms) return Config.ignoreRooms.includes(room);
 		return false;
-	};
+	}
 
 	sleepRoom(room: string): boolean {
 		if (this.isSleeping(room)) return false;
@@ -323,7 +349,7 @@ export class SettingsManager {
 		this.settings.sleep[room] = true;
 		this.save();
 		return true;
-	};
+	}
 
 	unsleepRoom(room: string): boolean {
 		if (!this.isSleeping(room)) return false;
@@ -331,7 +357,7 @@ export class SettingsManager {
 		this.settings.sleep[room] = false;
 		this.save();
 		return true;
-	};
+	}
 
 	applyConfig(): void {
 		Bot.opts.server = Config.server;
@@ -343,14 +369,18 @@ export class SettingsManager {
 		Bot.opts.pass = Config.pass;
 		Bot.opts.showErrors = Config.debug?.debug ?? true;
 		Bot.opts.debug = Config.debug?.debug ?? true;
-	};
+	}
 
 	/*
 	 * Cache System
 	 */
 
-	httpGetAndCache(url: string, callback?: (data: string | null, error: NodeJS.ErrnoException | null) => void, onDownload?: () => void): void {
-		for (let i in this.httpCache) {
+	httpGetAndCache(
+		url: string,
+		callback?: (data: string | null, error: NodeJS.ErrnoException | null) => void,
+		onDownload?: () => void
+	): void {
+		for (const i in this.httpCache) {
 			if (this.httpCache[i].url === url) {
 				readFile(AppOptions.data + '_temp/' + i, (err, data) => {
 					if (err) {
@@ -364,32 +394,41 @@ export class SettingsManager {
 			}
 		}
 		if (onDownload) onDownload();
-		Tools.httpGet(url, (function (this: SettingsManager, data, err) {
-			if (err) {
-				if (typeof callback === "function") callback(null, err);
-				return;
-			}
-			let file: string;
-			do {
-				file = "cache.http." + Tools.generateRandomNick(5) + ".tmp";
-			} while (this.httpCache[file]);
-			writeFile(AppOptions.data + '_temp/' + file, data, (function (this: SettingsManager, err: NodeJS.ErrnoException | null) {
-				if (!err) {
-					this.httpCache[file] = { url: url, time: Date.now() };
-					this.cacheFFM.writeObj(this.httpCache);
+		Tools.httpGet(
+			url,
+			((data: string | null, err?: Error): void => {
+				if (err) {
+					if (typeof callback === 'function') callback(null, err);
+					return;
 				}
-				if (typeof callback === "function") callback(data, null);
-			}).bind(this));
-		}).bind(this));
-	};
+				let file: string;
+				do {
+					file = 'cache.http.' + Tools.generateRandomNick(5) + '.tmp';
+				} while (this.httpCache[file]);
+				if (!data) return;
+				writeFile(
+					AppOptions.data + '_temp/' + file,
+					data,
+					((err: NodeJS.ErrnoException | null): void => {
+						if (!err) {
+							this.httpCache[file] = { url: url, time: Date.now() };
+							this.cacheFFM.writeObj(this.httpCache);
+						}
+						if (typeof callback === 'function') callback(data, null);
+					}).bind(this)
+				);
+			}).bind(this)
+		);
+	}
 
 	unCacheUrl(url: string | RegExp | true): void {
-		var uncache, changed = false;
-		for (var file in this.httpCache) {
+		let uncache,
+			changed = false;
+		for (const file in this.httpCache) {
 			uncache = false;
-			if (typeof url === "string") {
+			if (typeof url === 'string') {
 				if (url === this.httpCache[file].url) uncache = true;
-			} else if (typeof url === "object" && url instanceof RegExp) {
+			} else if (typeof url === 'object' && url instanceof RegExp) {
 				if (url.test(this.httpCache[file].url)) uncache = true;
 			} else if (url === true) {
 				uncache = true;
@@ -399,12 +438,12 @@ export class SettingsManager {
 					unlinkSync(AppOptions.data + '_temp/' + file);
 				} catch (err: any) {
 					debug(err.stack);
-					debug("Could not remove cache file: " + AppOptions.data + '_temp/' + file);
+					debug('Could not remove cache file: ' + AppOptions.data + '_temp/' + file);
 				}
 				delete this.httpCache[file];
 				changed = true;
 			}
 		}
 		if (changed) this.cacheFFM.writeObj(this.httpCache);
-	};
-};
+	}
+}

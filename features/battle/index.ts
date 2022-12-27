@@ -26,15 +26,15 @@ export class BattleManager implements Feature {
 		this.challengeManager = new ChallengeManager(this.battleBot, this.teamBuilder);
 		this.tourManager = new TourManager(this.teamBuilder);
 		this.ladderManager = new LadderManager(this.battleBot, this.teamBuilder);
-	};
+	}
 
-	init() {
+	init(): void {
 		this.battleBot.init();
 		this.tourManager.clearData();
 		this.teamBuilder.loadTeamList();
-	};
+	}
 
-	parse(room: string, message: string, isIntro: boolean, spl: string[]) {
+	parse(room: string, message: string, isIntro: boolean, spl: string[]): void {
 		switch (spl[0]) {
 			case 'tournament':
 				this.tourManager.parse(room, message, isIntro, spl);
@@ -50,28 +50,28 @@ export class BattleManager implements Feature {
 
 		if (!Bot.rooms[room]) {
 			if (spl[0] !== 'init' || spl[1] !== 'battle') return;
-		} else if (Bot.rooms[room].type !== "battle") return;
+		} else if (Bot.rooms[room].type !== 'battle') return;
 
 		try {
 			this.battleBot.receive(room, message, isIntro);
 		} catch (e: any) {
 			errlog(e.stack);
-			error("battleBot crash");
+			error('battleBot crash');
 		}
-	};
+	}
 
-	getInitCmds() {
+	getInitCmds(): string[] | undefined {
 		return this.battleBot.tryJoinAbandonedBattles();
-	};
+	}
 
-	readyToDie() {
+	readyToDie(): string | undefined {
 		const battles = Object.keys(this.battleBot.battles);
-		if (battles.length) return ("There are " + battles.length + " battles in progress");
-	};
+		if (battles.length) return 'There are ' + battles.length + ' battles in progress';
+	}
 
-	destroy() {
+	destroy(): void {
 		this.ladderManager.destroy();
 		this.battleBot.destroy();
 		if (Features[this.id]) delete Features[this.id];
-	};
-};
+	}
+}

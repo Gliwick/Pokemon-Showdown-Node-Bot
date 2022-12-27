@@ -12,11 +12,22 @@ interface EffectData {
 	shortDesc?: string;
 }
 
-type ID = '' | string & { __isID: true };
+type ID = '' | (string & { __isID: true });
 
 export type EffectType =
-	'Condition' | 'Pokemon' | 'Move' | 'Item' | 'Ability' | 'Format' |
-	'Nature' | 'Ruleset' | 'Weather' | 'Status' | 'Terastal' | 'Rule' | 'ValidatorRule';
+	| 'Condition'
+	| 'Pokemon'
+	| 'Move'
+	| 'Item'
+	| 'Ability'
+	| 'Format'
+	| 'Nature'
+	| 'Ruleset'
+	| 'Weather'
+	| 'Status'
+	| 'Terastal'
+	| 'Rule'
+	| 'ValidatorRule';
 
 interface BasicEffect extends EffectData {
 	/**
@@ -92,11 +103,18 @@ type EventOrder = `on${string}Order` | `on${string}Priority`;
 type AnyFunction = (this: Record<string, any>, arg1?: any, arg2?: any, arg3?: any, arg4?: any) => void;
 type ActiveMove = Record<string, any>;
 
-type Condition = BasicEffect & Record<EventListener, AnyFunction | string | number> & Record<EventOrder, number> & {
-	readonly effectType: 'Condition' | 'Weather' | 'Status' | 'Terastal';
-	readonly counterMax?: number;
-	readonly durationCallback?: (this: Record<string, any>, target: Record<string, any>, source: Record<string, any>, effect: Condition | null) => number;
-}
+type Condition = BasicEffect &
+	Record<EventListener, AnyFunction | string | number> &
+	Record<EventOrder, number> & {
+		readonly effectType: 'Condition' | 'Weather' | 'Status' | 'Terastal';
+		readonly counterMax?: number;
+		readonly durationCallback?: (
+			this: Record<string, any>,
+			target: Record<string, any>,
+			source: Record<string, any>,
+			effect: Condition | null
+		) => number;
+	};
 
 export type ConditionData = Partial<Condition>;
 
@@ -133,7 +151,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 			// Paralysis occurs after all other Speed modifiers, so evaluate all modifiers up to this point first
 			spe = this.finalModify(spe);
 			if (!pokemon.hasAbility('quickfeet')) {
-				spe = Math.floor(spe * 50 / 100);
+				spe = Math.floor((spe * 50) / 100);
 			}
 			return spe;
 		},
@@ -287,7 +305,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 			}
 			this.activeTarget = pokemon;
 			const damage = this.actions.getConfusionDamage(pokemon, 40);
-			if (typeof damage !== 'number') throw new Error("Confusion damage not dealt");
+			if (typeof damage !== 'number') throw new Error('Confusion damage not dealt');
 			const activeMove = { id: this.toID('confused'), effectType: 'Move', type: '???' };
 			this.damage(damage, pokemon, pokemon, activeMove as ActiveMove);
 			return false;
@@ -418,8 +436,9 @@ export const Conditions: { [k: string]: ConditionData } = {
 		name: 'choicelock',
 		noCopy: true,
 		onStart(pokemon) {
-			if (!this.activeMove) throw new Error("Battle.activeMove is null");
-			if (!this.activeMove.id || this.activeMove.hasBounced || this.activeMove.sourceEffect === 'snatch') return false;
+			if (!this.activeMove) throw new Error('Battle.activeMove is null');
+			if (!this.activeMove.id || this.activeMove.hasBounced || this.activeMove.sourceEffect === 'snatch')
+				return false;
 			this.effectState.move = this.activeMove.id;
 		},
 		onBeforeMove(pokemon, target, move) {
@@ -428,13 +447,15 @@ export const Conditions: { [k: string]: ConditionData } = {
 				return;
 			}
 			if (
-				!pokemon.ignoringItem() && !pokemon.volatiles['dynamax'] &&
-				move.id !== this.effectState.move && move.id !== 'struggle'
+				!pokemon.ignoringItem() &&
+				!pokemon.volatiles['dynamax'] &&
+				move.id !== this.effectState.move &&
+				move.id !== 'struggle'
 			) {
 				// Fails unless the Choice item is being ignored, and no PP is lost
 				this.addMove('move', pokemon, move.name);
 				this.attrLastMove('[still]');
-				this.debug("Disabled by Choice item lock");
+				this.debug('Disabled by Choice item lock');
 				this.add('-fail', pokemon);
 				return false;
 			}
@@ -479,7 +500,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 			// time's up; time to hit! :D
 			const move = this.dex.moves.get(data.move);
 			if (target.fainted || target === data.source) {
-				this.hint(`${move.name} did not hit because the target is ${(target.fainted ? 'fainted' : 'the user')}.`);
+				this.hint(`${move.name} did not hit because the target is ${target.fainted ? 'fainted' : 'the user'}.`);
 				return;
 			}
 
@@ -500,7 +521,14 @@ export const Conditions: { [k: string]: ConditionData } = {
 
 			this.actions.trySpreadMoveHit([target], data.source, hitMove, true);
 			if (data.source.isActive && data.source.hasItem('lifeorb') && this.gen >= 5) {
-				this.singleEvent('AfterMoveSecondarySelf', data.source.getItem(), data.source.itemState, data.source, target, data.source.getItem());
+				this.singleEvent(
+					'AfterMoveSecondarySelf',
+					data.source.getItem(),
+					data.source.itemState,
+					data.source,
+					target,
+					data.source.getItem()
+				);
 			}
 			this.activeMove = null;
 
@@ -518,7 +546,13 @@ export const Conditions: { [k: string]: ConditionData } = {
 		onSwitchIn(target) {
 			if (!target.fainted) {
 				target.heal(target.maxhp);
-				this.add('-heal', target, target.getHealth, '[from] move: ' + this.effectState.sourceEffect, '[zeffect]');
+				this.add(
+					'-heal',
+					target,
+					target.getHealth,
+					'[from] move: ' + this.effectState.sourceEffect,
+					'[zeffect]'
+				);
 				target.side.removeSlotCondition(target, 'healreplacement');
 			}
 		},
@@ -535,7 +569,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 			// this.effectState.counter should never be undefined here.
 			// However, just in case, use 1 if it is undefined.
 			const counter = this.effectState.counter || 1;
-			this.debug("Success chance: " + Math.round(100 / counter) + "%");
+			this.debug('Success chance: ' + Math.round(100 / counter) + '%');
 			const success = this.randomChance(1, counter);
 			if (!success) delete pokemon.volatiles['stall'];
 			return success;
@@ -851,7 +885,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 			if (pokemon.baseSpecies.name === 'Shedinja') return;
 
 			// Changes based on dynamax level, 2 is max (at LVL 10)
-			const ratio = 1.5 + (pokemon.dynamaxLevel * 0.05);
+			const ratio = 1.5 + pokemon.dynamaxLevel * 0.05;
 
 			pokemon.maxhp = Math.floor(pokemon.maxhp * ratio);
 			pokemon.hp = Math.floor(pokemon.hp * ratio);
@@ -890,7 +924,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 	// Commander needs two conditions so they are implemented here
 	// Dondozo
 	commanded: {
-		name: "Commanded",
+		name: 'Commanded',
 		noCopy: true,
 		onStart(target) {
 			this.boost({ atk: 2, def: 2, spa: 2, spd: 2, spe: 2 }, target);
@@ -904,7 +938,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 	},
 	// Tatsugiri
 	commanding: {
-		name: "Commanding",
+		name: 'Commanding',
 		noCopy: true,
 		onStart(target) {
 			this.add('-activate', target, 'ability: Commander');
@@ -937,7 +971,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 		name: 'Arceus',
 		onTypePriority: 1,
 		onType(types, pokemon) {
-			if (pokemon.transformed || pokemon.ability !== 'multitype' && this.gen >= 8) return types;
+			if (pokemon.transformed || (pokemon.ability !== 'multitype' && this.gen >= 8)) return types;
 			let type: string | undefined = 'Normal';
 			if (pokemon.ability === 'multitype') {
 				type = pokemon.getItem().onPlate;
@@ -952,7 +986,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 		name: 'Silvally',
 		onTypePriority: 1,
 		onType(types, pokemon) {
-			if (pokemon.transformed || pokemon.ability !== 'rkssystem' && this.gen >= 8) return types;
+			if (pokemon.transformed || (pokemon.ability !== 'rkssystem' && this.gen >= 8)) return types;
 			let type: string | undefined = 'Normal';
 			if (pokemon.ability === 'rkssystem') {
 				type = pokemon.getItem().onMemory;
