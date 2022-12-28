@@ -16,15 +16,13 @@ export interface BattleModule {
 	decide: (battle: Battle, decisions: Decision[][]) => Decision[] | null;
 }
 
-export const modules: Record<string, BattleModule> = {
-	'ingame-nostatus': new IngameNoStatus(),
-	random: new Random(),
-	'singles-eff': new SinglesEffective(),
-};
-
-Object.values(modules).forEach((mod) => {
+export const modules: Record<string, BattleModule> = (
+	[new IngameNoStatus(), new Random(), new SinglesEffective()] as BattleModule[]
+).reduce((acc, mod) => {
+	acc[mod.id] = mod;
 	debug('Loaded battle module: ' + mod.id + (mod.desc ? ' [' + mod.desc + ']' : ''));
-});
+	return acc;
+}, {} as Record<string, BattleModule>);
 
 export function choose(battle: Battle): BattleModule | null {
 	if (!battle.tier) return null;
