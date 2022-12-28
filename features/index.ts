@@ -21,11 +21,15 @@ export function loadFeature(feature: string, reloading?: boolean): void {
 	feature = toId(feature); // to prevent injection
 	const filename = feature + '/index.ts';
 	const path = DIR + filename;
+
 	if (!existsSync(path)) throw new Error('Error: Feature ' + feature + ' not found');
-	Tools.uncacheTree(path);
+	if (reloading) Tools.uncacheTree(path);
 	const f = require('./' + filename).feature as Feature;
 	if (f.id) {
-		if (Features[f.id]) Features[f.id].destroy();
+		if (Features[f.id]) {
+			if (!reloading) return;
+			Features[f.id].destroy();
+		}
 		Features[f.id] = f;
 		if (reloading) {
 			Features[f.id].init();
@@ -41,6 +45,7 @@ export function loadFeature(feature: string, reloading?: boolean): void {
 export function loadFeatures(reloading?: boolean): string[] {
 	const featureList = readdirSync(DIR);
 	const errs: string[] = [];
+
 	featureList.forEach((feature): void => {
 		const path = DIR + feature + '/index.ts';
 		if (existsSync(path)) {
@@ -53,6 +58,8 @@ export function loadFeatures(reloading?: boolean): string[] {
 			}
 		}
 	});
-	info('Features ' + (reloading ? 'reloaded' : 'loaded') + (errs.length ? '. Errors: ' + errs.join(', ') : ''));
+	(reloading ? info : ok)(
+		'Features ' + (reloading ? 'reloaded' : 'loaded') + (errs.length ? '. Errors: ' + errs.join(', ') : '')
+	);
 	return errs;
 }
