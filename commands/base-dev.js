@@ -204,7 +204,7 @@ exports.commands = {
 					global.Tools = new (require('./../tools.ts').Tools)();
 					this.reply('tools.ts reloaded');
 					info('tools.ts reloaded');
-					Tools.loadTranslations(true);
+					Tools.intl.loadTranslations(true);
 				} catch (e) {
 					errlog(e.stack);
 					this.reply('Error: tools.ts has errors');
@@ -236,7 +236,7 @@ exports.commands = {
 			case 'lang':
 			case 'languages':
 				this.sclog();
-				var _errs = Tools.loadTranslations(true) || [];
+				var _errs = Tools.intl.loadTranslations(true) || [];
 				if (!_errs.length) return this.reply('Languages hotpatched');
 				this.reply('Some languages crashed: ' + _errs.join(', '));
 				break;

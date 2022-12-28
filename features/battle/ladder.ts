@@ -19,7 +19,7 @@ export class LadderManager {
 		if (!this.reportsRoom) return;
 		let lang = Config.language || 'english';
 		if (Settings.settings.language?.[this.reportsRoom]) lang = Settings.settings['language'][this.reportsRoom];
-		Bot.say(this.reportsRoom, Tools.translateGlobal('battle', 'battlefound', lang) + ': <<' + room + '>>');
+		Bot.say(this.reportsRoom, Tools.intl.translateGlobal('battle', 'battlefound', lang) + ': <<' + room + '>>');
 		this.reportsRoom = null;
 	}
 

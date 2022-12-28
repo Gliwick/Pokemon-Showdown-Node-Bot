@@ -119,10 +119,10 @@ exports.commands = {
 		var lang = toId(arg);
 		if (!lang.length)
 			return this.reply(
-				this.trad('nolang') + '. ' + this.trad('v') + ': ' + Object.keys(Tools.translations).join(', ')
+				this.trad('nolang') + '. ' + this.trad('v') + ': ' + Object.keys(Tools.intl.translations).join(', ')
 			);
-		if (!Tools.translations[lang])
-			return this.reply(this.trad('v') + ': ' + Object.keys(Tools.translations).join(', '));
+		if (!Tools.intl.translations[lang])
+			return this.reply(this.trad('v') + ': ' + Object.keys(Tools.intl.translations).join(', '));
 		if (!Settings.settings['language']) Settings.settings['language'] = {};
 		Settings.settings['language'][tarRoom] = lang;
 		Settings.save();

@@ -178,7 +178,7 @@ class Context {
 	}
 
 	trad(data: string): string {
-		return Tools.translateCmd(this.handler, data, this.language);
+		return Tools.intl.translateCmd(this.handler, data, this.language);
 	}
 
 	parse(data: string): void {

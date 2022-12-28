@@ -23,7 +23,7 @@ function normalize(str) {
 }
 
 function searchInLanguage(lang, word, keys) {
-	var dataLang = Tools.translations[lang]?.global;
+	var dataLang = Tools.intl.translations[lang]?.global;
 	var translationTemp;
 	var results = [];
 	var searchResults = [];
@@ -77,7 +77,7 @@ function searchInLanguage(lang, word, keys) {
 function getTranslations(from, to, word) {
 	word = normalize(word);
 	var results = [];
-	var toLangData = Tools.translations[to]?.global;
+	var toLangData = Tools.intl.translations[to]?.global;
 	if (!toLangData) return null;
 	var ids = searchInLanguage(from, word, ['abilities', 'items', 'moves', 'natures', 'pokemon']);
 	if (!ids || !ids.length) return null;
@@ -129,7 +129,7 @@ exports.commands = {
 				this.trad('u1') + ': ' + this.cmdToken + this.cmd + ' ' + this.trad('u2'),
 				'pokemon'
 			);
-		var validlangs = Object.keys(Tools.translations);
+		var validlangs = Object.keys(Tools.intl.translations);
 		if (validlangs.indexOf(from) < 0)
 			return this.restrictReply(
 				this.trad('lnot1') + ' "' + from + '" ' + this.trad('lnot2') + ': ' + validlangs.join(', '),

@@ -93,7 +93,7 @@ if (!AppOptions.testmode) CommandParser.loadCommands();
 
 /* Languages (translations) */
 
-if (!AppOptions.testmode) Tools.loadTranslations();
+if (!AppOptions.testmode) Tools.intl.loadTranslations();
 
 /* Features */
 

@@ -1,15 +1,15 @@
 /*
  * Tools file
  */
-import { lstatSync, readdirSync, watchFile as fsWatchFile } from 'fs';
+import { watchFile as fsWatchFile } from 'fs';
 import * as http from 'http';
 import * as https from 'https';
-import { inspect } from 'util';
 
+import { Intl } from './bll/intl';
 import { ConfigType } from './config-tools';
 import { typechart } from './data/typechart';
 import { initFeature, initFeatures } from './features';
-import { errlog, error, info, ok } from './log';
+import { errlog, info } from './log';
 
 declare global {
 	interface String {
@@ -93,13 +93,7 @@ export interface PokeSet {
 
 export class Tools {
 	watchFile = fsWatchFile;
-	translations: Record<
-		string,
-		{
-			commands: Record<string, Record<string, string>>;
-			globals: Record<string, Record<string, string>>;
-		}
-	> = {};
+	intl = new Intl();
 
 	toName(text?: string): string {
 		if (!text) return '';
@@ -227,7 +221,7 @@ export class Tools {
 		let times = [];
 		const trans = (data: string): string => {
 			if (!lang) lang = Config.language || 'english';
-			return this.translateGlobal('time', data, lang);
+			return this.intl.translateGlobal('time', data, lang);
 		};
 		if (seconds) times.push(String(seconds) + ' ' + (seconds === 1 ? trans('second') : trans('seconds')));
 		let minutes, hours, days;
@@ -308,76 +302,6 @@ export class Tools {
 		});
 		req.write(toUpload);
 		req.end();
-	}
-
-	/* Languages */
-
-	loadLang(lang: string, reloading?: boolean): Tools['translations'][string] {
-		const langToGlobals: Record<string, Record<string, string>> = {};
-		const langToCommands: Record<string, Record<string, string>> = {};
-		readdirSync('./languages/' + lang).forEach((file: string): void => {
-			if (!file.endsWith('.json')) return;
-			if (reloading) this.uncacheTree('../languages/' + lang + '/' + file);
-			const { commands, ...globals } = require('../languages/' + lang + '/' + file);
-			Object.assign(langToCommands, commands || {});
-			Object.assign(langToGlobals, globals);
-		});
-		return { commands: langToCommands, globals: langToGlobals };
-	}
-
-	loadTranslations(reloading?: boolean): string[] {
-		const errs: string[] = [];
-		readdirSync('./languages').forEach((lang: string): void => {
-			if (lstatSync('./languages/' + lang).isDirectory()) {
-				try {
-					this.translations[lang] = this.loadLang(lang, reloading);
-				} catch (e: any) {
-					errlog(e.stack);
-					error('Could not import language: ./languages/' + lang + '/ | ' + inspect(e));
-					errs.push(lang);
-				}
-			}
-		});
-		if (reloading)
-			info(
-				'Languages reloaded' +
-					(errs.length ? '. Errors: ' + errs.join(', ') : '') +
-					'. Languages: ' +
-					Object.keys(this.translations).join(', ')
-			);
-		else
-			ok(
-				'Loaded languages' +
-					(errs.length ? '. Errors: ' + errs.join(', ') : '') +
-					'. Languages: ' +
-					Object.keys(this.translations).join(', ')
-			);
-		return errs;
-	}
-
-	translateCmd(cmd: string, data: string, lang: string): string {
-		if (this.translations[lang] && this.translations[lang].commands && this.translations[lang].commands[cmd]) {
-			return this.translations[lang].commands[cmd][data];
-		} else {
-			lang = 'english';
-			if (
-				!this.translations[lang] ||
-				!this.translations[lang].commands ||
-				!this.translations[lang].commands[cmd]
-			) {
-				return '__(not found)__';
-			} else {
-				return this.translations[lang].commands[cmd][data];
-			}
-		}
-	}
-
-	translateGlobal(glob: string, data: string, lang: string): string {
-		return (
-			this.translations[lang]?.globals?.[glob]?.[data] ||
-			this.translations['english']?.globals?.[glob]?.[data] ||
-			'__(not found)__'
-		);
 	}
 
 	/* Battle formats and data */
