@@ -292,9 +292,10 @@ class ResourceMonitor {
 	}
 }
 
+type Command = (this: Context, sargs: string, by: string, room: string, cmd: string) => void;
+
 export class CommandParser {
-	commands: Record<string, string | ((this: Context, sargs: string, by: string, room: string, cmd: string) => void)> =
-		{};
+	commands: Record<string, string | Command> = {};
 	dynCommands: Record<string, string> = {};
 	tempVar = '';
 	dynCommandsFFM = new FlatFileManager(dynCommandsDataFile);
