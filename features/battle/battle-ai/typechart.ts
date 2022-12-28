@@ -2,10 +2,7 @@
 	Battle typechart
 */
 
-const DATA_DIR = './../data/';
-const MODS_DATA_DIR = DATA_DIR + 'mods/';
-
-import { CurrentGen, Type } from './battle-data';
+import { CurrentGen, MODS_DATA_DIR, Type } from './battle-data';
 
 type Gen = `gen${number}`;
 
@@ -1045,10 +1042,10 @@ typechart.gen2 = typechart.gen3 = typechart.gen4 = typechart.gen5;
 
 function getChart(gen: number = CurrentGen, battleId?: string): TypeChart {
 	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.formatMods[formatId];
+	const formatMod = Config.battleFormatMods[formatId];
 	if (formatMod) {
 		try {
-			const temp = require(MODS_DATA_DIR + formatMod + '/typechart.js').BattleTypeChart;
+			const temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/typechart.js').BattleTypeChart;
 			if (temp) return temp as TypeChart;
 		} catch (e) {}
 	}

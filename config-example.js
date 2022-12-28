@@ -269,13 +269,24 @@ exports.battleMessages = {
 	*/
 };
 
-exports.formatMods = {};
-
+/**
+ * Algorithms for use in battles
+ */
 exports.battleModules = {
-	/* Algorithms for use in battles */
 	gen9challengecup1v1: 'ingame-nostatus',
 	gen91v1: 'ingame-nostatus'
 };
+
+/**
+ * directory to load mod data from
+ * `./features/battle/data/mods/` by default
+ */
+exports.battleModsDir = '';
+
+/**
+ * Mods for use in battles
+ */
+exports.battleFormatMods = {};
 
 //exports.battleLog = {ageOfLogs: 1}; // Days
 

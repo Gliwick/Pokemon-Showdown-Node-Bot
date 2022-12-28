@@ -6,8 +6,8 @@ import { toId } from '../../../tools';
 import { Conditions } from '../data/conditions';
 import { deepcopy } from '../utils';
 
-const BATTLE_DATA_DIR = './../data/';
-const MODS_DATA_DIR = BATTLE_DATA_DIR + 'mods/';
+export const BATTLE_DATA_DIR = './../data/';
+export const MODS_DATA_DIR = BATTLE_DATA_DIR + 'mods/';
 
 export const CurrentGen = 9;
 
@@ -93,7 +93,7 @@ export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: st
 	} catch (e) {}
 	for (let i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + 'gen' + i + '/pokedex.js').BattlePokedex[poke];
+			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + i + '/pokedex.js').BattlePokedex[poke];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
@@ -105,11 +105,11 @@ export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: st
 	}
 
 	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.formatMods[formatId];
+	const formatMod = Config.battleFormatMods[formatId];
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + '/pokedex.js').BattlePokedex[poke];
+			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/pokedex.js').BattlePokedex[poke];
 		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
@@ -153,7 +153,7 @@ export function getMove(move: string, gen: number = CurrentGen, battleId?: strin
 	} catch (e) {}
 	for (let i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + 'gen' + i + '/moves.js').BattleMovedex[move];
+			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + i + '/moves.js').BattleMovedex[move];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
@@ -165,11 +165,11 @@ export function getMove(move: string, gen: number = CurrentGen, battleId?: strin
 	}
 
 	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.formatMods[formatId];
+	const formatMod = Config.battleFormatMods[formatId];
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + '/moves.js').BattleMovedex[move];
+			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/moves.js').BattleMovedex[move];
 		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
@@ -255,7 +255,7 @@ export function getItem(item: string, gen: number = CurrentGen, battleId?: strin
 	} catch (e) {}
 	for (let i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + 'gen' + i + '/items.js').BattleItems[item];
+			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + i + '/items.js').BattleItems[item];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
@@ -267,11 +267,11 @@ export function getItem(item: string, gen: number = CurrentGen, battleId?: strin
 	}
 
 	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.formatMods[formatId];
+	const formatMod = Config.battleFormatMods[formatId];
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + '/items.js').BattleItems[item];
+			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/items.js').BattleItems[item];
 		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
@@ -309,7 +309,9 @@ export function getAbility(abilityId: string, gen: number = CurrentGen, battleId
 	} catch (e) {}
 	for (let i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + 'gen' + i + '/abilities.js').BattleAbilities[abilityId];
+			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + i + '/abilities.js').BattleAbilities[
+				abilityId
+			];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
@@ -321,11 +323,13 @@ export function getAbility(abilityId: string, gen: number = CurrentGen, battleId
 	}
 
 	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.formatMods[formatId];
+	const formatMod = Config.battleFormatMods[formatId];
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + '/abilities.js').BattleAbilities[abilityId];
+			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/abilities.js').BattleAbilities[
+				abilityId
+			];
 		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
@@ -609,7 +613,8 @@ export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?
 	} catch (e) {}
 	for (let gen = CurrentGen - 1; gen >= gen; gen--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + 'gen' + gen + '/formats-data.js').BattleFormatsData[poke];
+			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + gen + '/formats-data.js')
+				.BattleFormatsData[poke];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
@@ -621,11 +626,12 @@ export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?
 	}
 
 	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.formatMods[formatId];
+	const formatMod = Config.battleFormatMods[formatId];
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + '/formats-data.js.js').BattleFormatsData[poke];
+			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/formats-data.js.js')
+				.BattleFormatsData[poke];
 		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {

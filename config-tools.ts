@@ -167,8 +167,9 @@ export interface ConfigType {
 	winmsg: string[];
 	losemsg: string[];
 	battleMessages: Record<string, { self?: string[]; foe?: string[] } | string[]>;
-	formatMods: Record<string, string>;
 	battleModules: Record<string, string>;
+	battleFormatMods: Record<string, string>;
+	battleModsDir?: string;
 	battleLog?: LogConfig;
 	abandonedBattleAutojoin: boolean;
 	ladderCheckInterval: number;
@@ -258,4 +259,5 @@ export function checkConfig(): void {
 		recv: false,
 		sent: false,
 	});
+	if (Config.battleModsDir && !Config.battleModsDir.endsWith('/')) Config.battleModsDir += '/';
 }
