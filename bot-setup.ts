@@ -76,7 +76,7 @@ export function setupBot(): void {
 		globalMonitor.connected = true;
 		for (const f in Features) {
 			try {
-				if (typeof Features[f].init === 'function') Features[f].init();
+				Features[f].init();
 			} catch (e: any) {
 				errlog(e.stack);
 				error('Feature Crash: ' + f + ' | ' + inspect(e));

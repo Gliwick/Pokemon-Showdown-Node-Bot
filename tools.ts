@@ -8,8 +8,7 @@ import * as https from 'https';
 import { Intl } from './bll/intl';
 import { ConfigType } from './config-tools';
 import { typechart } from './data/typechart';
-import { initFeature, initFeatures } from './features';
-import { errlog, info } from './log';
+import { errlog } from './log';
 
 declare global {
 	interface String {
@@ -815,33 +814,5 @@ export class Tools {
 			text += '\n';
 		}
 		return text;
-	}
-
-	/* Other tools */
-
-	reloadFeature(feature: string): void {
-		const f = initFeature(feature);
-		if (f?.id) {
-			if (Features[feature]) Features[feature].destroy();
-			Features[feature] = f;
-			if (f.init) f.init();
-		} else {
-			throw new Error('Error: Feature ' + feature + ' not found');
-		}
-	}
-
-	reloadFeatures(): void {
-		Object.values(Features).forEach((f) => {
-			if (typeof f.destroy === 'function') f.destroy();
-		});
-
-		const features = initFeatures();
-
-		Object.entries(features).forEach(([id, f]) => {
-			Features[id] = f;
-			if (typeof f.init === 'function') f.init();
-		});
-
-		info('Features reloaded');
 	}
 }

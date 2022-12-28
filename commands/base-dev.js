@@ -2,6 +2,9 @@
 	Development Commands
 */
 
+const loadFeature = require('../features/index.ts').loadFeature;
+const loadFeatures = require('../features/index.ts').loadFeatures;
+
 exports.commands = {
 	eval: 'js',
 	js: function (arg, by, room, cmd) {
@@ -167,7 +170,7 @@ exports.commands = {
 				return this.reply('Some command files crashed: ' + res.join(', '));
 			case 'features':
 				this.sclog();
-				var errs = Tools.reloadFeatures() || [];
+				var errs = loadFeatures(true) || [];
 				if (!errs.length) {
 					return this.reply('Features hotpatched');
 				}
@@ -177,7 +180,7 @@ exports.commands = {
 				if (!args[1]) return this.reply('You must specify a feature');
 				args[1] = args[1].trim();
 				try {
-					Tools.reloadFeature(args[1]);
+					loadFeature(args[1], true);
 					return this.reply('Feature: ' + args[1] + ' hotpatched');
 				} catch (e) {
 					errlog(e.stack);

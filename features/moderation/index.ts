@@ -624,3 +624,5 @@ export class ModerationManager implements Feature {
 		if (Features[this.id]) delete Features[this.id];
 	}
 }
+
+export const feature = new ModerationManager();

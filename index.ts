@@ -100,11 +100,7 @@ if (!AppOptions.testmode) Tools.intl.loadTranslations();
 global.Features = {};
 
 if (!AppOptions.testmode) {
-	Features = require('./features/index.ts').initFeatures();
-
-	Object.values(Features).forEach((f) => {
-		ok('New feature: ' + f.id + ' | ' + f.desc);
-	});
+	require('./features/index.ts').loadFeatures();
 }
 
 const opts = {
