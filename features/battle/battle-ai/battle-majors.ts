@@ -69,13 +69,9 @@ export const majors: Record<
 
 	inactive: function (this: Battle, args, kwargs) {
 		this.timer = true;
-		if (args[1]) {
-			if (
-				args[1].includes('Battle timer is ON') ||
-				args[1].includes('You have') ||
-				toId(args[1]).includes(toId(Bot.status.nickName))
-			)
-				this.makeDecision();
+
+		if (args[1] && this.foe) {
+			if (!(args[1].startsWith(this.foe.name) || args[1].startsWith(this.foe.userid))) this.makeDecision();
 		}
 	},
 
