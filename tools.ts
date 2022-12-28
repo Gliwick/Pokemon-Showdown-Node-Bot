@@ -245,6 +245,9 @@ export class Tools {
 
 	/* File system utils */
 
+	/**
+	 * @param path A path to a file from bot root
+	 */
 	uncacheTree(root: string): void {
 		let uncache = [require.resolve(root)];
 		do {

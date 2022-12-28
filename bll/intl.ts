@@ -22,7 +22,7 @@ export class Intl {
 		const langToCommands: Record<string, Record<string, string>> = {};
 		readdirSync('./languages/' + lang).forEach((file: string): void => {
 			if (!file.endsWith('.json')) return;
-			if (reloading) Tools.uncacheTree('../languages/' + lang + '/' + file);
+			if (reloading) Tools.uncacheTree('./languages/' + lang + '/' + file);
 			const { commands, ...globals } = require('../languages/' + lang + '/' + file);
 			Object.assign(langToCommands, commands || {});
 			Object.assign(langToGlobals, globals);

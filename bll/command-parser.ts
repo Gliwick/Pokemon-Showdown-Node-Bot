@@ -318,7 +318,7 @@ export class CommandParser {
 		const errs: string[] = [];
 		readdirSync('./commands').forEach((file: string) => {
 			if (file.substr(-3) === '.js') {
-				if (reloading) Tools.uncacheTree('../commands/' + file);
+				if (reloading) Tools.uncacheTree('./commands/' + file);
 				try {
 					Object.assign(this.commands, require('../commands/' + file).commands);
 				} catch (e: any) {
