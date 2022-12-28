@@ -315,10 +315,10 @@ export class Tools {
 	loadLang(lang: string, reloading?: boolean): Tools['translations'][string] {
 		const langToGlobals: Record<string, Record<string, string>> = {};
 		const langToCommands: Record<string, Record<string, string>> = {};
-		readdirSync('./languages/' + lang).forEach((file) => {
-			if (!file.endsWith('.ts')) return;
+		readdirSync('./languages/' + lang).forEach((file: string): void => {
+			if (!file.endsWith('.json')) return;
 			if (reloading) this.uncacheTree('./languages/' + lang + '/' + file);
-			const { commands, ...globals } = require('./languages/' + lang + '/' + file).translations;
+			const { commands, ...globals } = require('./languages/' + lang + '/' + file);
 			Object.assign(langToCommands, commands || {});
 			Object.assign(langToGlobals, globals);
 		});
@@ -327,7 +327,7 @@ export class Tools {
 
 	loadTranslations(reloading?: boolean): string[] {
 		const errs: string[] = [];
-		readdirSync('./languages').forEach((lang) => {
+		readdirSync('./languages').forEach((lang: string): void => {
 			if (lstatSync('./languages/' + lang).isDirectory()) {
 				try {
 					this.translations[lang] = this.loadLang(lang, reloading);
