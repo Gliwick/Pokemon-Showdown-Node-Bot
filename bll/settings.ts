@@ -263,7 +263,7 @@ export class SettingsManager {
 		pmwmsg?: Record<string, PmWelcomeMessage>;
 		sleep?: Record<string, boolean>;
 		zerotol?: Record<string, string>;
-	};
+	} = {};
 	settingsFFM = new FlatFileManager(AppOptions.data + 'settings.json');
 	permissions: Record<string, number> = {};
 	parserFilters: Record<string, (room: string, by: string, msg: string) => boolean> = {};
@@ -279,7 +279,6 @@ export class SettingsManager {
 		} catch (e: any) {
 			errlog(e.stack);
 			error('Could not import settings: ' + inspect(e));
-			this.settings = {};
 		}
 
 		try {

@@ -10,10 +10,15 @@ import 'sugar';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { inspect } from 'util';
 
+import { CommandParser as CommandParserClass } from './bll/command-parser';
+import { DataDownloader as DataDownloaderClass } from './bll/data-downloader';
+import { SecurityLogger } from './bll/security-log';
+import { SettingsManager } from './bll/settings';
 import { setupBot } from './bot-setup';
 import { checkConfig, parseArguments } from './config-tools';
 import { globalMonitor } from './global-monitor';
 import { errlog, error, info, ok } from './log';
+import { Tools as ToolsType } from './tools';
 
 export const colors = require('colors') as Record<string, (s: string) => string>;
 
@@ -68,7 +73,7 @@ if (!existsSync(AppOptions.config)) {
 global.Config = require(AppOptions.config);
 checkConfig();
 
-global.Tools = new (require('./tools.ts').Tools)();
+global.Tools = new ToolsType();
 
 if (AppOptions.debugmode) info(['Debug', 'Monitor', 'Production'][AppOptions.debugmode - 1] + ' mode');
 
@@ -78,13 +83,13 @@ info('Loading globals');
 
 global.Formats = {};
 
-global.Settings = new (require('./bll/settings.ts').SettingsManager)();
+global.Settings = new SettingsManager();
 
-global.DataDownloader = new (require('./bll/data-downloader.ts').DataDownloader)();
+global.DataDownloader = new DataDownloaderClass();
 
-global.CommandParser = new (require('./bll/command-parser.ts').CommandParser)();
+global.CommandParser = new CommandParserClass();
 
-global.SecurityLog = new (require('./bll/security-log.ts').SecurityLogger)();
+global.SecurityLog = new SecurityLogger();
 
 /* Commands */
 

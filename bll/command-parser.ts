@@ -8,7 +8,6 @@ import { cmdr, errlog, error, info, monitor, ok } from '../log';
 import { toId, toRoomid } from '../tools';
 import { FlatFileManager } from './settings';
 
-const dynCommandsDataFile = AppOptions.data + 'commands.json';
 const MAX_COMMAND_RECURSION = 10;
 const MAX_CMD_FLOOD = 30;
 const FLOOD_INTERVAL = 45 * 1000;
@@ -297,8 +296,8 @@ type Command = (this: Context, sargs: string, by: string, room: string, cmd: str
 export class CommandParser {
 	commands: Record<string, string | Command> = {};
 	dynCommands: Record<string, string> = {};
+	dynCommandsFFM = new FlatFileManager(AppOptions.data + 'commands.json');
 	tempVar = '';
-	dynCommandsFFM = new FlatFileManager(dynCommandsDataFile);
 	commandTokens: string[] = [];
 	resourceMonitor = new ResourceMonitor();
 

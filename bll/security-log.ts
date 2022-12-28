@@ -7,7 +7,7 @@ import { createWriteStream, existsSync, mkdirSync, PathLike, readdirSync, unlink
 import { LogConfig } from '../config-tools';
 import { errlog, error } from '../log';
 
-const LOGS_PATH = './logs/';
+export const LOGS_PATH = './logs/';
 
 interface Date {
 	day: number;
