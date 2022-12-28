@@ -206,9 +206,9 @@ function issue(text: string): void {
 	console.log(colors.yellow('issue') + '\t' + text);
 }
 
-type KeyOf<T, V> = { [K in keyof T]-?: V extends T[K] ? K : never }[keyof T];
+type KeyOfValueType<T, V> = { [K in keyof T]-?: V extends T[K] ? K : never }[keyof T];
 
-function validateConfigArray(key: KeyOf<ConfigType, any[]>): void {
+function validateConfigArray(key: KeyOfValueType<ConfigType, any[]>): void {
 	if (!Config[key] || !Array.isArray(Config[key])) {
 		issue('Config.' + key + ' is not an array');
 		Config[key] = [];
@@ -216,8 +216,8 @@ function validateConfigArray(key: KeyOf<ConfigType, any[]>): void {
 }
 
 export function validateConfigObject<T extends keyof ConfigType>(
-	key: KeyOf<ConfigType, ConfigType[T]>,
-	defaultValue: ConfigType[KeyOf<ConfigType, ConfigType[T]>]
+	key: KeyOfValueType<ConfigType, ConfigType[T]>,
+	defaultValue: ConfigType[KeyOfValueType<ConfigType, ConfigType[T]>]
 ): void {
 	if (!Config[key] || typeof Config[key] !== 'object' || Array.isArray(Config[key])) {
 		issue('Config.' + key + ' is not an object');
