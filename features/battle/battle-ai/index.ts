@@ -4,8 +4,8 @@
 
 const battleAutojoinFile = AppOptions.data + '_temp/' + 'battle-autojoin-tmp.json';
 
+import { FlatFileManager } from '../../../bll/settings';
 import { debug, error } from '../../../log';
-import { FlatFileManager } from '../../../settings';
 import { Battle } from './battle';
 import { createStream } from './battle-log';
 

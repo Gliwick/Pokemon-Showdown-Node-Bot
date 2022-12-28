@@ -3,7 +3,7 @@
 */
 
 import { toId } from '../../tools';
-import { Feature } from '../index';
+import { Feature } from '../';
 
 export class GroupChatsManager implements Feature {
 	id = 'groupchats';

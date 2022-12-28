@@ -1,11 +1,11 @@
-import { CommandParser as CommandParserClass } from './command-parser';
+import { CommandParser as CommandParserClass } from './bll/command-parser';
+import { SecurityLogger } from './bll/security-log';
+import { FlatFileManager as FlatFileManagerClass, SettingsManager } from './bll/settings';
+import { Client, ClientOptions } from './bll/showdown-client';
+import { FormatData } from './bot-connect';
 import { AppOptionsType, ConfigType } from './config-tools';
 import { DataDownloader as DataDownloaderClass } from './data-downloader';
 import { Feature } from './features';
-import { FormatData } from './index';
-import { SecurityLogger } from './security-log';
-import { FlatFileManager as FlatFileManagerClass, SettingsManager } from './settings';
-import { Client, ClientOptions } from './showdown-client';
 import { Tools as ToolsType } from './tools';
 
 declare global {

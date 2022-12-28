@@ -3,7 +3,7 @@
 */
 
 import { toId } from '../../../tools';
-import { Conditions } from "../data/statuses";
+import { Conditions } from '../data/statuses';
 import { deepcopy } from '../utils';
 
 const BATTLE_DATA_DIR = './../data/';
@@ -11,7 +11,26 @@ const MODS_DATA_DIR = BATTLE_DATA_DIR + 'mods/';
 
 export const CurrentGen = 9;
 
-export type Type = 'Bug' | 'Dark' | 'Dragon' | 'Electric' | 'Fairy' | 'Fighting' | 'Fire' | 'Flying' | 'Ghost' | 'Grass' | 'Ground' | 'Ice' | 'Normal' | 'Poison' | 'Psychic' | 'Rock' | 'Steel' | 'Water' | '???';
+export type Type =
+	| 'Bug'
+	| 'Dark'
+	| 'Dragon'
+	| 'Electric'
+	| 'Fairy'
+	| 'Fighting'
+	| 'Fire'
+	| 'Flying'
+	| 'Ghost'
+	| 'Grass'
+	| 'Ground'
+	| 'Ice'
+	| 'Normal'
+	| 'Poison'
+	| 'Psychic'
+	| 'Rock'
+	| 'Steel'
+	| 'Water'
+	| '???';
 
 export function getEffect(effect, gen: number = CurrentGen) {
 	if (!effect || typeof effect === 'string') {
@@ -46,12 +65,12 @@ export function getEffect(effect, gen: number = CurrentGen) {
 			effect.exists = true;
 		} else if (id === 'recoil') {
 			effect = {
-				effectType: 'Recoil'
+				effectType: 'Recoil',
 			};
 			effect.exists = true;
 		} else if (id === 'drain') {
 			effect = {
-				effectType: 'Drain'
+				effectType: 'Drain',
 			};
 			effect.exists = true;
 		}
@@ -61,7 +80,7 @@ export function getEffect(effect, gen: number = CurrentGen) {
 		if (!effect.effectType) effect.effectType = 'Effect';
 	}
 	return effect;
-};
+}
 
 export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: string) {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
@@ -70,33 +89,33 @@ export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: st
 	let temp;
 	try {
 		temp = DataDownloader.getPokedex()[poke];
-		for (let attr in temp) pokemon[attr] = temp[attr];
-	} catch (e) { }
+		for (const attr in temp) pokemon[attr] = temp[attr];
+	} catch (e) {}
 	for (let i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + "gen" + i + "/pokedex.js").BattlePokedex[poke];
+			temp = require(BATTLE_DATA_DIR + 'gen' + i + '/pokedex.js').BattlePokedex[poke];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
 		}
 		if (!temp.inherit) {
-			for (let i in pokemon) delete pokemon[i];
+			for (const i in pokemon) delete pokemon[i];
 		}
-		for (let attr in temp) pokemon[attr] = temp[attr];
+		for (const attr in temp) pokemon[attr] = temp[attr];
 	}
 
-	let formatId = battleId ? battleId.split('-')[1] : '';
-	let formatMod = Config.formatMods[formatId];
+	const formatId = battleId ? battleId.split('-')[1] : '';
+	const formatMod = Config.formatMods[formatId];
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + "/pokedex.js").BattlePokedex[poke];
-		} catch (e) { }
+			temp = require(MODS_DATA_DIR + formatMod + '/pokedex.js').BattlePokedex[poke];
+		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
-				for (let i in pokemon) delete pokemon[i];
+				for (const i in pokemon) delete pokemon[i];
 			}
-			for (let attr in temp) pokemon[attr] = temp[attr];
+			for (const attr in temp) pokemon[attr] = temp[attr];
 		}
 	}
 
@@ -106,9 +125,9 @@ export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: st
 			num: 0,
 			name: poke,
 			species: poke,
-			types: ["Normal"],
+			types: ['Normal'],
 			baseStats: { hp: 90, atk: 90, def: 90, spa: 90, spd: 90, spe: 90 },
-			abilities: { 0: "No Ability" },
+			abilities: { 0: 'No Ability' },
 			heightm: 0,
 			weightkg: 0,
 			unknown: true,
@@ -118,7 +137,7 @@ export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: st
 	if (!pokemon.name) pokemon.name = pokemon.species;
 	if (!pokemon.species) pokemon.species = pokemon.name;
 	return pokemon;
-};
+}
 
 export const getTemplate = getPokemon;
 
@@ -129,34 +148,34 @@ export function getMove(move: string, gen: number = CurrentGen, battleId?: strin
 	let temp;
 	try {
 		temp = DataDownloader.getMovedex()[move];
-		for (let i in temp) moveData[i] = temp[i];
+		for (const i in temp) moveData[i] = temp[i];
 		moveData.id = move;
-	} catch (e) { }
+	} catch (e) {}
 	for (let i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + "gen" + i + "/moves.js").BattleMovedex[move];
+			temp = require(BATTLE_DATA_DIR + 'gen' + i + '/moves.js').BattleMovedex[move];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
 		}
 		if (!temp.inherit) {
-			for (let i in moveData) delete moveData[i];
+			for (const i in moveData) delete moveData[i];
 		}
-		for (let i in temp) moveData[i] = temp[i];
+		for (const i in temp) moveData[i] = temp[i];
 	}
 
-	let formatId = battleId ? battleId.split('-')[1] : '';
-	let formatMod = Config.formatMods[formatId];
+	const formatId = battleId ? battleId.split('-')[1] : '';
+	const formatMod = Config.formatMods[formatId];
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + "/moves.js").BattleMovedex[move];
-		} catch (e) { }
+			temp = require(MODS_DATA_DIR + formatMod + '/moves.js').BattleMovedex[move];
+		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
-				for (let i in moveData) delete moveData[i];
+				for (const i in moveData) delete moveData[i];
 			}
-			for (let attr in temp) moveData[attr] = temp[attr];
+			for (const attr in temp) moveData[attr] = temp[attr];
 		}
 	}
 
@@ -182,27 +201,27 @@ export function getMove(move: string, gen: number = CurrentGen, battleId?: strin
 
 	if (!moveData.effectType) moveData.effectType = 'Move';
 	return moveData;
-};
+}
 
 const TypeAliases: Partial<Record<Type, string[]>> = {
-	'Bug': ['bug'],
-	'Dark': ['dark'],
-	'Dragon': ['dragon'],
-	'Electric': ['electr', 'thunder'],
-	'Fairy': ['fairy'],
-	'Fighting': ['fight'],
-	'Fire': ['fire', 'flame', 'flare', 'heat'],
-	'Flying': ['fly', 'sky', 'wing'],
-	'Ghost': ['ghost', 'shadow'],
-	'Grass': ['grass', 'leaf', 'petal', 'seed'],
-	'Ground': ['ground', 'earth', 'mud'],
-	'Ice': ['ice', 'freeze'],
-	'Normal': ['normal'],
-	'Poison': ['poison', 'sludge', 'toxic', 'veno'],
-	'Psychic': ['psy'],
-	'Rock': ['rock', 'stone'],
-	'Steel': ['steel', 'iron', 'metal'],
-	'Water': ['water', 'aqua', 'bubble', 'hydro'],
+	Bug: ['bug'],
+	Dark: ['dark'],
+	Dragon: ['dragon'],
+	Electric: ['electr', 'thunder'],
+	Fairy: ['fairy'],
+	Fighting: ['fight'],
+	Fire: ['fire', 'flame', 'flare', 'heat'],
+	Flying: ['fly', 'sky', 'wing'],
+	Ghost: ['ghost', 'shadow'],
+	Grass: ['grass', 'leaf', 'petal', 'seed'],
+	Ground: ['ground', 'earth', 'mud'],
+	Ice: ['ice', 'freeze'],
+	Normal: ['normal'],
+	Poison: ['poison', 'sludge', 'toxic', 'veno'],
+	Psychic: ['psy'],
+	Rock: ['rock', 'stone'],
+	Steel: ['steel', 'iron', 'metal'],
+	Water: ['water', 'aqua', 'bubble', 'hydro'],
 };
 
 function evaluateMoveType(name: string): Type {
@@ -214,7 +233,7 @@ function evaluateMoveType(name: string): Type {
 	}
 
 	for (moveType in TypeAliases) {
-		for (let typeAlias of (TypeAliases[moveType] || [])) {
+		for (const typeAlias of TypeAliases[moveType] || []) {
 			if (name.includes(typeAlias)) {
 				return moveType;
 			}
@@ -231,34 +250,34 @@ export function getItem(item: string, gen: number = CurrentGen, battleId?: strin
 	let temp;
 	try {
 		temp = DataDownloader.getItems()[item];
-		for (let i in temp) itemData[i] = temp[i];
+		for (const i in temp) itemData[i] = temp[i];
 		itemData.id = item;
-	} catch (e) { }
+	} catch (e) {}
 	for (let i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + "gen" + i + "/items.js").BattleItems[item];
+			temp = require(BATTLE_DATA_DIR + 'gen' + i + '/items.js').BattleItems[item];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
 		}
 		if (!temp.inherit) {
-			for (let i in itemData) delete itemData[i];
+			for (const i in itemData) delete itemData[i];
 		}
-		for (let i in temp) itemData[i] = temp[i];
+		for (const i in temp) itemData[i] = temp[i];
 	}
 
-	let formatId = battleId ? battleId.split('-')[1] : '';
-	let formatMod = Config.formatMods[formatId];
+	const formatId = battleId ? battleId.split('-')[1] : '';
+	const formatMod = Config.formatMods[formatId];
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + "/items.js").BattleItems[item];
-		} catch (e) { }
+			temp = require(MODS_DATA_DIR + formatMod + '/items.js').BattleItems[item];
+		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
-				for (let i in itemData) delete itemData[i];
+				for (const i in itemData) delete itemData[i];
 			}
-			for (let attr in temp) itemData[attr] = temp[attr];
+			for (const attr in temp) itemData[attr] = temp[attr];
 		}
 	}
 
@@ -269,14 +288,14 @@ export function getItem(item: string, gen: number = CurrentGen, battleId?: strin
 			spritenum: 0,
 			num: 0,
 			gen: CurrentGen,
-			category: "Effect",
-			effectType: "Item",
+			category: 'Effect',
+			effectType: 'Item',
 		};
 	}
 	if (!itemData.category) itemData.category = 'Effect';
 	if (!itemData.effectType) itemData.effectType = 'Item';
 	return itemData;
-};
+}
 
 export function getAbility(abilityId: string, gen: number = CurrentGen, battleId?: string) {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
@@ -285,34 +304,34 @@ export function getAbility(abilityId: string, gen: number = CurrentGen, battleId
 	let temp;
 	try {
 		temp = DataDownloader.getAbilities()[abilityId];
-		for (let i in temp) ability[i] = temp[i];
+		for (const i in temp) ability[i] = temp[i];
 		ability.id = abilityId;
-	} catch (e) { }
+	} catch (e) {}
 	for (let i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + "gen" + i + "/abilities.js").BattleAbilities[abilityId];
+			temp = require(BATTLE_DATA_DIR + 'gen' + i + '/abilities.js').BattleAbilities[abilityId];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
 		}
 		if (!temp.inherit) {
-			for (let i in ability) delete ability[i];
+			for (const i in ability) delete ability[i];
 		}
-		for (let i in temp) ability[i] = temp[i];
+		for (const i in temp) ability[i] = temp[i];
 	}
 
-	let formatId = battleId ? battleId.split('-')[1] : '';
-	let formatMod = Config.formatMods[formatId];
+	const formatId = battleId ? battleId.split('-')[1] : '';
+	const formatMod = Config.formatMods[formatId];
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + "/abilities.js").BattleAbilities[abilityId];
-		} catch (e) { }
+			temp = require(MODS_DATA_DIR + formatMod + '/abilities.js').BattleAbilities[abilityId];
+		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
-				for (let i in ability) delete ability[i];
+				for (const i in ability) delete ability[i];
 			}
-			for (let attr in temp) ability[attr] = temp[attr];
+			for (const attr in temp) ability[attr] = temp[attr];
 		}
 	}
 
@@ -322,25 +341,25 @@ export function getAbility(abilityId: string, gen: number = CurrentGen, battleId
 			name: abilityId,
 			rating: 0,
 			num: 0,
-			category: "Effect",
-			effectType: "Ability",
+			category: 'Effect',
+			effectType: 'Ability',
 		};
 	}
 	if (!ability.category) ability.category = 'Effect';
 	if (!ability.effectType) ability.effectType = 'Ability';
 	return ability;
-};
+}
 
 export class Move {
 	template;
 	name: string;
 	id: string;
 	pp: number;
-	disabled: boolean = false;
+	disabled = false;
 	helpers = {};
 
 	constructor(template) {
-		if (!template || typeof template !== "object") throw new Error("Invalid move template");
+		if (!template || typeof template !== 'object') throw new Error('Invalid move template');
 		this.template = template;
 		this.name = this.template.name;
 		this.id = this.template.id;
@@ -353,8 +372,8 @@ export class Move {
 		} else {
 			this.pp = Math.floor(this.template.pp * 1.6);
 		}
-	};
-};
+	}
+}
 
 export type Gender = 'M' | 'F' | 'N';
 
@@ -371,12 +390,12 @@ export class Pokemon implements PokemonDetails {
 	species;
 	name;
 
-	transformed: boolean = false;
+	transformed = false;
 	transformPrev: Partial<Pokemon> | null = null;
 
 	gender: Gender | null = null;
-	level: number = 100;
-	shiny: boolean = false;
+	level = 100;
+	shiny = false;
 
 	item: Record<string, any> | Unknown = '&unknown';
 	itemEffect = '';
@@ -384,17 +403,17 @@ export class Pokemon implements PokemonDetails {
 	prevItemEffect = '';
 
 	ability: Record<string, any> | Unknown = '&unknown';
-	supressedAbility: boolean = false;
+	supressedAbility = false;
 	baseAbility: Record<string, any> | Unknown = '&unknown';
 	abilityStack = [];
 
 	moves: Move[] = [];
 
-	active: boolean = false;
-	slot: number = -1;
+	active = false;
+	slot = -1;
 
-	hp: number = 100;
-	fainted: boolean = false;
+	hp = 100;
+	fainted = false;
 	status: string | null = null;
 	volatiles: Record<string, any> = {};
 	boosts: BoostsTable = {};
@@ -415,7 +434,7 @@ export class Pokemon implements PokemonDetails {
 		this.species = this.template.species;
 		this.name = this.template.species;
 
-		for (let i in properties) {
+		for (const i in properties) {
 			if (typeof this[i] === 'undefined' || typeof this[i] === 'function') continue;
 			if (i === 'template') continue;
 			this[i] = deepcopy(properties[i]);
@@ -425,42 +444,42 @@ export class Pokemon implements PokemonDetails {
 	addVolatile(volatile: string) {
 		volatile = toId(volatile);
 		this.volatiles[volatile] = true;
-	};
+	}
 
 	removeVolatile(volatile: string) {
 		volatile = toId(volatile);
 		if (this.volatiles[volatile]) delete this.volatiles[volatile];
-	};
+	}
 
 	removeAllVolatiles() {
-		for (let i in this.volatiles) delete this.volatiles[i];
-	};
+		for (const i in this.volatiles) delete this.volatiles[i];
+	}
 
 	addBoost(stat: BoostedStat, n: number) {
 		if (!this.boosts[stat]) this.boosts[stat] = 0;
 		this.boosts[stat] += n;
-	};
+	}
 
 	setBoost(stat: BoostedStat, n: number) {
 		this.boosts[stat] = n;
-	};
+	}
 
 	invertAllBoosts() {
-		for (let i in this.boosts) {
-			this.boosts[i] = this.boosts[i] * (-1);
+		for (const i in this.boosts) {
+			this.boosts[i] = this.boosts[i] * -1;
 		}
-	};
+	}
 
 	removeAllBoosts() {
-		for (let i in this.boosts) delete this.boosts[i];
-	};
+		for (const i in this.boosts) delete this.boosts[i];
+	}
 
-	markAbility(id: string, isNotBase: boolean = false) {
+	markAbility(id: string, isNotBase = false) {
 		this.ability = getAbility(id);
-		if ((!this.baseAbility || this.baseAbility === "&unknown") && !isNotBase) {
+		if ((!this.baseAbility || this.baseAbility === '&unknown') && !isNotBase) {
 			this.baseAbility = this.ability;
 			this.abilityStack.push(this.ability.id);
-		} else if (isNotBase && this.baseAbility && this.baseAbility !== "&unknown") {
+		} else if (isNotBase && this.baseAbility && this.baseAbility !== '&unknown') {
 			if (this.ability.id === this.baseAbility.id) {
 				if (this.abilityStack[this.abilityStack.length - 1] === this.ability.id) {
 					this.abilityStack.pop();
@@ -468,15 +487,15 @@ export class Pokemon implements PokemonDetails {
 				if (this.abilityStack[this.abilityStack.length - 1]) {
 					this.baseAbility = getAbility(this.abilityStack[this.abilityStack.length - 1]);
 				} else {
-					this.baseAbility = "&unknown";
+					this.baseAbility = '&unknown';
 				}
 			}
 		}
-	};
+	}
 
 	prepareMove(move: string, target: number) {
 		this.prepared = { move, target };
-	};
+	}
 
 	markMove(id: string, deduct?: number) {
 		id = toId(id);
@@ -490,7 +509,7 @@ export class Pokemon implements PokemonDetails {
 			move.pp += deduct;
 		}
 		return move;
-	};
+	}
 
 	transformInto(pokemon: Pokemon) {
 		this.transformPrev = {
@@ -500,7 +519,7 @@ export class Pokemon implements PokemonDetails {
 			moves: this.moves,
 			ability: this.ability,
 			baseAbility: this.baseAbility,
-			abilityStack: this.abilityStack
+			abilityStack: this.abilityStack,
 		};
 		this.species = pokemon.species;
 		this.template = pokemon.template;
@@ -520,8 +539,8 @@ export class Pokemon implements PokemonDetails {
 		this.boosts = { ...pokemon.boosts };
 		this.addVolatile('transform');
 		this.addVolatile('formechange');
-		this.volatiles.formechange = (pokemon.volatiles.formechange ? pokemon.volatiles.formechange : pokemon.species);
-	};
+		this.volatiles.formechange = pokemon.volatiles.formechange ? pokemon.volatiles.formechange : pokemon.species;
+	}
 
 	unTransform() {
 		this.transformed = false;
@@ -535,14 +554,14 @@ export class Pokemon implements PokemonDetails {
 			this.abilityStack = this.transformPrev.abilityStack;
 		}
 		this.transformPrev = null;
-	};
-};
+	}
+}
 
 export interface PokemonDetails {
-	species: string,
-	level: number,
-	shiny: boolean,
-	gender: Gender | null,
+	species: string;
+	level: number;
+	shiny: boolean;
+	gender: Gender | null;
 }
 
 export class Player {
@@ -556,8 +575,8 @@ export class Player {
 	teamPv: (PokemonDetails | null)[] = [];
 
 	constructor(id: string, name?: string, avatar?: any) {
-		this.id = id || "p0";
-		this.name = name || "";
+		this.id = id || 'p0';
+		this.name = name || '';
 		this.userid = toId(name);
 		this.avatar = avatar || 0;
 	}
@@ -565,19 +584,19 @@ export class Player {
 	setName(name: string) {
 		this.name = name;
 		this.userid = toId(name);
-	};
+	}
 
 	removeSideCondition(condition: string) {
 		condition = toId(condition);
 		if (this.side[condition]) delete this.side[condition];
-	};
+	}
 
 	addSideCondition(condition: string) {
 		condition = toId(condition);
 		if (!this.side[condition]) this.side[condition] = 0;
 		this.side[condition]++;
-	};
-};
+	}
+}
 
 export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?: string) {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
@@ -586,35 +605,35 @@ export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?
 	let temp;
 	try {
 		temp = DataDownloader.getFormatsData()[poke];
-		for (let attr in temp) formatsData[attr] = temp[attr];
-	} catch (e) { }
+		for (const attr in temp) formatsData[attr] = temp[attr];
+	} catch (e) {}
 	for (let gen = CurrentGen - 1; gen >= gen; gen--) {
 		try {
-			temp = require(BATTLE_DATA_DIR + "gen" + gen + "/formats-data.js").BattleFormatsData[poke];
+			temp = require(BATTLE_DATA_DIR + 'gen' + gen + '/formats-data.js').BattleFormatsData[poke];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
 		}
 		if (!temp.inherit) {
-			for (let attr in formatsData) delete formatsData[attr];
+			for (const attr in formatsData) delete formatsData[attr];
 		}
-		for (let attr in temp) formatsData[attr] = temp[attr];
+		for (const attr in temp) formatsData[attr] = temp[attr];
 	}
 
-	let formatId = battleId ? battleId.split('-')[1] : '';
-	let formatMod = Config.formatMods[formatId];
+	const formatId = battleId ? battleId.split('-')[1] : '';
+	const formatMod = Config.formatMods[formatId];
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require(MODS_DATA_DIR + formatMod + "/formats-data.js.js").BattleFormatsData[poke];
-		} catch (e) { }
+			temp = require(MODS_DATA_DIR + formatMod + '/formats-data.js.js').BattleFormatsData[poke];
+		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
-				for (let attr in formatsData) delete formatsData[attr];
+				for (const attr in formatsData) delete formatsData[attr];
 			}
-			for (let attr in temp) formatsData[attr] = temp[attr];
+			for (const attr in temp) formatsData[attr] = temp[attr];
 		}
 	}
 
 	return formatsData;
-};
+}

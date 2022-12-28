@@ -4,9 +4,9 @@
 import { readdirSync } from 'fs';
 import { inspect } from 'util';
 
-import { cmdr, errlog, error, info, monitor, ok } from './log';
+import { cmdr, errlog, error, info, monitor, ok } from '../log';
+import { toId, toRoomid } from '../tools';
 import { FlatFileManager } from './settings';
-import { toId, toRoomid } from './tools';
 
 const dynCommandsDataFile = AppOptions.data + 'commands.json';
 const MAX_COMMAND_RECURSION = 10;

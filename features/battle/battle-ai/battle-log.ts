@@ -2,8 +2,8 @@
 	Log system (battle)
 */
 
+import { checkDir, sweep } from '../../../bll/security-log';
 import { errlog } from '../../../log';
-import { checkDir, sweep } from '../../../security-log';
 import { Battle } from './battle';
 
 const LOGS_PATH = './logs/';

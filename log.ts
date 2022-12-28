@@ -1,6 +1,6 @@
 /* Console reporting */
 
-import { colors } from './index';
+import { colors } from '.';
 
 export function ok(str: string): void {
 	if (AppOptions.debugmode) {
