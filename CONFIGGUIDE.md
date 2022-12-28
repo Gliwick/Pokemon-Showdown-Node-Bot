@@ -154,7 +154,7 @@ With `exports.moderation` you can configure the moderation feature
 
 ## Battles (Optional)
 
-`exports.aceptAll` if true, the bot will acept all battle, without limits. It is not recommended, keep it to false, so you can specify max number of battles at the same time in `exports.maxBattles`.
+`exports.acceptAll` if true, the bot will acept all battle, without limits. It is not recommended, keep it to false, so you can specify max number of battles at the same time in `exports.maxBattles`.
 
 Specify in `exports.winmsg` all possible phrases for saying when bot wins, same with `exports.losemsg` but when bot loses, the same with `exports.initBattleMsg` but when the bot joins the battle. You can also specify other messages in `exports.battleMessages`.
 

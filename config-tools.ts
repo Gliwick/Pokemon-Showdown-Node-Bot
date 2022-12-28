@@ -102,7 +102,7 @@ export interface ConfigType {
 		zeroToleranceDefaultLevel?: string;
 		zeroToleranceLevels?: Record<string, { name: string; value: number }>;
 	};
-	aceptAll: boolean;
+	acceptAll: boolean;
 	maxBattles: number;
 	initBattleMsg: string[];
 	winmsg: string[];

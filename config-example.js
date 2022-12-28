@@ -247,7 +247,7 @@ exports.moderation = {
  * Battles
  */
 
-exports.aceptAll = false;
+exports.acceptAll = false;
 
 exports.maxBattles = 1;
 
