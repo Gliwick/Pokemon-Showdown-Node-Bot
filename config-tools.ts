@@ -208,14 +208,14 @@ function issue(text: string): void {
 
 type KeyOf<T, V> = { [K in keyof T]-?: V extends T[K] ? K : never }[keyof T];
 
-function enforceConfigArray(key: KeyOf<ConfigType, any[]>): void {
+function validateConfigArray(key: KeyOf<ConfigType, any[]>): void {
 	if (!Config[key] || !Array.isArray(Config[key])) {
 		issue('Config.' + key + ' is not an array');
 		Config[key] = [];
 	}
 }
 
-export function enforceConfigObject<T extends keyof ConfigType>(
+export function validateConfigObject<T extends keyof ConfigType>(
 	key: KeyOf<ConfigType, ConfigType[T]>,
 	defaultValue: ConfigType[KeyOf<ConfigType, ConfigType[T]>]
 ): void {
@@ -236,15 +236,15 @@ export function checkConfig(): void {
 		);
 	}
 	if (typeof Config.rooms !== 'string' || !['all', 'official', 'public'].includes(Config.rooms)) {
-		enforceConfigArray('rooms');
+		validateConfigArray('rooms');
 	}
-	enforceConfigArray('privateRooms');
-	enforceConfigArray('ignoreRooms');
-	enforceConfigArray('initCmds');
-	enforceConfigObject('exceptions', {});
-	enforceConfigArray('ranks');
-	enforceConfigObject('permissionExceptions', {});
-	enforceConfigObject('debug', {
+	validateConfigArray('privateRooms');
+	validateConfigArray('ignoreRooms');
+	validateConfigArray('initCmds');
+	validateConfigObject('exceptions', {});
+	validateConfigArray('ranks');
+	validateConfigObject('permissionExceptions', {});
+	validateConfigObject('debug', {
 		error: false,
 		ok: false,
 		errlog: false,

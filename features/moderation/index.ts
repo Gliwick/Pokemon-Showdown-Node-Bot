@@ -2,7 +2,7 @@
 	Moderation Feature
 */
 
-import { ConfigType, enforceConfigObject } from '../../config-tools';
+import { ConfigType, validateConfigObject } from '../../config-tools';
 import { toId } from '../../tools';
 import { Feature } from '../index';
 
@@ -575,7 +575,7 @@ export class ModerationManager implements Feature {
 	parse(room: string, message: string, isIntro: boolean, spl: string[]): void {
 		if (isIntro) return;
 		if (!Bot.rooms[room] || Bot.rooms[room].type !== 'chat') return;
-		enforceConfigObject('moderation', {
+		validateConfigObject('moderation', {
 			modException: '%',
 			MOD_CONSTS: { ...DEFAULT_MOD_CONSTS },
 			values: { ...DEFAULT_MOD_VALUES },
