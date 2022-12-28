@@ -291,7 +291,7 @@ export class SettingsManager {
 
 		this.userManager = new UserManager();
 
-		this.package = require('./package.json');
+		this.package = require('../package.json');
 		ok('Loaded Settings. Bot version: ' + this.package.version);
 	}
 

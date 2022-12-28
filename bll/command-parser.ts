@@ -317,12 +317,12 @@ export class CommandParser {
 		const errs: string[] = [];
 		readdirSync('./commands').forEach((file: string) => {
 			if (file.substr(-3) === '.js') {
-				if (reloading) Tools.uncacheTree('./commands/' + file);
+				if (reloading) Tools.uncacheTree('../commands/' + file);
 				try {
-					Object.assign(this.commands, require('./commands/' + file).commands);
+					Object.assign(this.commands, require('../commands/' + file).commands);
 				} catch (e: any) {
 					errlog(e.stack);
-					error('Could not import commands file: ./commands/' + file + ' | ' + inspect(e));
+					error('Could not import commands file: ../commands/' + file + ' | ' + inspect(e));
 					errs.push(file);
 				}
 			}

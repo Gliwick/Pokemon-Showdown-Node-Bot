@@ -78,14 +78,14 @@ info('Loading globals');
 
 global.Formats = {};
 
-global.Settings = new (require('./settings.ts').SettingsManager)();
-global.FlatFileManager = require('./settings.ts').FlatFileManager;
+global.Settings = new (require('./bll/settings.ts').SettingsManager)();
+global.FlatFileManager = require('./bll/settings.ts').FlatFileManager;
 
-global.DataDownloader = new (require('./data-downloader.ts').DataDownloader)();
+global.DataDownloader = new (require('./bll/data-downloader.ts').DataDownloader)();
 
-global.CommandParser = new (require('./command-parser.ts').CommandParser)();
+global.CommandParser = new (require('./bll/command-parser.ts').CommandParser)();
 
-global.SecurityLog = new (require('./security-log.ts').SecurityLogger)();
+global.SecurityLog = new (require('./bll/security-log.ts').SecurityLogger)();
 
 /* Commands */
 
@@ -122,7 +122,7 @@ const opts = {
 	debug: Config.debug?.debug ?? true,
 };
 
-global.PSClient = require('./showdown-client.ts').Client;
+global.PSClient = require('./bll/showdown-client.ts').Client;
 global.Bot = new PSClient(Config.server, Config.port, opts);
 
 setupBot();

@@ -5,7 +5,7 @@ import { writeFile } from 'fs';
 import { IncomingMessage } from 'http';
 import * as https from 'https';
 
-import { debug, errlog, error } from './log';
+import { debug, errlog, error } from '../log';
 
 const datenow = Date.now();
 
@@ -77,9 +77,9 @@ export class DataDownloader {
 					return;
 				}
 				try {
-					Tools.uncacheTree('./data/' + file);
+					Tools.uncacheTree('../data/' + file);
 				} catch (e) {}
-				debug('Downloaded data file: ' + './data/' + file);
+				debug('Downloaded data file: ' + '../data/' + file);
 				if (typeof callback === 'function') callback(true);
 			});
 		});
@@ -100,34 +100,34 @@ export class DataDownloader {
 	}
 
 	getPokedex() {
-		return require('./data/pokedex.js').BattlePokedex;
+		return require('../data/pokedex.js').BattlePokedex;
 	}
 
 	getMovedex() {
-		return require('./data/moves.js').BattleMovedex;
+		return require('../data/moves.js').BattleMovedex;
 	}
 
 	getAbilities() {
-		return require('./data/abilities.js').BattleAbilities;
+		return require('../data/abilities.js').BattleAbilities;
 	}
 
 	getItems() {
-		return require('./data/items.js').BattleItems;
+		return require('../data/items.js').BattleItems;
 	}
 
 	getAliases() {
-		return require('./data/aliases.js').BattleAliases;
+		return require('../data/aliases.js').BattleAliases;
 	}
 
 	getFormats() {
-		return require('./data/formats.js').Formats;
+		return require('../data/formats.js').Formats;
 	}
 
 	getFormatsData() {
-		return require('./data/formats-data.js').BattleFormatsData;
+		return require('../data/formats-data.js').BattleFormatsData;
 	}
 
 	getLearnsets() {
-		return require('./data/learnsets.js').BattleLearnsets;
+		return require('../data/learnsets.js').BattleLearnsets;
 	}
 }
