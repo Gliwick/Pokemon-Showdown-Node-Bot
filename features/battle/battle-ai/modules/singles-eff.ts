@@ -2392,11 +2392,14 @@ export class SinglesEffective implements BattleModule {
 		return res;
 	}
 
-	getMovesData(battle: Battle, decisions: Decision[], selfPoke: Pokemon): MoveDecision[] {
-		const moveDecisions: MoveDecision[] = [];
+	getMovesData(battle: Battle, decisions: Decision[], selfPoke: Pokemon): Decision[] {
+		const moveDecisions: Decision[] = [];
 
 		for (let i = 0; i < decisions.length; i++) {
-			if (decisions[i].type !== 'move') continue;
+			if (decisions[i].type !== 'move') {
+				moveDecisions.push(decisions[i]);
+				continue;
+			}
 			const des = decisions[i] as MoveDecision;
 
 			const baseMoveName = battle.request.side.pokemon[0].moves[des.moveId];
@@ -2483,30 +2486,37 @@ export class SinglesEffective implements BattleModule {
 		return moveDecisions;
 	}
 
-	filterRedundantMaxMoves(decisions: MoveDecision[]): MoveDecision[] {
-		const maxMoveMaxPower = {};
+	filterRedundantMaxMoves(decisions: Decision[]): Decision[] {
+		const maxMoveMaxPower: Record<string, number> = {};
+		let maxGuardMaxPP = 0;
+
 		for (const des of decisions) {
-			if (des.moveData && des.moveData.isMax && des.moveData.category !== 'Status') {
-				const typeAndCategory = des.moveData.type + '|' + des.moveData.category;
-				if (!maxMoveMaxPower[typeAndCategory]) maxMoveMaxPower[typeAndCategory] = des.moveData.basePower;
+			if (des.type !== 'move') continue;
+			const moveDecision = des as MoveDecision;
+			if (moveDecision.moveData && moveDecision.moveData.isMax && moveDecision.moveData.category !== 'Status') {
+				const typeAndCategory = moveDecision.moveData.type + '|' + moveDecision.moveData.category;
+				if (!maxMoveMaxPower[typeAndCategory])
+					maxMoveMaxPower[typeAndCategory] = moveDecision.moveData.basePower;
 				else
 					maxMoveMaxPower[typeAndCategory] = Math.max(
 						maxMoveMaxPower[typeAndCategory],
-						des.moveData.basePower
+						moveDecision.moveData.basePower
 					);
 			}
+			if (moveDecision.move === 'maxguard') maxGuardMaxPP = Math.max(maxGuardMaxPP, moveDecision.movePP);
 		}
-		decisions = decisions.filter(
-			(des) =>
-				!(des.moveData && des.moveData.isMax && des.moveData.category !== 'Status') ||
-				des.moveData.basePower >= maxMoveMaxPower[des.moveData.type + '|' + des.moveData.category]
-		);
 
-		let maxGuardMaxPP = 0;
-		for (const des of decisions) {
-			if (des.move === 'maxguard') maxGuardMaxPP = Math.max(maxGuardMaxPP, des.movePP);
-		}
-		decisions = decisions.filter((des) => des.move !== 'maxguard' || des.movePP >= maxGuardMaxPP);
+		decisions = decisions.filter((des) => {
+			if (des.type !== 'move') return true;
+			const moveDecision = des as MoveDecision;
+			return (
+				!moveDecision.moveData?.isMax ||
+				(moveDecision.moveData.category !== 'Status' &&
+					moveDecision.moveData.basePower >=
+						maxMoveMaxPower[moveDecision.moveData.type + '|' + moveDecision.moveData.category]) ||
+				(moveDecision.moveData.category === 'Status' && moveDecision.movePP >= maxGuardMaxPP)
+			);
+		});
 
 		return decisions;
 	}
@@ -2532,6 +2542,7 @@ export class SinglesEffective implements BattleModule {
 		for (const i in damageMoves) {
 			if (!Array.isArray(damageMoves[i])) continue;
 			const category = damageMoves[i] as MoveDecision[];
+			if (!category.length) continue;
 			const moves = category.map((decision) => decision.move);
 			debug('Damage Moves (' + i + ') -> ' + moves);
 		}
@@ -2539,6 +2550,7 @@ export class SinglesEffective implements BattleModule {
 		for (const i in supportMoves) {
 			if (!Array.isArray(supportMoves[i])) continue;
 			const category = supportMoves[i] as MoveDecision[];
+			if (!category.length) continue;
 			const moves = category.map((decision) => decision.move);
 			debug('Support Moves (' + i + ') -> ' + moves);
 		}
