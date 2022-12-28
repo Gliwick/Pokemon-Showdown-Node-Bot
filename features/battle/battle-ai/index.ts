@@ -8,6 +8,7 @@ import { FlatFileManager } from '../../../bll/settings';
 import { debug, error } from '../../../log';
 import { Battle } from './battle';
 import { createStream } from './battle-log';
+import { ModuleManager } from './modules';
 
 export class BattleBot {
 	battles: Record<string, Battle> = {};
@@ -16,8 +17,11 @@ export class BattleBot {
 	autojoinFFM: FlatFileManager;
 	autoJoinData: Record<string, number> = {};
 
+	moduleManager: ModuleManager;
+
 	constructor() {
 		this.autojoinFFM = new FlatFileManager(battleAutojoinFile);
+		this.moduleManager = new ModuleManager();
 	}
 
 	init(): void {
@@ -70,7 +74,7 @@ export class BattleBot {
 					this.battles[room].destroy();
 				} catch (e) {}
 			}
-			this.battles[room] = new Battle(room);
+			this.battles[room] = new Battle(this, room);
 			createStream(this.battles[room]);
 			this.battlesCount++;
 			this.updateBattleAutojoin();

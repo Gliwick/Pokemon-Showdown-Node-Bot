@@ -56,7 +56,8 @@ const DoubleTurnMoves = [
  */
 
 export class IngameNoStatus implements BattleModule {
-	id = 'ingame-nostatus';
+	static readonly ID = 'ingame-nostatus';
+	readonly name = 'ingame-nostatus';
 
 	constructor() {}
 

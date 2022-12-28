@@ -54,7 +54,8 @@ interface DamageViabilityCategories {
 }
 
 export class SinglesEffective implements BattleModule {
-	id = 'singles-eff';
+	static readonly ID = 'singles-eff';
+	readonly name = 'singles-eff';
 
 	constructor() {}
 

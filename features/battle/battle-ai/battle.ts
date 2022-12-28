@@ -6,12 +6,10 @@
 import { createWriteStream, PathLike, writeFileSync, WriteStream } from 'fs';
 import { inspect } from 'util';
 
+import { colors } from '../../../index';
 import { debug, errlog, error } from '../../../log';
 import { toId } from '../../../tools';
-
-const MAX_RECURSIVE = 5;
-const MIN_TIME_LOCK = 3 * 1000; // 3 secods to avoid send spam
-
+import { BattleBot } from '.';
 import {
 	CurrentGen,
 	getAbility,
@@ -27,7 +25,9 @@ import { majors } from './battle-majors';
 import { Minor, minors } from './battle-minors';
 import { Pokemon as CalcPokemon } from './calc';
 import { Decision, getDecisions, MoveDecision } from './decision';
-import { choose } from './modules';
+
+const MAX_RECURSIVE = 5;
+const MIN_TIME_LOCK = 3 * 1000; // 3 secods to avoid send spam
 
 export type PlayerId = 'p1' | 'p2';
 export type BattleType = 'singles' | 'doubles' | 'triples' | 'rotation';
@@ -103,6 +103,8 @@ interface Ident {
 }
 
 export class Battle {
+	bot: BattleBot;
+
 	id: string;
 	title: number | null = null;
 	players: Record<PlayerId, Player> = {
@@ -148,7 +150,8 @@ export class Battle {
 	rated = false;
 	ended = false;
 
-	constructor(id: string) {
+	constructor(bot: BattleBot, id: string) {
+		this.bot = bot;
 		this.id = id;
 	}
 
@@ -170,7 +173,7 @@ export class Battle {
 		if (!decision?.length) return;
 
 		const { moveData, ...toLog } = decision[0] as MoveDecision;
-		debug('Send Decision: '.cyan + JSON.stringify(toLog));
+		debug(colors.cyan('Send Decision: ') + JSON.stringify(toLog));
 		let str = '/choose ';
 		for (let i = 0; i < decision.length; i++) {
 			str += decision[i].getDecisionStr();
@@ -277,7 +280,7 @@ export class Battle {
 		if (this.lock) return;
 		this.lock = true;
 		debug('Making decisions - ' + this.id);
-		let decisions, mod;
+		let decisions;
 		try {
 			decisions = getDecisions(this);
 		} catch (e: any) {
@@ -292,11 +295,12 @@ export class Battle {
 			this.lock = false;
 			return;
 		}
+		let mod;
 		try {
-			mod = choose(this);
+			mod = this.bot.moduleManager.choose(this);
 			if (mod) {
 				const decision = mod.decide(this, decisions);
-				if (decision instanceof Array) {
+				if (decision) {
 					this.lock = false;
 					this.sendDecision(decision);
 					return;
@@ -305,8 +309,8 @@ export class Battle {
 		} catch (e2: any) {
 			errlog(e2.message);
 			errlog(e2.stack);
-			error('Module failed: ' + mod?.id + ' | ' + inspect(e2));
-			SecurityLog.log('BATTLE MODULE FAILED: ' + e2.message + '\nmodule: ' + mod?.id + '\n' + e2.stack);
+			error('Module failed: ' + mod?.name + ' | ' + inspect(e2));
+			SecurityLog.log('BATTLE MODULE FAILED: ' + e2.message + '\nmodule: ' + mod?.name + '\n' + e2.stack);
 		}
 		this.lock = false;
 		this.sendDecision(decisions[Math.floor(Math.random() * decisions.length)]);

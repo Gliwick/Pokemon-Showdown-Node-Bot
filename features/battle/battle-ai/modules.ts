@@ -10,55 +10,64 @@ import { IngameNoStatus } from './modules/ingame-nostatus';
 import { Random } from './modules/random';
 import { SinglesEffective } from './modules/singles-eff';
 
+export interface BattleModuleClass {
+	readonly ID: string;
+	new (): BattleModule;
+}
+
 export interface BattleModule {
-	readonly id: string;
+	readonly name: string;
 	readonly desc?: string;
 	decide: (battle: Battle, decisions: Decision[][]) => Decision[] | null;
 }
 
-export const modules: Record<string, BattleModule> = (
-	[new IngameNoStatus(), new Random(), new SinglesEffective()] as BattleModule[]
-).reduce((acc, mod) => {
-	acc[mod.id] = mod;
-	debug('Loaded battle module: ' + mod.id + (mod.desc ? ' [' + mod.desc + ']' : ''));
-	return acc;
-}, {} as Record<string, BattleModule>);
+export class ModuleManager {
+	modules: Record<string, BattleModule>;
 
-export function choose(battle: Battle): BattleModule | null {
-	if (!battle.tier) return null;
+	constructor() {
+		this.modules = ([IngameNoStatus, Random, SinglesEffective] as BattleModuleClass[]).reduce((acc, Module) => {
+			const moduleInstance = new Module();
+			acc[Module.ID] = moduleInstance;
+			debug('Loaded battle module: ' + Module.ID + (moduleInstance.desc ? ' [' + moduleInstance.desc + ']' : ''));
+			return acc;
+		}, {} as Record<string, BattleModule>);
+	}
 
-	const modId = Config.battleModules?.[toId(battle.tier)];
-	if (modId) {
-		const mod = modules[modId];
-		if (mod) {
-			debug('Battle module [' + battle.id + '] - Using ' + mod);
-			return mod;
+	private chooseInt(battle: Battle): BattleModule | null {
+		if (!battle.tier) return null;
+
+		const modId = Config.battleModules?.[toId(battle.tier)];
+		if (modId) {
+			const mod = this.modules[modId];
+			if (mod) {
+				return mod;
+			}
 		}
-	}
 
-	/* Module decision by default */
+		/* Module decision by default */
 
-	if (toId(battle.tier).includes('1v1')) {
-		if (modules['ingame-nostatus']) {
-			debug('Battle module [' + battle.id + '] - Using ingame-nostatus');
-			return modules['ingame-nostatus'];
+		if (toId(battle.tier).includes('1v1')) {
+			if (this.modules[IngameNoStatus.ID]) {
+				return this.modules[IngameNoStatus.ID];
+			}
 		}
-	}
 
-	if (battle.gametype === 'singles') {
-		if (modules['singles-eff']) {
-			debug('Battle module [' + battle.id + '] - Using singles-eff');
-			return modules['singles-eff'];
+		if (battle.gametype === 'singles') {
+			if (this.modules[SinglesEffective.ID]) {
+				return this.modules[SinglesEffective.ID];
+			}
 		}
+
+		return this.modules[IngameNoStatus.ID] || null;
 	}
 
-	if (modules['ingame-nostatus']) {
-		debug('Battle module [' + battle.id + '] - Using ingame-nostatus');
-		return modules['ingame-nostatus'];
+	choose(battle: Battle): BattleModule | null {
+		const module = this.chooseInt(battle);
+		if (module) {
+			debug('Battle module [' + battle.id + '] - Using ' + module.name);
+		} else {
+			debug('Battle module [' + battle.id + '] - Not found, using random');
+		}
+		return module;
 	}
-
-	/* Random, no module designed */
-
-	debug('Battle module [' + battle.id + '] - Not found, using random');
-	return null;
 }
