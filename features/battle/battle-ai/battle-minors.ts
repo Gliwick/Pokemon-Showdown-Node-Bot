@@ -11,7 +11,7 @@ export type Minor = `-${string}`;
 
 export const minors: Record<
 	Minor,
-	((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void) | Minor
+	Minor | ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void)
 > = {
 	'-damage': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);

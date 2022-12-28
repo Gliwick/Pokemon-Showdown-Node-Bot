@@ -9,7 +9,7 @@ import { BoostedStat, getEffect, getMove, getPokemon, Move, Pokemon } from './ba
 
 export const majors: Record<
 	string,
-	((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void) | string
+	string | ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void)
 > = {
 	rated: function (this: Battle, args, kwargs) {
 		this.rated = true;
