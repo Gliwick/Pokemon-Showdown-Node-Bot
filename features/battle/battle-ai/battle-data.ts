@@ -3,7 +3,7 @@
 */
 
 import { toId } from '../../../tools';
-import { Conditions } from '../data/statuses';
+import { Conditions } from '../data/conditions';
 import { deepcopy } from '../utils';
 
 const BATTLE_DATA_DIR = './../data/';
