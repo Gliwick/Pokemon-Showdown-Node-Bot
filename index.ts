@@ -16,7 +16,7 @@ import { SecurityLogger } from './bll/security-log';
 import { SettingsManager } from './bll/settings';
 import { setupBot } from './bot-setup';
 import { checkConfig, parseArguments } from './config-tools';
-import { globalMonitor } from './global-monitor';
+import { GlobalMonitor } from './global-monitor';
 import { errlog, error, info, ok } from './log';
 import { Tools as ToolsType } from './tools';
 
@@ -125,9 +125,9 @@ const opts = {
 global.PSClient = require('./bll/showdown-client.ts').Client;
 global.Bot = new PSClient(Config.server, Config.port, opts);
 
-setupBot();
+const globalMonitor = new GlobalMonitor();
 
-/* Global Monitor */
+setupBot(globalMonitor);
 
 globalMonitor.checkSystem();
 

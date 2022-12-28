@@ -3,7 +3,7 @@
 import { colors } from './index';
 import { monitor } from './log';
 
-class GlobalMonitor {
+export class GlobalMonitor {
 	connected = false;
 	retryingRename = false;
 	reconnecting = false;
@@ -47,5 +47,3 @@ class GlobalMonitor {
 		}
 	}
 }
-
-export const globalMonitor = new GlobalMonitor();

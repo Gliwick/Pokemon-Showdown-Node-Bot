@@ -1,6 +1,6 @@
 import { inspect } from 'util';
 
-import { globalMonitor } from './global-monitor';
+import { GlobalMonitor } from './global-monitor';
 import { colors } from './index';
 import { debug, errlog, error, info, monitor, ok, recv, sent } from './log';
 
@@ -67,7 +67,7 @@ function botAfterConnect(): void {
 	}
 }
 
-export function setupBot(): void {
+export function setupBot(globalMonitor: GlobalMonitor): void {
 	Bot.on('connect', (): void => {
 		ok('Connected to server ' + Config.serverid + ' (' + Tools.getDateString() + ')');
 		SecurityLog.log(
