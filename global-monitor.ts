@@ -1,6 +1,6 @@
 /* Global Monitor */
 
-import { colors } from '.';
+import { colors } from './index';
 import { monitor } from './log';
 
 class GlobalMonitor {

@@ -1,7 +1,7 @@
 import { inspect } from 'util';
 
-import { colors } from '.';
 import { globalMonitor } from './global-monitor';
+import { colors } from './index';
 import { debug, errlog, error, info, monitor, ok, recv, sent } from './log';
 
 function getFeatureInitCmds(): string[] {

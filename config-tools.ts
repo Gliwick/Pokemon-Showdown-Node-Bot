@@ -1,6 +1,6 @@
 /* Process arguments */
 
-import { colors } from '.';
+import { colors } from './index';
 
 export interface AppOptionsType {
 	help?: boolean;
