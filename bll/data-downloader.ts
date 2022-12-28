@@ -90,11 +90,11 @@ export class DataDownloader {
 			this.downloadFile(
 				this.data[i].url,
 				this.data[i].file,
-				function (this: DataDownloader, s: boolean, err?: Error) {
+				((s: boolean, err?: Error): void => {
 					if (s) return;
 					error('Data download failed: ' + this.data[i].file + '\n' + err?.message);
 					if (err?.stack) errlog(err.stack);
-				}
+				}).bind(this)
 			);
 		}
 	}
