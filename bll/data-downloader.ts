@@ -86,7 +86,7 @@ export class DataDownloader {
 	}
 
 	download(): void {
-		if (this.lastDownload && Date.now() - this.lastDownload > 60 * 1000) return;
+		if (this.lastDownload && Date.now() - this.lastDownload <= 60 * 1000) return;
 		this.lastDownload = Date.now();
 		for (let i = 0; i < this.data.length; i++) {
 			this.downloadFile(
