@@ -76,4 +76,4 @@ export class BattleManager implements Feature {
 	}
 }
 
-export const feature = new BattleManager();
+export const feature = BattleManager;

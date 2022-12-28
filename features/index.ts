@@ -24,7 +24,7 @@ export function loadFeature(feature: string, reloading?: boolean): void {
 
 	if (!existsSync(path)) throw new Error('Error: Feature ' + feature + ' not found');
 	if (reloading) Tools.uncacheTree(path);
-	const f = require('./' + filename).feature as Feature;
+	const f = new (require('./' + filename).feature)() as Feature;
 	if (f.id) {
 		if (Features[f.id]) {
 			if (!reloading) return;

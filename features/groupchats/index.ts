@@ -96,4 +96,4 @@ export class GroupChatsManager implements Feature {
 	}
 }
 
-export const feature = new GroupChatsManager();
+export const feature = GroupChatsManager;

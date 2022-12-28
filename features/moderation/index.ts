@@ -625,4 +625,4 @@ export class ModerationManager implements Feature {
 	}
 }
 
-export const feature = new ModerationManager();
+export const feature = ModerationManager;

@@ -199,4 +199,4 @@ export class TournamentsManager implements Feature {
 	}
 }
 
-export const feature = new TournamentsManager();
+export const feature = TournamentsManager;
