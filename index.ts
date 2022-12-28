@@ -79,7 +79,6 @@ info('Loading globals');
 global.Formats = {};
 
 global.Settings = new (require('./bll/settings.ts').SettingsManager)();
-global.FlatFileManager = require('./bll/settings.ts').FlatFileManager;
 
 global.DataDownloader = new (require('./bll/data-downloader.ts').DataDownloader)();
 

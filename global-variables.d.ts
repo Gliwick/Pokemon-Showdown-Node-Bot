@@ -1,7 +1,7 @@
 import { CommandParser as CommandParserClass } from './bll/command-parser';
 import { DataDownloader as DataDownloaderClass } from './bll/data-downloader';
 import { SecurityLogger } from './bll/security-log';
-import { FlatFileManager as FlatFileManagerClass, SettingsManager } from './bll/settings';
+import { SettingsManager } from './bll/settings';
 import { Client, ClientOptions } from './bll/showdown-client';
 import { FormatData } from './bot-setup';
 import { AppOptionsType, ConfigType } from './config-tools';
@@ -17,7 +17,6 @@ declare global {
 			Config: ConfigType;
 			DataDownloader: DataDownloaderClass;
 			Features: Record<string, Feature>;
-			FlatFileManager: new () => FlatFileManagerClass;
 			Formats: Record<string, FormatData>;
 			PSClient: new () => Client;
 			SecurityLog: SecurityLogger;
@@ -30,8 +29,7 @@ declare global {
 	const Config: ConfigType;
 	const CommandParser: CommandParserClass;
 	const DataDownloader: DataDownloaderClass;
-	let Features: Record<string, Feature>;
-	const FlatFileManager: new () => FlatFileManagerClass;
+	const Features: Record<string, Feature>;
 	const Formats: Record<string, FormatData>;
 	const PSClient: new (server: string, port: number, opts: Partial<ClientOptions>) => Client;
 	const SecurityLog: SecurityLogger;
