@@ -10,7 +10,7 @@ import 'sugar';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { inspect } from 'util';
 
-import { connectBot } from './bot-connect';
+import { setupBot } from './bot-setup';
 import { checkConfig, parseArguments } from './config-tools';
 import { globalMonitor } from './global-monitor';
 import { errlog, error, info, ok } from './log';
@@ -125,7 +125,7 @@ const opts = {
 global.PSClient = require('./showdown-client.ts').Client;
 global.Bot = new PSClient(Config.server, Config.port, opts);
 
-connectBot();
+setupBot();
 
 /* Global Monitor */
 

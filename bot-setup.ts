@@ -67,7 +67,7 @@ function botAfterConnect(): void {
 	}
 }
 
-export function connectBot(): void {
+export function setupBot(): void {
 	Bot.on('connect', (): void => {
 		ok('Connected to server ' + Config.serverid + ' (' + Tools.getDateString() + ')');
 		SecurityLog.log(
