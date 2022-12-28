@@ -4,8 +4,9 @@ import { SecurityLogger } from './bll/security-log';
 import { SettingsManager } from './bll/settings';
 import { Client, ClientOptions } from './bll/showdown-client';
 import { FormatData } from './bot-setup';
-import { AppOptionsType, ConfigType } from './config-tools';
+import { ConfigType } from './config-tools';
 import { Feature } from './features';
+import { AppOptionsType } from './global-types';
 import { Tools as ToolsType } from './tools';
 
 declare global {
