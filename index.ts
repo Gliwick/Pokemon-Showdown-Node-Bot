@@ -11,6 +11,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { inspect } from 'util';
 
 import { checkConfig, parseArguments } from './config-tools';
+import { debug, errlog, error, info, monitor, ok, recv, sent } from './log';
 
 export const colors = require('colors') as Record<string, (s: string) => string>;
 
