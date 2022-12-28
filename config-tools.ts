@@ -220,7 +220,7 @@ export function validateConfigObject<T extends keyof ConfigType>(
 	defaultValue: ConfigType[KeyOf<ConfigType, ConfigType[T]>]
 ): void {
 	if (!Config[key] || typeof Config[key] !== 'object' || Array.isArray(Config[key])) {
-		issue('Config' + key + ' is not an object');
+		issue('Config.' + key + ' is not an object');
 		Config[key] = defaultValue;
 	}
 }
@@ -231,7 +231,7 @@ export function checkConfig(): void {
 			'WARNING: YOUR SERVER URL ' +
 				colors.red(Config.server) +
 				' SEEMS A CLIENT URL, NOT A SERVER ONE. USE ' +
-				colors.cyan('node serverconfig.js') +
+				colors.cyan('node getserver.js') +
 				' TO GET THE CORRECT SERVER, PORT AND SERVERID VALUES\n'
 		);
 	}
