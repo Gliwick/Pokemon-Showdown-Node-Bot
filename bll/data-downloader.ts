@@ -7,40 +7,40 @@ import * as https from 'https';
 
 import { debug, errlog, error } from '../log';
 
-const datenow = Date.now();
-
 export class DataDownloader {
+	initDate = Date.now();
+	lastDownload?: number;
 	data: { url: string; file: string }[] = [
 		{
 			url: 'https://raw.githubusercontent.com/Zarel/Pokemon-Showdown/master/config/formats.js',
 			file: 'formats.js',
 		},
 		{
-			url: 'https://play.pokemonshowdown.com/data/formats-data.js?' + datenow,
+			url: 'https://play.pokemonshowdown.com/data/formats-data.js?' + this.initDate,
 			file: 'formats-data.js',
 		},
 		{
-			url: 'https://play.pokemonshowdown.com/data/pokedex.js?' + datenow,
+			url: 'https://play.pokemonshowdown.com/data/pokedex.js?' + this.initDate,
 			file: 'pokedex.js',
 		},
 		{
-			url: 'https://play.pokemonshowdown.com/data/moves.js?' + datenow,
+			url: 'https://play.pokemonshowdown.com/data/moves.js?' + this.initDate,
 			file: 'moves.js',
 		},
 		{
-			url: 'https://play.pokemonshowdown.com/data/abilities.js?' + datenow,
+			url: 'https://play.pokemonshowdown.com/data/abilities.js?' + this.initDate,
 			file: 'abilities.js',
 		},
 		{
-			url: 'https://play.pokemonshowdown.com/data/items.js?' + datenow,
+			url: 'https://play.pokemonshowdown.com/data/items.js?' + this.initDate,
 			file: 'items.js',
 		},
 		{
-			url: 'https://play.pokemonshowdown.com/data/learnsets.js?' + datenow,
+			url: 'https://play.pokemonshowdown.com/data/learnsets.js?' + this.initDate,
 			file: 'learnsets.js',
 		},
 		{
-			url: 'https://play.pokemonshowdown.com/data/aliases.js?' + datenow,
+			url: 'https://play.pokemonshowdown.com/data/aliases.js?' + this.initDate,
 			file: 'aliases.js',
 		},
 	];
@@ -86,6 +86,8 @@ export class DataDownloader {
 	}
 
 	download(): void {
+		if (this.lastDownload && Date.now() - this.lastDownload > 60 * 1000) return;
+		this.lastDownload = Date.now();
 		for (let i = 0; i < this.data.length; i++) {
 			this.downloadFile(
 				this.data[i].url,
