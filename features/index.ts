@@ -33,7 +33,7 @@ export function loadFeature(feature: string, reloading?: boolean): void {
 		Features[f.id] = f;
 		if (reloading) {
 			Features[f.id].init();
-			info('Feature "' + f.id + '" ' + 'reloaded');
+			info('Feature "' + f.id + '" reloaded');
 		} else {
 			ok('New feature: ' + f.id + ' | ' + f.desc);
 		}
