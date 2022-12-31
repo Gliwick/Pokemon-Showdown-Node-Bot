@@ -396,7 +396,7 @@ export class SinglesEffective implements BattleModule {
 
 		let movesB = [];
 		const supposedMoveTypes: Type[] = [];
-		for (const move of battle.foe.active[0].moves.slice()) {
+		for (const move of battle.foe.active[0].moves) {
 			if (move.disabled || move.pp <= 0) continue;
 
 			const moveData = getMove(move.id, battle.gen, battle.id);
@@ -2695,7 +2695,7 @@ export class SinglesEffective implements BattleModule {
 			if (filteredMoves.length > 0) {
 				finalDamageMoves = filteredMoves;
 			} else {
-				finalDamageMoves = damageMoves.subbreak.slice();
+				finalDamageMoves = [...damageMoves.subbreak];
 			}
 		}
 

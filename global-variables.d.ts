@@ -6,6 +6,7 @@ import { Client, ClientOptions } from './bll/showdown-client';
 import { FormatData } from './bot-setup';
 import { ConfigType } from './config-tools';
 import { Feature } from './features';
+import { GlobalMonitor as GlobalMonitorClass } from './global-monitor';
 import { AppOptionsType } from './global-types';
 import { Tools as ToolsType } from './tools';
 
@@ -19,6 +20,7 @@ declare global {
 			DataDownloader: DataDownloaderClass;
 			Features: Record<string, Feature>;
 			Formats: Record<string, FormatData>;
+			GlobalMonitor: GlobalMonitorClass;
 			PSClient: new () => Client;
 			SecurityLog: SecurityLogger;
 			Settings: SettingsManager;
@@ -32,6 +34,7 @@ declare global {
 	const DataDownloader: DataDownloaderClass;
 	const Features: Record<string, Feature>;
 	const Formats: Record<string, FormatData>;
+	const GlobalMonitor: GlobalMonitorClass;
 	const PSClient: new (server: string, port: number, opts: Partial<ClientOptions>) => Client;
 	const SecurityLog: SecurityLogger;
 	const Settings: SettingsManager;

@@ -2,11 +2,23 @@
 	Admin Commands
 */
 
-exports.commands = {
+import { Command } from '../bll/command-parser';
+import { toId, toRoomid } from '../tools';
+
+interface Room {
+	title?: string;
+}
+
+interface Rooms {
+	official?: Room[];
+	chat?: Room[];
+}
+
+export const commands: Record<string, string | Command> = {
 	c: 'custom',
-	custom: function (arg, by, room, cmd) {
+	custom: function (arg, by, room) {
 		if (!this.isRanked('admin')) return false;
-		var tarRoom;
+		let tarRoom;
 		if (arg.indexOf('[') === 0 && arg.indexOf(']') > -1) {
 			tarRoom = toRoomid(arg.slice(1, arg.indexOf(']')));
 			arg = arg.substr(arg.indexOf(']') + 1).trim();
@@ -18,39 +30,31 @@ exports.commands = {
 	sendpm: 'pm',
 	pm: function (arg, by, room, cmd) {
 		if (!this.isRanked('admin')) return false;
-		var args = arg.split(',');
+		const args = arg.split(',');
 		if (args.length < 2) return this.reply('Usage: ' + this.cmdToken + cmd + ' [user], [message]');
-		var targetUser = toId(args.shift());
-		var msg = args.join(',').trim();
+		const targetUser = toId(args.shift());
+		const msg = args.join(',').trim();
 		if (!targetUser || !msg) return this.reply('Usage: ' + this.cmdToken + cmd + ' [user], [message]');
 		this.sclog();
 		this.sendPM(targetUser, msg);
 	},
 
-	join: function (arg, by, room, cmd) {
+	join: function (arg) {
 		if (!this.isRanked('admin')) return false;
 		if (!arg) return;
-		arg = arg.split(',');
-		var cmds = [];
-		for (var i = 0; i < arg.length; i++) {
-			cmds.push('|/join ' + arg[i]);
-		}
+		const cmds = arg.split(',').map((a) => '|/join ' + a);
 		this.sclog();
 		this.send(cmds);
 	},
 
-	leave: function (arg, by, room, cmd) {
+	leave: function (arg) {
 		if (!this.isRanked('admin')) return false;
 		if (!arg) {
 			if (this.roomType !== 'pm') this.reply('/leave');
 			this.sclog();
 			return;
 		}
-		arg = arg.split(',');
-		var cmds = [];
-		for (var i = 0; i < arg.length; i++) {
-			cmds.push(toId(arg[i]) + '|/leave');
-		}
+		const cmds = arg.split(',').map((a) => toId(a) + '|/leave');
 		this.sclog();
 		this.send(cmds);
 	},
@@ -59,7 +63,7 @@ exports.commands = {
 	joinrooms: 'joinall',
 	joinall: function (arg, by, room, cmd) {
 		if (!this.isRanked('admin')) return false;
-		var target = 'all';
+		let target = 'all';
 		arg = toId(arg);
 		if (arg.length || cmd === 'joinrooms') {
 			if (arg === 'official') target = 'official';
@@ -67,32 +71,21 @@ exports.commands = {
 			else if (arg === 'all') target = 'all';
 			else return this.reply('Usage: ' + this.cmdToken + cmd + ' [official/public/all]');
 		}
-		var qParser = function (data) {
-			data = data.split('|');
-			if (data[0] === 'rooms') {
-				data.splice(0, 1);
-				var str = data.join('|');
-				var cmds = [];
+		const qParser = (data: string): void => {
+			const command = data.split('|')[0];
+			if (command === 'rooms') {
+				const str = data.substring(command.length + 1);
+				let cmds: string[] = [];
 				try {
-					var rooms = JSON.parse(str);
-					var offRooms = [],
-						publicRooms = [];
-					if (rooms.official) {
-						for (var i = 0; i < rooms.official.length; i++) {
-							if (rooms.official[i].title) offRooms.push(toId(rooms.official[i].title));
-						}
-					}
-					if (rooms.chat) {
-						for (var i = 0; i < rooms.chat.length; i++) {
-							if (rooms.chat[i].title) publicRooms.push(toId(rooms.chat[i].title));
-						}
-					}
-					if (target === 'all' || target === 'official') {
-						for (var i = 0; i < offRooms.length; i++) cmds.push('|/join ' + offRooms[i]);
-					}
-					if (target === 'all' || target === 'public') {
-						for (var i = 0; i < publicRooms.length; i++) cmds.push('|/join ' + publicRooms[i]);
-					}
+					const roomsObject = JSON.parse(str) as Rooms;
+					const rooms: Room[][] = [];
+					if (target === 'all' || target === 'official') rooms.push(roomsObject.official || []);
+					if (target === 'all' || target === 'public') rooms.push(roomsObject.chat || []);
+					cmds = rooms
+						.flat(1)
+						.map((room) => toId(room.title))
+						.filter((room) => !!room)
+						.map((room) => '|/join ' + room);
 				} catch (e) {}
 				Bot.send(cmds, 2000);
 				Bot.removeListener('queryresponse', qParser);
@@ -104,11 +97,11 @@ exports.commands = {
 	},
 
 	lang: 'language',
-	language: function (arg, by, room, cmd) {
+	language: function (arg, by, room) {
 		if (!this.isRanked('roomowner')) return false;
-		var tarRoom = room;
-		var targetObj = Tools.getTargetRoom(arg);
-		var textHelper = '';
+		let tarRoom = room;
+		const targetObj = Tools.getTargetRoom(arg);
+		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
 			tarRoom = targetObj.room;
@@ -116,7 +109,7 @@ exports.commands = {
 		}
 		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
 			return this.reply(this.trad('notchat') + textHelper);
-		var lang = toId(arg);
+		const lang = toId(arg);
 		if (!lang.length)
 			return this.reply(
 				this.trad('nolang') + '. ' + this.trad('v') + ': ' + Object.keys(Tools.intl.translations).join(', ')
@@ -134,9 +127,9 @@ exports.commands = {
 	settings: 'set',
 	set: function (arg, by, room, cmd) {
 		if (!this.isRanked('roomowner')) return false;
-		var tarRoom = room;
-		var targetObj = Tools.getTargetRoom(arg);
-		var textHelper = '';
+		let tarRoom = room;
+		const targetObj = Tools.getTargetRoom(arg);
+		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
 			tarRoom = targetObj.room;
@@ -144,10 +137,10 @@ exports.commands = {
 		}
 		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
 			return this.reply(this.trad('notchat') + textHelper);
-		var args = arg.split(',');
+		const args = arg.split(',');
 		if (args.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-		var perm = toId(args[0]);
-		var rank = args[1].trim();
+		const perm = toId(args[0]);
+		const rank = args[1].trim();
 		if (!(perm in Settings.permissions)) {
 			return this.reply(this.trad('ps') + ': ' + Object.keys(Settings.permissions).sort().join(', '));
 		}
@@ -182,10 +175,10 @@ exports.commands = {
 	battlesettings: 'battleset',
 	battleset: function (arg, by, room, cmd) {
 		if (!this.isRanked('admin')) return false;
-		var args = arg.split(',');
+		const args = arg.split(',');
 		if (args.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-		var perm = toId(args[0]);
-		var rank = args[1].trim();
+		const perm = toId(args[0]);
+		const rank = args[1].trim();
 		if (!(perm in Settings.permissions)) {
 			return this.reply(this.trad('ps') + ': ' + Object.keys(Settings.permissions).sort().join(', '));
 		}
@@ -211,5 +204,5 @@ exports.commands = {
 		} else {
 			return this.reply(this.trad('not1') + ' ' + rank + ' ' + this.trad('not2'));
 		}
-	}
+	},
 };

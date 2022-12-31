@@ -17,7 +17,7 @@ interface Room {
 	id: string;
 	type: string;
 	title: string;
-	users: string[] | null;
+	users: string[];
 }
 
 interface User {
@@ -28,7 +28,7 @@ interface User {
 	rank: string;
 }
 
-class Context {
+export class Context {
 	arg: string;
 	by: string;
 	room: string;
@@ -41,34 +41,37 @@ class Context {
 	language: string;
 	parser: CommandParser;
 
-	constructor(opts: Partial<Context>, parser: CommandParser) {
+	constructor(opts: Partial<Omit<Context, 'parser'>>, parser: CommandParser) {
 		this.arg = opts.arg || '';
 		this.by = opts.by || '';
 		this.room = opts.room || 'lobby';
 		this.cmd = opts.cmd || '';
 		this.handler = opts.handler || '';
 		this.cmdToken = opts.cmdToken || '';
-		this.roomType = this.room.charAt(0) === ',' ? 'pm' : Bot.rooms[this.room] ? Bot.rooms[this.room].type : 'chat';
+		this.roomType = this.room.charAt(0) === ',' ? 'pm' : Bot.rooms[this.room]?.type || 'chat';
 		this.botName = Bot.status.nickName;
 		this.isExcepted = Tools.equalOrHigherRank(this.by, true);
-		let lang = Config.language || 'english';
-		if (this.roomType === 'chat' && Settings.settings.language?.[this.room])
-			lang = Settings.settings['language'][this.room];
-		this.language = lang;
+		this.language =
+			(this.roomType === 'chat' && Settings.settings.language?.[this.room]) || Config.language || 'english';
 		this.parser = parser;
 	}
 
-	send(arg1: string, arg2: string | string[], interval = 2000): void {
-		if (!arg2) {
-			Bot.send(arg1, interval);
-		} else if (arg1.charAt(0) !== ',') {
-			Bot.sendRoom(arg1, arg2, interval);
+	send(...args: [string, string | string[], number?] | [string | string[]]): void {
+		const interval = args[2] || 2000;
+		if (!args[1]) {
+			Bot.send(args[0], interval);
 		} else {
-			if (!Array.isArray(arg2)) {
-				arg2 = [arg2.toString()];
+			const arg1 = args[0] as string;
+			const arg2 = args[1];
+			if (arg1.charAt(0) !== ',') {
+				Bot.sendRoom(arg1, arg2, interval);
+			} else {
+				const args2Array = Array.isArray(arg2) ? arg2 : [arg2];
+				Bot.send(
+					args2Array.map((arg) => '|/pm ' + arg1.substr(1) + ',' + arg),
+					interval
+				);
 			}
-			for (let i = 0; i < arg2.length; i++) arg2[i] = '|/pm ' + arg1.substr(1) + ',' + arg2[i];
-			Bot.send(arg2, interval);
 		}
 	}
 
@@ -139,18 +142,14 @@ class Context {
 	}
 
 	getRoom(targetRoom: string): Room | null {
-		if (!Bot.rooms[targetRoom]) return null;
+		const room = Bot.rooms[targetRoom];
+		if (!room) return null;
 		return {
 			id: toRoomid(targetRoom),
-			type: Bot.rooms[targetRoom].type,
-			title: Bot.rooms[targetRoom].title,
-			users: this.getRoomUsers(targetRoom),
+			type: room.type,
+			title: room.title,
+			users: Object.values(room.users),
 		};
-	}
-
-	getRoomUsers(targetRoom: string): string[] | null {
-		if (!Bot.rooms[targetRoom]) return null;
-		return Object.values(Bot.rooms[targetRoom].users);
 	}
 
 	getUser(user: string, targetRoom: string): User | null {
@@ -184,7 +183,7 @@ class Context {
 		this.parser.parse(this.room, this.by, data);
 	}
 
-	sclog(data: string): void {
+	sclog(data?: string): void {
 		if (data) {
 			SecurityLog.log('[' + this.room + '] [' + this.by + '] [' + this.handler + '] ' + data);
 		} else {
@@ -203,6 +202,10 @@ class Context {
 					this.arg
 			);
 		}
+	}
+
+	getModule<T extends CommandModule>(moduleClass: new () => CommandModule): T {
+		return Object.values(this.parser.modules).filter((module) => module instanceof moduleClass)[0] as T;
 	}
 }
 
@@ -291,10 +294,15 @@ class ResourceMonitor {
 	}
 }
 
-type Command = (this: Context, sargs: string, by: string, room: string, cmd: string) => void;
+export type Command = (this: Context, sargs: string, by: string, room: string, cmd: string) => void;
+
+export interface CommandModule {
+	init(): void;
+}
 
 export class CommandParser {
 	commands: Record<string, string | Command> = {};
+	modules: Record<string, CommandModule> = {};
 	dynCommands: Record<string, string> = {};
 	dynCommandsFFM = new FlatFileManager(AppOptions.data + 'commands.json');
 	tempVar = '';
@@ -315,11 +323,19 @@ export class CommandParser {
 	/* Load commands */
 	loadCommands(reloading?: boolean): string[] {
 		const errs: string[] = [];
-		readdirSync('./commands').forEach((file: string) => {
-			if (file.substr(-3) === '.js') {
+		readdirSync('./commands').forEach((file: string): void => {
+			if (file.endsWith('.ts')) {
 				if (reloading) Tools.uncacheTree('./commands/' + file);
 				try {
-					Object.assign(this.commands, require('../commands/' + file).commands);
+					const { commands, module } = require('../commands/' + file) as {
+						commands: [];
+						module?: new () => CommandModule;
+					};
+					Object.assign(this.commands, commands);
+					if (module) {
+						this.modules[file] = new module();
+						this.modules[file].init();
+					}
 				} catch (e: any) {
 					errlog(e.stack);
 					error('Could not import commands file: ../commands/' + file + ' | ' + inspect(e));

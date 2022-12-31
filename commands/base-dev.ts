@@ -2,23 +2,29 @@
 	Development Commands
 */
 
-const loadFeature = require('../features/index.ts').loadFeature;
-const loadFeatures = require('../features/index.ts').loadFeatures;
+import { exec, ExecException } from 'child_process';
+import { inspect } from 'util';
 
-exports.commands = {
+import { Command, Context } from '../bll/command-parser';
+import { checkConfig } from '../config-tools';
+import { loadFeature, loadFeatures } from '../features';
+import { errlog, error, info } from '../log';
+import { toId, toRoomid } from '../tools';
+
+export const commands: Record<string, string | Command> = {
 	eval: 'js',
-	js: function (arg, by, room, cmd) {
+	js: function (arg, by, room) {
 		if (!this.isExcepted) return false;
 		this.sclog();
 		try {
-			var result = eval(arg.trim());
+			const result = eval(arg.trim());
 			this.say(room, '``' + JSON.stringify(result) + '``');
 		} catch (e) {
 			this.say(room, e.name + ': ' + e.message);
 		}
 	},
 
-	send: function (arg, by, room, cmd) {
+	send: function (arg) {
 		if (!this.isExcepted) return false;
 		this.sclog();
 		this.send(arg);
@@ -48,7 +54,7 @@ exports.commands = {
 
 	sleep: function (arg, by, room) {
 		if (!this.isExcepted) return false;
-		var roomObj = this.getRoom(toRoomid(arg) || room);
+		const roomObj = this.getRoom(toRoomid(arg) || room);
 		if (!roomObj) {
 			if (!arg) return this.pmReply('Usage: ' + this.cmdToken + this.cmd + ' [room]');
 			return this.pmReply('Room "' + arg + '" not found');
@@ -64,7 +70,7 @@ exports.commands = {
 	wake: 'unsleep',
 	unsleep: function (arg, by, room) {
 		if (!this.isExcepted) return false;
-		var roomObj = this.getRoom(toRoomid(arg) || room);
+		const roomObj = this.getRoom(toRoomid(arg) || room);
 		if (!roomObj) {
 			if (!arg) return this.pmReply('Usage: ' + this.cmdToken + this.cmd + ' [room]');
 			return this.pmReply('Room "' + arg + '" not found');
@@ -85,49 +91,35 @@ exports.commands = {
 			else if (!arg) return this.pmReply('Usage: ' + this.cmdToken + this.cmd + ' [room]');
 		}
 		if (!arg) {
-			var rooms = '',
-				roomArr = [];
-			var buf = '',
-				cmds = [];
-			buf +=
-				'**Bot status** |' +
-				(Settings.lockdown ? ' **Lockdown** |' : '') +
-				' Username: ``' +
-				Bot.status.nickName +
-				'`` | Rooms: ';
-			for (let i in Bot.rooms) {
-				var botIdent = Bot.rooms[i].users[toId(Bot.status.nickName)] || ' ';
-				roomArr.push(
+			const roomsArray = Object.entries(Bot.rooms).map(([i, room]) => {
+				const botIdent = room.users[toId(Bot.status.nickName)] || ' ';
+				return (
 					'<<' +
-						i +
-						'>> (' +
-						Bot.rooms[i].type.charAt(0).toLowerCase() +
-						(Settings.isSleeping(i) ? 's' : 'r') +
-						(botIdent.charAt(0) !== ' ' ? botIdent.charAt(0) : 'u') +
-						(Config.privateRooms.includes(i) ? 'h' : 'p') +
-						')'
+					i +
+					'>> (' +
+					room.type.charAt(0).toLowerCase() +
+					(Settings.isSleeping(i) ? 's' : 'r') +
+					(botIdent.charAt(0) !== ' ' ? botIdent.charAt(0) : 'u') +
+					(Config.privateRooms.includes(i) ? 'h' : 'p') +
+					')'
 				);
-			}
-			if (roomArr.length) {
-				for (var i = 0; i < roomArr.length; i++) {
-					if (buf.length + roomArr[i].length + (i < roomArr.length - 1 ? 2 : 0) > 300) {
-						cmds.push(buf);
-						buf = '';
-					}
-					buf += roomArr[i];
-					if (i < roomArr.length - 1) buf += ', ';
-				}
-			} else {
-				buf += '(none)';
-			}
-			cmds.push(buf);
+			});
+			const cmds = Tools.joinWithLengthLimit(
+				roomsArray.length ? roomsArray : ['(none)'],
+				'**Bot status** |' +
+					(Settings.lockdown ? ' **Lockdown** |' : '') +
+					' Username: ``' +
+					Bot.status.nickName +
+					'`` | Rooms: '
+			);
 			return this.pmReply(cmds);
 		}
-		var tarRoom = toRoomid(arg);
-		var roomObj = this.getRoom(tarRoom);
+
+		const tarRoom = toRoomid(arg);
+		const roomObj = this.getRoom(tarRoom);
 		if (!roomObj) return this.pmReply('Room "' + tarRoom + '" not found');
-		var sleep = Settings.isSleeping(tarRoom) ? 'Sleeping' : 'Ready';
-		var botIdent = Bot.rooms[roomObj.id].users[toId(Bot.status.nickName)] || ' ';
+		const sleep = Settings.isSleeping(tarRoom) ? 'Sleeping' : 'Ready';
+		const botIdent = Bot.rooms[roomObj.id].users[toId(Bot.status.nickName)] || ' ';
 		this.pmReply(
 			'**' +
 				roomObj.title +
@@ -155,22 +147,22 @@ exports.commands = {
 	},
 
 	hotpatch: 'reload',
-	reload: function (arg, by, room, cmd) {
+	reload: function (arg) {
 		if (!this.isExcepted) return false;
-		var args = arg.split(',');
-		var opt = toId(args[0]);
+		const args = arg.split(',');
+		const opt = toId(args[0]);
 		switch (opt) {
 			case '':
 			case 'commands':
 				this.sclog();
-				var res = CommandParser.loadCommands(true) || [];
+				const res = CommandParser.loadCommands(true) || [];
 				if (!res.length) {
 					return this.reply('Commands hotpatched');
 				}
 				return this.reply('Some command files crashed: ' + res.join(', '));
 			case 'features':
 				this.sclog();
-				var errs = loadFeatures(true) || [];
+				const errs = loadFeatures(true) || [];
 				if (!errs.length) {
 					return this.reply('Features hotpatched');
 				}
@@ -225,7 +217,7 @@ exports.commands = {
 				try {
 					Tools.uncacheTree(AppOptions.config);
 					global.Config = require('./../' + AppOptions.config);
-					Tools.checkConfig();
+					checkConfig();
 					Settings.applyConfig();
 					CommandParser.reloadTokens();
 					this.reply(AppOptions.config + ' reloaded');
@@ -239,7 +231,7 @@ exports.commands = {
 			case 'lang':
 			case 'languages':
 				this.sclog();
-				var _errs = Tools.intl.loadTranslations(true) || [];
+				const _errs = Tools.intl.loadTranslations(true) || [];
 				if (!_errs.length) return this.reply('Languages hotpatched');
 				this.reply('Some languages crashed: ' + _errs.join(', '));
 				break;
@@ -249,41 +241,42 @@ exports.commands = {
 	},
 
 	updatebranch: 'updategit',
-	updategit: function (arg, by, room, cmd) {
+	updategit: function () {
 		if (!this.isExcepted) return false;
 
-		if (global.updateGitLock) {
+		if (GlobalMonitor.updateGitLock) {
 			return this.reply('There is currently another update in progress');
 		}
 
-		global.updateGitLock = true;
+		GlobalMonitor.updateGitLock = true;
 		this.sclog();
 
-		var self = this;
-		var exec = require('child_process').exec;
-		exec('git diff-index --quiet HEAD --', function (error) {
-			var cmd = 'git pull --rebase';
-			if (error) {
-				if (error.code === 1) {
-					// The working directory or index have local changes.
-					cmd = 'git stash && ' + cmd + ' && git stash pop';
-				} else {
-					// The most likely case here is that the user does not have
-					// `git` on the PATH (which would be error.code === 127).
-					self.reply('Error:' + error);
-					global.updateServerLock = false;
-					return;
+		exec(
+			'git diff-index --quiet HEAD --',
+			function (this: Context, error: ExecException | null): void {
+				let cmd = 'git pull --rebase';
+				if (error) {
+					if (error.code === 1) {
+						// The working directory or index have local changes.
+						cmd = 'git stash && ' + cmd + ' && git stash pop';
+					} else {
+						// The most likely case here is that the user does not have
+						// `git` on the PATH (which would be error.code === 127).
+						this.reply('Error:' + error);
+						GlobalMonitor.updateGitLock = false;
+						return;
+					}
 				}
-			}
-			var entry = 'Running `' + cmd + '`';
-			self.reply(entry);
-			exec(cmd, function (error, stdout, stderr) {
-				('' + stdout + stderr).split('\n').forEach(function (s) {
-					self.reply(s);
+				const entry = 'Running `' + cmd + '`';
+				this.reply(entry);
+				exec(cmd, function (error, stdout, stderr) {
+					('' + stdout + stderr).split('\n').forEach(function (s) {
+						this.reply(s);
+					});
+					GlobalMonitor.updateGitLock = false;
 				});
-				global.updateGitLock = false;
-			});
-		});
+			}.bind(this)
+		);
 	},
 
 	endlockdown: 'lockdown',
@@ -311,10 +304,11 @@ exports.commands = {
 		} else {
 			if (!Settings.lockdown)
 				return this.reply('To kill the process you must use ``' + this.cmdToken + 'lockdown`` first');
-			for (var f in Features) {
-				if (typeof Features[f].readyToDie === 'function') {
+			for (const f in Features) {
+				const readyToDie = Features[f].readyToDie;
+				if (readyToDie) {
 					try {
-						var err = Features[f].readyToDie();
+						const err = readyToDie();
 						if (err)
 							return this.reply(
 								'Feature "' +
@@ -330,7 +324,7 @@ exports.commands = {
 							'Feature "' +
 								f +
 								'" not ready | ' +
-								sys.inspect(e) +
+								inspect(e) +
 								' | Use ``' +
 								this.cmdToken +
 								'forcekill`` if you want to kill the process anyway'
@@ -342,5 +336,5 @@ exports.commands = {
 			console.log('Kill. By: ' + by);
 			process.exit();
 		}
-	}
+	},
 };

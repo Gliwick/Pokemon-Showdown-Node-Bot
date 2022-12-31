@@ -23,13 +23,13 @@ export class GroupChatsManager implements Feature {
 
 	parseInit(room: string): void {
 		if (!Config.groupchats[room].onJoin?.length) return;
-		Bot.sendRoom(room, Config.groupchats[room].onJoin.slice(0), 2000);
+		Bot.sendRoom(room, [...Config.groupchats[room].onJoin], 2000);
 	}
 
 	parseDeinit(room: string): void {
 		if (!Config.groupchats[room].onLeave || !Config.groupchats[room].onLeave.length) return;
 		setTimeout(() => {
-			Bot.sendRoom('', Config.groupchats[room].onLeave.slice(0), 2000);
+			Bot.sendRoom('', [...Config.groupchats[room].onLeave], 2000);
 		}, 1000);
 	}
 

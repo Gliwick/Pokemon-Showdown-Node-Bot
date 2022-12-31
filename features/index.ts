@@ -12,6 +12,7 @@ export interface Feature extends Parser {
 	readonly desc?: string;
 	init: () => void;
 	getInitCmds?: () => string[];
+	readyToDie?: () => string | undefined;
 	destroy: () => void;
 }
 

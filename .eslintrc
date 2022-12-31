@@ -24,7 +24,6 @@
 		"sort-imports": 0
 	},
 	"ignorePatterns": [
-		"commands/",
 		"features/battle/battle-ai/battle*",
 		"features/battle/battle-ai/calc.ts",
 		"features/battle/battle-ai/modules",

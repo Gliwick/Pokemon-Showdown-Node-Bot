@@ -6,6 +6,7 @@
 
 import 'path';
 import 'sugar';
+import './global-variables.d.ts';
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { inspect } from 'util';
@@ -16,7 +17,7 @@ import { SecurityLogger } from './bll/security-log';
 import { SettingsManager } from './bll/settings';
 import { setupBot } from './bot-setup';
 import { checkConfig } from './config-tools';
-import { GlobalMonitor } from './global-monitor';
+import { GlobalMonitor as GlobalMonitorClass } from './global-monitor';
 import { AppOptionsType } from './global-types';
 import { errlog, error, info, ok } from './log';
 import { Tools as ToolsType } from './tools';
@@ -178,7 +179,8 @@ const opts = {
 global.PSClient = require('./bll/showdown-client.ts').Client;
 global.Bot = new PSClient(Config.server, Config.port, opts);
 
-const globalMonitor = new GlobalMonitor();
+const globalMonitor = new GlobalMonitorClass();
+global.GlobalMonitor = globalMonitor;
 
 setupBot(globalMonitor);
 

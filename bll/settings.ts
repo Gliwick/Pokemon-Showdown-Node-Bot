@@ -81,6 +81,8 @@ export class FlatFileManager {
 	}
 }
 
+type UserAction = 'j' | 'l' | 'c' | 'n';
+
 class User {
 	name: string;
 	id: string;
@@ -89,7 +91,7 @@ class User {
 		name: string;
 		time: number;
 		room?: string;
-		action?: string;
+		action?: UserAction;
 		args?: string[];
 	} | null;
 	online: boolean;
@@ -126,7 +128,7 @@ class User {
 		const dSeen: User['lastSeen'] = { name: this.name, time: Date.now() };
 		if (!Config.privateRooms.includes(room)) {
 			dSeen.room = room;
-			dSeen.action = action;
+			if (action === 'j' || action === 'l' || action === 'c' || action === 'n') dSeen.action = action;
 			dSeen.args = args;
 		}
 		this.lastSeen = dSeen;
@@ -250,7 +252,8 @@ export class SettingsManager {
 		autoban?: Record<string, Record<string, number>>;
 		autopromote?: Record<string, Autopromote>;
 		bannedphrases?: Record<string, Record<string, boolean>>;
-		commands?: Record<string, Record<string, string>>;
+		commands?: Record<string, Record<string, string | true>>;
+		deftier?: Record<string, string>;
 		inapropiatephrases?: Record<string, Record<string, boolean>>;
 		joinphrases?: Record<string, Record<string, string>>;
 		jointours?: Record<string, boolean>;
@@ -262,10 +265,12 @@ export class SettingsManager {
 		regexautoban?: Record<string, Record<string, boolean>>;
 		pmwmsg?: Record<string, PmWelcomeMessage>;
 		sleep?: Record<string, boolean>;
+		suspect?: Record<string, { poke: string; link?: string }>;
+		usagelink?: string;
 		zerotol?: Record<string, string>;
 	} = {};
 	settingsFFM = new FlatFileManager(AppOptions.data + 'settings.json');
-	permissions: Record<string, number> = {};
+	permissions: Record<string, boolean> = {};
 	parserFilters: Record<string, (room: string, by: string, msg: string) => boolean> = {};
 	userManager: UserManager;
 	httpCache: Record<string, { url: string; time: number }> = {};
@@ -303,27 +308,20 @@ export class SettingsManager {
 	 */
 
 	userCan(room: string, user: string, permission: string): boolean {
-		let rank;
-		if (
-			!this.settings.commands ||
-			!this.settings.commands[room] ||
-			typeof this.settings.commands[room][permission] === 'undefined'
-		) {
-			rank = Config.defaultPermission;
-			if (Config.permissionExceptions[permission]) rank = Config.permissionExceptions[permission];
-		} else {
-			rank = this.settings.commands[room][permission];
-		}
+		const rank =
+			this.settings.commands?.[room]?.[permission] ||
+			Config.permissionExceptions[permission] ||
+			Config.defaultPermission;
 		return Tools.equalOrHigherRank(user, rank);
 	}
 
 	addPermissions(perms: string[]): void {
 		for (let i = 0; i < perms.length; i++) {
-			this.permissions[perms[i]] = 1;
+			this.permissions[perms[i]] = true;
 		}
 	}
 
-	setPermission(room: string, perm: string, rank: string): void {
+	setPermission(room: string, perm: string, rank: string | true): void {
 		if (!this.settings.commands) this.settings.commands = {};
 		if (!this.settings.commands[room]) this.settings.commands[room] = {};
 		this.settings.commands[room][perm] = rank;

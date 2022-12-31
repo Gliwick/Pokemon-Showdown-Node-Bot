@@ -7,6 +7,7 @@ export class GlobalMonitor {
 	connected = false;
 	retryingRename = false;
 	reconnecting = false;
+	updateGitLock = false;
 
 	checkSystem(): void {
 		let status = '';

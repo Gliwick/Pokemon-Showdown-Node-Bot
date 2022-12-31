@@ -93,6 +93,15 @@ export interface PokeSet {
 export class Tools {
 	watchFile = fsWatchFile;
 	intl = new Intl();
+	normalObj: Record<string, string> = {};
+
+	constructor() {
+		const str1 = 'ÃÀÁÄÂÈÉËÊÌÍÏÎÒÓÖÔÙÚÜÛãàáäâèéëêìíïîòóöôùúüûÑÇç';
+		const str2 = 'AAAAAEEEEIIIIOOOOUUUUaaaaaeeeeiiiioooouuuuñcc';
+		for (let i = 0; i < str1.length; i++) {
+			this.normalObj[str1.charAt(i)] = str2.charAt(i);
+		}
+	}
 
 	toName(text?: string): string {
 		if (!text) return '';
@@ -154,6 +163,29 @@ export class Tools {
 		}
 		// Step 7
 		return d[n][m];
+	}
+
+	joinWithLengthLimit(arr: string[], prefix: string, separator = ', ', length = 300): string[] {
+		return arr
+			.map((s, i) => s + (i < arr.length - 1 ? separator : ''))
+			.reduce(
+				(acc, toAdd) => {
+					acc[acc.length - 1].length + toAdd.length > length
+						? acc.push(toAdd)
+						: (acc[acc.length - 1] += toAdd);
+					return acc;
+				},
+				[prefix]
+			);
+	}
+
+	normalize(str: string): string {
+		if (!str) return '';
+		let res = '';
+		for (let i = 0; i < str.length; i++) {
+			res += this.normalObj[str.charAt(i)] || str.charAt(i);
+		}
+		return toId(res);
 	}
 
 	/* Commands and Permissions */
@@ -243,6 +275,16 @@ export class Tools {
 		return times.join(', ');
 	}
 
+	getESTDiff(timestamp: number): number {
+		const date = new Date(timestamp);
+		if (date.getMonth() < 11 && date.getMonth() > 1) {
+			if (date.getMonth() === 10 && date.getDate() - date.getDay() <= 6) return -5;
+			if (date.getMonth() === 2 && date.getDate() - date.getDay() < 0) return -5;
+			return -4;
+		}
+		return -5;
+	}
+
 	/* File system utils */
 
 	/**
@@ -267,7 +309,7 @@ export class Tools {
 
 	httpGet(url: string, callback?: (data: string | null, e?: Error) => void): void {
 		if (!callback) return;
-		http.get(url, (res) => {
+		http.get(url, (res: http.IncomingMessage): void => {
 			const data = { data: '' };
 			res.on('data', (part: any) => {
 				data.data += part;
@@ -283,7 +325,7 @@ export class Tools {
 		});
 	}
 
-	uploadToHastebin(toUpload: string, callback?: (success: boolean, linkStr: any) => void): void {
+	uploadToHastebin(toUpload: string, callback?: (success: boolean, link: any) => void): void {
 		const reqOpts: https.RequestOptions = {
 			hostname: 'hastebin.com',
 			method: 'POST',
@@ -292,15 +334,15 @@ export class Tools {
 		const req = https.request(reqOpts, (res: http.IncomingMessage) => {
 			res.on('data', (chunk: any) => {
 				try {
-					const linkStr = 'hastebin.com/' + JSON.parse(chunk.toString())['key'];
-					if (callback) callback(true, linkStr);
+					const link = 'hastebin.com/' + JSON.parse(chunk.toString())['key'];
+					if (callback) callback(true, link);
 				} catch (e: any) {
 					if (callback) callback(false, e);
 				}
 			});
 		});
 		req.on('error', (e: Error) => {
-			if (typeof callback === 'function') callback(false, e);
+			if (callback) callback(false, e);
 		});
 		req.write(toUpload);
 		req.end();
