@@ -1,9 +1,11 @@
 /*
  * Minimized version of Pokemon Showdown Client for Node JS
  *
- * By: Ecuacion (https://github.com/Ecuacion) (C) Copyright 2015-2016
+ * By: Gliwick (https://github.com/Gliwick) (C) Copyright 2015-2016
  *
  * Part of this code is imported from other developments, so credits to:
+ *
+ * Ecuacion (https://github.com/Ecuacion) original owner
  *
  * Quinella, Morfent (https://github.com/Morfent) and TalkTakesTime (https://github.com/TalkTakesTime) developers of Pokemon-Showdown-Bot (https://github.com/TalkTakesTime/Pokemon-Showdown-Bot)
  *

@@ -96,7 +96,7 @@ $ git clone <your own fork> <My-Bot-Example-Folder>
 Third, create a remote to get the updates (first use `cd` to reach the directory of your bot):
 
 ```
-$ git remote add upstream https://github.com/Ecuacion/Pokemon-Showdown-Node-Bot.git
+$ git remote add upstream https://github.com/Gliwick/Pokemon-Showdown-Node-Bot.git
 ```
 
 Now, you can make changes, and commit them.

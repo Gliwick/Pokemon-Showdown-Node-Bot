@@ -126,7 +126,7 @@ exports.permissionExceptions = {
 	games: '#'
 };
 
-exports.botguide = 'https://github.com/Ecuacion/Pokemon-Showdown-Node-Bot/blob/master/commands/README.md';
+exports.botguide = 'https://github.com/Gliwick/Pokemon-Showdown-Node-Bot/blob/master/commands/README.md';
 
 //When you pm the bot but don't use a command, it replies you this message. Example: "Hi, I'm a bot. Use .help to view a command guide"
 //The var #USER is replaced with the username that pms it

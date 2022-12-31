@@ -1,6 +1,6 @@
 # Pokemon Showdown Node Bot - Configuration Guide
 
-This guide is a explanation of how to configure [Pokemon-Showdown-Node-Bot](https://github.com/Ecuacion/Pokemon-Showdown-Node-Bot) once installed.
+This guide is a explanation of how to configure [Pokemon-Showdown-Node-Bot](https://github.com/Gliwick/Pokemon-Showdown-Node-Bot) once installed.
 
 First of all, copy `config-example.js` to `config.js`
 
