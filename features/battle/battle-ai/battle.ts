@@ -316,13 +316,15 @@ export class Battle {
 		this.sendDecision(decisions[Math.floor(Math.random() * decisions.length)]);
 	}
 
-	log(line?: string) {
-		if (this.stream) {
-			this.stream.write(line + '\n');
-		}
+	log(line: string) {
+		if (this.stream) this.stream.write(line + '\n');
 	}
 
-	add(line?: string, isIntro?: boolean) {
+	debug(line: string) {
+		if (Config.debug.battle) this.log(line);
+	}
+
+	add(line: string, isIntro?: boolean) {
 		this.run(line, isIntro);
 		this.log(line);
 	}

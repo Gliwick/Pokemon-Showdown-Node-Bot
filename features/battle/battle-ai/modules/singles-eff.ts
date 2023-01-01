@@ -2076,7 +2076,7 @@ export class SinglesEffective implements BattleModule {
 			}
 
 			if (pc <= 0) {
-				debug('Immune to move ' + move.namel);
+				battle.debug('Immune to move ' + move.namel);
 				res.immune.push(des);
 				continue;
 			}
@@ -2280,7 +2280,7 @@ export class SinglesEffective implements BattleModule {
 				residual[j] = (residual[j] * 100) / hp;
 			}
 
-			debug('Move: ' + move.name + ' | Damage: ' + dmg + ' | Percent: ' + pc + ' | Residual: ' + residual);
+			battle.debug('Move: ' + move.name + ' | Damage: ' + dmg + ' | Percent: ' + pc + ' | Residual: ' + residual);
 
 			let hazard = getHazardsDamage(foePoke, foeConditions, battle.conditions, battle.gen, battle.id);
 			if (foePoke.hasAbility({ regenerator: 1 })) hazard -= 33.3;
@@ -2529,23 +2529,24 @@ export class SinglesEffective implements BattleModule {
 		return JSON.stringify(toLog);
 	}
 
-	logDecisions(
+	debugDecisions(
+		battle: Battle,
 		selfPoke: Pokemon,
 		foePoke: Pokemon,
 		bestSw: SwitchDecision | null,
 		damageMoves: DamageViabilityCategories,
 		supportMoves: SupportViabilityCategoties
 	): void {
-		debug(this.toLogString(selfPoke) + '\nVS\n' + this.toLogString(foePoke));
+		battle.debug(this.toLogString(selfPoke) + '\nVS\n' + this.toLogString(foePoke));
 
-		debug('Best switch: ' + (bestSw?.poke || 'none'));
+		battle.debug('Best switch: ' + (bestSw?.poke || 'none'));
 
 		for (const i in damageMoves) {
 			if (!Array.isArray(damageMoves[i])) continue;
 			const category = damageMoves[i] as MoveDecision[];
 			if (!category.length) continue;
 			const moves = category.map((decision) => decision.move);
-			debug('Damage Moves (' + i + ') -> ' + moves);
+			battle.debug('Damage Moves (' + i + ') -> ' + moves);
 		}
 
 		for (const i in supportMoves) {
@@ -2553,7 +2554,7 @@ export class SinglesEffective implements BattleModule {
 			const category = supportMoves[i] as MoveDecision[];
 			if (!category.length) continue;
 			const moves = category.map((decision) => decision.move);
-			debug('Support Moves (' + i + ') -> ' + moves);
+			battle.debug('Support Moves (' + i + ') -> ' + moves);
 		}
 	}
 
@@ -2569,7 +2570,7 @@ export class SinglesEffective implements BattleModule {
 		let bestSwitch: SwitchDecision | MoveDecision | null = this.getBestSwitch(battle, decisions);
 		const damageMoves = this.getViableDamageMoves(battle, decisions);
 		const supportMoves = this.getViableSupportMoves(battle, decisions);
-		this.logDecisions(selfPoke, foePoke, bestSwitch, damageMoves, supportMoves);
+		this.debugDecisions(battle, selfPoke, foePoke, bestSwitch, damageMoves, supportMoves);
 
 		const ev = this.evaluatePokemon(battle, 0);
 
@@ -3005,7 +3006,7 @@ export class SinglesEffective implements BattleModule {
 			if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 		}
 
-		debug('Final damage moves: ' + JSON.stringify(finalDamageMoves.map((d) => d.move)));
+		battle.debug('Final damage moves: ' + JSON.stringify(finalDamageMoves.map((d) => d.move)));
 
 		let foeHasSwitch = false;
 		for (let i = 0; i < movesB.length; i++) {
@@ -3034,7 +3035,7 @@ export class SinglesEffective implements BattleModule {
 				(damageMoves.ohko.length === 0 && supportMoves.obligatory.length === 0))
 		) {
 			if (bestSwitch) {
-				debug('Returning best switch');
+				battle.debug('Returning best switch');
 				if (bestSwitch.type === 'move') return bestSwitch;
 				const evBestSwitch = this.evaluatePokemon(battle, (bestSwitch as SwitchDecision).pokeId);
 				if (
@@ -3098,7 +3099,7 @@ export class SinglesEffective implements BattleModule {
 	 */
 
 	getBestSwitch(battle: Battle, decisions: Decision[]): SwitchDecision | null {
-		debug('Switch options | Foe: ' + battle.foe.active[0].name);
+		battle.debug('Switch options | Foe: ' + battle.foe.active[0].name);
 		let switches: { decision: SwitchDecision; ev: Matchup }[] = [];
 		for (let i = 0; i < decisions.length; i++) {
 			if (decisions[i].type !== 'switch') continue;
@@ -3113,7 +3114,7 @@ export class SinglesEffective implements BattleModule {
 				decision,
 				ev: this.evaluatePokemon(battle, decision.pokeId),
 			};
-			debug(
+			battle.debug(
 				'Switch option | Pokemon: ' +
 					switchOption.decision.poke +
 					' | Evaluation: ' +
@@ -3127,7 +3128,7 @@ export class SinglesEffective implements BattleModule {
 		switches.sort((a, b) => 10000 * (a.ev.received - b.ev.received) + (b.ev.inflicted - a.ev.inflicted));
 
 		if (battle.foe.active[0] && battle.foe.active[0].volatiles['substitute']) {
-			debug('Returning sub breaker');
+			battle.debug('Returning sub breaker');
 			const subBreakers = switches.filter((switchOption) => switchOption.ev.inflicted > 25);
 			if (subBreakers.length) return subBreakers[0].decision;
 		}

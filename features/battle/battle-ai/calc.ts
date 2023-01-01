@@ -2,7 +2,6 @@
  * Pokemon Showdown Bot - Damage calculator
  */
 
-import { debug } from '../../../log';
 import { toId } from '../../../tools';
 import { deepcopy } from '../utils';
 import { Battle } from './battle';
@@ -1262,7 +1261,7 @@ export function calculate(
 		const originalStab = atkPoke.getTypes(atkConditions, true).includes(moveType);
 		const teraStab = move.type === atkPoke.terastallize;
 		if (originalStab && teraStab && !['firepledge', 'grasspledge', 'waterpledge'].includes(move.id)) {
-			debug('applying double ' + move.type + ' stab from terastallization');
+			if (battle) battle.debug('applying double ' + move.type + ' stab from terastallization');
 			stab = atkPoke.hasAbility('adaptability') ? 2.25 : 2;
 		} else if (teraStab) {
 			stab = atkPoke.hasAbility('adaptability') ? 2 : 1.5;

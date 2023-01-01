@@ -9,7 +9,7 @@ import { Battle } from './battle';
 checkDir(LOGS_PATH);
 checkDir(LOGS_PATH + 'battle-log/');
 
-export function createStream(battle: Battle) {
+export function createStream(battle: Battle): void {
 	if (!Config.battleLog) return;
 	const f = new Date();
 	const fstr =
