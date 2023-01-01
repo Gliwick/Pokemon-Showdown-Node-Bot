@@ -207,7 +207,7 @@ export const commands: Record<string, string | Command> = {
 			case 'data':
 				this.sclog();
 				Tools.uncacheTree('./data-downloader.ts');
-				global.DataDownloader = new (require('../bll/data-downloader.ts').DataDownloader)();
+				global.DataDownloader = new (require('../data-downloader.ts').DataDownloader)();
 				DataDownloader.download();
 				this.reply('Data files reloaded');
 				break;

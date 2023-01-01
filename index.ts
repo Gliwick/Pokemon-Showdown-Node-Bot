@@ -9,16 +9,16 @@ import 'sugar';
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 
-import { DataDownloader as DataDownloaderClass } from './bll/data-downloader';
-import { SecurityLogger } from './bll/security-log';
-import { SettingsManager } from './bll/settings';
 import { setupBot } from './bot-setup';
 import { CommandParser as CommandParserClass } from './command-parser';
 import { checkConfig } from './config-tools';
+import { DataDownloader as DataDownloaderClass } from './data-downloader';
 import { FeatureManager } from './features';
 import { GlobalMonitor as GlobalMonitorClass } from './global-monitor';
 import { AppOptionsType } from './global-types';
 import { errlog, error, info, ok } from './log';
+import { SecurityLogger } from './security-log';
+import { SettingsManager } from './settings';
 import { Tools as ToolsType } from './tools';
 
 function importColors(): Record<string, (s: string) => string> {
@@ -177,7 +177,7 @@ const opts = {
 	debug: Config.debug?.debug ?? true,
 };
 
-const PSClient = require('./bll/showdown-client.ts').Client;
+const PSClient = require('./showdown-client.ts').Client;
 global.Bot = new PSClient(Config.server, Config.port, opts);
 
 const globalMonitor = new GlobalMonitorClass();

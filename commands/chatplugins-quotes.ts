@@ -1,8 +1,8 @@
 import { inspect } from 'util';
 
-import { FlatFileManager } from '../bll/settings';
 import { Command, CommandModuleManager, Context } from '../command-parser';
 import { errlog, error } from '../log';
+import { FlatFileManager } from '../settings';
 import { toId } from '../tools';
 
 class QuotesRepo implements CommandModuleManager {

@@ -2,9 +2,9 @@
  * Tournaments points system
  */
 
-import { FlatFileManager } from '../../bll/settings';
 import { LeaderboardConfig } from '../../config-tools';
 import { debug } from '../../log';
+import { FlatFileManager } from '../../settings';
 import { toId } from '../../tools';
 import { BracketNode, TourData } from '.';
 

@@ -32,7 +32,7 @@ import * as url from 'url';
 import * as util from 'util';
 import { client as WebSocketClient, connection, Message } from 'websocket';
 
-import { toId } from '../tools';
+import { toId } from './tools';
 
 export interface ClientOptions {
 	server: string;

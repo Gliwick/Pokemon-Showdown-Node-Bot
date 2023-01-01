@@ -2,8 +2,8 @@
 	Log system (battle)
 */
 
-import { checkDir, LOGS_PATH, sweep } from '../../../bll/security-log';
 import { errlog } from '../../../log';
+import { checkDir, LOGS_PATH, sweep } from '../../../security-log';
 import { Battle } from './battle';
 
 checkDir(LOGS_PATH);

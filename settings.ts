@@ -4,10 +4,10 @@
 import { existsSync, PathLike, readFile, readFileSync, rename, unlinkSync, writeFile, writeFileSync } from 'fs';
 import { inspect } from 'util';
 
-import { ConfigType, LeaderboardConfig } from '../config-tools';
-import { debug, errlog, error, ok } from '../log';
-import type PackageJsonType from '../package.json';
-import { toId } from '../tools';
+import { ConfigType, LeaderboardConfig } from './config-tools';
+import { debug, errlog, error, ok } from './log';
+import type PackageJsonType from './package.json';
+import { toId } from './tools';
 
 export class FlatFileManager {
 	file: PathLike;
@@ -295,7 +295,7 @@ export class SettingsManager {
 
 		this.userManager = new UserManager();
 
-		this.package = require('../package.json');
+		this.package = require('./package.json');
 		ok('Loaded Settings. Bot version: ' + this.package.version);
 	}
 

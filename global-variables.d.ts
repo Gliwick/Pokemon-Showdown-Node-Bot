@@ -1,13 +1,13 @@
-import { DataDownloader as DataDownloaderClass } from './bll/data-downloader';
-import { SecurityLogger } from './bll/security-log';
-import { SettingsManager } from './bll/settings';
-import { Client } from './bll/showdown-client';
 import { FormatData } from './bot-setup';
 import { CommandParser as CommandParserClass } from './command-parser';
 import { ConfigType } from './config-tools';
+import { DataDownloader as DataDownloaderClass } from './data-downloader';
 import { FeatureManager } from './features';
 import { GlobalMonitor as GlobalMonitorClass } from './global-monitor';
 import { AppOptionsType } from './global-types';
+import { SecurityLogger } from './security-log';
+import { SettingsManager } from './settings';
+import { Client } from './showdown-client';
 import { Tools as ToolsType } from './tools';
 
 export declare global {

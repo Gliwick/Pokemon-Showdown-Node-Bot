@@ -4,7 +4,7 @@
 import { lstatSync, readdirSync } from 'fs';
 import { inspect } from 'util';
 
-import { errlog, error, info, ok } from '../log';
+import { errlog, error, info, ok } from './log';
 
 export class Intl {
 	translations: Record<

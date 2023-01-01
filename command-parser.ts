@@ -4,8 +4,8 @@
 import { existsSync, readdirSync } from 'fs';
 import { inspect } from 'util';
 
-import { FlatFileManager } from './bll/settings';
 import { cmdr, errlog, error, info, monitor, ok } from './log';
+import { FlatFileManager } from './settings';
 import { toId, toRoomid } from './tools';
 
 const MAX_COMMAND_RECURSION = 10;
