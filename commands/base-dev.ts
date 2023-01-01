@@ -18,7 +18,7 @@ export const commands: Record<string, string | Command> = {
 		try {
 			const result = eval(arg.trim());
 			this.say(room, '``' + JSON.stringify(result) + '``');
-		} catch (e) {
+		} catch (e: any) {
 			this.say(room, e.name + ': ' + e.message);
 		}
 	},
@@ -186,7 +186,7 @@ export const commands: Record<string, string | Command> = {
 					this.reply('command-parser.ts reloaded');
 					info('command-parser.ts reloaded');
 					CommandParser.loadCommands(true);
-				} catch (e) {
+				} catch (e: any) {
 					errlog(e.stack);
 					this.reply('Error: command-parser.ts has errors');
 				}
@@ -199,7 +199,7 @@ export const commands: Record<string, string | Command> = {
 					this.reply('tools.ts reloaded');
 					info('tools.ts reloaded');
 					Tools.intl.loadTranslations(true);
-				} catch (e) {
+				} catch (e: any) {
 					errlog(e.stack);
 					this.reply('Error: tools.ts has errors');
 				}
@@ -221,7 +221,7 @@ export const commands: Record<string, string | Command> = {
 					CommandParser.reloadTokens();
 					this.reply(AppOptions.config + ' reloaded');
 					info(AppOptions.config + ' reloaded');
-				} catch (e) {
+				} catch (e: any) {
 					error('could not reload ' + AppOptions.config);
 					errlog(e.stack);
 					this.reply('Error: ' + 'could not reload ' + AppOptions.config);
@@ -268,12 +268,13 @@ export const commands: Record<string, string | Command> = {
 				}
 				const entry = 'Running `' + cmd + '`';
 				this.reply(entry);
-				exec(cmd, function (error, stdout, stderr) {
-					('' + stdout + stderr).split('\n').forEach(function (s) {
-						this.reply(s);
-					});
-					GlobalMonitor.updateGitLock = false;
-				});
+				exec(
+					cmd,
+					function (this: Context, error: ExecException | null, stdout: string, stderr: string): void {
+						('' + stdout + stderr).split('\n').forEach(this.reply);
+						GlobalMonitor.updateGitLock = false;
+					}.bind(this)
+				);
 			}.bind(this)
 		);
 	},
@@ -303,32 +304,32 @@ export const commands: Record<string, string | Command> = {
 		} else {
 			if (!Settings.lockdown)
 				return this.reply('To kill the process you must use ``' + this.cmdToken + 'lockdown`` first');
-			for (const f in Features) {
-				const readyToDie = Features[f].readyToDie;
-				if (readyToDie) {
-					try {
-						const err = readyToDie();
-						if (err)
-							return this.reply(
-								'Feature "' +
-									f +
-									'" not ready | ' +
-									err +
-									' | Use ``' +
-									this.cmdToken +
-									'forcekill`` if you want to kill the process anyway'
-							);
-					} catch (e) {
+			for (const f in Features.features) {
+				const readyToDie = Features.features[f].readyToDie;
+				if (!readyToDie) continue;
+				try {
+					const err = readyToDie();
+					if (err) {
 						return this.reply(
 							'Feature "' +
 								f +
 								'" not ready | ' +
-								inspect(e) +
+								err +
 								' | Use ``' +
 								this.cmdToken +
 								'forcekill`` if you want to kill the process anyway'
 						);
 					}
+				} catch (e) {
+					return this.reply(
+						'Feature "' +
+							f +
+							'" not ready | ' +
+							inspect(e) +
+							' | Use ``' +
+							this.cmdToken +
+							'forcekill`` if you want to kill the process anyway'
+					);
 				}
 			}
 			this.sclog();

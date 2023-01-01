@@ -64,9 +64,14 @@ export const commands: Record<string, string | Command> = {
 		if (this.getModule<UserRepo>(UserRepo).getDownload(toId(this.by))) {
 			return this.pmReply(this.trad('busy'));
 		}
-		const callback = function (this: Context, dataString: string, err?: Error, nocache?: boolean): void {
+		const callback = function (
+			this: Context,
+			dataString: string | null,
+			err: Error | null,
+			nocache?: boolean
+		): void {
 			this.getModule<UserRepo>(UserRepo).markDownload(toId(this.by), false);
-			if (err) return this.pmReply(this.trad('err') + ' ' + url);
+			if (err || !dataString) return this.pmReply(this.trad('err') + ' ' + url);
 			let data: User;
 			try {
 				data = JSON.parse(dataString);
@@ -116,13 +121,9 @@ export const commands: Record<string, string | Command> = {
 				);
 			}
 		}.bind(this);
-		const regdateCache = this.getModule<UserRepo>(UserRepo).regdateCache;
-		for (let i = 0; i < regdateCache.length; i++) {
-			if (regdateCache[i].username && toId(regdateCache[i].username) === target) {
-				callback(JSON.stringify(regdateCache[i]), null, true);
-				return;
-			}
-		}
+		this.getModule<UserRepo>(UserRepo)
+			.regdateCache.filter((cache) => cache.username === target)
+			.forEach((cache) => callback(JSON.stringify(cache), null, true));
 		this.getModule<UserRepo>(UserRepo).markDownload(toId(this.by), true);
 		Tools.httpGet(url, callback);
 	},

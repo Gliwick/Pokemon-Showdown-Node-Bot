@@ -144,9 +144,9 @@ export const commands: Record<string, string | Command> = {
 		if (!(perm in Settings.permissions)) {
 			return this.reply(this.trad('ps') + ': ' + Object.keys(Settings.permissions).sort().join(', '));
 		}
-		if (rank in { off: 1, disable: 1 }) {
-			if (!this.canSet(perm, true)) return this.reply(this.trad('denied'));
-			Settings.setPermission(tarRoom, perm, true);
+		if (['off', 'disable'].includes(rank)) {
+			if (!this.canSet(perm, Tools.highestRank())) return this.reply(this.trad('denied'));
+			Settings.setPermission(tarRoom, perm, Tools.highestRank());
 			Settings.save();
 			this.sclog();
 			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('d') + textHelper);
@@ -182,8 +182,8 @@ export const commands: Record<string, string | Command> = {
 		if (!(perm in Settings.permissions)) {
 			return this.reply(this.trad('ps') + ': ' + Object.keys(Settings.permissions).sort().join(', '));
 		}
-		if (rank in { off: 1, disable: 1 }) {
-			Settings.setPermission('battle-', perm, true);
+		if (['off', 'disable'].includes(rank)) {
+			Settings.setPermission('battle-', perm, Tools.highestRank());
 			Settings.save();
 			this.sclog();
 			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('d'));

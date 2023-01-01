@@ -56,7 +56,7 @@ function getUsageLink(callback: (link?: string) => void): void {
 	const realLink = generateUsageLink(-1);
 	const currLink = Settings.settings.usagelink;
 	if (currLink !== realLink) {
-		Tools.httpGet(realLink, (data: string | null, err?: Error): void => {
+		Tools.httpGet(realLink, (data: string | null, err: Error | null): void => {
 			if (!err && data && data.indexOf('<title>404 Not Found</title>') < 0) {
 				Settings.settings.usagelink = realLink;
 				Settings.save();
@@ -274,12 +274,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 						this.trad('tiererr1') + ' "' + tierName(tier) + '" ' + this.trad('tiererr3'),
 						'usage'
 					);
-				const dataRes = {
-					name: poke,
-					pos: -1,
-					usage: 0,
-					raw: 0,
-				};
+				const dataRes = { name: poke, pos: -1, usage: '', raw: '' };
 				let line;
 				for (let i = 5; i < lines.length; i++) {
 					line = lines[i].split('|');

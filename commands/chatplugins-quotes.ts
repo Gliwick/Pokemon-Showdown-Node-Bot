@@ -18,14 +18,14 @@ class QuotesRepo implements CommandModuleManager {
 	init(): void {
 		try {
 			this.quotes = this.quotesFFM.readObj();
-		} catch (e) {
+		} catch (e: any) {
 			errlog(e.stack);
 			error('Could not import quotes: ' + inspect(e));
 		}
 
 		try {
 			this.jokes = this.jokesFFM.readObj();
-		} catch (e) {
+		} catch (e: any) {
 			errlog(e.stack);
 			error('Could not import jokes: ' + inspect(e));
 		}

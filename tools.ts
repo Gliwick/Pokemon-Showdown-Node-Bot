@@ -303,7 +303,7 @@ export class Tools {
 
 	/* Http utils */
 
-	httpGet(url: string, callback?: (data: string | null, e?: Error) => void): void {
+	httpGet(url: string, callback?: (data: string | null, e: Error | null) => void): void {
 		if (!callback) return;
 		http.get(url, (res: http.IncomingMessage): void => {
 			const data = { data: '' };
@@ -311,7 +311,7 @@ export class Tools {
 				data.data += part;
 			});
 			res.on('end', () => {
-				callback(data.data);
+				callback(data.data, null);
 			});
 			res.on('error', (e: Error) => {
 				callback(null, e);
