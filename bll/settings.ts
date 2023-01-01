@@ -404,7 +404,7 @@ export class SettingsManager {
 		if (onDownload) onDownload();
 		Tools.httpGet(
 			url,
-			((data: string | null, err?: Error): void => {
+			((data: string | null, err: Error | null): void => {
 				if (err) {
 					if (typeof callback === 'function') callback(null, err);
 					return;

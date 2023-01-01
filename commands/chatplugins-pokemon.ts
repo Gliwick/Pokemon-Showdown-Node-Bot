@@ -14,6 +14,8 @@ class PokemonModule implements CommandModuleManager {
 
 export const manager = PokemonModule;
 
+const LangAliases: Record<string, string> = { en: 'english' };
+
 interface SearchResult {
 	type: string;
 	id: string;
@@ -65,14 +67,16 @@ function getTranslations(from: string, to: string, word: string): Translation[] 
 		});
 }
 
-function getPokemonMoves(pokemon: string, filter: (move: any) => boolean): string[] {
-	let pokedex, movedex, learnsets;
+function getPokemonMoves(pokemon: string, filter: (move: any) => boolean): string[] | null {
+	let pokedex: Record<string, any>;
+	let movedex: Record<string, any>;
+	let learnsets: Record<string, { learnset: Record<string, string> }>;
 	try {
 		pokedex = DataDownloader.getPokedex();
 		movedex = DataDownloader.getMovedex();
 		learnsets = DataDownloader.getLearnsets();
 	} catch (e) {
-		throw new Error(this.trad('err'));
+		return null;
 	}
 	const pokemonToCheck: string[] = [];
 	while (pokemon) {
@@ -113,15 +117,8 @@ export const commands: Record<string, string | Command> = {
 		if (from && !to && from !== 'english') {
 			to = 'english';
 		}
-		const langAliases = {
-			en: 'english',
-			es: 'spanish',
-			de: 'german',
-			fr: 'french',
-			it: 'italian',
-		};
-		if (langAliases[from]) from = langAliases[from];
-		if (langAliases[to]) to = langAliases[to];
+		if (LangAliases[from]) from = LangAliases[from];
+		if (LangAliases[to]) to = LangAliases[to];
 		if (!from || !to || from === to || !word)
 			return this.restrictReply(
 				this.trad('u1') + ': ' + this.cmdToken + this.cmd + ' ' + this.trad('u2'),
@@ -365,6 +362,9 @@ export const commands: Record<string, string | Command> = {
 		if (aliases[arg]) arg = toId(aliases[arg]);
 		if (pokedex[arg]) {
 			const prioritymoves = getPokemonMoves(arg, (move) => move.priority > 0 && move.basePower > 0);
+			if (prioritymoves === null) {
+				return this.pmReply(this.trad('err'));
+			}
 			text += prioritymoves.join(', ');
 		} else {
 			text += this.trad('err2');
@@ -395,6 +395,9 @@ export const commands: Record<string, string | Command> = {
 						move.secondary.self &&
 						move.secondary.self.boosts)
 			);
+			if (boostingmoves === null) {
+				return this.pmReply(this.trad('err'));
+			}
 			text += boostingmoves.join(', ');
 		} else {
 			text += this.trad('err2');
@@ -422,6 +425,9 @@ export const commands: Record<string, string | Command> = {
 					move.drain ||
 					['moonlight', 'morningsun', 'rest', 'shoreup', 'swallow', 'synthesis', 'wish'].includes(move.id)
 			);
+			if (recoveryAndDrainMoves === null) {
+				return this.pmReply(this.trad('err'));
+			}
 			text += recoveryAndDrainMoves.join(', ');
 		} else {
 			text += this.trad('err2');
@@ -446,6 +452,9 @@ export const commands: Record<string, string | Command> = {
 			const hazards = getPokemonMoves(arg, (move) =>
 				['spikes', 'stealthrock', 'stickyweb', 'toxicspikes'].includes(move.id)
 			);
+			if (hazards === null) {
+				return this.pmReply(this.trad('err'));
+			}
 			if (arg === 'copperajahgmax') hazards.push('gmaxsteelsurge');
 			if (arg === 'drednawgmax') hazards.push('gmaxstonesurge');
 			text += hazards.sort().join(', ');

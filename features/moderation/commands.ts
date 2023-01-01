@@ -3,6 +3,7 @@
 */
 
 import { Command, CommandModuleManager, Context } from '../../command-parser';
+import { ConfigType } from '../../config-tools';
 import { toId, toRoomid } from '../../tools';
 import { ModerationManager } from '.';
 
@@ -153,7 +154,7 @@ export const commands: Record<string, string | Command> = {
 
 		try {
 			new RegExp(arg, 'i');
-		} catch (e) {
+		} catch (e: any) {
 			return this.reply(e.message);
 		}
 
@@ -298,7 +299,7 @@ export const commands: Record<string, string | Command> = {
 			.reduce((acc, [key, name]) => {
 				acc[name] = key;
 				return acc;
-			}, {});
+			}, {} as Record<string, string>);
 
 		if (cmd === 'vzt' || cmd === 'viewzerotol') {
 			const ztList = Object.entries(Settings.settings.zerotol || {})
@@ -817,7 +818,7 @@ export const commands: Record<string, string | Command> = {
 		if (!this.can('joinphrase')) return;
 		if (!Settings.settings.joinphrases) Settings.settings.joinphrases = {};
 
-		let tarRoom;
+		let tarRoom: string;
 		if (this.roomType === 'pm') {
 			if (!this.isRanked(Tools.getGroup('admin'))) return false;
 			tarRoom = 'global';
@@ -938,18 +939,20 @@ export const commands: Record<string, string | Command> = {
 		}
 
 		if (args.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-		const [mod, set] = (args.length < 3 ? args.slice(0, 2) : args.slice(1, 3)).map(toId);
+		const [modArg, set] = (args.length < 3 ? args.slice(0, 2) : args.slice(1, 3)).map(toId);
 		if (set !== 'on' && set !== 'off') {
 			return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 		}
-		if (!(mod in Config.moderation.modDefault)) {
+		if (!(modArg in Config.moderation.modDefault)) {
 			return this.reply(this.trad('valid') + ': ' + Object.keys(Config.moderation.modDefault).sort().join(', '));
 		}
 
 		if (!Settings.settings.modding) Settings.settings.modding = {};
-		if (!Settings.settings.modding[tarRoom])
+		if (!Settings.settings.modding[tarRoom]) {
 			Settings.settings.modding[tarRoom] = { ...Config.moderation.modDefault };
+		}
 
+		const mod = modArg as keyof ConfigType['moderation']['modDefault'];
 		if (set === 'on') {
 			if (Settings.settings.modding[tarRoom][mod] === 1) {
 				this.reply(this.trad('mod') + ' **' + mod + '** ' + this.trad('ae') + ' ' + tarRoom);
@@ -963,7 +966,7 @@ export const commands: Record<string, string | Command> = {
 			if (Settings.settings.modding[tarRoom][mod] === 0) {
 				this.reply(this.trad('mod') + ' **' + mod + '** ' + this.trad('ad') + ' ' + tarRoom);
 			} else {
-				Settings.settings['modding'][tarRoom][mod] = 0;
+				Settings.settings.modding[tarRoom][mod] = 0;
 				Settings.save();
 				this.sclog();
 				this.reply(this.trad('mod') + ' **' + mod + '** ' + this.trad('d') + ' ' + tarRoom);
