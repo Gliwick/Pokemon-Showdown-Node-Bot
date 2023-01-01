@@ -2,16 +2,18 @@
 	Basic Commands
 */
 
-import { Command, CommandModule } from '../bll/command-parser';
+import '../index';
+
+import { Command, CommandModuleManager } from '../command-parser';
 import { toId } from '../tools';
 
-class BasicModule implements CommandModule {
+class BasicModule implements CommandModuleManager {
 	init(): void {
 		Settings.addPermissions(['say']);
 	}
 }
 
-export const module = BasicModule;
+export const manager = BasicModule;
 
 export const commands: Record<string, string | Command> = {
 	credits: 'about',

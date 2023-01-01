@@ -2,11 +2,11 @@
 	Smogon related commads
 */
 
-import { Command, CommandModule, Context } from '../bll/command-parser';
+import { Command, CommandModuleManager, Context } from '../command-parser';
 import { debug } from '../log';
 import { toId } from '../tools';
 
-class Downloader implements CommandModule {
+class Downloader implements CommandModuleManager {
 	downloadingFlag: Record<string, boolean> = {};
 
 	init(): void {
@@ -26,7 +26,7 @@ class Downloader implements CommandModule {
 	}
 }
 
-export const module = Downloader;
+export const manager = Downloader;
 
 /* Default tier */
 
@@ -136,16 +136,13 @@ function getUsage(this: Context, arg: string, link?: string): void {
 				return this.restrictReply(this.trad('tiererr1') + ' "' + tier + '" ' + this.trad('tiererr2'), 'usage');
 		}
 		if (isTopTier(tier)) ladderType = 1695; //OU representative usage stats
-		if (this.getModule<Downloader>(Downloader).getDownload(link + 'moveset/' + tier + '-' + ladderType + '.txt')) {
+		if (this.getModule(Downloader).getDownload(link + 'moveset/' + tier + '-' + ladderType + '.txt')) {
 			return this.restrictReply(this.trad('busy'), 'usage');
 		}
 		Settings.httpGetAndCache(
 			link + 'moveset/' + tier + '-' + ladderType + '.txt',
 			function (this: Context, data: string | null, err: NodeJS.ErrnoException | null): void {
-				this.getModule<Downloader>(Downloader).markDownload(
-					link + 'moveset/' + tier + '-' + ladderType + '.txt',
-					false
-				);
+				this.getModule(Downloader).markDownload(link + 'moveset/' + tier + '-' + ladderType + '.txt', false);
 				if (err || !data) {
 					return this.restrictReply(
 						this.trad('err') + ' ' + link + 'moveset/' + tier + '-' + ladderType + '.txt',
@@ -242,10 +239,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 				this.restrictReply(cmds, 'usage');
 			}.bind(this),
 			function (this: Context): void {
-				this.getModule<Downloader>(Downloader).markDownload(
-					link + 'moveset/' + tier + '-' + ladderType + '.txt',
-					true
-				);
+				this.getModule(Downloader).markDownload(link + 'moveset/' + tier + '-' + ladderType + '.txt', true);
 			}.bind(this)
 		);
 	} else {
@@ -261,13 +255,13 @@ function getUsage(this: Context, arg: string, link?: string): void {
 		}
 		if (isTopTier(tier)) ladderType = 1695; //OU representative usage stats
 		const url = link + tier + '-' + ladderType + '.txt';
-		if (this.getModule<Downloader>(Downloader).getDownload(url)) {
+		if (this.getModule(Downloader).getDownload(url)) {
 			return this.restrictReply(this.trad('busy'), 'usage');
 		}
 		Settings.httpGetAndCache(
 			url,
 			function (this: Context, data: string | null, err: NodeJS.ErrnoException | null): void {
-				this.getModule<Downloader>(Downloader).markDownload(url, false);
+				this.getModule(Downloader).markDownload(url, false);
 				if (err || !data) {
 					return this.restrictReply(
 						this.trad('err') + ' ' + link + tier + '-' + ladderType + '.txt',
@@ -332,7 +326,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 				);
 			}.bind(this),
 			function (this: Context): void {
-				this.getModule<Downloader>(Downloader).markDownload(link + tier + '-' + ladderType + '.txt', true);
+				this.getModule(Downloader).markDownload(link + tier + '-' + ladderType + '.txt', true);
 			}.bind(this)
 		);
 	}

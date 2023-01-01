@@ -1,11 +1,11 @@
 import { inspect } from 'util';
 
-import { Command, CommandModule, Context } from '../bll/command-parser';
 import { FlatFileManager } from '../bll/settings';
+import { Command, CommandModuleManager, Context } from '../command-parser';
 import { errlog, error } from '../log';
 import { toId } from '../tools';
 
-class QuotesRepo implements CommandModule {
+class QuotesRepo implements CommandModuleManager {
 	quotesDataFile = AppOptions.data + 'quotes.json';
 	jokesDataFile = AppOptions.data + 'jokes.json';
 
@@ -56,7 +56,7 @@ class QuotesRepo implements CommandModule {
 	}
 }
 
-export const module = QuotesRepo;
+export const manager = QuotesRepo;
 
 export const commands: Record<string, string | Command> = {
 	/*
@@ -67,7 +67,7 @@ export const commands: Record<string, string | Command> = {
 	delquote: 'quote',
 	getquote: 'quote',
 	quote: function (arg, by, room, cmd) {
-		const repo = this.getModule<QuotesRepo>(QuotesRepo);
+		const repo = this.getModule(QuotesRepo);
 		if (cmd === 'addquote' || cmd === 'setquote') {
 			if (!this.isRanked('admin')) return false;
 			const args = arg.split(',');
@@ -115,7 +115,7 @@ export const commands: Record<string, string | Command> = {
 	},
 	listquotes: function () {
 		if (!this.isRanked('admin')) return false;
-		const data = Object.entries(this.getModule<QuotesRepo>(QuotesRepo).quotes)
+		const data = Object.entries(this.getModule(QuotesRepo).quotes)
 			.map(([i, quote]) => i + ' -> ' + quote)
 			.join('\n');
 		if (!data) return this.reply(this.trad('empty'));
@@ -135,7 +135,7 @@ export const commands: Record<string, string | Command> = {
 	deljoke: 'joke',
 	getjoke: 'joke',
 	joke: function (arg, by, room, cmd) {
-		const repo = this.getModule<QuotesRepo>(QuotesRepo);
+		const repo = this.getModule(QuotesRepo);
 		if (cmd === 'addjoke' || cmd === 'setjoke') {
 			if (!this.isRanked('admin')) return false;
 			const args = arg.split(',');
@@ -183,7 +183,7 @@ export const commands: Record<string, string | Command> = {
 	},
 	listjokes: function () {
 		if (!this.isRanked('admin')) return false;
-		const data = Object.entries(this.getModule<QuotesRepo>(QuotesRepo).jokes)
+		const data = Object.entries(this.getModule(QuotesRepo).jokes)
 			.map(([i, joke]) => i + ' -> ' + joke)
 			.join('\n');
 		if (!data) return this.reply(this.trad('empty'));

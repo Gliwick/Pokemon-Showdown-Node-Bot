@@ -74,9 +74,9 @@ export function setupBot(globalMonitor: GlobalMonitor): void {
 			'Connected to server ' + Bot.opts.server + ':' + Bot.opts.port + ' (' + Bot.opts.serverid + ')'
 		);
 		globalMonitor.connected = true;
-		for (const f in Features) {
+		for (const f in Features.features) {
 			try {
-				Features[f].init();
+				Features.features[f].init();
 			} catch (e: any) {
 				errlog(e.stack);
 				error('Feature Crash: ' + f + ' | ' + inspect(e));

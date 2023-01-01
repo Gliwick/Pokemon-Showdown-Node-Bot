@@ -234,12 +234,12 @@ export class Client {
 	}
 
 	private onRenameEnd(data: { data: string }, nick: string, pass?: string | null): void {
-		const retryFn = ((): void => this.rename(nick, pass)).bind(this);
 		if (data.data === ';') {
 			this.error('failed to log in; nick is registered - invalid or no password given');
 			this.events.emit('renamefailure', -1);
 			return;
 		}
+		const retryFn = ((): void => this.rename(nick, pass)).bind(this);
 		if (data.data.length < 50) {
 			this.error('failed to log in: ' + data);
 			if (this.opts.retryLogin) {
@@ -376,6 +376,7 @@ export class Client {
 			} else {
 				const toSend = JSON.stringify(dataArray);
 				this.events.emit('send', toSend);
+				console.log(toSend);
 				connection.send(toSend);
 			}
 		} else {

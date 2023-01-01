@@ -72,7 +72,17 @@ export class BattleManager implements Feature {
 	destroy(): void {
 		this.ladderManager.destroy();
 		this.battleBot.destroy();
-		if (Features[this.id]) delete Features[this.id];
+		if (Features.features[this.id]) delete Features.features[this.id];
+	}
+
+	reloadBot(): void {
+		const { battles } = this.battleBot;
+		Tools.uncacheTree('features/battle/battle-ai/index.ts');
+		require('./battle-ai/index.ts');
+		this.battleBot = new BattleBot();
+		this.battleBot.init();
+		this.battleBot.battles = battles;
+		this.battleBot.battlesCount = Object.keys(battles).length;
 	}
 }
 

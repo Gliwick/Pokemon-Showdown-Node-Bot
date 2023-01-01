@@ -5,9 +5,8 @@
 import { exec, ExecException } from 'child_process';
 import { inspect } from 'util';
 
-import { Command, Context } from '../bll/command-parser';
+import { Command, Context } from '../command-parser';
 import { checkConfig } from '../config-tools';
-import { loadFeature, loadFeatures } from '../features';
 import { errlog, error, info } from '../log';
 import { toId, toRoomid } from '../tools';
 
@@ -162,7 +161,7 @@ export const commands: Record<string, string | Command> = {
 				return this.reply('Some command files crashed: ' + res.join(', '));
 			case 'features':
 				this.sclog();
-				const errs = loadFeatures(true) || [];
+				const errs = Features.loadFeatures(true) || [];
 				if (!errs.length) {
 					return this.reply('Features hotpatched');
 				}
@@ -172,9 +171,9 @@ export const commands: Record<string, string | Command> = {
 				if (!args[1]) return this.reply('You must specify a feature');
 				args[1] = args[1].trim();
 				try {
-					loadFeature(args[1], true);
+					Features.loadFeature(args[1], true);
 					return this.reply('Feature: ' + args[1] + ' hotpatched');
-				} catch (e) {
+				} catch (e: any) {
 					errlog(e.stack);
 					return this.reply(e.message || 'Error: Feature: ' + args[1] + ' crashed');
 				}

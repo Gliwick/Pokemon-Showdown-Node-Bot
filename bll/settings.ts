@@ -239,20 +239,20 @@ class UserManager {
 interface Autopromote {
 	enabled: boolean;
 	users: Record<string, string>;
-	all: boolean;
+	all: string | null;
 }
 
 interface PmWelcomeMessage {
 	enabled: boolean;
-	msg: string;
+	msg: string | null;
 }
 
 export class SettingsManager {
 	settings: {
-		autoban?: Record<string, Record<string, number>>;
+		autoban?: Record<string, Record<string, boolean>>;
 		autopromote?: Record<string, Autopromote>;
 		bannedphrases?: Record<string, Record<string, boolean>>;
-		commands?: Record<string, Record<string, string | true>>;
+		commands?: Record<string, Record<string, string>>;
 		deftier?: Record<string, string>;
 		inapropiatephrases?: Record<string, Record<string, boolean>>;
 		joinphrases?: Record<string, Record<string, string>>;
@@ -261,7 +261,7 @@ export class SettingsManager {
 		language?: Record<string, string>;
 		leaderboards?: Record<string, LeaderboardConfig>;
 		modding?: Record<string, ConfigType['moderation']['modDefault']>;
-		modexception?: Record<string, boolean>;
+		modexception?: Record<string, string>;
 		regexautoban?: Record<string, Record<string, boolean>>;
 		pmwmsg?: Record<string, PmWelcomeMessage>;
 		sleep?: Record<string, boolean>;
@@ -307,10 +307,9 @@ export class SettingsManager {
 	 * Permissions
 	 */
 
-	userCan(room: string, user: string, permission: string): boolean {
+	userCan(room: string, user: string, permission?: string): boolean {
 		const rank =
-			this.settings.commands?.[room]?.[permission] ||
-			Config.permissionExceptions[permission] ||
+			(permission && (this.settings.commands?.[room]?.[permission] || Config.permissionExceptions[permission])) ||
 			Config.defaultPermission;
 		return Tools.equalOrHigherRank(user, rank);
 	}
@@ -321,7 +320,7 @@ export class SettingsManager {
 		}
 	}
 
-	setPermission(room: string, perm: string, rank: string | true): void {
+	setPermission(room: string, perm: string, rank: string): void {
 		if (!this.settings.commands) this.settings.commands = {};
 		if (!this.settings.commands[room]) this.settings.commands[room] = {};
 		this.settings.commands[room][perm] = rank;

@@ -2,17 +2,17 @@
  * Pokemon-related commands
  */
 
-import { Command, CommandModule } from '../bll/command-parser';
+import { Command, CommandModuleManager } from '../command-parser';
 import { debug } from '../log';
 import { toId } from '../tools';
 
-class PokemonModule implements CommandModule {
+class PokemonModule implements CommandModuleManager {
 	init(): void {
 		Settings.addPermissions(['pokemon']);
 	}
 }
 
-export const module = PokemonModule;
+export const manager = PokemonModule;
 
 interface SearchResult {
 	type: string;

@@ -4,11 +4,11 @@
 
 import { inspect } from 'util';
 
-import { Command, CommandModule, Context } from '../bll/command-parser';
+import { Command, CommandModuleManager, Context } from '../command-parser';
 import { debug, error } from '../log';
 import { toId } from '../tools';
 
-class UserRepo implements CommandModule {
+class UserRepo implements CommandModuleManager {
 	downloadingFlag: Record<string, boolean> = {};
 	regdateCache: User[] = [];
 
@@ -29,7 +29,7 @@ class UserRepo implements CommandModule {
 	}
 }
 
-export const module = UserRepo;
+export const manager = UserRepo;
 
 interface User {
 	registertime: number;

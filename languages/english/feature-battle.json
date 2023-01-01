@@ -72,7 +72,6 @@
 		"teamlist": {
 			"list": "Bot teams list",
 			"empty": "Bot teams list is empty",
-			"id": "Id",
 			"format": "Format",
 			"pokemon": "Pokemon",
 			"err": "Error: failed to upload teams list to Hastebin"

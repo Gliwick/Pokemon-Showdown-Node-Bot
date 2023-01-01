@@ -6,17 +6,17 @@
 
 import 'path';
 import 'sugar';
-import './global-variables.d.ts';
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { inspect } from 'util';
 
-import { CommandParser as CommandParserClass } from './bll/command-parser';
 import { DataDownloader as DataDownloaderClass } from './bll/data-downloader';
 import { SecurityLogger } from './bll/security-log';
 import { SettingsManager } from './bll/settings';
 import { setupBot } from './bot-setup';
+import { CommandParser as CommandParserClass } from './command-parser';
 import { checkConfig } from './config-tools';
+import { FeatureManager } from './features';
 import { GlobalMonitor as GlobalMonitorClass } from './global-monitor';
 import { AppOptionsType } from './global-types';
 import { errlog, error, info, ok } from './log';
@@ -155,10 +155,10 @@ if (!AppOptions.testmode) Tools.intl.loadTranslations();
 
 /* Features */
 
-global.Features = {};
+global.Features = new FeatureManager();
 
 if (!AppOptions.testmode) {
-	require('./features/index.ts').loadFeatures();
+	global.Features.loadFeatures();
 }
 
 const opts = {

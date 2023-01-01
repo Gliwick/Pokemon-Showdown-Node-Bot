@@ -32,7 +32,7 @@ export interface ConfigType {
 	privateRooms: string[];
 	ignoreRooms: string[];
 	initCmds: string[];
-	exceptions: Record<string, string | true>;
+	exceptions: Record<string, string>;
 	ranks: string[];
 	globalPermissions: Record<string, string>;
 	commandTokens: string[];
@@ -100,7 +100,7 @@ export interface ConfigType {
 		punishments: string[];
 		psServersExcepts?: string[];
 		zeroToleranceDefaultLevel?: string;
-		zeroToleranceLevels?: Record<string, { name: string; value: number }>;
+		zeroToleranceLevels: Record<string, { name: string; value: number }>;
 	};
 	acceptAll: boolean;
 	maxBattles: number;
@@ -119,9 +119,10 @@ export interface ConfigType {
 	tourDefault: {
 		format: string;
 		type: 'elimination' | 'roundrobin';
+		eliminationCount?: number;
 		maxUsers: number | null;
-		timeToStart: number;
-		autodq: number;
+		timeToStart: number | null;
+		autodq: number | null;
 		scoutProtect: boolean;
 	};
 	leaderboards: Record<string, LeaderboardConfig>;

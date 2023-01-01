@@ -49,8 +49,8 @@
 			"not": "not",
 			"b": "blacklisted in",
 			"nousers": "No users are blacklisted in",
-			"listab": "The following users are banned in",
-			"listrab": "The following regexes are banned in",
+			"autoban": "The following users are banned in",
+			"regexautoban": "The following regexes are banned in",
 			"err": "upload failure, could not upload blacklist to hastebin"
 		},
 		"zerotol": {

@@ -4,7 +4,7 @@ import { inspect } from 'util';
 import { debug, error } from '../../log';
 import { PokeSet, toId } from '../../tools';
 
-const teamsDataFile = AppOptions.data + 'teams.json';
+const TEAMS_DATA_FILE = AppOptions.data + 'teams.json';
 
 interface RandomTeam {
 	maxPokemon: number;
@@ -26,10 +26,10 @@ export class TeamBuilder {
 		try {
 			if (reloading) Tools.uncacheTree('./features/battle/teams.js');
 			this.staticTeams = require('./teams.js').teams;
-			if (!existsSync(teamsDataFile)) {
+			if (!existsSync(TEAMS_DATA_FILE)) {
 				this.dynTeams = {};
 			} else {
-				this.dynTeams = JSON.parse(readFileSync(teamsDataFile).toString());
+				this.dynTeams = JSON.parse(readFileSync(TEAMS_DATA_FILE).toString());
 			}
 			this.mergeTeams();
 			return true;
@@ -81,12 +81,12 @@ export class TeamBuilder {
 			this.writePending = true;
 			return;
 		}
-		writeFile(teamsDataFile + '.0', data, (): void => {
+		writeFile(TEAMS_DATA_FILE + '.0', data, (): void => {
 			// rename is atomic on POSIX, but will throw an error on Windows
-			rename(teamsDataFile + '.0', teamsDataFile, (err: NodeJS.ErrnoException | null): void => {
+			rename(TEAMS_DATA_FILE + '.0', TEAMS_DATA_FILE, (err: NodeJS.ErrnoException | null): void => {
 				if (err) {
 					// This should only happen on Windows.
-					writeFile(teamsDataFile, data, finishWriting);
+					writeFile(TEAMS_DATA_FILE, data, finishWriting);
 					return;
 				}
 				finishWriting();
@@ -147,5 +147,17 @@ export class TeamBuilder {
 
 	packTeam(team?: PokeSet[]): string {
 		return Tools.packTeam(team);
+	}
+
+	private getPokeSets(team: Team): PokeSet[] {
+		if (typeof team === 'string') return Tools.fastUnpackTeam(team);
+		if (!Array.isArray(team)) return [...(team.essentialPokemon || []), ...team.pokemon];
+		return team;
+	}
+
+	teamOverview(team: Team): string {
+		const pokes = this.getPokeSets(team).map((p) => p.species);
+		if (!pokes.length) return '(empty)';
+		return pokes.join(', ');
 	}
 }

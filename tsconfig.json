@@ -19,15 +19,15 @@
 	},
 	"types": ["node"],
 	"include": [
-		"./features/battle/*.ts",
-		"./features/battle/battle-ai/*.ts",
-		"./features/battle/battle-ai/modules/*.ts",
-		"./features/battle/data/*.ts"
+		"./global-variables.d.ts",
+		"./commands/*.ts",
+		"./features/**/*.ts",
+		"./features/battle/**/*.ts",
+		"./features/battle/battle-ai/modules/*.ts"
 	],
 	"ts-node": {
 		"files": true,
 		"transpileOnly": true,
 		"transpiler": "ts-node/transpilers/swc-experimental"
-	},
-	"files": ["./global-variables.d.ts"]
+	}
 }

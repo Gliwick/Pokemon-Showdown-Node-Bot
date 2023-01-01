@@ -76,7 +76,7 @@ export class ModerationManager implements Feature {
 		return Config.moderation?.values?.[key] || DEFAULT_MOD_VALUES[key];
 	}
 
-	getModException(room: string): string | true {
+	getModException(room: string): string {
 		return Settings.settings.modexception?.[room] || Config.moderation.modException || Tools.getGroup('driver');
 	}
 
@@ -108,7 +108,7 @@ export class ModerationManager implements Feature {
 		}
 	}
 
-	isBotRanked(room: string, rank: string | true): boolean {
+	isBotRanked(room: string, rank: string): boolean {
 		if (!Bot.rooms[room]) return false;
 		const ident = Bot.rooms[room].users[toId(Bot.status.nickName)];
 		if (ident) return Tools.equalOrHigherRank(ident, rank);
@@ -129,11 +129,19 @@ export class ModerationManager implements Feature {
 		return false;
 	}
 
-	blacklistUser(room: string, user: string): boolean {
+	blacklistUser(user: string, room: string): boolean {
 		if (!Settings.settings.autoban?.[room]?.[user]) {
 			Settings.settings.autoban = Settings.settings.autoban || {};
 			Settings.settings.autoban[room] = Settings.settings.autoban[room] || {};
-			Settings.settings.autoban[room][user] = 1;
+			Settings.settings.autoban[room][user] = true;
+			return true;
+		}
+		return false;
+	}
+
+	unblacklistUser(user: string, room: string): boolean {
+		if (Settings.settings.autoban?.[room]?.[user]) {
+			delete Settings.settings.autoban[room][user];
 			return true;
 		}
 		return false;
@@ -188,6 +196,24 @@ export class ModerationManager implements Feature {
 		return serversAds;
 	}
 
+	blacklistRegex(regex: string, room: string): boolean {
+		if (!Settings.settings.regexautoban?.[room]?.[regex]) {
+			Settings.settings.regexautoban = Settings.settings.regexautoban || {};
+			Settings.settings.regexautoban[room] = Settings.settings.regexautoban[room] || {};
+			Settings.settings.regexautoban[room][regex] = true;
+			return true;
+		}
+		return false;
+	}
+
+	unblacklistRegex(regex: string, room: string): boolean {
+		if (Settings.settings.regexautoban?.[room]?.[regex]) {
+			delete Settings.settings.regexautoban[room][regex];
+			return true;
+		}
+		return false;
+	}
+
 	private pushAndShift<T>(arr: [T, T, T, T], el: T): [T, T, T, T] {
 		return [arr[1], arr[2], arr[3], el];
 	}
@@ -228,7 +254,7 @@ export class ModerationManager implements Feature {
 		if (!Config.moderation.allowmute) return;
 		if (!this.isBotRanked(room, Tools.getGroup('driver'))) return; // Bot is not a driver or above
 
-		const infractions = [];
+		const infractions: string[] = [];
 		let muteMessage = '';
 		let pointVal = 0;
 		let totalPointVal = 0;
@@ -555,7 +581,7 @@ export class ModerationManager implements Feature {
 		if (ban) {
 			Bot.say(room, '/roomban ' + by + ', ' + this.trad('ab', room) + (ban === '#range' ? ' (RegExp)' : ''));
 			if (ban !== '#range' && !this.isBanned(room, old)) {
-				this.blacklistUser(room, old); // Blacklist alt
+				this.blacklistUser(old, room); // Blacklist alt
 				SecurityLog.log(
 					'User "' + old + '" was blacklisted for being alt of "' + toId(by) + '" | Room: ' + room
 				);
@@ -581,6 +607,11 @@ export class ModerationManager implements Feature {
 			values: { ...DEFAULT_MOD_VALUES },
 			modDefault: DEFAULT_MOD,
 			punishments: ['warn', 'mute', 'hourmute', 'roomban'],
+			zeroToleranceLevels: {
+				l: { name: 'Low', value: 1 },
+				n: { name: 'Normal', value: 2 },
+				h: { name: 'High', value: 3 },
+			},
 		});
 		let by, timeOff;
 		switch (spl[0]) {
@@ -621,7 +652,7 @@ export class ModerationManager implements Feature {
 	destroy(): void {
 		if (this.cleanDataTimer) clearInterval(this.cleanDataTimer);
 		this.cleanDataTimer = null;
-		if (Features[this.id]) delete Features[this.id];
+		if (Features.features[this.id]) delete Features.features[this.id];
 	}
 }
 

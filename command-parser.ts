@@ -1,17 +1,20 @@
 /*
 	Command parser for Pokemon Showdown Bot
 */
-import { readdirSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { inspect } from 'util';
 
-import { cmdr, errlog, error, info, monitor, ok } from '../log';
-import { toId, toRoomid } from '../tools';
-import { FlatFileManager } from './settings';
+import { FlatFileManager } from './bll/settings';
+import { cmdr, errlog, error, info, monitor, ok } from './log';
+import { toId, toRoomid } from './tools';
 
 const MAX_COMMAND_RECURSION = 10;
 const MAX_CMD_FLOOD = 30;
 const FLOOD_INTERVAL = 45 * 1000;
 const HELP_TIME_INTERVAL = 2 * 60 * 1000;
+
+const COMMANDS_DIR = './commands/';
+const FEATURES_DIR = './features/';
 
 interface Room {
 	id: string;
@@ -50,7 +53,7 @@ export class Context {
 		this.cmdToken = opts.cmdToken || '';
 		this.roomType = this.room.charAt(0) === ',' ? 'pm' : Bot.rooms[this.room]?.type || 'chat';
 		this.botName = Bot.status.nickName;
-		this.isExcepted = Tools.equalOrHigherRank(this.by, true);
+		this.isExcepted = Tools.equalOrHigherRank(this.by, Tools.highestRank());
 		this.language =
 			(this.roomType === 'chat' && Settings.settings.language?.[this.room]) || Config.language || 'english';
 		this.parser = parser;
@@ -87,7 +90,7 @@ export class Context {
 		this.send(',' + this.by, data);
 	}
 
-	restrictReply(data: string | string[], perm: string): void {
+	restrictReply(data: string | string[], perm?: string): void {
 		if (!this.can(perm)) {
 			this.pmReply(data);
 		} else {
@@ -99,11 +102,11 @@ export class Context {
 		this.send(targetRoom, data);
 	}
 
-	isRanked(rank: string | true): boolean {
+	isRanked(rank: string): boolean {
 		return Tools.equalOrHigherRank(this.by, rank);
 	}
 
-	isRoomRanked(targetRoom: string, rank: string | true): boolean {
+	isRoomRanked(targetRoom: string, rank: string): boolean {
 		if (Bot.rooms && Bot.rooms[targetRoom] && Bot.rooms[targetRoom].users) {
 			const userIdent = Bot.rooms[targetRoom].users[toId(this.by)] || this.by;
 			return Tools.equalOrHigherRank(userIdent, rank);
@@ -111,11 +114,11 @@ export class Context {
 		return this.isRanked(rank);
 	}
 
-	can(permission: string): boolean {
+	can(permission?: string): boolean {
 		return Settings.userCan(this.roomType === 'battle' ? 'battle-' : this.room, this.by, permission);
 	}
 
-	canSet(permission: string, rank: string | true): boolean {
+	canSet(permission: string, rank: string): boolean {
 		const rankSet =
 			Settings.settings.commands?.[this.room]?.[permission] ||
 			Config.permissionExceptions[permission] ||
@@ -125,14 +128,14 @@ export class Context {
 		return false;
 	}
 
-	botRanked(rank: string | true): boolean {
+	botRanked(rank: string): boolean {
 		if (!Bot.rooms[this.room]) return false;
 		const ident = Bot.rooms[this.room].users[toId(Bot.status.nickName)];
 		if (ident) return Tools.equalOrHigherRank(ident, rank);
 		return false;
 	}
 
-	hasRank(user: string, rank: string | true, targetRoom?: string): boolean {
+	hasRank(user: string, rank: string, targetRoom?: string): boolean {
 		if (!targetRoom) targetRoom = this.room;
 		if (Bot.rooms && Bot.rooms[targetRoom] && Bot.rooms[targetRoom].users) {
 			const userIdent = Bot.rooms[targetRoom].users[toId(user)] || user;
@@ -204,7 +207,7 @@ export class Context {
 		}
 	}
 
-	getModule<T extends CommandModule>(moduleClass: new () => CommandModule): T {
+	getModule<T extends CommandModuleManager>(moduleClass: new () => T): T {
 		return Object.values(this.parser.modules).filter((module) => module instanceof moduleClass)[0] as T;
 	}
 }
@@ -296,13 +299,13 @@ class ResourceMonitor {
 
 export type Command = (this: Context, sargs: string, by: string, room: string, cmd: string) => void;
 
-export interface CommandModule {
+export interface CommandModuleManager {
 	init(): void;
 }
 
 export class CommandParser {
 	commands: Record<string, string | Command> = {};
-	modules: Record<string, CommandModule> = {};
+	modules: Record<string, CommandModuleManager> = {};
 	dynCommands: Record<string, string> = {};
 	dynCommandsFFM = new FlatFileManager(AppOptions.data + 'commands.json');
 	tempVar = '';
@@ -323,24 +326,28 @@ export class CommandParser {
 	/* Load commands */
 	loadCommands(reloading?: boolean): string[] {
 		const errs: string[] = [];
-		readdirSync('./commands').forEach((file: string): void => {
-			if (file.endsWith('.ts')) {
-				if (reloading) Tools.uncacheTree('./commands/' + file);
-				try {
-					const { commands, module } = require('../commands/' + file) as {
-						commands: [];
-						module?: new () => CommandModule;
-					};
-					Object.assign(this.commands, commands);
-					if (module) {
-						this.modules[file] = new module();
-						this.modules[file].init();
-					}
-				} catch (e: any) {
-					errlog(e.stack);
-					error('Could not import commands file: ../commands/' + file + ' | ' + inspect(e));
-					errs.push(file);
+		const commandFiles = readdirSync(COMMANDS_DIR)
+			.filter((file) => file.endsWith('.ts'))
+			.map((file) => COMMANDS_DIR + file);
+		const featureCommandFiles = readdirSync(FEATURES_DIR)
+			.map((file) => FEATURES_DIR + file + '/commands.ts')
+			.filter((path) => existsSync(path));
+		[...commandFiles, ...featureCommandFiles].forEach((file: string): void => {
+			if (reloading) Tools.uncacheTree(file);
+			try {
+				const { commands, manager } = require(file) as {
+					commands: [];
+					manager?: new () => CommandModuleManager;
+				};
+				Object.assign(this.commands, commands);
+				if (manager) {
+					this.modules[file] = new manager();
+					this.modules[file].init();
 				}
+			} catch (e: any) {
+				errlog(e.stack);
+				error('Could not import commands file: ' + file + ' | ' + inspect(e));
+				errs.push(file);
 			}
 		});
 		if (reloading) info('Commands reloaded' + (errs.length ? '. Errors: ' + errs.join(', ') : ''));
@@ -367,7 +374,7 @@ export class CommandParser {
 	}
 
 	parse(room: string, by: string, msg: string): void {
-		if (!Tools.equalOrHigherRank(by, true)) {
+		if (!Tools.equalOrHigherRank(by, Tools.highestRank())) {
 			if (this.resourceMonitor.isLocked(by)) return;
 		}
 		if (msg.substr(0, 8) === '/invite ' && Tools.equalOrHigherRank(by, '%')) {
@@ -442,7 +449,7 @@ export class CommandParser {
 				};
 				const context = new Context(opts, this);
 				try {
-					if (!Tools.equalOrHigherRank(by, true)) {
+					if (!Tools.equalOrHigherRank(by, Tools.highestRank())) {
 						if (this.resourceMonitor.countcmd(by)) return;
 					}
 					cmdr(handler + ' | arg: ' + args + ' | by: ' + by + ' | room: ' + room + ' | cmd: ' + cmd);

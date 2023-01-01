@@ -34,15 +34,10 @@ export class GroupChatsManager implements Feature {
 	}
 
 	runAutopromote(room: string, by: string): NodeJS.Timeout | void {
-		if (!Settings.settings.autopromote?.[room]) return;
-		const autoPromotion = Settings.settings.autopromote[room];
-		if (!autoPromotion.enabled) return;
+		const autoPromotion = Settings.settings.autopromote?.[room];
+		if (!autoPromotion?.enabled) return;
 		const userid = toId(by);
-		if (
-			autoPromotion.users &&
-			autoPromotion.users[userid] &&
-			!Tools.equalOrHigherRank(by.charAt(0), autoPromotion.users[userid])
-		) {
+		if (autoPromotion.users[userid] && !Tools.equalOrHigherRank(by.charAt(0), autoPromotion.users[userid])) {
 			return Bot.say(room, '/roompromote ' + userid + ',' + autoPromotion.users[userid]);
 		}
 		if (autoPromotion.all && !Tools.equalOrHigherRank(by.charAt(0), autoPromotion.all))
@@ -50,9 +45,9 @@ export class GroupChatsManager implements Feature {
 	}
 
 	runWelcomeMessage(room: string, by: string): void {
-		if (!Settings.settings.pmwmsg?.[room]) return;
-		if (!Settings.settings.pmwmsg[room].enabled || !Settings.settings.pmwmsg[room].msg) return;
-		Bot.say(room, '/pm ' + by + ',' + Tools.stripCommands(Settings.settings.pmwmsg[room].msg));
+		const pwmmsg = Settings.settings.pmwmsg?.[room];
+		if (!pwmmsg || !pwmmsg.enabled || !pwmmsg.msg) return;
+		Bot.say(room, '/pm ' + by + ',' + Tools.stripCommands(pwmmsg.msg));
 	}
 
 	intervalJoin(): void {
@@ -92,7 +87,7 @@ export class GroupChatsManager implements Feature {
 			clearInterval(this.timer);
 			this.timer = null;
 		}
-		if (Features[this.id]) delete Features[this.id];
+		if (Features.features[this.id]) delete Features.features[this.id];
 	}
 }
 

@@ -2,17 +2,17 @@
 	Dynamic Commands
 */
 
-import { Command, CommandModule, Context } from '../bll/command-parser';
+import { Command, CommandModuleManager, Context } from '../command-parser';
 import { error } from '../log';
 import { toId } from '../tools';
 
-class DynamicModule implements CommandModule {
+class DynamicModule implements CommandModuleManager {
 	init(): void {
 		Settings.addPermissions(['info', 'wall']);
 	}
 }
 
-export const module = DynamicModule;
+export const manager = DynamicModule;
 
 function getCmdList(head: string): string[] | null {
 	const cmdArr = Object.keys(CommandParser.dynCommands).sort();

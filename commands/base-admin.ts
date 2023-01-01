@@ -2,7 +2,7 @@
 	Admin Commands
 */
 
-import { Command } from '../bll/command-parser';
+import { Command } from '../command-parser';
 import { toId, toRoomid } from '../tools';
 
 interface Room {

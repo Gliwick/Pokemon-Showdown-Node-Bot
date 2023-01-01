@@ -203,27 +203,23 @@ export class Tools {
 		return { arg: newArg, room };
 	}
 
-	equalOrHigherRank(userIdentity: string, rank: string | true): boolean {
-		if (typeof rank === 'string' && rank.length > 1) rank = this.getGroup(rank);
+	highestRank(): string {
+		return Config.ranks[Config.ranks.length - 1];
+	}
+
+	equalOrHigherRank(userIdentity: string, rank: string): boolean {
+		if (rank.length > 1) rank = this.getGroup(rank);
 		if (rank === ' ') return true;
-		if (!Config.ranks) Config.ranks = [];
 		const userId = toId(userIdentity);
-		let userRank: string | true = '';
-		if (userId in Config.exceptions) {
-			userRank = Config.exceptions[userId];
-		} else {
-			userRank = userIdentity.charAt(0);
-		}
-		if (userRank === true) return true;
-		if (rank === true) return false;
+		const userRank = Config.exceptions[userId] || userIdentity.charAt(0);
 		if (Config.ranks.indexOf(userRank) === -1) return false;
 		if (Config.ranks.indexOf(userRank) >= Config.ranks.indexOf(rank)) return true;
 		return false;
 	}
 
-	getGroup(perm?: string): string | true {
-		if (!perm) return true;
-		return Config.globalPermissions[perm] || DefaultPermissions[perm] || true;
+	getGroup(perm?: string): string {
+		if (!perm) return this.highestRank();
+		return Config.globalPermissions[perm] || DefaultPermissions[perm] || this.highestRank();
 	}
 
 	/* Time and Dates */
@@ -708,17 +704,6 @@ export class Tools {
 			i = j + 1;
 		}
 		return team;
-	}
-
-	teamOverview(buf?: string): string {
-		const team = this.fastUnpackTeam(buf);
-		if (!team) return '(empty)';
-		const pokes = [];
-		for (let i = 0; i < team.length; i++) {
-			pokes.push(team[i].species);
-		}
-		if (!pokes.length) return '(empty)';
-		return pokes.join(', ');
 	}
 
 	getTemplate(name?: string): Record<string, any> {

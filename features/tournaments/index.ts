@@ -2,43 +2,35 @@
 	Tournaments Manager Feature
 */
 
+import { ConfigType } from '../../config-tools';
 import { Feature } from '../index';
 import { LeaderboardsManager } from './leaderboards';
 
 const CurrentGen = 9;
 
-interface TournamentDetails {
-	format: string;
-	type: string;
-	eliminationCount: number;
-	maxUsers: number;
-	timeToStart: number;
-	autodq: boolean;
-	scoutProtect: boolean;
-}
-
 export class Tournament {
-	format;
-	type;
-	eliminationCount;
-	users = 0;
+	format: string;
+	type: 'elimination' | 'roundrobin';
+	eliminationCount: number;
 	maxUsers: number | null;
+	room: string;
+	timeToStart: number;
+	autodq: number | null;
+	scoutProtect: boolean;
+
+	users = 0;
 	signups = false;
 	started = false;
 	startTimer: NodeJS.Timeout | null = null;
-	room;
-	timeToStart;
-	autodq;
-	scoutProtect;
 
-	constructor(room: string, details: TournamentDetails) {
+	constructor(room: string, details: ConfigType['tourDefault']) {
 		this.format = details.format || 'gen' + CurrentGen + 'randombattle';
 		this.type = details.type || 'elimination';
 		this.eliminationCount = details.eliminationCount || 1;
 		this.maxUsers = details.maxUsers || null;
 		this.room = room || 'lobby';
 		this.timeToStart = details.timeToStart || 30 * 1000;
-		this.autodq = details.autodq || false;
+		this.autodq = details.autodq;
 		this.scoutProtect = details.scoutProtect || false;
 	}
 
@@ -118,7 +110,7 @@ export class TournamentsManager implements Feature {
 		this.leaderboards = new LeaderboardsManager();
 	}
 
-	newTour(room: string, details: TournamentDetails): void {
+	newTour(room: string, details: ConfigType['tourDefault']): void {
 		this.tournaments[room] = new Tournament(room, details);
 		this.tournaments[room].createTour();
 	}
@@ -195,7 +187,7 @@ export class TournamentsManager implements Feature {
 	}
 
 	destroy(): void {
-		if (Features[this.id]) delete Features[this.id];
+		if (Features.features[this.id]) delete Features.features[this.id];
 	}
 }
 
