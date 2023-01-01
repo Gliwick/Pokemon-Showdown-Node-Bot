@@ -22,12 +22,10 @@ export function toId(text?: string): string {
 	if (!text) return '';
 	return text.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
-global.toId = toId;
 
 export function toRoomid(roomid: string): string {
 	return roomid.replace(/[^a-zA-Z0-9-]+/g, '').toLowerCase();
 }
-global.toRoomid = toRoomid;
 
 const DefaultPermissions: ConfigType['globalPermissions'] = {
 	voice: '+',

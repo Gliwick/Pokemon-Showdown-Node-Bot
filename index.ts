@@ -8,7 +8,6 @@ import 'path';
 import 'sugar';
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { inspect } from 'util';
 
 import { DataDownloader as DataDownloaderClass } from './bll/data-downloader';
 import { SecurityLogger } from './bll/security-log';
@@ -22,15 +21,17 @@ import { AppOptionsType } from './global-types';
 import { errlog, error, info, ok } from './log';
 import { Tools as ToolsType } from './tools';
 
-export const colors = require('colors') as Record<string, (s: string) => string>;
-
-try {
-	global.sys = { inspect };
-} catch (e: any) {
-	console.log(e.stack);
-	console.log("ERROR: missing dependencies, try 'npm install'");
-	process.exit(-1);
+function importColors(): Record<string, (s: string) => string> {
+	try {
+		return require('colors');
+	} catch (e: any) {
+		console.log(e.stack);
+		console.log("ERROR: missing dependencies, try 'npm install'");
+		process.exit(-1);
+	}
 }
+
+export const colors = importColors();
 
 console.log(
 	colors.yellow(
@@ -176,7 +177,7 @@ const opts = {
 	debug: Config.debug?.debug ?? true,
 };
 
-global.PSClient = require('./bll/showdown-client.ts').Client;
+const PSClient = require('./bll/showdown-client.ts').Client;
 global.Bot = new PSClient(Config.server, Config.port, opts);
 
 const globalMonitor = new GlobalMonitorClass();

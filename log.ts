@@ -116,15 +116,3 @@ export function monitor(str: string, type?: MonitorType, flag?: MonitorFlag): vo
 export function issue(text: string): void {
 	console.log(colors.yellow('issue') + '\t' + text);
 }
-
-Object.assign(globalThis, {
-	ok,
-	info,
-	error,
-	errlog,
-	debug,
-	cmdr,
-	recv,
-	sent,
-	monitor,
-});

@@ -3,6 +3,7 @@ import { inspect } from 'util';
 import { GlobalMonitor } from './global-monitor';
 import { colors } from './index';
 import { debug, errlog, error, info, monitor, ok, recv, sent } from './log';
+import { toId } from './tools';
 
 function getFeatureInitCmds(): string[] {
 	return Object.values(Features).flatMap((f) => {
@@ -245,14 +246,14 @@ export function setupBot(globalMonitor: GlobalMonitor): void {
 	/* Features */
 
 	Bot.on('line', (room: string, message: string, isIntro: boolean, spl: string[]): void => {
-		for (const f in Features) {
+		for (const f in Features.features) {
 			try {
-				if (typeof Features[f].parse === 'function') Features[f].parse(room, message, isIntro, spl);
+				Features.features[f].parse(room, message, isIntro, spl);
 			} catch (e: any) {
 				errlog(e.stack);
 				error('Feature Crash: ' + f + ' | ' + inspect(e));
 				SecurityLog.log('FEATURE CRASH: ' + f + ' | ' + e.message + '\n' + e.stack);
-				delete Features[f];
+				delete Features.features[f];
 				info('Feature ' + f + ' has been disabled');
 			}
 		}
