@@ -46,7 +46,7 @@
 		"colors": "1.0.3",
 		"sugar": "1.4.1",
 		"ts-node": "^10.0.0",
-		"websocket": "1.0.18"
+		"websocket": "1.0.34"
 	},
 	"devDependencies": {
 		"@types/colors": "^1.2.1",

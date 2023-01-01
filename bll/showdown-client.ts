@@ -376,7 +376,6 @@ export class Client {
 			} else {
 				const toSend = JSON.stringify(dataArray);
 				this.events.emit('send', toSend);
-				console.log(toSend);
 				connection.send(toSend);
 			}
 		} else {
