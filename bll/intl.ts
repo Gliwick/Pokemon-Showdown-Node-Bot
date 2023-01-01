@@ -61,20 +61,11 @@ export class Intl {
 	}
 
 	translateCmd(cmd: string, data: string, lang: string): string {
-		if (this.translations[lang] && this.translations[lang].commands && this.translations[lang].commands[cmd]) {
-			return this.translations[lang].commands[cmd][data];
-		} else {
-			lang = 'english';
-			if (
-				!this.translations[lang] ||
-				!this.translations[lang].commands ||
-				!this.translations[lang].commands[cmd]
-			) {
-				return '__(not found)__';
-			} else {
-				return this.translations[lang].commands[cmd][data];
-			}
-		}
+		return (
+			this.translations[lang]?.commands?.[cmd]?.[data] ||
+			this.translations['english']?.commands?.[cmd]?.[data] ||
+			'__(not found)__'
+		);
 	}
 
 	translateGlobal(glob: string, data: string, lang: string): string {
