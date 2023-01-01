@@ -198,7 +198,7 @@ export const commands: Record<string, string | Command> = {
 					global.Tools = new (require('./../tools.ts').Tools)();
 					this.reply('tools.ts reloaded');
 					info('tools.ts reloaded');
-					Tools.intl.loadTranslations(true);
+					I18n.loadTranslations(true);
 				} catch (e: any) {
 					errlog(e.stack);
 					this.reply('Error: tools.ts has errors');
@@ -230,7 +230,7 @@ export const commands: Record<string, string | Command> = {
 			case 'lang':
 			case 'languages':
 				this.sclog();
-				const _errs = Tools.intl.loadTranslations(true) || [];
+				const _errs = I18n.loadTranslations(true) || [];
 				if (!_errs.length) return this.reply('Languages hotpatched');
 				this.reply('Some languages crashed: ' + _errs.join(', '));
 				break;

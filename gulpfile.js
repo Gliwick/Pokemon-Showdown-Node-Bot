@@ -21,6 +21,7 @@ var globalList = [
 	'Features',
 	'Formats',
 	'GlobalMonitor',
+	'I18n',
 	'SecurityLog',
 	'Settings',
 	'Tools'

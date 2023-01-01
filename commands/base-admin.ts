@@ -107,15 +107,17 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
+		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {
 			return this.reply(this.trad('notchat') + textHelper);
+		}
 		const lang = toId(arg);
 		if (!lang.length)
 			return this.reply(
-				this.trad('nolang') + '. ' + this.trad('v') + ': ' + Object.keys(Tools.intl.translations).join(', ')
+				this.trad('nolang') + '. ' + this.trad('v') + ': ' + Object.keys(I18n.translations).join(', ')
 			);
-		if (!Tools.intl.translations[lang])
-			return this.reply(this.trad('v') + ': ' + Object.keys(Tools.intl.translations).join(', '));
+		if (!I18n.translations[lang]) {
+			return this.reply(this.trad('v') + ': ' + Object.keys(I18n.translations).join(', '));
+		}
 		if (!Settings.settings['language']) Settings.settings['language'] = {};
 		Settings.settings['language'][tarRoom] = lang;
 		Settings.save();

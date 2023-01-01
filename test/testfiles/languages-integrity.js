@@ -7,12 +7,12 @@ describe('Languages', function () {
 		var translations = {};
 		fs.readdirSync('./languages').forEach(function (lang) {
 			if (fs.lstatSync('./languages/' + lang).isDirectory()) {
-				translations[lang] = Tools.intl.loadLang(lang, false);
+				translations[lang] = I18n.loadLang(lang, false);
 			}
 		});
 	});
 	it('Should exist a default language', function () {
-		Tools.intl.loadTranslations();
-		assert.notStrictEqual(Tools.intl.translations['english'], undefined);
+		I18n.loadTranslations();
+		assert.notStrictEqual(I18n.translations['english'], undefined);
 	});
 });

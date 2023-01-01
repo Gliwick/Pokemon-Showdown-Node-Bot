@@ -7,7 +7,6 @@ import * as https from 'https';
 
 import { ConfigType } from './config-tools';
 import { typechart } from './data/typechart';
-import { Intl } from './intl';
 import { errlog } from './log';
 
 declare global {
@@ -90,7 +89,6 @@ export interface PokeSet {
 
 export class Tools {
 	watchFile = fsWatchFile;
-	intl = new Intl();
 	normalObj: Record<string, string> = {};
 
 	constructor() {
@@ -246,7 +244,7 @@ export class Tools {
 		let times = [];
 		const trans = (data: string): string => {
 			if (!lang) lang = Config.language || 'english';
-			return this.intl.translateGlobal('time', data, lang);
+			return I18n.translateGlobal('time', data, lang);
 		};
 		if (seconds) times.push(String(seconds) + ' ' + (seconds === 1 ? trans('second') : trans('seconds')));
 		let minutes, hours, days;

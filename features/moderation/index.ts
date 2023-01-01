@@ -82,7 +82,7 @@ export class ModerationManager implements Feature {
 
 	trad(data: string, room: string): string {
 		const lang = Settings.settings.language?.[room] || Config.language || 'english';
-		return Tools.intl.translateGlobal('moderation', data, lang);
+		return I18n.translateGlobal('moderation', data, lang);
 	}
 
 	cleanData(): void {

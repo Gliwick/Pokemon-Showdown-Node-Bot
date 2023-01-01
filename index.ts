@@ -16,6 +16,7 @@ import { DataDownloader as DataDownloaderClass } from './data-downloader';
 import { FeatureManager } from './features';
 import { GlobalMonitor as GlobalMonitorClass } from './global-monitor';
 import { AppOptionsType } from './global-types';
+import { Intl } from './intl';
 import { errlog, error, info, ok } from './log';
 import { SecurityLogger } from './security-log';
 import { SettingsManager } from './settings';
@@ -136,15 +137,17 @@ info('Loading globals');
 
 /* Globals */
 
-global.Formats = {};
-
-global.Settings = new SettingsManager();
+global.CommandParser = new CommandParserClass();
 
 global.DataDownloader = new DataDownloaderClass();
 
-global.CommandParser = new CommandParserClass();
+global.Formats = {};
+
+global.I18n = new Intl();
 
 global.SecurityLog = new SecurityLogger();
+
+global.Settings = new SettingsManager();
 
 /* Commands */
 
@@ -152,7 +155,7 @@ if (!AppOptions.testmode) CommandParser.loadCommands();
 
 /* Languages (translations) */
 
-if (!AppOptions.testmode) Tools.intl.loadTranslations();
+if (!AppOptions.testmode) I18n.loadTranslations();
 
 /* Features */
 

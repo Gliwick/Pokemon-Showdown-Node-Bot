@@ -179,7 +179,7 @@ export class Context {
 	}
 
 	trad(data: string): string {
-		return Tools.intl.translateCmd(this.handler, data, this.language);
+		return I18n.translateCmd(this.handler, data, this.language);
 	}
 
 	parse(data: string): void {
