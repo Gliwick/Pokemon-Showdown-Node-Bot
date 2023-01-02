@@ -3267,7 +3267,7 @@ export class SinglesEffective implements BattleModule {
 			}
 		}
 
-		decisions = leads || decisions;
+		decisions = leads.length ? leads : decisions;
 		leads = [];
 		for (let i = 0; i < decisions.length; i++) {
 			const sideId = decisions[i].team[0];
@@ -3290,7 +3290,7 @@ export class SinglesEffective implements BattleModule {
 			leads.push(decisions[i]);
 		}
 
-		return this.sample(leads || decisions);
+		return this.sample(leads.length ? leads : decisions);
 	}
 
 	/*
