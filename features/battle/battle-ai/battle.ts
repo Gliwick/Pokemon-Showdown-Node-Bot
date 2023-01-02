@@ -7,7 +7,7 @@ import { createWriteStream, PathLike, writeFileSync, WriteStream } from 'fs';
 import { inspect } from 'util';
 
 import { colors } from '../../../index';
-import { debug, errlog, error } from '../../../log';
+import { errlog, error } from '../../../log';
 import { toId, toName } from '../../../tools';
 import { BattleBot } from '.';
 import {
@@ -173,7 +173,7 @@ export class Battle {
 		if (!decision?.length) return;
 
 		const { moveData, ...toLog } = decision[0] as MoveDecision;
-		debug(colors.cyan('Send Decision: ') + JSON.stringify(toLog));
+		this.debug(colors.cyan('Send Decision: ') + JSON.stringify(toLog));
 		let str = '/choose ';
 		for (let i = 0; i < decision.length; i++) {
 			str += decision[i].getDecisionStr();
@@ -269,7 +269,7 @@ export class Battle {
 
 	makeDecision(forced?: boolean) {
 		if (!this.self) return; // Not playing
-		debug(this.id + '->MakeDecision');
+		this.debug(this.id + '->MakeDecision');
 		if (!forced && this.lastSent.rqid >= 0 && this.lastSent.rqid === this.rqid) {
 			if (Date.now() - this.lastSent.time < MIN_TIME_LOCK) return;
 			if (this.lastSent.decision) {
@@ -279,19 +279,19 @@ export class Battle {
 		}
 		if (this.lock) return;
 		this.lock = true;
-		debug('Making decisions - ' + this.id);
+		this.debug('Making decisions - ' + this.id);
 		let decisions;
 		try {
 			decisions = getDecisions(this);
 		} catch (e: any) {
-			debug(e.stack);
-			debug('Decision maker crashed: ' + inspect(e));
+			this.debug(e.stack);
+			this.debug('Decision maker crashed: ' + inspect(e));
 			SecurityLog.log('BATTLE D.M. CRASH: ' + e.message + '\n' + e.stack);
 			this.lock = false;
 			return;
 		}
 		if (!decisions || !decisions.length) {
-			debug('Nothing to do: ' + this.id);
+			this.debug('Nothing to do: ' + this.id);
 			this.lock = false;
 			return;
 		}
