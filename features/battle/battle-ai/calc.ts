@@ -11,6 +11,7 @@ import {
 	CurrentGen,
 	Gender,
 	Pokemon as BattlePokemon,
+	PokemonDetails,
 	StatsTable,
 	Type,
 } from './battle-data';
@@ -19,13 +20,18 @@ import { getEffectiveness, getMultipleEff } from './typechart';
 const BaseStats: BaseStat[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 const BoostedStats: (BaseStat & BoostedStat)[] = ['atk', 'def', 'spa', 'spd', 'spe'];
 
-export class Pokemon {
+export class Pokemon implements PokemonDetails {
 	template;
 	gen: number;
 
-	name: string;
+	// PokemonDetails properties
 	species: string;
+	level = 100;
+	shiny = false;
 	gender: Gender | null = null;
+	terastallize: Type | null = null;
+
+	name: string;
 	item: Record<string, any> | null = null;
 	stats: StatsTable = {};
 	evs: StatsTable = {};
@@ -34,11 +40,8 @@ export class Pokemon {
 	nature: StatsTable = {};
 	ability: Record<string, any> | null = null;
 	supressedAbility = false;
-	level = 100;
-	shiny = false;
 	happiness: number | null = null;
 	status: string | null = null;
-	terastallize: Type | null = null;
 	hp = 100;
 
 	category: Category | 'Status' | 'Mixed' = 'Mixed';

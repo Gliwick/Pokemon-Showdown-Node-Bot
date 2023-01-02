@@ -428,31 +428,31 @@ export class Battle {
 
 	parseDetails(str?: string): PokemonDetails | null {
 		if (!str) return null;
-		const details = str.split(',');
-		for (let d = 0; d < details.length; d++) {
-			details[d] = details[d].trim();
-		}
+		const details = str.split(',').map((d) => d.trim());
 		const poke: PokemonDetails = {
 			species: '',
 			level: 100,
 			shiny: false,
 			gender: null,
+			terastallize: null,
 		};
-		if (details[details.length - 1] === 'shiny') {
-			poke.shiny = true;
-			details.pop();
-		}
-		const gender = details[details.length - 1];
-		if (gender === 'M' || gender === 'F') {
-			poke.gender = gender;
-			details.pop();
+		if (details[0]) {
+			poke.species = details[0];
 		}
 		if (details[1]) {
 			poke.level = parseInt(details[1].substr(1), 10) || 100;
 		}
-		if (details[0]) {
-			poke.species = details[0];
-		}
+		details.slice(2).forEach((d) => {
+			if (d === 'shiny') {
+				poke.shiny = true;
+			}
+			if (d === 'M' || d === 'F') {
+				poke.gender = d;
+			}
+			if (d.startsWith('tera:')) {
+				poke.terastallize = d.substring('tera:'.length) as Type;
+			}
+		});
 		return poke;
 	}
 
@@ -558,10 +558,8 @@ export class Battle {
 		const poke = new CalcPokemon(
 			getPokemon(details.species, this.gen, this.id),
 			{
-				level: details.level,
-				shiny: details.shiny,
-				gender: details.gender,
 				helpers: this.helpers[side][pokeId] || {},
+				...details,
 			},
 			this
 		);
@@ -570,10 +568,6 @@ export class Battle {
 		poke.status = condition.status;
 		poke.hp = condition.hp;
 		poke.stats = p.stats;
-		const battlePokemon = this[side]?.pokemon?.filter?.((playerPokemon) => playerPokemon.name === ident.name);
-		if (battlePokemon?.length) {
-			poke.terastallize = battlePokemon[0].terastallize;
-		}
 		if (forceMega && this.request.active?.[0]?.canMegaEvo) {
 			if (poke.item.megaStone) {
 				poke.template = getPokemon(poke.item.megaStone, this.gen, this.id);

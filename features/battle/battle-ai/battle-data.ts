@@ -390,17 +390,27 @@ export type BoostsTable = Partial<Record<BoostedStat, number>>;
 export type BaseStat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 export type StatsTable = Partial<Record<BaseStat, number>>;
 
+export interface PokemonDetails {
+	species: string;
+	level: number;
+	shiny: boolean;
+	gender: Gender | null;
+	terastallize: Type | null;
+}
+
 export class Pokemon implements PokemonDetails {
 	template;
-	species;
 	name;
 
-	transformed = false;
-	transformPrev: Partial<Pokemon> | null = null;
-
+	// PokemonDetails properties
+	species;
 	gender: Gender | null = null;
 	level = 100;
 	shiny = false;
+	terastallize: Type | null = null;
+
+	transformed = false;
+	transformPrev: Partial<Pokemon> | null = null;
 
 	item: Record<string, any> | Unknown = '&unknown';
 	itemEffect = '';
@@ -410,7 +420,7 @@ export class Pokemon implements PokemonDetails {
 	ability: Record<string, any> | Unknown = '&unknown';
 	supressedAbility = false;
 	baseAbility: Record<string, any> | Unknown = '&unknown';
-	abilityStack = [];
+	abilityStack: string[] = [];
 
 	moves: Move[] = [];
 
@@ -422,7 +432,6 @@ export class Pokemon implements PokemonDetails {
 	status: string | null = null;
 	volatiles: Record<string, any> = {};
 	boosts: BoostsTable = {};
-	terastallize: Type | null = null;
 
 	passing: number | null = null;
 	prepared: {
@@ -531,7 +540,7 @@ export class Pokemon implements PokemonDetails {
 		this.shiny = pokemon.shiny;
 		this.ability = pokemon.ability;
 		this.baseAbility = pokemon.baseAbility;
-		this.abilityStack = pokemon.abilityStack.slice();
+		this.abilityStack = [...pokemon.abilityStack];
 		this.moves = [];
 		let mv;
 		for (let i = 0; i < pokemon.moves.length; i++) {
@@ -556,17 +565,10 @@ export class Pokemon implements PokemonDetails {
 			this.moves = this.transformPrev.moves || [];
 			this.ability = this.transformPrev.ability || '&unknown';
 			this.baseAbility = this.transformPrev.baseAbility || '&unknown';
-			this.abilityStack = this.transformPrev.abilityStack;
+			this.abilityStack = this.transformPrev.abilityStack || [];
 		}
 		this.transformPrev = null;
 	}
-}
-
-export interface PokemonDetails {
-	species: string;
-	level: number;
-	shiny: boolean;
-	gender: Gender | null;
 }
 
 export class Player {
