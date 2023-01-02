@@ -2,7 +2,7 @@
  * Pokemon Showdown Bot - Damage calculator
  */
 
-import { toId } from '../../../tools';
+import { deepcopy, toId } from '../../../tools';
 import { Battle } from './battle';
 import {
 	BaseStat,
