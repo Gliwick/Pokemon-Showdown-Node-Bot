@@ -1,4 +1,5 @@
 import { debug } from '../../log';
+import { equalOrHigherRank, getGroup } from '../../tools';
 import { Parser } from '..';
 import { BattleBot } from './battle-ai';
 import { TeamBuilder } from './teambuilder';
@@ -18,7 +19,7 @@ export class ChallengeManager implements Parser {
 		if (!nBattles) return true; //If it is not busy, accept the challenge
 		if (Config.acceptAll) return true; //Acept all challenges if 'acceptAll' is enabled
 		if (Config.maxBattles && Config.maxBattles > nBattles) return true; //If it is not in too many battles, accept the challenge
-		if (Tools.equalOrHigherRank(user, Tools.getGroup('driver'))) return true; //Staff exception
+		if (equalOrHigherRank(user, getGroup('driver'))) return true; //Staff exception
 		return false;
 	}
 

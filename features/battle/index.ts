@@ -3,6 +3,7 @@
 */
 
 import { errlog, error } from '../../log';
+import { uncacheTree } from '../../tools';
 import { Feature } from '../index';
 import { BattleBot } from './battle-ai';
 import { ChallengeManager } from './challenges';
@@ -77,7 +78,7 @@ export class BattleManager implements Feature {
 
 	reloadBot(): void {
 		const { battles } = this.battleBot;
-		Tools.uncacheTree('features/battle/battle-ai/index.ts');
+		uncacheTree('features/battle/battle-ai/index.ts');
 		require('./battle-ai/index.ts');
 		this.battleBot = new BattleBot();
 		this.battleBot.init();

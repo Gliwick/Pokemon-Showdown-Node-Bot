@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'fs';
 
 import { errlog, error, info, ok } from '../log';
-import { toId } from '../tools';
+import { toId, uncacheTree } from '../tools';
 
 export interface Parser {
 	parse: (room: string, message: string, isIntro: boolean, spl: string[]) => void;
@@ -27,7 +27,7 @@ export class FeatureManager {
 		const path = DIR + filename;
 
 		if (!existsSync(path)) throw new Error('Error: Feature ' + feature + ' not found');
-		if (reloading) Tools.uncacheTree(path);
+		if (reloading) uncacheTree(path);
 		const f = new (require('./' + filename).feature)() as Feature;
 		if (f.id) {
 			if (this.features[f.id]) {

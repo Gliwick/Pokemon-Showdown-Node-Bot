@@ -3,7 +3,7 @@
 */
 
 import { error } from '../../../log';
-import { toId } from '../../../tools';
+import { toId, toName } from '../../../tools';
 import { Battle, BattleType, BattleTypeActiveSlots, PlayerId, Request } from './battle';
 import { BoostedStat, getEffect, getMove, getPokemon, Move, Pokemon } from './battle-data';
 
@@ -180,7 +180,7 @@ export const majors: Record<
 		}
 
 		const slot = this.parseSlot(spl[0].substr(2, 1));
-		const name = Tools.toName(spl[1]);
+		const name = toName(spl[1]);
 		const details = this.parseDetails(args[2]);
 		const health = this.parseStatus(args[3]);
 		const player = this.players[p as PlayerId];

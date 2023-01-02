@@ -23,8 +23,7 @@ var globalList = [
 	'GlobalMonitor',
 	'I18n',
 	'SecurityLog',
-	'Settings',
-	'Tools'
+	'Settings'
 ];
 globalList.forEach(function (identifier) {
 	globals[identifier] = false;

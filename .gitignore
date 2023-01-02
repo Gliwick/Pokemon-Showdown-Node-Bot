@@ -18,7 +18,6 @@ logs
 data/*.js
 data/*.json
 data/_temp
-!data/typechart.js
 !data/*-example.js
 features/battle/battle-ai/temp
 features/battle/teams.js

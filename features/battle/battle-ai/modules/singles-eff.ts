@@ -963,7 +963,7 @@ export class SinglesEffective implements BattleModule {
 					move.zMoveBoost.spa &&
 					move.zMoveBoost.spd &&
 					move.zMoveBoost.spe);
-			if (battle.request.active[0].canZMove || battle.request.side.pokemon[0].canZMove) {
+			if (battle.request.active[0].canZMove) {
 				if (des.transformation !== 'zmove' && viableZMove && selfPoke.item) {
 					if (selfPoke.item.zMoveType && selfPoke.item.zMoveType === move.type) continue;
 					if (selfPoke.item.zMoveFrom && selfPoke.item.zMoveFrom === move.name) continue;
@@ -2335,11 +2335,7 @@ export class SinglesEffective implements BattleModule {
 			if (move.id in { nuzzle: 1, rapidspin: 1 } && (sub > 0 || pc < 100)) continue;
 			if (typeof des.transformation === 'string' && ['zmove', 'dynamax'].includes(des.transformation) && sub > 0)
 				continue;
-			if (
-				(battle.request.active[0].canZMove || battle.request.side.pokemon[0].canZMove) &&
-				sub === 0 &&
-				pc < 100
-			) {
+			if (battle.request.active[0].canZMove && sub === 0 && pc < 100) {
 				if (des.transformation !== 'zmove' && selfPoke.item) {
 					if (selfPoke.item.zMoveType && selfPoke.item.zMoveType === move.type) continue;
 					if (selfPoke.item.zMoveFrom && selfPoke.item.zMoveFrom === move.name) continue;

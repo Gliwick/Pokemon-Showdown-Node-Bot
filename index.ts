@@ -4,10 +4,7 @@
 	By: Gliwick
 */
 
-import 'path';
-import 'sugar';
-
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, watchFile, writeFileSync } from 'fs';
 
 import { setupBot } from './bot-setup';
 import { CommandParser as CommandParserClass } from './command-parser';
@@ -20,7 +17,7 @@ import { Intl } from './intl';
 import { errlog, error, info, ok } from './log';
 import { SecurityLogger } from './security-log';
 import { SettingsManager } from './settings';
-import { Tools as ToolsType } from './tools';
+import { uncacheTree } from './tools';
 
 function importColors(): Record<string, (s: string) => string> {
 	try {
@@ -129,8 +126,6 @@ if (!existsSync(AppOptions.config)) {
 global.Config = require(AppOptions.config);
 checkConfig();
 
-global.Tools = new ToolsType();
-
 if (AppOptions.debugmode) info(['Debug', 'Monitor', 'Production'][AppOptions.debugmode - 1] + ' mode');
 
 info('Loading globals');
@@ -195,7 +190,7 @@ if (!AppOptions.testmode) {
 	ok('Global monitor is working');
 }
 
-//CrashGuard
+// CrashGuard
 if (!AppOptions.testmode && Config.crashguard) {
 	process.on('uncaughtException', function (err) {
 		SecurityLog.log('CRASH: ' + err.message + '\n' + err.stack);
@@ -205,12 +200,12 @@ if (!AppOptions.testmode && Config.crashguard) {
 	ok('Crashguard enabled');
 }
 
-//WatchConfig
+// WatchConfig
 if (!AppOptions.testmode && Config.watchconfig) {
-	Tools.watchFile(AppOptions.config, (curr, prev) => {
+	watchFile(AppOptions.config, (curr, prev) => {
 		if (curr.mtime <= prev.mtime) return;
 		try {
-			Tools.uncacheTree(AppOptions.config);
+			uncacheTree(AppOptions.config);
 			global.Config = require(AppOptions.config);
 			checkConfig();
 			Settings.applyConfig();
@@ -226,7 +221,7 @@ if (!AppOptions.testmode && Config.watchconfig) {
 
 console.log(colors.yellow('\n-----------------------------------------------\n'));
 
-//Connection
+// Connection
 if (AppOptions.testmode) {
 	ok('Test mode enabled');
 } else {

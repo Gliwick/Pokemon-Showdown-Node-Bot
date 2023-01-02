@@ -2,9 +2,8 @@
 	Battle data
 */
 
-import { toId } from '../../../tools';
+import { deepcopy, escapeHTML, toId } from '../../../tools';
 import { Conditions } from '../data/conditions';
-import { deepcopy } from '../utils';
 
 export const BATTLE_DATA_DIR = './../data/';
 export const MODS_DATA_DIR = BATTLE_DATA_DIR + 'mods/';
@@ -75,7 +74,7 @@ export function getEffect(effect, gen: number = CurrentGen) {
 			effect.exists = true;
 		}
 		if (!effect.id) effect.id = id;
-		if (!effect.name) effect.name = Tools.escapeHTML(name);
+		if (!effect.name) effect.name = escapeHTML(name);
 		if (!effect.category) effect.category = 'Effect';
 		if (!effect.effectType) effect.effectType = 'Effect';
 	}
@@ -630,8 +629,9 @@ export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/formats-data.js.js')
-				.BattleFormatsData[poke];
+			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/formats-data.js').BattleFormatsData[
+				poke
+			];
 		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {

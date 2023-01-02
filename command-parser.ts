@@ -6,7 +6,7 @@ import { inspect } from 'util';
 
 import { cmdr, errlog, error, info, monitor, ok } from './log';
 import { FlatFileManager } from './settings';
-import { toId, toRoomid } from './tools';
+import { equalOrHigherRank, highestRank, stripCommands, toId, toRoomid, uncacheTree } from './tools';
 
 const MAX_COMMAND_RECURSION = 10;
 const MAX_CMD_FLOOD = 30;
@@ -53,7 +53,7 @@ export class Context {
 		this.cmdToken = opts.cmdToken || '';
 		this.roomType = this.room.charAt(0) === ',' ? 'pm' : Bot.rooms[this.room]?.type || 'chat';
 		this.botName = Bot.status.nickName;
-		this.isExcepted = Tools.equalOrHigherRank(this.by, Tools.highestRank());
+		this.isExcepted = equalOrHigherRank(this.by, highestRank());
 		this.language =
 			(this.roomType === 'chat' && Settings.settings.language?.[this.room]) || Config.language || 'english';
 		this.parser = parser;
@@ -103,13 +103,13 @@ export class Context {
 	}
 
 	isRanked(rank: string): boolean {
-		return Tools.equalOrHigherRank(this.by, rank);
+		return equalOrHigherRank(this.by, rank);
 	}
 
 	isRoomRanked(targetRoom: string, rank: string): boolean {
 		if (Bot.rooms && Bot.rooms[targetRoom] && Bot.rooms[targetRoom].users) {
 			const userIdent = Bot.rooms[targetRoom].users[toId(this.by)] || this.by;
-			return Tools.equalOrHigherRank(userIdent, rank);
+			return equalOrHigherRank(userIdent, rank);
 		}
 		return this.isRanked(rank);
 	}
@@ -124,14 +124,14 @@ export class Context {
 			Config.permissionExceptions[permission] ||
 			Config.defaultPermission;
 
-		if (Tools.equalOrHigherRank(this.by, rankSet) && Tools.equalOrHigherRank(this.by, rank)) return true;
+		if (equalOrHigherRank(this.by, rankSet) && equalOrHigherRank(this.by, rank)) return true;
 		return false;
 	}
 
 	botRanked(rank: string): boolean {
 		if (!Bot.rooms[this.room]) return false;
 		const ident = Bot.rooms[this.room].users[toId(Bot.status.nickName)];
-		if (ident) return Tools.equalOrHigherRank(ident, rank);
+		if (ident) return equalOrHigherRank(ident, rank);
 		return false;
 	}
 
@@ -139,9 +139,9 @@ export class Context {
 		if (!targetRoom) targetRoom = this.room;
 		if (Bot.rooms && Bot.rooms[targetRoom] && Bot.rooms[targetRoom].users) {
 			const userIdent = Bot.rooms[targetRoom].users[toId(user)] || user;
-			return Tools.equalOrHigherRank(userIdent, rank);
+			return equalOrHigherRank(userIdent, rank);
 		}
-		return Tools.equalOrHigherRank(user, rank);
+		return equalOrHigherRank(user, rank);
 	}
 
 	getRoom(targetRoom: string): Room | null {
@@ -333,7 +333,7 @@ export class CommandParser {
 			.map((file) => FEATURES_DIR + file + '/commands.ts')
 			.filter((path) => existsSync(path));
 		[...commandFiles, ...featureCommandFiles].forEach((file: string): void => {
-			if (reloading) Tools.uncacheTree(file);
+			if (reloading) uncacheTree(file);
 			try {
 				const { commands, manager } = require(file) as {
 					commands: [];
@@ -374,10 +374,10 @@ export class CommandParser {
 	}
 
 	parse(room: string, by: string, msg: string): void {
-		if (!Tools.equalOrHigherRank(by, Tools.highestRank())) {
+		if (!equalOrHigherRank(by, highestRank())) {
 			if (this.resourceMonitor.isLocked(by)) return;
 		}
-		if (msg.substr(0, 8) === '/invite ' && Tools.equalOrHigherRank(by, '%')) {
+		if (msg.substr(0, 8) === '/invite ' && equalOrHigherRank(by, '%')) {
 			Bot.say('', '/join ' + msg.substr(8));
 			SecurityLog.log('User ' + by + ' used /invite ' + msg.substr(8));
 			return;
@@ -404,7 +404,7 @@ export class CommandParser {
 				Config.pmhelp &&
 				this.resourceMonitor.counthelp(by)
 			) {
-				Bot.pm(by, Tools.stripCommands(Config.pmhelp.replace(/#USER/g, by.substr(1))));
+				Bot.pm(by, stripCommands(Config.pmhelp.replace(/#USER/g, by.substr(1))));
 			}
 			return;
 		}
@@ -449,7 +449,7 @@ export class CommandParser {
 				};
 				const context = new Context(opts, this);
 				try {
-					if (!Tools.equalOrHigherRank(by, Tools.highestRank())) {
+					if (!equalOrHigherRank(by, highestRank())) {
 						if (this.resourceMonitor.countcmd(by)) return;
 					}
 					cmdr(handler + ' | arg: ' + args + ' | by: ' + by + ' | room: ' + room + ' | cmd: ' + cmd);

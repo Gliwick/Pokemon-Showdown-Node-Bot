@@ -1,4 +1,4 @@
-import { Stat } from '../tools';
+export type Stat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 
 export const typechart: Record<
 	string,

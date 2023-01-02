@@ -3,7 +3,7 @@
 */
 
 import { ConfigType, validateConfigObject } from '../../config-tools';
-import { toId } from '../../tools';
+import { equalOrHigherRank, getGroup, toId } from '../../tools';
 import { Feature } from '../index';
 
 const DEFAULT_MOD_CONSTS: Required<ConfigType['moderation']['MOD_CONSTS']> = {
@@ -77,7 +77,7 @@ export class ModerationManager implements Feature {
 	}
 
 	getModException(room: string): string {
-		return Settings.settings.modexception?.[room] || Config.moderation.modException || Tools.getGroup('driver');
+		return Settings.settings.modexception?.[room] || Config.moderation.modException || getGroup('driver');
 	}
 
 	trad(data: string, room: string): string {
@@ -111,7 +111,7 @@ export class ModerationManager implements Feature {
 	isBotRanked(room: string, rank: string): boolean {
 		if (!Bot.rooms[room]) return false;
 		const ident = Bot.rooms[room].users[toId(Bot.status.nickName)];
-		if (ident) return Tools.equalOrHigherRank(ident, rank);
+		if (ident) return equalOrHigherRank(ident, rank);
 		return false;
 	}
 
@@ -220,7 +220,7 @@ export class ModerationManager implements Feature {
 
 	parseChat(room: string, time: number, by: string, message: string): void {
 		const user = toId(by);
-		if (Tools.equalOrHigherRank(by, this.getModException(room))) return;
+		if (equalOrHigherRank(by, this.getModException(room))) return;
 		const ban = this.isBanned(room, by);
 		if (ban) Bot.say(room, '/roomban ' + by + ', ' + this.trad('ab', room) + (ban === '#range' ? ' (RegExp)' : ''));
 
@@ -252,7 +252,7 @@ export class ModerationManager implements Feature {
 		/* Moderation */
 
 		if (!Config.moderation.allowmute) return;
-		if (!this.isBotRanked(room, Tools.getGroup('driver'))) return; // Bot is not a driver or above
+		if (!this.isBotRanked(room, getGroup('driver'))) return; // Bot is not a driver or above
 
 		const infractions: string[] = [];
 		let muteMessage = '';
@@ -560,7 +560,7 @@ export class ModerationManager implements Feature {
 
 			cmd = Config.moderation.punishments[pointVal - 1];
 
-			if (cmd === 'roomban' && !this.isBotRanked(room, Tools.getGroup('moderator'))) cmd = 'hourmute'; //Bot is not a moderator
+			if (cmd === 'roomban' && !this.isBotRanked(room, getGroup('moderator'))) cmd = 'hourmute'; //Bot is not a moderator
 			if (Config.privateRooms.includes(room) && cmd === 'warn') cmd = 'mute'; //can't warn in private rooms
 
 			Bot.say(room, '/' + cmd + ' ' + user + muteMessage);
@@ -570,13 +570,13 @@ export class ModerationManager implements Feature {
 	parseJoin(room: string, by: string): void {
 		const jp = this.getJoinPhrase(room, by);
 		if (jp) Bot.say(room, jp);
-		if (Tools.equalOrHigherRank(by, Config.moderation.modException)) return;
+		if (equalOrHigherRank(by, Config.moderation.modException)) return;
 		const ban = this.isBanned(room, by);
 		if (ban) Bot.say(room, '/roomban ' + by + ', ' + this.trad('ab', room) + (ban === '#range' ? ' (RegExp)' : ''));
 	}
 
 	parseRename(room: string, by: string, old: string): void {
-		if (Tools.equalOrHigherRank(by, Config.moderation.modException)) return;
+		if (equalOrHigherRank(by, Config.moderation.modException)) return;
 		const ban = this.isBanned(room, by);
 		if (ban) {
 			Bot.say(room, '/roomban ' + by + ', ' + this.trad('ab', room) + (ban === '#range' ? ' (RegExp)' : ''));

@@ -3,7 +3,7 @@
 */
 
 import { Command, Context } from '../../command-parser';
-import { toId, toRoomid } from '../../tools';
+import { getTargetRoom, stripCommands, toId, toRoomid, uploadToHastebin } from '../../tools';
 import { GroupChatsManager } from '.';
 
 function wpmEnabled(room: string): boolean {
@@ -43,7 +43,7 @@ export const commands: Record<string, string | Command> = {
 	autopromote: function (arg, user, room, cmd) {
 		if (!this.isRanked('roomowner')) return false;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -81,7 +81,7 @@ export const commands: Record<string, string | Command> = {
 				'\n\n';
 			const users = Object.values(Settings.settings.autopromote[tarRoom].users).map((user, i) => user + i);
 			txt += users.join(', ');
-			Tools.uploadToHastebin(
+			uploadToHastebin(
 				txt,
 				function (this: Context, r: boolean, link: any): void {
 					if (r) return this.pmReply(this.trad('list') + ' ' + tarRoom + ': ' + link);
@@ -194,7 +194,7 @@ export const commands: Record<string, string | Command> = {
 	wpm: function (arg, user, room, cmd) {
 		if (!this.isRanked('roomowner')) return false;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -236,7 +236,7 @@ export const commands: Record<string, string | Command> = {
 						if (!wpmEnabled(tarRoom)) return this.reply(this.trad('dis') + ' ' + tarRoom);
 						const message = Settings.settings.pmwmsg[tarRoom].msg;
 						if (!message) return this.reply(this.trad('not') + ' ' + tarRoom);
-						this.reply(Tools.stripCommands(message));
+						this.reply(stripCommands(message));
 						break;
 					default:
 						return this.reply(
@@ -246,7 +246,7 @@ export const commands: Record<string, string | Command> = {
 				break;
 			case 'setwpm':
 				if (!wpmEnabled(tarRoom)) return this.reply(this.trad('dis') + ' ' + tarRoom);
-				arg = Tools.stripCommands(arg.trim());
+				arg = stripCommands(arg.trim());
 				if (!arg) return this.reply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [message]');
 				if (!Settings.settings.pmwmsg[tarRoom]) Settings.settings.pmwmsg[tarRoom] = { msg: '', enabled: true };
 				Settings.settings.pmwmsg[tarRoom].msg = arg;

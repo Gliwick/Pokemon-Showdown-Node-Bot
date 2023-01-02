@@ -7,7 +7,7 @@ import { inspect } from 'util';
 import { ConfigType, LeaderboardConfig } from './config-tools';
 import { debug, errlog, error, ok } from './log';
 import type PackageJsonType from './package.json';
-import { toId } from './tools';
+import { equalOrHigherRank, generateRandomNick, httpGet, toId } from './tools';
 
 export class FlatFileManager {
 	file: PathLike;
@@ -311,7 +311,7 @@ export class SettingsManager {
 		const rank =
 			(permission && (this.settings.commands?.[room]?.[permission] || Config.permissionExceptions[permission])) ||
 			Config.defaultPermission;
-		return Tools.equalOrHigherRank(user, rank);
+		return equalOrHigherRank(user, rank);
 	}
 
 	addPermissions(perms: string[]): void {
@@ -402,7 +402,7 @@ export class SettingsManager {
 			}
 		}
 		if (onDownload) onDownload();
-		Tools.httpGet(
+		httpGet(
 			url,
 			((data: string | null, err: Error | null): void => {
 				if (err) {
@@ -411,7 +411,7 @@ export class SettingsManager {
 				}
 				let file: string;
 				do {
-					file = 'cache.http.' + Tools.generateRandomNick(5) + '.tmp';
+					file = 'cache.http.' + generateRandomNick(5) + '.tmp';
 				} while (this.httpCache[file]);
 				if (!data) return;
 				writeFile(

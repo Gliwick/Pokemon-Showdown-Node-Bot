@@ -7,7 +7,7 @@ import { inspect } from 'util';
 
 import { Command, CommandModuleManager, Context } from '../../command-parser';
 import { errlog } from '../../log';
-import { toId } from '../../tools';
+import { getGroup, getTargetRoom, parseAliases, toId, uploadToHastebin } from '../../tools';
 import { BattleManager } from '.';
 
 class BattleModule implements CommandModuleManager {
@@ -32,15 +32,16 @@ function getTeamCallback(this: Context, name: string, format: string, res: Incom
 			}
 			let team;
 			let packed;
+			const { teamBuilder } = Features.getFeature(BattleManager);
 			try {
-				team = Tools.teamToJSON(data.data);
-				packed = Tools.packTeam(team);
+				team = teamBuilder.teamToJSON(data.data);
+				packed = teamBuilder.packTeam(team);
 			} catch (e: any) {
 				errlog(e.stack);
 				this.reply(this.trad('err2'));
 				return;
 			}
-			if (Features.getFeature(BattleManager).teamBuilder.addTeam(name, format, packed)) {
+			if (teamBuilder.addTeam(name, format, packed)) {
 				this.sclog();
 				this.reply(this.trad('team') + ' __' + name + '__ ' + this.trad('added'));
 			} else {
@@ -64,7 +65,7 @@ export const commands: Record<string, string | Command> = {
 		if (!this.isExcepted) return false;
 		this.sclog();
 		let tarRoom = room;
-		const tarObj = Tools.getTargetRoom(arg);
+		const tarObj = getTargetRoom(arg);
 		if (tarObj) {
 			arg = tarObj.arg;
 			tarRoom = tarObj.room;
@@ -104,7 +105,7 @@ export const commands: Record<string, string | Command> = {
 
 	unblockchallenges: 'blockchallenges',
 	blockchallenges: function (arg, by, room, cmd) {
-		if (!this.isRanked(Tools.getGroup('admin'))) return;
+		if (!this.isRanked(getGroup('admin'))) return;
 		this.sclog();
 		if (cmd === 'blockchallenges') {
 			this.say('', '/blockchallenges');
@@ -128,7 +129,7 @@ export const commands: Record<string, string | Command> = {
 	jointours: function (arg, by, room) {
 		if (!this.can('jointour')) return false;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -158,14 +159,16 @@ export const commands: Record<string, string | Command> = {
 		if (!this.can('searchbattle')) return false;
 		if (Settings.lockdown) return;
 		if (!arg || !arg.length) return this.reply(this.trad('e1'));
-		const format = Tools.parseAliases(arg);
-		if (!Formats[format] || !Formats[format].ladder)
-			return this.reply(this.trad('e21') + ' ' + format + ' ' + this.trad('e22'));
-		if (Formats[format].team && !Features.getFeature(BattleManager).teamBuilder.hasTeam(format))
+		const format = parseAliases(arg);
+		if (!Formats[format]?.ladder) return this.reply(this.trad('e21') + ' ' + format + ' ' + this.trad('e22'));
+
+		const { ladderManager, teamBuilder } = Features.getFeature(BattleManager);
+		if (Formats[format].team && !teamBuilder.hasTeam(format)) {
 			return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
-		Features.getFeature(BattleManager).ladderManager.reportsRoom = room;
+		}
+		ladderManager.reportsRoom = room;
 		const cmds = [];
-		const team = Features.getFeature(BattleManager).teamBuilder.getTeam(format);
+		const team = teamBuilder.getTeam(format);
 		if (team) cmds.push('|/useteam ' + team);
 		cmds.push('|/search ' + arg);
 		this.send(cmds);
@@ -173,18 +176,20 @@ export const commands: Record<string, string | Command> = {
 
 	ladderstop: 'ladderstart',
 	ladderstart: function (arg, by, room, cmd) {
-		if (!this.isRanked(Tools.getGroup('admin'))) return false;
+		if (!this.isRanked(getGroup('admin'))) return false;
 		if (cmd === 'ladderstop') {
 			this.sclog();
 			if (Features.getFeature(BattleManager).ladderManager.stop()) this.reply(this.trad('stop'));
 			return;
 		}
-		const format = Tools.parseAliases(arg);
-		if (!Formats[format] || !Formats[format].ladder)
-			return this.reply(this.trad('e21') + ' ' + format + ' ' + this.trad('e22'));
-		if (Formats[format].team && !Features.getFeature(BattleManager).teamBuilder.hasTeam(format))
+		const format = parseAliases(arg);
+		if (!Formats[format]?.ladder) return this.reply(this.trad('e21') + ' ' + format + ' ' + this.trad('e22'));
+
+		const { ladderManager, teamBuilder } = Features.getFeature(BattleManager);
+		if (Formats[format].team && !teamBuilder.hasTeam(format)) {
 			return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
-		if (Features.getFeature(BattleManager).ladderManager.start(format)) {
+		}
+		if (ladderManager.start(format)) {
 			this.reply(this.trad('start') + ' ' + format);
 			this.sclog();
 		}
@@ -201,13 +206,17 @@ export const commands: Record<string, string | Command> = {
 			args = [by, arg];
 		}
 		if (args.length < 2) return this.reply(this.trad('e11') + ': ' + this.cmdToken + cmd + ' ' + this.trad('e12'));
-		const format = Tools.parseAliases(args[1]);
-		if (!format || !Formats[format] || !Formats[format].chall)
+		const format = parseAliases(args[1]);
+		if (!format || !Formats[format]?.chall) {
 			return this.reply(this.trad('e21') + ' "' + format + '" ' + this.trad('e22'));
-		if (Formats[format].team && !Features.getFeature(BattleManager).teamBuilder.hasTeam(format))
+		}
+
+		const { teamBuilder } = Features.getFeature(BattleManager);
+		if (Formats[format].team && !teamBuilder.hasTeam(format)) {
 			return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
+		}
 		const cmds = [];
-		const team = Features.getFeature(BattleManager).teamBuilder.getTeam(format);
+		const team = teamBuilder.getTeam(format);
 		if (team) cmds.push('|/useteam ' + team);
 		cmds.push('|/challenge ' + toId(args[0]) + ', ' + format);
 		this.send(cmds);
@@ -220,19 +229,16 @@ export const commands: Record<string, string | Command> = {
 		if (!this.can('jointour')) return false;
 		if (Settings.lockdown) return;
 		if (this.roomType !== 'chat') return this.reply(this.trad('notchat'));
-		if (
-			!Features.getFeature(BattleManager).tourManager.tourData[room] ||
-			!Features.getFeature(BattleManager).tourManager.tourData[room].format
-		)
-			return this.reply(this.trad('e1'));
-		if (cmd === 'checktour') {
-			return this.say(room, '/tour getupdate');
-		}
-		if (Features.getFeature(BattleManager).tourManager.tourData[room].isJoined) return this.reply(this.trad('e2'));
-		if (Features.getFeature(BattleManager).tourManager.tourData[room].isStarted) return this.reply(this.trad('e3'));
-		const format = toId(Features.getFeature(BattleManager).tourManager.tourData[room].format);
-		if (Formats[format] && Formats[format].team && !Features.getFeature(BattleManager).teamBuilder.hasTeam(format))
+
+		const { teamBuilder, tourManager } = Features.getFeature(BattleManager);
+		if (!tourManager.tourData[room]?.format) return this.reply(this.trad('e1'));
+		if (cmd === 'checktour') return this.say(room, '/tour getupdate');
+		if (tourManager.tourData[room].isJoined) return this.reply(this.trad('e2'));
+		if (tourManager.tourData[room].isStarted) return this.reply(this.trad('e3'));
+		const format = toId(tourManager.tourData[room].format);
+		if (Formats[format] && Formats[format].team && !teamBuilder.hasTeam(format)) {
 			return this.reply(this.trad('e41') + ' ' + format + '. ' + this.trad('e42'));
+		}
 		this.reply('/tour join');
 	},
 
@@ -251,12 +257,13 @@ export const commands: Record<string, string | Command> = {
 	botteams: 'team',
 	teams: 'team',
 	team: function (arg, by, room, cmd) {
-		if (!this.isRanked(Tools.getGroup('admin'))) return false;
+		if (!this.isRanked(getGroup('admin'))) return false;
 		if (!arg) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 		const argArray = arg.split(',');
 		const opt = toId(argArray[0]);
 		let id: string;
 		let name: string;
+		const { teamBuilder } = Features.getFeature(BattleManager);
 		switch (opt) {
 			case 'add':
 			case 'new':
@@ -264,7 +271,7 @@ export const commands: Record<string, string | Command> = {
 					return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u3'));
 				}
 				name = toId(argArray[1]);
-				const format = Tools.parseAliases(argArray[2]);
+				const format = parseAliases(argArray[2]);
 				let link = argArray[3].trim();
 				if (!link) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 				if (link.substr(-1) === '/') link = link.substr(0, link.length - 1);
@@ -285,12 +292,12 @@ export const commands: Record<string, string | Command> = {
 				if (argArray.length < 2)
 					return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u5'));
 				id = toId(argArray[1]);
-				if (!Features.getFeature(BattleManager).teamBuilder.dynTeams[id]) {
+				if (!teamBuilder.dynTeams[id]) {
 					return this.reply(this.trad('team') + ' __' + id + '__ ' + this.trad('notexists'));
 				}
 				try {
-					const data = Tools.exportTeam(Features.getFeature(BattleManager).teamBuilder.dynTeams[id].packed);
-					Tools.uploadToHastebin(
+					const data = teamBuilder.exportTeam(teamBuilder.dynTeams[id].packed);
+					uploadToHastebin(
 						data,
 						function (this: Context, r: boolean, link: any): void {
 							if (r) return this.pmReply(id + ': ' + link);
@@ -306,17 +313,13 @@ export const commands: Record<string, string | Command> = {
 				if (argArray.length < 2)
 					return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u6'));
 				id = toId(argArray[1]);
-				if (!Features.getFeature(BattleManager).teamBuilder.dynTeams[id])
+				if (!teamBuilder.dynTeams[id]) {
 					return this.reply(this.trad('team') + ' __' + id + '__ ' + this.trad('notexists'));
-				const cmds = [];
-				const team = Features.getFeature(BattleManager).teamBuilder.dynTeams[id].packed;
+				}
+				const cmds: string[] = [];
+				const team = teamBuilder.dynTeams[id].packed;
 				if (team) cmds.push('|/useteam ' + team);
-				cmds.push(
-					'|/challenge ' +
-						toId(argArray[2] || by) +
-						', ' +
-						Features.getFeature(BattleManager).teamBuilder.dynTeams[id].format
-				);
+				cmds.push('|/challenge ' + toId(argArray[2] || by) + ', ' + teamBuilder.dynTeams[id].format);
 				this.sclog();
 				this.send(cmds);
 				break;
@@ -325,7 +328,7 @@ export const commands: Record<string, string | Command> = {
 				if (argArray.length < 2)
 					return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u4'));
 				name = toId(argArray[1]);
-				if (Features.getFeature(BattleManager).teamBuilder.removeTeam(name)) {
+				if (teamBuilder.removeTeam(name)) {
 					this.sclog();
 					this.reply(this.trad('team') + ' __' + name + '__ ' + this.trad('removed'));
 				} else {
@@ -341,7 +344,7 @@ export const commands: Record<string, string | Command> = {
 	viewteamslist: 'teamlist',
 	teamslist: 'teamlist',
 	teamlist: function () {
-		if (!this.isRanked(Tools.getGroup('admin'))) return false;
+		if (!this.isRanked(getGroup('admin'))) return false;
 		const teamsStr = this.trad('list') + ':\n\n';
 		const { teamBuilder } = Features.getFeature(BattleManager);
 		const teams = Object.entries(teamBuilder.staticTeams)
@@ -359,7 +362,7 @@ export const commands: Record<string, string | Command> = {
 			);
 		const nTeams = teams.length;
 		if (!nTeams) return this.pmReply(this.trad('empty'));
-		Tools.uploadToHastebin(
+		uploadToHastebin(
 			teamsStr,
 			function (this: Context, r: boolean, link: any): void {
 				if (r) return this.pmReply(this.trad('list') + ': ' + link);
@@ -369,7 +372,7 @@ export const commands: Record<string, string | Command> = {
 	},
 
 	formatlist: function () {
-		if (!this.isRanked(Tools.getGroup('admin'))) return false;
+		if (!this.isRanked(getGroup('admin'))) return false;
 		const teams = Features.getFeature(BattleManager).teamBuilder.staticTeams;
 		const genToFormats = Object.keys(teams).reduce((acc, format) => {
 			const gen = format.substr(3, 1);

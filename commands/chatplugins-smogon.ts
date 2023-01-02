@@ -4,7 +4,7 @@
 
 import { Command, CommandModuleManager, Context } from '../command-parser';
 import { debug } from '../log';
-import { toId } from '../tools';
+import { getTargetRoom, httpGet, joinWithLengthLimit, pad, parseAliases, toId, toName } from '../tools';
 
 class Downloader implements CommandModuleManager {
 	downloadingFlag: Record<string, boolean> = {};
@@ -49,14 +49,14 @@ function generateUsageLink(monthmod: number): string {
 		month -= 12;
 		year++;
 	}
-	return 'http://www.smogon.com/stats/' + Tools.addLeftZero(year, 4) + '-' + Tools.addLeftZero(month + 1, 2) + '/';
+	return 'http://www.smogon.com/stats/' + pad(year, 4) + '-' + pad(month + 1, 2) + '/';
 }
 
 function getUsageLink(callback: (link?: string) => void): void {
 	const realLink = generateUsageLink(-1);
 	const currLink = Settings.settings.usagelink;
 	if (currLink !== realLink) {
-		Tools.httpGet(realLink, (data: string | null, err: Error | null): void => {
+		httpGet(realLink, (data: string | null, err: Error | null): void => {
 			if (!err && data && data.indexOf('<title>404 Not Found</title>') < 0) {
 				Settings.settings.usagelink = realLink;
 				Settings.save();
@@ -84,7 +84,7 @@ function isTopTier(tier: string): boolean {
 function getUsage(this: Context, arg: string, link?: string): void {
 	if (!link) link = generateUsageLink(-2);
 	if (this.cmd === 'usagelink' || this.cmd === 'usagedatalink') {
-		const tFormat = Tools.parseAliases(arg);
+		const tFormat = parseAliases(arg);
 		return this.restrictReply(
 			this.trad('stats') +
 				': ' +
@@ -131,7 +131,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 				'usage'
 			);
 		if (args[2]) {
-			tier = Tools.parseAliases(args[2]);
+			tier = parseAliases(args[2]);
 			if (!Formats[tier] && !Formats[tier + 'suspecttest'])
 				return this.restrictReply(this.trad('tiererr1') + ' "' + tier + '" ' + this.trad('tiererr2'), 'usage');
 		}
@@ -174,7 +174,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 					);
 				const result: string[] = [];
 				let resultName = '';
-				const pokeName = Tools.toName(pokeData[1].split('|')[1]);
+				const pokeName = toName(pokeData[1].split('|')[1]);
 				for (let i = 0; i < pokeData.length; i++) {
 					if (pokeData[i + 1] && pokeData[i].trim() === '+----------------------------------------+') {
 						switch (toId(pokeData[i + 1])) {
@@ -224,7 +224,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 							tierName(tier),
 						'usage'
 					);
-				const cmds = Tools.joinWithLengthLimit(
+				const cmds = joinWithLengthLimit(
 					result,
 					'**' +
 						this.trad('usagedata1').replace('#NAME', resultName) +
@@ -249,7 +249,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 				'usage'
 			);
 		if (args[1]) {
-			tier = Tools.parseAliases(args[1]);
+			tier = parseAliases(args[1]);
 			if (!Formats[tier] && !Formats[tier + 'suspecttest'])
 				return this.restrictReply(this.trad('tiererr1') + ' "' + tier + '" ' + this.trad('tiererr2'), 'usage');
 		}
@@ -280,7 +280,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 					line = lines[i].split('|');
 					if (line.length < 7) continue;
 					if (toId(line[2]) === poke || searchIndex === parseInt(line[1].trim())) {
-						dataRes.name = Tools.toName(line[2]);
+						dataRes.name = toName(line[2]);
 						dataRes.pos = parseInt(line[1].trim());
 						dataRes.usage = line[3].trim();
 						dataRes.raw = line[4].trim();
@@ -334,7 +334,7 @@ export const commands: Record<string, string | Command> = {
 	deftier: function (arg, by, room) {
 		if (!this.isRanked('roomowner')) return false;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -360,7 +360,7 @@ export const commands: Record<string, string | Command> = {
 		if (!Settings.settings.suspect) Settings.settings.suspect = {};
 		if (this.cmd === 'delsuspect') {
 			if (!arg) return this.reply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [tier]');
-			arg = Tools.parseAliases(arg);
+			arg = parseAliases(arg);
 			if (!Settings.settings.suspect[arg]) {
 				return this.reply(this.trad('d1') + ' "' + arg + '" ' + this.trad('notfound'));
 			}
@@ -373,7 +373,7 @@ export const commands: Record<string, string | Command> = {
 			if (args.length < 3) {
 				return this.reply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [tier], [pokemon], [link]');
 			}
-			const tier = Tools.parseAliases(args.shift());
+			const tier = parseAliases(args.shift());
 			if (!Formats[tier] && !Formats[tier + 'suspecttest']) {
 				return this.reply(this.trad('tier') + ' "' + tier + '" ' + this.trad('notfound'));
 			}
@@ -391,7 +391,7 @@ export const commands: Record<string, string | Command> = {
 	suspect: function (arg) {
 		let tier = getDefaultTier(this.room);
 		if (arg) {
-			tier = Tools.parseAliases(arg);
+			tier = parseAliases(arg);
 		}
 		if (Settings.settings.suspect && Settings.settings.suspect[tier]) {
 			//Suspect
@@ -401,7 +401,7 @@ export const commands: Record<string, string | Command> = {
 					' **' +
 					tierName(tier) +
 					'**: **' +
-					Tools.toName(Settings.settings.suspect[tier].poke) +
+					toName(Settings.settings.suspect[tier].poke) +
 					'**. ' +
 					Settings.settings.suspect[tier].link,
 				'info'

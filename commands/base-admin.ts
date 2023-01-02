@@ -3,7 +3,7 @@
 */
 
 import { Command } from '../command-parser';
-import { toId, toRoomid } from '../tools';
+import { getTargetRoom, highestRank, toId, toRoomid } from '../tools';
 
 interface Room {
 	title?: string;
@@ -100,7 +100,7 @@ export const commands: Record<string, string | Command> = {
 	language: function (arg, by, room) {
 		if (!this.isRanked('roomowner')) return false;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -130,7 +130,7 @@ export const commands: Record<string, string | Command> = {
 	set: function (arg, by, room, cmd) {
 		if (!this.isRanked('roomowner')) return false;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -147,8 +147,8 @@ export const commands: Record<string, string | Command> = {
 			return this.reply(this.trad('ps') + ': ' + Object.keys(Settings.permissions).sort().join(', '));
 		}
 		if (['off', 'disable'].includes(rank)) {
-			if (!this.canSet(perm, Tools.highestRank())) return this.reply(this.trad('denied'));
-			Settings.setPermission(tarRoom, perm, Tools.highestRank());
+			if (!this.canSet(perm, highestRank())) return this.reply(this.trad('denied'));
+			Settings.setPermission(tarRoom, perm, highestRank());
 			Settings.save();
 			this.sclog();
 			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('d') + textHelper);
@@ -185,7 +185,7 @@ export const commands: Record<string, string | Command> = {
 			return this.reply(this.trad('ps') + ': ' + Object.keys(Settings.permissions).sort().join(', '));
 		}
 		if (['off', 'disable'].includes(rank)) {
-			Settings.setPermission('battle-', perm, Tools.highestRank());
+			Settings.setPermission('battle-', perm, highestRank());
 			Settings.save();
 			this.sclog();
 			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('d'));

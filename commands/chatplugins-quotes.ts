@@ -3,7 +3,7 @@ import { inspect } from 'util';
 import { Command, CommandModuleManager, Context } from '../command-parser';
 import { errlog, error } from '../log';
 import { FlatFileManager } from '../settings';
-import { toId } from '../tools';
+import { stripCommands, toId, uploadToHastebin } from '../tools';
 
 class QuotesRepo implements CommandModuleManager {
 	quotesDataFile = AppOptions.data + 'quotes.json';
@@ -77,7 +77,7 @@ export const commands: Record<string, string | Command> = {
 			const id = toId(args[0]);
 			if (!id) return this.reply(this.trad('noid'));
 			args.splice(0, 1);
-			const content = Tools.stripCommands(args.join(',').trim());
+			const content = stripCommands(args.join(',').trim());
 			if (!content) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 			if (repo.quotes[id] && cmd !== 'setquote') {
 				return this.reply(this.trad('quote') + ' "' + id + '" ' + this.trad('already'));
@@ -106,11 +106,11 @@ export const commands: Record<string, string | Command> = {
 			if (!id) return this.reply(this.trad('noid'));
 			if (!repo.quotes[id])
 				return this.restrictReply(this.trad('quote') + ' "' + id + '" ' + this.trad('n'), 'quote');
-			return this.restrictReply(Tools.stripCommands(repo.quotes[id]), 'quote');
+			return this.restrictReply(stripCommands(repo.quotes[id]), 'quote');
 		} else {
 			const quote = repo.randQuote();
 			if (quote === null) return this.restrictReply(this.trad('empty'), 'quote');
-			return this.restrictReply(Tools.stripCommands(quote), 'quote');
+			return this.restrictReply(stripCommands(quote), 'quote');
 		}
 	},
 	listquotes: function () {
@@ -119,7 +119,7 @@ export const commands: Record<string, string | Command> = {
 			.map(([i, quote]) => i + ' -> ' + quote)
 			.join('\n');
 		if (!data) return this.reply(this.trad('empty'));
-		Tools.uploadToHastebin(
+		uploadToHastebin(
 			this.trad('list') + ':\n\n' + data,
 			function (this: Context, r: boolean, link: any): void {
 				if (r) return this.pmReply(this.trad('list') + ': ' + link);
@@ -145,7 +145,7 @@ export const commands: Record<string, string | Command> = {
 			const id = toId(args[0]);
 			if (!id) return this.reply(this.trad('noid'));
 			args.splice(0, 1);
-			const content = Tools.stripCommands(args.join(',').trim());
+			const content = stripCommands(args.join(',').trim());
 			if (!content) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 			if (repo.jokes[id] && cmd !== 'setjoke') {
 				return this.reply(this.trad('joke') + ' "' + id + '" ' + this.trad('already'));
@@ -174,11 +174,11 @@ export const commands: Record<string, string | Command> = {
 			if (!id) return this.reply(this.trad('noid'));
 			if (!repo.jokes[id])
 				return this.restrictReply(this.trad('joke') + ' "' + id + '" ' + this.trad('n'), 'joke');
-			return this.restrictReply(Tools.stripCommands(repo.jokes[id]), 'joke');
+			return this.restrictReply(stripCommands(repo.jokes[id]), 'joke');
 		} else {
 			const joke = repo.randJoke();
 			if (joke === null) return this.restrictReply(this.trad('empty'), 'joke');
-			return this.restrictReply(Tools.stripCommands(joke), 'joke');
+			return this.restrictReply(stripCommands(joke), 'joke');
 		}
 	},
 	listjokes: function () {
@@ -187,7 +187,7 @@ export const commands: Record<string, string | Command> = {
 			.map(([i, joke]) => i + ' -> ' + joke)
 			.join('\n');
 		if (!data) return this.reply(this.trad('empty'));
-		Tools.uploadToHastebin(
+		uploadToHastebin(
 			this.trad('list') + ':\n\n' + data,
 			function (this: Context, r: boolean, link: any): void {
 				if (r) return this.pmReply(this.trad('list') + ': ' + link);

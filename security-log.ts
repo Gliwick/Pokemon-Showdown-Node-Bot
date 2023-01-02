@@ -6,6 +6,7 @@ import { createWriteStream, existsSync, mkdirSync, PathLike, readdirSync, unlink
 
 import { LogConfig } from './config-tools';
 import { errlog, error } from './log';
+import { pad } from './tools';
 
 export const LOGS_PATH = './logs/';
 
@@ -75,12 +76,7 @@ export class SecurityLogger {
 
 	write(message: string): void {
 		const f = new Date();
-		const fstr =
-			Tools.addLeftZero(f.getFullYear(), 4) +
-			'_' +
-			Tools.addLeftZero(f.getMonth() + 1, 2) +
-			'_' +
-			Tools.addLeftZero(f.getDate(), 2);
+		const fstr = pad(f.getFullYear(), 4) + '_' + pad(f.getMonth() + 1, 2) + '_' + pad(f.getDate(), 2);
 		if (!this.logStream || this.logDate !== fstr) {
 			if (this.logStream) {
 				try {
@@ -95,15 +91,7 @@ export class SecurityLogger {
 			sweep(LOGS_PATH + 'security-log' + '/', Config.securityLog);
 		}
 		this.logStream.write(
-			'[' +
-				Tools.addLeftZero(f.getHours(), 2) +
-				':' +
-				Tools.addLeftZero(f.getMinutes(), 2) +
-				':' +
-				Tools.addLeftZero(f.getSeconds(), 2) +
-				'] ' +
-				message +
-				'\n'
+			'[' + [f.getHours(), f.getMinutes(), f.getSeconds()].map((n) => pad(n, 2)).join(':') + ']' + message + '\n'
 		);
 	}
 

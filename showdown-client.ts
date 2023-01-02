@@ -27,9 +27,9 @@
 
 import { EventEmitter } from 'events';
 import { IncomingMessage } from 'http';
-import * as https from 'https';
-import * as url from 'url';
-import * as util from 'util';
+import { request, RequestOptions } from 'https';
+import { parse, UrlWithStringQuery } from 'url';
+import { inspect } from 'util';
 import { client as WebSocketClient, connection, Message } from 'websocket';
 
 import { toId } from './tools';
@@ -60,7 +60,7 @@ interface Room {
 
 export class Client {
 	opts: ClientOptions;
-	actionUrl: url.UrlWithStringQuery;
+	actionUrl: UrlWithStringQuery;
 	rooms: Record<string, Room>;
 	roomcount: number;
 	connection: connection | null;
@@ -99,7 +99,7 @@ export class Client {
 			debug: false,
 			...opts,
 		};
-		this.actionUrl = url.parse(this.opts.loginServer);
+		this.actionUrl = parse(this.opts.loginServer);
 
 		this.rooms = {};
 		this.roomcount = 0;
@@ -152,7 +152,7 @@ export class Client {
 		connection.on(
 			'error',
 			((err: Error): void => {
-				this.error('connection error: ' + util.inspect(err));
+				this.error('connection error: ' + inspect(err));
 				this.connection = null;
 				this.status.connected = false;
 				this.events.emit('disconnect', err);
@@ -165,7 +165,7 @@ export class Client {
 		connection.on(
 			'close',
 			((code: number, desc: string): void => {
-				this.debug('connection closed: ' + util.inspect([code, desc]));
+				this.debug('connection closed: ' + inspect([code, desc]));
 				this.connection = null;
 				this.status.connected = false;
 				this.events.emit('disconnect', 0);
@@ -199,7 +199,7 @@ export class Client {
 		webSocket.on(
 			'connectFailed',
 			((err: Error): void => {
-				this.error('Could not connect to server ' + this.opts.server + ': ' + util.inspect(err));
+				this.error('Could not connect to server ' + this.opts.server + ': ' + inspect(err));
 				this.events.emit('disconnect', err);
 				if (this.opts.autoReconnect) {
 					this.debug('retrying in ' + this.opts.autoReconnectDelay / 1000 + ' seconds');
@@ -220,7 +220,7 @@ export class Client {
 			str += chars.charAt(~~(Math.random() * l));
 		}
 		const conStr = 'ws://' + this.opts.server + ':' + this.opts.port + '/showdown/' + id + '/' + str + '/websocket';
-		this.debug('connecting to ' + conStr + ' - secondary protocols: ' + util.inspect(this.opts.secprotocols));
+		this.debug('connecting to ' + conStr + ' - secondary protocols: ' + inspect(this.opts.secprotocols));
 		webSocket.connect(conStr, this.opts.secprotocols);
 	}
 
@@ -286,7 +286,7 @@ export class Client {
 	}
 
 	rename(nick: string, pass?: string | null): void {
-		const requestOptions: https.RequestOptions = {
+		const requestOptions: RequestOptions = {
 			hostname: this.actionUrl.hostname,
 			port: this.actionUrl.port,
 			path: this.actionUrl.pathname,
@@ -320,14 +320,14 @@ export class Client {
 			};
 			this.debug('Sending log in request to: ' + requestOptions.path + ' | Data -> ' + data);
 		}
-		const req = https.request(
+		const req = request(
 			requestOptions,
 			((res: IncomingMessage): void => this.onRename(res, nick, pass)).bind(this)
 		);
 		req.on(
 			'error',
 			((err: Error): void => {
-				this.error('login error: ' + util.inspect(err));
+				this.error('login error: ' + inspect(err));
 				if (this.opts.retryLogin) {
 					this.debug('Retrying log in process in ' + this.opts.retryLogin / 1000 + ' seconds...');
 					setTimeout(((): void => this.rename(nick, pass)).bind(this), this.opts.retryLogin);

@@ -5,7 +5,7 @@
 import { LeaderboardConfig } from '../../config-tools';
 import { debug } from '../../log';
 import { FlatFileManager } from '../../settings';
-import { toId } from '../../tools';
+import { generateRandomNick, getDateString, toId } from '../../tools';
 import { BracketNode, TourData } from '.';
 
 const toursDataFile = AppOptions.data + 'leaderboards.json';
@@ -283,7 +283,7 @@ export class LeaderboardsManager {
 		debug('Updating leaderboard...');
 		this.writeResults(room, results);
 		this.save();
-		debug('Leaderboard updated. ' + Tools.getDateString());
+		debug('Leaderboard updated. ' + getDateString());
 	}
 
 	getResetHashCode(room: string): string | null {
@@ -291,7 +291,7 @@ export class LeaderboardsManager {
 		for (const i in this.resetCodes) {
 			if (this.resetCodes[i] === room) delete this.resetCodes[i];
 		}
-		const code = Tools.generateRandomNick(10);
+		const code = generateRandomNick(10);
 		this.resetCodes[code] = room;
 		return code;
 	}

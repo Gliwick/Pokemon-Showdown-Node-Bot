@@ -162,6 +162,7 @@ export function validateConfigObject<T extends keyof ConfigType>(
 		issue('Config.' + key + ' is not an object');
 		Config[key] = defaultValue;
 	}
+	Config[key] = Object.assign(defaultValue as any, Config[key]);
 }
 
 export function checkConfig(): void {
@@ -196,6 +197,13 @@ export function checkConfig(): void {
 		cmdr: false,
 		recv: false,
 		sent: false,
+	});
+	validateConfigObject('globalPermissions', {
+		voice: '+',
+		driver: '%',
+		moderator: '@',
+		roomowner: '#',
+		admin: '&',
 	});
 	if (Config.battleModsDir && !Config.battleModsDir.endsWith('/')) Config.battleModsDir += '/';
 }

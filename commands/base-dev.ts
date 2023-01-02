@@ -8,7 +8,7 @@ import { inspect } from 'util';
 import { Command, Context } from '../command-parser';
 import { checkConfig } from '../config-tools';
 import { errlog, error, info } from '../log';
-import { toId, toRoomid } from '../tools';
+import { joinWithLengthLimit, toId, toRoomid, uncacheTree } from '../tools';
 
 export const commands: Record<string, string | Command> = {
 	eval: 'js',
@@ -103,7 +103,7 @@ export const commands: Record<string, string | Command> = {
 					')'
 				);
 			});
-			const cmds = Tools.joinWithLengthLimit(
+			const cmds = joinWithLengthLimit(
 				roomsArray.length ? roomsArray : ['(none)'],
 				'**Bot status** |' +
 					(Settings.lockdown ? ' **Lockdown** |' : '') +
@@ -181,7 +181,7 @@ export const commands: Record<string, string | Command> = {
 			case 'parser':
 				this.sclog();
 				try {
-					Tools.uncacheTree('./command-parser.ts');
+					uncacheTree('./command-parser.ts');
 					global.CommandParser = new (require('./../command-parser.ts').CommandParser)();
 					this.reply('command-parser.ts reloaded');
 					info('command-parser.ts reloaded');
@@ -194,8 +194,7 @@ export const commands: Record<string, string | Command> = {
 			case 'tools':
 				this.sclog();
 				try {
-					Tools.uncacheTree('./tools.ts');
-					global.Tools = new (require('./../tools.ts').Tools)();
+					uncacheTree('./tools.ts');
 					this.reply('tools.ts reloaded');
 					info('tools.ts reloaded');
 					I18n.loadTranslations(true);
@@ -206,7 +205,7 @@ export const commands: Record<string, string | Command> = {
 				break;
 			case 'data':
 				this.sclog();
-				Tools.uncacheTree('./data-downloader.ts');
+				uncacheTree('./data-downloader.ts');
 				global.DataDownloader = new (require('../data-downloader.ts').DataDownloader)();
 				DataDownloader.download();
 				this.reply('Data files reloaded');
@@ -214,7 +213,7 @@ export const commands: Record<string, string | Command> = {
 			case 'config':
 				this.sclog();
 				try {
-					Tools.uncacheTree(AppOptions.config);
+					uncacheTree(AppOptions.config);
 					global.Config = require('./../' + AppOptions.config);
 					checkConfig();
 					Settings.applyConfig();

@@ -3,7 +3,7 @@ import { inspect } from 'util';
 import { GlobalMonitor } from './global-monitor';
 import { colors } from './index';
 import { debug, errlog, error, info, monitor, ok, recv, sent } from './log';
-import { toId } from './tools';
+import { generateRandomNick, getDateString, toId } from './tools';
 
 function getFeatureInitCmds(): string[] {
 	return Object.values(Features).flatMap((f) => {
@@ -70,7 +70,7 @@ function botAfterConnect(): void {
 
 export function setupBot(globalMonitor: GlobalMonitor): void {
 	Bot.on('connect', (): void => {
-		ok('Connected to server ' + Config.serverid + ' (' + Tools.getDateString() + ')');
+		ok('Connected to server ' + Config.serverid + ' (' + getDateString() + ')');
 		SecurityLog.log(
 			'Connected to server ' + Bot.opts.server + ':' + Bot.opts.port + ' (' + Bot.opts.serverid + ')'
 		);
@@ -144,7 +144,7 @@ export function setupBot(globalMonitor: GlobalMonitor): void {
 	Bot.on('challstr', (): void => {
 		info('Received challstr, logging in...');
 		if (!Config.nick) {
-			Bot.rename('Bot ' + Tools.generateRandomNick(10));
+			Bot.rename('Bot ' + generateRandomNick(10));
 		} else {
 			Bot.rename(Config.nick, Config.pass);
 		}
@@ -154,13 +154,13 @@ export function setupBot(globalMonitor: GlobalMonitor): void {
 		if (e === -1) {
 			if (!Config.nick) {
 				debug('Login failure - generating another random nickname');
-				Bot.rename('Bot ' + Tools.generateRandomNick(10));
+				Bot.rename('Bot ' + generateRandomNick(10));
 			} else {
 				error('Login failure - name registered, invalid or no password given');
 				if (!Bot.status.named) {
 					info('Invalid nick + pass, using a random nickname');
 					Config.nick = '';
-					Bot.rename('Bot ' + Tools.generateRandomNick(10));
+					Bot.rename('Bot ' + generateRandomNick(10));
 				}
 			}
 		} else {
@@ -170,7 +170,7 @@ export function setupBot(globalMonitor: GlobalMonitor): void {
 				setTimeout(function () {
 					globalMonitor.retryingRename = false;
 					if (!Config.nick) {
-						Bot.rename('Bot ' + Tools.generateRandomNick(10));
+						Bot.rename('Bot ' + generateRandomNick(10));
 					} else {
 						Bot.rename(Config.nick, Config.pass);
 					}

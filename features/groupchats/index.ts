@@ -2,7 +2,7 @@
 	Groupchats Tools
 */
 
-import { toId } from '../../tools';
+import { equalOrHigherRank, stripCommands, toId } from '../../tools';
 import { Feature } from '../';
 
 export class GroupChatsManager implements Feature {
@@ -37,17 +37,17 @@ export class GroupChatsManager implements Feature {
 		const autoPromotion = Settings.settings.autopromote?.[room];
 		if (!autoPromotion?.enabled) return;
 		const userid = toId(by);
-		if (autoPromotion.users[userid] && !Tools.equalOrHigherRank(by.charAt(0), autoPromotion.users[userid])) {
+		if (autoPromotion.users[userid] && !equalOrHigherRank(by.charAt(0), autoPromotion.users[userid])) {
 			return Bot.say(room, '/roompromote ' + userid + ',' + autoPromotion.users[userid]);
 		}
-		if (autoPromotion.all && !Tools.equalOrHigherRank(by.charAt(0), autoPromotion.all))
+		if (autoPromotion.all && !equalOrHigherRank(by.charAt(0), autoPromotion.all))
 			return Bot.say(room, '/roompromote ' + userid + ',' + autoPromotion.all);
 	}
 
 	runWelcomeMessage(room: string, by: string): void {
 		const pwmmsg = Settings.settings.pmwmsg?.[room];
 		if (!pwmmsg || !pwmmsg.enabled || !pwmmsg.msg) return;
-		Bot.say(room, '/pm ' + by + ',' + Tools.stripCommands(pwmmsg.msg));
+		Bot.say(room, '/pm ' + by + ',' + stripCommands(pwmmsg.msg));
 	}
 
 	intervalJoin(): void {

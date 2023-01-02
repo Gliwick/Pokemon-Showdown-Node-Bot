@@ -3,7 +3,6 @@
  */
 
 import { toId } from '../../../tools';
-import { deepcopy } from '../utils';
 import { Battle } from './battle';
 import {
 	BaseStat,

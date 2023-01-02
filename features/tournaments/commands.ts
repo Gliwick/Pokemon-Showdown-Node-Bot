@@ -4,7 +4,7 @@
 
 import { Command, CommandModuleManager, Context } from '../../command-parser';
 import { ConfigType, validateConfigObject } from '../../config-tools';
-import { toId, toRoomid } from '../../tools';
+import { parseAliases, toId, toName, toRoomid, uploadToHastebin } from '../../tools';
 import { TournamentsManager } from '.';
 
 class TournamentsModule implements CommandModuleManager {
@@ -123,7 +123,7 @@ export const commands: Record<string, string | Command> = {
 				}
 			}
 			if (params.format) {
-				const format = Tools.parseAliases(params.format);
+				const format = parseAliases(params.format);
 				if (!Formats[format] || !Formats[format].chall)
 					return this.reply(this.trad('e31') + ' ' + format + ' ' + this.trad('e32'));
 				details.format = format;
@@ -228,11 +228,11 @@ export const commands: Record<string, string | Command> = {
 				let txt =
 					this.trad('rank') +
 					' **' +
-					Tools.toName(rank.name) +
+					toName(rank.name) +
 					'** ' +
 					this.trad('in') +
 					' __' +
-					Tools.toName(tryGetRoomName(tarRoom)) +
+					toName(tryGetRoomName(tarRoom)) +
 					'__ | ';
 				txt += this.trad('points') + ': ' + rank.points + ' | ';
 				txt +=
@@ -280,11 +280,8 @@ export const commands: Record<string, string | Command> = {
 				if (!top || !top.length) return this.restrictReply(this.trad('empty') + ' ' + tarRoom, 'rank');
 				const topResults = top
 					.slice(0, 5)
-					.map((t, i) => '__#' + (i + 1) + '__ **' + Tools.toName(t[0]) + '** (' + t[6] + ')');
-				this.restrictReply(
-					'**' + Tools.toName(tryGetRoomName(tarRoom)) + '** | ' + topResults.join(', '),
-					'rank'
-				);
+					.map((t, i) => '__#' + (i + 1) + '__ **' + toName(t[0]) + '** (' + t[6] + ')');
+				this.restrictReply('**' + toName(tryGetRoomName(tarRoom)) + '** | ' + topResults.join(', '), 'rank');
 				break;
 			case 'table':
 				if (!this.isRanked('roomowner')) return false;
@@ -298,7 +295,7 @@ export const commands: Record<string, string | Command> = {
 				}
 				const table = manager.leaderboards.getTable(tarRoom, size);
 				if (!table) return this.reply(this.trad('empty') + ' ' + tarRoom);
-				Tools.uploadToHastebin(
+				uploadToHastebin(
 					table,
 					function (this: Context, r: boolean, link: any): void {
 						if (r) return this.pmReply(this.trad('table') + ' (' + tarRoom + '): ' + link);

@@ -4,7 +4,7 @@
 
 import { Command, CommandModuleManager, Context } from '../command-parser';
 import { error } from '../log';
-import { toId } from '../tools';
+import { getGroup, joinWithLengthLimit, stripCommands, toId, uploadToHastebin } from '../tools';
 
 class DynamicModule implements CommandModuleManager {
 	init(): void {
@@ -20,7 +20,7 @@ function getCmdList(head: string): string[] | null {
 		(cmd) => !(CommandParser.dynCommands[cmd] && CommandParser.dynCommands[cmd].substr(0, 4) === '/ref')
 	);
 	if (!newCmdArr.length) return null;
-	return Tools.joinWithLengthLimit(newCmdArr, head);
+	return joinWithLengthLimit(newCmdArr, head);
 }
 
 export const commands: Record<string, string | Command> = {
@@ -68,7 +68,7 @@ export const commands: Record<string, string | Command> = {
 
 	deletecommand: 'delcmd',
 	delcmd: function (arg) {
-		if (!this.isRanked(Tools.getGroup('admin'))) return false;
+		if (!this.isRanked(getGroup('admin'))) return false;
 		const dcmd = toId(arg);
 		if (CommandParser.dynCommands[dcmd]) {
 			delete CommandParser.dynCommands[dcmd];
@@ -82,7 +82,7 @@ export const commands: Record<string, string | Command> = {
 
 	setcommand: 'setcmd',
 	setcmd: function (arg) {
-		if (!this.isRanked(Tools.getGroup('admin'))) return false;
+		if (!this.isRanked(getGroup('admin'))) return false;
 		if (!CommandParser.tempVar) {
 			return this.reply(this.trad('notemp'));
 		}
@@ -101,7 +101,7 @@ export const commands: Record<string, string | Command> = {
 
 	setalias: 'setcmdalias',
 	setcmdalias: function (arg, by, room, cmd) {
-		if (!this.isRanked(Tools.getGroup('admin'))) return false;
+		if (!this.isRanked(getGroup('admin'))) return false;
 		const args = arg.split(',');
 		if (args.length !== 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 		const alias = toId(args[0]);
@@ -119,7 +119,7 @@ export const commands: Record<string, string | Command> = {
 
 	dyncmdlist: 'getdyncmdlist',
 	getdyncmdlist: function () {
-		if (!this.isRanked(Tools.getGroup('admin'))) return false;
+		if (!this.isRanked(getGroup('admin'))) return false;
 		const list = Object.keys(CommandParser.dynCommands).sort();
 		if (!list.length) return this.pmReply(this.trad('nocmds'));
 		let text = this.trad('list') + ':\n\n';
@@ -130,7 +130,7 @@ export const commands: Record<string, string | Command> = {
 			}
 			text += i + ' -> "' + CommandParser.dynCommands[i] + '"' + '\n';
 		}
-		Tools.uploadToHastebin(
+		uploadToHastebin(
 			text,
 			function (this: Context, r: boolean, link: any): void {
 				if (r) return this.pmReply(this.trad('list') + ': ' + link);
@@ -141,8 +141,8 @@ export const commands: Record<string, string | Command> = {
 
 	stemp: 'temp',
 	temp: function (arg) {
-		if (!this.isRanked(Tools.getGroup('admin'))) return false;
-		if (arg) CommandParser.tempVar = Tools.stripCommands(arg);
+		if (!this.isRanked(getGroup('admin'))) return false;
+		if (arg) CommandParser.tempVar = stripCommands(arg);
 		this.sclog('Temp command-parser var changed');
 		this.reply('Temp: ' + CommandParser.tempVar);
 	},

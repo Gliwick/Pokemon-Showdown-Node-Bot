@@ -2,6 +2,7 @@
 
 import { colors } from './index';
 import { monitor } from './log';
+import { generateRandomNick, getDateString } from './tools';
 
 export class GlobalMonitor {
 	connected = false;
@@ -30,7 +31,7 @@ export class GlobalMonitor {
 			issue = 'connect';
 			status += colors.red('disconnected');
 		}
-		monitor(status + ' (' + Tools.getDateString() + ')', 'status');
+		monitor(status + ' (' + getDateString() + ')', 'status');
 		if (issue) {
 			switch (issue) {
 				case 'connect':
@@ -42,7 +43,7 @@ export class GlobalMonitor {
 					monitor('Monitor failed: Login issue. Logging in a random username.');
 					SecurityLog.log('Monitor failed: Login issue. Logging in a random username.');
 					Config.nick = '';
-					Bot.rename('Bot ' + Tools.generateRandomNick(10));
+					Bot.rename('Bot ' + generateRandomNick(10));
 					break;
 			}
 		}

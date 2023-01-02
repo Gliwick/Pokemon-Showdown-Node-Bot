@@ -3,9 +3,10 @@
 */
 import { writeFile } from 'fs';
 import { IncomingMessage } from 'http';
-import * as https from 'https';
+import { get } from 'https';
 
 import { debug, errlog, error } from './log';
+import { uncacheTree } from './tools';
 
 export class DataDownloader {
 	initDate = Date.now();
@@ -47,22 +48,20 @@ export class DataDownloader {
 
 	httpsGet(url: string, callback: (data: string | null, error?: Error) => void): void {
 		if (typeof callback !== 'function') return;
-		https
-			.get(url, (res: IncomingMessage): void => {
-				const data = { data: '' };
-				res.on('data', (part: any): void => {
-					data.data += part;
-				});
-				res.on('end', (): void => {
-					callback(data.data);
-				});
-				res.on('error', (e): void => {
-					callback(null, e);
-				});
-			})
-			.on('error', (e: Error): void => {
+		get(url, (res: IncomingMessage): void => {
+			const data = { data: '' };
+			res.on('data', (part: any): void => {
+				data.data += part;
+			});
+			res.on('end', (): void => {
+				callback(data.data);
+			});
+			res.on('error', (e): void => {
 				callback(null, e);
 			});
+		}).on('error', (e: Error): void => {
+			callback(null, e);
+		});
 	}
 
 	downloadFile(url: string, file: string, callback: (success: boolean, error?: Error) => void): void {
@@ -77,7 +76,7 @@ export class DataDownloader {
 					return;
 				}
 				try {
-					Tools.uncacheTree('./data/' + file);
+					uncacheTree('./data/' + file);
 				} catch (e) {}
 				debug('Downloaded data file: ' + '../data/' + file);
 				if (typeof callback === 'function') callback(true);

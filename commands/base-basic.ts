@@ -2,10 +2,8 @@
 	Basic Commands
 */
 
-import '../index';
-
 import { Command, CommandModuleManager } from '../command-parser';
-import { toId } from '../tools';
+import { getTimeAgo, joinWithLengthLimit, stripCommands, toId } from '../tools';
 
 class BasicModule implements CommandModuleManager {
 	init(): void {
@@ -34,13 +32,12 @@ export const commands: Record<string, string | Command> = {
 
 	git: 'github',
 	github: function () {
-		if (Settings.package.repository)
-			this.restrictReply(Tools.stripCommands(Settings.package.repository.url), 'info');
+		if (Settings.package.repository) this.restrictReply(stripCommands(Settings.package.repository.url), 'info');
 	},
 
 	botversion: 'version',
 	version: function () {
-		this.restrictReply(Tools.stripCommands(Settings.package.version), 'info');
+		this.restrictReply(stripCommands(Settings.package.version), 'info');
 	},
 
 	guide: 'help',
@@ -123,7 +120,7 @@ export const commands: Record<string, string | Command> = {
 				'** ' +
 				this.trad('s1') +
 				' __' +
-				Tools.getTimeAgo(dSeen.time, this.language).trim() +
+				getTimeAgo(dSeen.time, this.language).trim() +
 				(this.trad('s2') ? '__ ' + this.trad('s2') : '__');
 			if (dSeen.room && dSeen.action && dSeen.args) {
 				switch (dSeen.action) {
@@ -154,7 +151,7 @@ export const commands: Record<string, string | Command> = {
 		const alts = Settings.userManager.getAlts(arg);
 		if (alts.length) {
 			if (this.can('alts')) {
-				const cmds = Tools.joinWithLengthLimit(
+				const cmds = joinWithLengthLimit(
 					alts,
 					this.trad('alts') + ' ' + Settings.userManager.getName(arg) + ': '
 				);
@@ -180,6 +177,6 @@ export const commands: Record<string, string | Command> = {
 	say: function (arg) {
 		if (!arg) return;
 		if (!this.can('say')) return;
-		this.reply(Tools.stripCommands(arg));
+		this.reply(stripCommands(arg));
 	},
 };

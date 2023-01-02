@@ -4,7 +4,7 @@
 
 import { Command, CommandModuleManager } from '../command-parser';
 import { debug } from '../log';
-import { toId } from '../tools';
+import { getGroup, levenshtein, normalize, toId, toName } from '../tools';
 
 class PokemonModule implements CommandModuleManager {
 	init(): void {
@@ -38,7 +38,7 @@ function searchInLanguage(lang: string, word: string, keys: string[]): SearchRes
 		.flatMap((key) => Object.entries(dataLang[key]).map((entry) => [key].concat(entry)))
 		.filter(([, , translation]) => !!translation)
 		.map(([key, k, translation]) => {
-			const levenstein = Tools.levenshtein(word, Tools.normalize(translation), maxLevenstein);
+			const levenstein = levenshtein(word, normalize(translation), maxLevenstein);
 			return { type: key, id: k, title: translation, levenstein };
 		})
 		.filter((result) => result.levenstein <= maxLevenstein);
@@ -55,7 +55,7 @@ interface Translation {
 }
 
 function getTranslations(from: string, to: string, word: string): Translation[] | null {
-	word = Tools.normalize(word);
+	word = normalize(word);
 	const toLangData = I18n.translations[to]?.globals;
 	if (!toLangData) return null;
 	const ids = searchInLanguage(from, word, ['abilities', 'items', 'moves', 'natures', 'pokemon']);
@@ -175,22 +175,22 @@ export const commands: Record<string, string | Command> = {
 				'pokemon'
 			);
 		let text = '';
-		if (Tools.normalize(translations[0].from) !== Tools.normalize(word))
+		if (normalize(translations[0].from) !== normalize(word))
 			text += this.trad('not1') + ' "' + word + '" ' + this.trad('not3') + '. ';
-		text += this.trad('tra') + ' **' + Tools.toName(translations[0].from) + '** (' + from + ' - ' + to + '): ';
+		text += this.trad('tra') + ' **' + toName(translations[0].from) + '** (' + from + ' - ' + to + '): ';
 		for (let i = 0; i < translations.length; i++) {
-			if (Tools.normalize(translations[0].from) !== Tools.normalize(translations[i].from)) continue;
+			if (normalize(translations[0].from) !== normalize(translations[i].from)) continue;
 			if (typeof translations[i].to === 'string') {
 				text +=
 					'**' +
-					Tools.toName(translations[i].to) +
+					toName(translations[i].to) +
 					'** (' +
 					(this.trad(translations[i].type) || translations[i].type) +
 					')';
 			} else {
 				text +=
 					'**' +
-					Tools.toName(translations[i].to[0]) +
+					toName(translations[i].to[0]) +
 					'** (' +
 					(this.trad(translations[i].type) || translations[i].type) +
 					')';
@@ -214,7 +214,7 @@ export const commands: Record<string, string | Command> = {
 		let rpoke = pokeList[Math.floor(Math.random() * pokeList.length)];
 		rpoke = pokedex[rpoke].species;
 		if (!this.can('pokemon')) return this.pmReply(rpoke);
-		if (cmd === 'poke' && this.botRanked(Tools.getGroup('voice'))) return this.reply('!dt ' + rpoke);
+		if (cmd === 'poke' && this.botRanked(getGroup('voice'))) return this.reply('!dt ' + rpoke);
 		this.reply(rpoke);
 	},
 

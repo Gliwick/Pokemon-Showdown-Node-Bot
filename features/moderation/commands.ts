@@ -4,7 +4,7 @@
 
 import { Command, CommandModuleManager, Context } from '../../command-parser';
 import { ConfigType } from '../../config-tools';
-import { toId, toRoomid } from '../../tools';
+import { getGroup, getTargetRoom, stripCommands, toId, toRoomid, uploadToHastebin } from '../../tools';
 import { ModerationManager } from '.';
 
 class ModerationModule implements CommandModuleManager {
@@ -26,7 +26,7 @@ export const commands: Record<string, string | Command> = {
 	autoban: function (arg, by, room) {
 		if (!this.can('autoban')) return;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -34,7 +34,7 @@ export const commands: Record<string, string | Command> = {
 			textHelper = ' (' + tarRoom + ')';
 		}
 		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
-		const moderator = Tools.getGroup('moderator');
+		const moderator = getGroup('moderator');
 		if (!this.isExcepted && !this.botRanked(moderator)) {
 			return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', moderator));
 		}
@@ -84,7 +84,7 @@ export const commands: Record<string, string | Command> = {
 	unautoban: function (arg, by, room) {
 		if (!this.can('autoban')) return;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -94,7 +94,7 @@ export const commands: Record<string, string | Command> = {
 		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {
 			return this.reply(this.trad('notchat') + textHelper);
 		}
-		const moderator = Tools.getGroup('moderator');
+		const moderator = getGroup('moderator');
 		if (!this.isExcepted && !this.botRanked(moderator)) {
 			return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', moderator));
 		}
@@ -135,7 +135,7 @@ export const commands: Record<string, string | Command> = {
 	regexautoban: function (arg, user, room) {
 		if (!this.can('autoban')) return;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -145,7 +145,7 @@ export const commands: Record<string, string | Command> = {
 		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {
 			return this.reply(this.trad('notchat') + textHelper);
 		}
-		const moderator = Tools.getGroup('moderator');
+		const moderator = getGroup('moderator');
 		if (!this.isExcepted && !this.botRanked(moderator)) {
 			return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', moderator));
 		}
@@ -181,7 +181,7 @@ export const commands: Record<string, string | Command> = {
 	unregexautoban: function (arg, user, room) {
 		if (!this.can('autoban')) return;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -191,7 +191,7 @@ export const commands: Record<string, string | Command> = {
 		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {
 			return this.reply(this.trad('notchat') + textHelper);
 		}
-		const moderator = Tools.getGroup('moderator');
+		const moderator = getGroup('moderator');
 		if (!this.isExcepted && !this.botRanked(moderator)) {
 			return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', moderator));
 		}
@@ -215,7 +215,7 @@ export const commands: Record<string, string | Command> = {
 	viewblacklist: function (arg, by, room) {
 		if (!this.can('autoban')) return;
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -264,7 +264,7 @@ export const commands: Record<string, string | Command> = {
 			.join('\n');
 
 		if (nBans) {
-			Tools.uploadToHastebin(
+			uploadToHastebin(
 				text,
 				function (this: Context, r: boolean, linkStr: any): void {
 					if (r) this.pmReply(linkStr);
@@ -286,7 +286,7 @@ export const commands: Record<string, string | Command> = {
 	vzt: 'zerotol',
 	viewzerotol: 'zerotol',
 	zerotol: function (arg, by, room, cmd) {
-		if (!this.isRanked(Tools.getGroup('admin'))) return;
+		if (!this.isRanked(getGroup('admin'))) return;
 		if (!Config.moderation.zeroToleranceLevels && Config.moderation.zeroToleranceDefaultLevel) {
 			return this.reply(this.trad('nolevels'));
 		}
@@ -306,7 +306,7 @@ export const commands: Record<string, string | Command> = {
 				.map(([user, level]) => [user, ztLevels[level]?.name || level])
 				.map(([user, level]) => this.trad('user') + ': ' + user + ' | ' + this.trad('level') + ': ' + level);
 			if (ztList.length) {
-				Tools.uploadToHastebin(
+				uploadToHastebin(
 					this.trad('ztl') + ':\n\n' + ztList.join('\n'),
 					function (this: Context, r: boolean, linkStr: any): void {
 						if (r) this.pmReply(linkStr);
@@ -426,13 +426,13 @@ export const commands: Record<string, string | Command> = {
 
 		let tarRoom;
 		if (this.roomType === 'pm') {
-			if (!this.isRanked(Tools.getGroup('admin'))) return false;
+			if (!this.isRanked(getGroup('admin'))) return false;
 			tarRoom = 'global';
 		} else {
 			tarRoom = room;
 		}
 
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -464,13 +464,13 @@ export const commands: Record<string, string | Command> = {
 
 		let tarRoom;
 		if (this.roomType === 'pm') {
-			if (!this.isRanked(Tools.getGroup('admin'))) return false;
+			if (!this.isRanked(getGroup('admin'))) return false;
 			tarRoom = 'global';
 		} else {
 			tarRoom = room;
 		}
 
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -508,12 +508,12 @@ export const commands: Record<string, string | Command> = {
 		let tarRoom;
 		let bannedFrom = '';
 		if (this.roomType === 'pm') {
-			if (!this.isRanked(Tools.getGroup('admin'))) return false;
+			if (!this.isRanked(getGroup('admin'))) return false;
 			tarRoom = 'global';
 		} else {
 			tarRoom = room;
 		}
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -550,7 +550,7 @@ export const commands: Record<string, string | Command> = {
 		const banList = Object.keys(bannedPhrases);
 		if (!banList.length) return this.reply(this.trad('nowords') + textHelper);
 
-		Tools.uploadToHastebin(
+		uploadToHastebin(
 			this.trad('list') + ' ' + bannedFrom + ':\n\n' + banList.join('\n'),
 			function (this: Context, r: boolean, link: string): void {
 				if (r) return this.pmReply(this.trad('link') + ' ' + bannedFrom + ': ' + link);
@@ -566,13 +566,13 @@ export const commands: Record<string, string | Command> = {
 
 		let tarRoom;
 		if (this.roomType === 'pm') {
-			if (!this.isRanked(Tools.getGroup('admin'))) return false;
+			if (!this.isRanked(getGroup('admin'))) return false;
 			tarRoom = 'global';
 		} else {
 			tarRoom = room;
 		}
 
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -604,13 +604,13 @@ export const commands: Record<string, string | Command> = {
 
 		let tarRoom;
 		if (this.roomType === 'pm') {
-			if (!this.isRanked(Tools.getGroup('admin'))) return false;
+			if (!this.isRanked(getGroup('admin'))) return false;
 			tarRoom = 'global';
 		} else {
 			tarRoom = room;
 		}
 
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -647,12 +647,12 @@ export const commands: Record<string, string | Command> = {
 		let tarRoom;
 		let bannedFrom = '';
 		if (this.roomType === 'pm') {
-			if (!this.isRanked(Tools.getGroup('admin'))) return false;
+			if (!this.isRanked(getGroup('admin'))) return false;
 			tarRoom = 'global';
 		} else {
 			tarRoom = room;
 		}
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -689,7 +689,7 @@ export const commands: Record<string, string | Command> = {
 		const banList = Object.keys(bannedPhrases);
 		if (!banList.length) return this.reply(this.trad('nowords') + textHelper);
 
-		Tools.uploadToHastebin(
+		uploadToHastebin(
 			this.trad('list') + ' ' + bannedFrom + ':\n\n' + banList.join('\n'),
 			function (this: Context, r: boolean, link: string): void {
 				if (r) return this.pmReply(this.trad('link') + ' ' + bannedFrom + ': ' + link);
@@ -709,13 +709,13 @@ export const commands: Record<string, string | Command> = {
 
 		let tarRoom;
 		if (this.roomType === 'pm') {
-			if (!this.isRanked(Tools.getGroup('admin'))) return false;
+			if (!this.isRanked(getGroup('admin'))) return false;
 			tarRoom = 'global';
 		} else {
 			tarRoom = room;
 		}
 
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -726,7 +726,7 @@ export const commands: Record<string, string | Command> = {
 			return this.reply(this.trad('notchat') + textHelper);
 
 		if (Bot.rooms[tarRoom] && Bot.rooms[tarRoom].type === 'chat' && toId(arg) in { on: 1, enable: 1 }) {
-			if (!this.isRanked(Tools.getGroup('roomowner'))) return false;
+			if (!this.isRanked(getGroup('roomowner'))) return false;
 			if (!Settings.settings.jpdisable) Settings.settings.jpdisable = {};
 			if (!Settings.settings.jpdisable[tarRoom]) return this.reply(this.trad('ae') + textHelper);
 			delete Settings.settings.jpdisable[tarRoom];
@@ -736,7 +736,7 @@ export const commands: Record<string, string | Command> = {
 		}
 
 		if (Bot.rooms[tarRoom] && Bot.rooms[tarRoom].type === 'chat' && toId(arg) in { off: 1, disable: 1 }) {
-			if (!this.isRanked(Tools.getGroup('roomowner'))) return false;
+			if (!this.isRanked(getGroup('roomowner'))) return false;
 			if (!Settings.settings.jpdisable) Settings.settings.jpdisable = {};
 			if (Settings.settings.jpdisable[tarRoom]) return this.reply(this.trad('ad') + textHelper);
 			Settings.settings.jpdisable[tarRoom] = true;
@@ -769,7 +769,7 @@ export const commands: Record<string, string | Command> = {
 					return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 				}
 				if (!Settings.settings.joinphrases[tarRoom]) Settings.settings.joinphrases[tarRoom] = {};
-				Settings.settings.joinphrases[tarRoom][user] = Tools.stripCommands(arg);
+				Settings.settings.joinphrases[tarRoom][user] = stripCommands(arg);
 				Settings.save();
 				this.sclog();
 				this.reply(
@@ -820,13 +820,13 @@ export const commands: Record<string, string | Command> = {
 
 		let tarRoom: string;
 		if (this.roomType === 'pm') {
-			if (!this.isRanked(Tools.getGroup('admin'))) return false;
+			if (!this.isRanked(getGroup('admin'))) return false;
 			tarRoom = 'global';
 		} else {
 			tarRoom = room;
 		}
 
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -849,7 +849,7 @@ export const commands: Record<string, string | Command> = {
 			([i, joinPhrase]) => i + ' => ' + joinPhrase
 		);
 		if (!list.length) return this.reply(this.trad('empty') + textHelper);
-		Tools.uploadToHastebin(
+		uploadToHastebin(
 			this.trad('jp') +
 				' ' +
 				(tarRoom === 'global' ? this.trad('globally') : this.trad('in') + ' ' + tarRoom) +
@@ -876,7 +876,7 @@ export const commands: Record<string, string | Command> = {
 	modex: 'modexception',
 	modexception: function (arg, by, room) {
 		let tarRoom = room;
-		const targetObj = Tools.getTargetRoom(arg);
+		const targetObj = getTargetRoom(arg);
 		let textHelper = '';
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
@@ -894,7 +894,7 @@ export const commands: Record<string, string | Command> = {
 				'info'
 			);
 		}
-		if (!this.isRanked(Tools.getGroup('roomowner'))) return false;
+		if (!this.isRanked(getGroup('roomowner'))) return false;
 		if (!Settings.settings.modexception) Settings.settings.modexception = {};
 		const rank = arg.trim();
 		if (Config.ranks.indexOf(rank) >= 0) {
@@ -927,11 +927,11 @@ export const commands: Record<string, string | Command> = {
 	modset: 'mod',
 	modsettings: 'mod',
 	mod: function (arg, by, room, cmd) {
-		if (!this.isRanked(Tools.getGroup('roomowner'))) return false;
+		if (!this.isRanked(getGroup('roomowner'))) return false;
 		let tarRoom = room;
 		const args = arg.split(',');
 		if (args.length > 2) {
-			if (!this.isRanked(Tools.getGroup('admin'))) return false;
+			if (!this.isRanked(getGroup('admin'))) return false;
 			tarRoom = toRoomid(args[0]);
 		}
 		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {

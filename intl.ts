@@ -5,6 +5,7 @@ import { lstatSync, readdirSync } from 'fs';
 import { inspect } from 'util';
 
 import { errlog, error, info, ok } from './log';
+import { uncacheTree } from './tools';
 
 export class Intl {
 	translations: Record<
@@ -22,7 +23,7 @@ export class Intl {
 		const langToCommands: Record<string, Record<string, string>> = {};
 		readdirSync('./languages/' + lang).forEach((file: string): void => {
 			if (!file.endsWith('.json')) return;
-			if (reloading) Tools.uncacheTree('./languages/' + lang + '/' + file);
+			if (reloading) uncacheTree('./languages/' + lang + '/' + file);
 			const { commands, ...globals } = require('./languages/' + lang + '/' + file);
 			Object.assign(langToCommands, commands || {});
 			Object.assign(langToGlobals, globals);

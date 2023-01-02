@@ -8,7 +8,7 @@ import { inspect } from 'util';
 
 import { colors } from '../../../index';
 import { debug, errlog, error } from '../../../log';
-import { toId } from '../../../tools';
+import { toId, toName } from '../../../tools';
 import { BattleBot } from '.';
 import {
 	CurrentGen,
@@ -368,7 +368,7 @@ export class Battle {
 			if (typeof minor !== 'function') {
 				error('Unknown minor type: ' + args[0] + ' - ' + inspect(minor) + '');
 			} else {
-				debug('running minor ' + args[0] + '([' + args + '], ' + JSON.stringify(kwargs) + ')');
+				this.debug('running minor ' + args[0] + '([' + args + '], ' + JSON.stringify(kwargs) + ')');
 				try {
 					minor.call(this, args, kwargs, isIntro);
 				} catch (e: any) {
@@ -402,7 +402,7 @@ export class Battle {
 			if (typeof major !== 'function') {
 				error('Unknown major type: ' + args[0] + ' - ' + inspect(major) + '');
 			} else {
-				debug('running major ' + args[0] + '([' + args + '], ' + JSON.stringify(kwargs) + ')');
+				this.debug('running major ' + args[0] + '([' + args + '], ' + JSON.stringify(kwargs) + ')');
 				try {
 					major.call(this, args, kwargs, isIntro);
 				} catch (e: any) {
@@ -512,7 +512,7 @@ export class Battle {
 		const pokeId = str.substr(0, 1);
 		const slot = this.parseSlot(pokeId);
 		str = str.substr(1);
-		const name = Tools.toName(str.substr(1));
+		const name = toName(str.substr(1));
 		if (!(side in this.players)) {
 			error('Unknown side: ' + side);
 			return null;
@@ -533,7 +533,7 @@ export class Battle {
 		const pokeId = str.substr(0, 1);
 		const slot = this.parseSlot(pokeId);
 		str = str.substr(1);
-		const name = Tools.toName(str.substr(1));
+		const name = toName(str.substr(1));
 		return {
 			side: side,
 			slot: slot,

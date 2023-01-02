@@ -9,7 +9,6 @@ import { Intl } from './intl';
 import { SecurityLogger } from './security-log';
 import { SettingsManager } from './settings';
 import { Client } from './showdown-client';
-import { Tools as ToolsType } from './tools';
 
 export declare global {
 	namespace NodeJS {
@@ -25,7 +24,6 @@ export declare global {
 			I18n: Intl;
 			SecurityLog: SecurityLogger;
 			Settings: SettingsManager;
-			Tools: ToolsType;
 		}
 	}
 	const AppOptions: AppOptionsType;
@@ -39,5 +37,4 @@ export declare global {
 	const I18n: Intl;
 	const SecurityLog: SecurityLogger;
 	const Settings: SettingsManager;
-	const Tools: ToolsType;
 }

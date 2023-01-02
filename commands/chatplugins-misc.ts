@@ -6,7 +6,7 @@ import { inspect } from 'util';
 
 import { Command, CommandModuleManager, Context } from '../command-parser';
 import { debug, error } from '../log';
-import { toId } from '../tools';
+import { getESTDiff, getTimeAgo, httpGet, stripCommands, toId } from '../tools';
 
 class UserRepo implements CommandModuleManager {
 	downloadingFlag: Record<string, boolean> = {};
@@ -45,7 +45,7 @@ export const commands: Record<string, string | Command> = {
 		});
 		if (choices.length < 2) return this.pmReply(this.trad('err'));
 		const choice = choices[Math.floor(Math.random() * choices.length)];
-		this.restrictReply('**' + this.trad('pick') + ':** ' + Tools.stripCommands(choice), 'pick');
+		this.restrictReply('**' + this.trad('pick') + ':** ' + stripCommands(choice), 'pick');
 	},
 
 	'8ball': 'randomanswer',
@@ -100,15 +100,13 @@ export const commands: Record<string, string | Command> = {
 						' ' +
 						this.trad('regtime1') +
 						' __' +
-						Tools.getTimeAgo(regTimestamp, this.language).trim() +
+						getTimeAgo(regTimestamp, this.language).trim() +
 						'__ ' +
 						this.trad('regtime2')
 				);
 			} else {
 				regTimestamp +=
-					1000 * 60 * 60 * Tools.getESTDiff(regTimestamp) +
-					new Date().getTimezoneOffset() * 60 * 1000 -
-					364000;
+					1000 * 60 * 60 * getESTDiff(regTimestamp) + new Date().getTimezoneOffset() * 60 * 1000 - 364000;
 				this.pmReply(
 					this.trad('user') +
 						' ' +
@@ -125,6 +123,6 @@ export const commands: Record<string, string | Command> = {
 			.regdateCache.filter((cache) => cache.username === target)
 			.forEach((cache) => callback(JSON.stringify(cache), null, true));
 		this.getModule<UserRepo>(UserRepo).markDownload(toId(this.by), true);
-		Tools.httpGet(url, callback);
+		httpGet(url, callback);
 	},
 };
