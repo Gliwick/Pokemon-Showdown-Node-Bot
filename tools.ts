@@ -5,12 +5,6 @@
 import { get, IncomingMessage } from 'http';
 import { request, RequestOptions } from 'https';
 
-declare global {
-	interface String {
-		escapeHTML(): string;
-	}
-}
-
 /* String utils */
 
 export function toId(text?: string): string {
@@ -29,11 +23,6 @@ export function toName(text?: string): string {
 
 export function pad(num: number, numOfZeros: number): string {
 	return num.toString().padStart(numOfZeros, '0');
-}
-
-export function escapeHTML(str?: string): string {
-	if (!str) return '';
-	return ('' + str).escapeHTML();
 }
 
 export function generateRandomNick(numChars: number): string {

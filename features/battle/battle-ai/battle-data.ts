@@ -2,7 +2,9 @@
 	Battle data
 */
 
-import { deepcopy, escapeHTML, toId } from '../../../tools';
+import { String as Sugar } from 'sugar';
+
+import { deepcopy, toId } from '../../../tools';
 import { Conditions } from '../data/conditions';
 
 export const BATTLE_DATA_DIR = './../data/';
@@ -74,7 +76,7 @@ export function getEffect(effect, gen: number = CurrentGen) {
 			effect.exists = true;
 		}
 		if (!effect.id) effect.id = id;
-		if (!effect.name) effect.name = escapeHTML(name);
+		if (!effect.name) effect.name = Sugar.escapeHTML(name || '');
 		if (!effect.category) effect.category = 'Effect';
 		if (!effect.effectType) effect.effectType = 'Effect';
 	}
