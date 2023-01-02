@@ -1172,18 +1172,14 @@ export function calculate(
 		}
 	}
 
-	if (atkPoke.item) {
+	if (atkPoke.item && (!atkPoke.item.itemUser || atkPoke.item.itemUser.includes(atkPoke.template.species))) {
 		switch (atkPoke.item.id) {
 			case 'lightball':
-				if (atkPoke.template.species.startsWith('Pikachu')) atk = Math.floor(atk * 2);
+				atk = Math.floor(atk * 2);
 			case 'thickclub':
-				if (
-					['Cubone', 'Marowak', 'Marowak-Alola'].includes(atkPoke.template.species) &&
-					category === 'Physical'
-				)
-					atk *= 2;
+				if (category === 'Physical') atk *= 2;
 			case 'deepseatooth':
-				if (atkPoke.template.species === 'Clamperl' && category === 'Special') atk *= 2;
+				if (category === 'Special') atk *= 2;
 			case 'choiceband':
 				if (category === 'Physical') atk = Math.floor(atk * 1.5);
 				break;
@@ -1191,12 +1187,10 @@ export function calculate(
 				if (category === 'Special') atk = Math.floor(atk * 1.5);
 				break;
 			case 'souldew':
-				if (atkPoke.template.species.startsWith('Latias') || atkPoke.template.species.startsWith('Latios')) {
-					if (gen >= 7) {
-						if (['Dragon', 'Psychic'].includes(moveType)) bp = Math.floor(bp * 1.2);
-					} else {
-						if (category === 'Special') atk = Math.floor(atk * 1.5);
-					}
+				if (gen >= 7) {
+					if (['Dragon', 'Psychic'].includes(moveType)) bp = Math.floor(bp * 1.2);
+				} else {
+					if (category === 'Special') atk = Math.floor(atk * 1.5);
 				}
 				break;
 			case 'adamantorb':
@@ -1221,7 +1215,7 @@ export function calculate(
 		if (atkPoke.item.onPlate === moveType) bp = Math.floor(bp * 1.2);
 	}
 
-	if (defPoke.item) {
+	if (defPoke.item && (!defPoke.item.itemUser || defPoke.item.itemUser.includes(defPoke.template.species))) {
 		if (
 			defPoke.item.onSourceModifyDamage &&
 			defPoke.item.naturalGift?.type === move.type &&
@@ -1232,10 +1226,13 @@ export function calculate(
 		}
 		switch (defPoke.item.id) {
 			case 'metalpowder':
-				if (defStat === 'def' && atkPoke.template.species === 'Ditto') def = Math.floor(def * 2);
+				if (defStat === 'def') def *= 2;
 				break;
 			case 'deepseascale':
-				if (defStat === 'spd' && atkPoke.template.species === 'Clamperl') def = Math.floor(def * 2);
+				if (defStat === 'spd') def *= 2;
+				break;
+			case 'souldew':
+				if (gen < 7 && defStat === 'spd') def = Math.floor(def * 1.5);
 				break;
 			case 'eviolite':
 				if (atkPoke.template.evos) def = Math.floor(def * 1.5);
