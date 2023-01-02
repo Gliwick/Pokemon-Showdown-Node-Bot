@@ -1,6 +1,6 @@
 import { toId } from '../../../tools';
 
-export function getTemplate(name?: string): Record<string, any> {
+export function getPokemon(name?: string): Record<string, any> {
 	name = toId(name || '');
 	try {
 		return DataDownloader.getPokedex()[name] || {};

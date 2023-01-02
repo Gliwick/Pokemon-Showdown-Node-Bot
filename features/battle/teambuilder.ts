@@ -5,7 +5,7 @@ import { inspect } from 'util';
 import { Stat, typechart } from '../../data/typechart';
 import { debug, errlog, error } from '../../log';
 import { isUndefinedOrDefault, toId, uncacheTree } from '../../tools';
-import { getItem, getMove, getTemplate } from './data';
+import { getItem, getMove, getPokemon } from './data';
 
 const TEAMS_DATA_FILE = AppOptions.data + 'teams.json';
 
@@ -475,7 +475,7 @@ export class TeamBuilder {
 			// ability
 			j = buf.indexOf('|', i);
 			const ability = buf.substring(i, j);
-			const template = getTemplate(set.species);
+			const template = getPokemon(set.species);
 			set.ability =
 				template.abilities && ability in { '': 1, 0: 1, 1: 1, H: 1 }
 					? template.abilities[ability || '0']
@@ -561,9 +561,9 @@ export class TeamBuilder {
 		for (let i = 0; i < team.length; i++) {
 			const curSet = team[i];
 			if (curSet.name !== curSet.species) {
-				text += '' + curSet.name + ' (' + (getTemplate(curSet.species).name || curSet.species) + ')';
+				text += '' + curSet.name + ' (' + (getPokemon(curSet.species).name || curSet.species) + ')';
 			} else {
-				text += '' + (getTemplate(curSet.species).name || curSet.species);
+				text += '' + (getPokemon(curSet.species).name || curSet.species);
 			}
 			if (curSet.gender === 'M') text += ' (M)';
 			if (curSet.gender === 'F') text += ' (F)';

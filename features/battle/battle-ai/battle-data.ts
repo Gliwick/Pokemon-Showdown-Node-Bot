@@ -140,8 +140,6 @@ export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: st
 	return pokemon;
 }
 
-export const getTemplate = getPokemon;
-
 export function getMove(move: string, gen: number = CurrentGen, battleId?: string): Record<string, any> {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	move = toId(move);
