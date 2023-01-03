@@ -216,6 +216,16 @@ exports.chatLogger = {
 };
 ```
 
+## Auto-Invite (Optional)
+
+This feature is rarely useful, just an example:
+
+```js
+exports.autoInvite = [{ linked: 'lobby', private: 'adminsroom', rank: '#' }];
+```
+
+In this example, in a server there is a private room with modjoin called `Admins Room` where all admins are room owners. With that feature if the bot is in both rooms, when an admin join lobby, it is automatically invited to Admins Room.
+
 ## GroupChats (Optional)
 
 You can use this feature to set events (arrays of commands to be sent on certain circunstances). For example:
