@@ -21,13 +21,14 @@ export class Intl {
 	loadLang(lang: string, reloading?: boolean): Intl['translations'][string] {
 		const langToGlobals: Record<string, Record<string, string>> = {};
 		const langToCommands: Record<string, Record<string, string>> = {};
-		readdirSync('./languages/' + lang).forEach((file: string): void => {
-			if (!file.endsWith('.json')) return;
-			if (reloading) uncacheTree('./languages/' + lang + '/' + file);
-			const { commands, ...globals } = require('./languages/' + lang + '/' + file);
-			Object.assign(langToCommands, commands || {});
-			Object.assign(langToGlobals, globals);
-		});
+		readdirSync('./languages/' + lang)
+			.filter((file) => file.endsWith('.json'))
+			.forEach((file: string): void => {
+				if (reloading) uncacheTree('./languages/' + lang + '/' + file);
+				const { commands, ...globals } = require('./languages/' + lang + '/' + file);
+				Object.assign(langToCommands, commands || {});
+				Object.assign(langToGlobals, globals);
+			});
 		return { commands: langToCommands, globals: langToGlobals };
 	}
 

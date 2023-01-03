@@ -5,7 +5,7 @@ var assert = require('assert');
 describe('Languages', function () {
 	it('Should be loaded without errors', function () {
 		var translations = {};
-		fs.readdirSync('./languages').forEach(function (lang) {
+		fs.readdirSync('./languages').forEach((lang) => {
 			if (fs.lstatSync('./languages/' + lang).isDirectory()) {
 				translations[lang] = I18n.loadLang(lang, false);
 			}
