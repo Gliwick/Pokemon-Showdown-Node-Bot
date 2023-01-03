@@ -213,7 +213,9 @@ export class Pokemon implements PokemonDetails {
 		if (this.hasAbility('slowstart')) spe = Math.floor(spe * 0.5);
 		if (this.hasItem({ ironball: 1, machobrace: 1 })) spe = Math.floor(spe * 0.5);
 		if (this.hasItem('choicescarf')) spe = Math.floor(spe * 1.5);
-		if (this.hasItem('quickpowder') && this.template.species === 'Ditto') spe = Math.floor(spe * 2);
+		if (this.hasItem('quickpowder') && this.item && this.item.itemUser.includes(this.template.species)) {
+			spe = Math.floor(spe * 2);
+		}
 		if (conditions.volatiles.unburden) spe *= 2;
 		if (conditions.volatiles.protosynthesis === 'spe' || conditions.volatiles.quarkdrive === 'spe') {
 			spe = Math.floor(spe * 1.5);
