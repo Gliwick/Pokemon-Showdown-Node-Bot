@@ -40,7 +40,7 @@ export const commands: Record<string, string | Command> = {
 			}
 			return;
 		}
-		const perm = cmd in { wall: 1, dynwall: 1, infowall: 1 } ? 'wall' : 'info';
+		const perm = ['wall', 'dynwall', 'infowall'].includes(cmd) ? 'wall' : 'info';
 		if (!this.can(perm) || this.roomType === 'pm') {
 			if (!arg) {
 				const list = getCmdList(this.trad('list') + ': ');

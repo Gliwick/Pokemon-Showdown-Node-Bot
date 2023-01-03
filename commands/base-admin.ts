@@ -153,7 +153,7 @@ export const commands: Record<string, string | Command> = {
 			this.sclog();
 			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('d') + textHelper);
 		}
-		if (rank in { on: 1, all: 1, enable: 1 }) {
+		if (['on', 'all', 'enable'].includes(rank)) {
 			if (!this.canSet(perm, ' ')) return this.reply(this.trad('denied'));
 			Settings.setPermission(tarRoom, perm, ' ');
 			Settings.save();
@@ -190,7 +190,7 @@ export const commands: Record<string, string | Command> = {
 			this.sclog();
 			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('d'));
 		}
-		if (rank in { on: 1, all: 1, enable: 1 }) {
+		if (['on', 'all', 'enable'].includes(rank)) {
 			Settings.setPermission('battle-', perm, ' ');
 			Settings.save();
 			this.sclog();

@@ -121,7 +121,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 				'usage'
 			);
 		dataType = toId(args[1]);
-		if (!(dataType in { moves: 1, items: 1, abilities: 1, teammates: 1, spreads: 1 }))
+		if (!['moves', 'items', 'abilities', 'teammates', 'spreads'].includes(dataType)) {
 			return this.restrictReply(
 				this.trad('usage') +
 					': ' +
@@ -130,6 +130,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 					' [pokemon], [moves / items / abilities / spreads / teammates], (tier)',
 				'usage'
 			);
+		}
 		if (args[2]) {
 			tier = parseAliases(args[2]);
 			if (!Formats[tier] && !Formats[tier + 'suspecttest'])

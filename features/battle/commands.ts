@@ -201,10 +201,7 @@ export const commands: Record<string, string | Command> = {
 	challenge: function (arg, by, room, cmd) {
 		if (!this.can('challenge')) return false;
 		if (Settings.lockdown) return;
-		let args = arg.split(',');
-		if (cmd in { challme: 1, challengeme: 1 }) {
-			args = [by, arg];
-		}
+		const args = ['challme', 'challengeme'].includes(cmd) ? [by, arg] : arg.split(',');
 		if (args.length < 2) return this.reply(this.trad('e11') + ': ' + this.cmdToken + cmd + ' ' + this.trad('e12'));
 		const format = parseAliases(args[1]);
 		if (!format || !Formats[format]?.chall) {

@@ -1113,7 +1113,7 @@ export function calculate(
 				if (
 					!supressedWeather &&
 					globalConditions.weather === 'sandstorm' &&
-					moveType in { Rock: 1, Ground: 1, Steel: 1 }
+					['Rock', 'Ground', 'Steel'].includes(moveType)
 				)
 					bp = Math.floor(bp * 1.3);
 				break;
@@ -1323,22 +1323,24 @@ export function calculate(
 	/* Weather */
 
 	if (globalConditions.weather && !supressedWeather) {
-		if (move.type === 'Water' && toId(globalConditions.weather) in { primordialsea: 1, raindance: 1 })
-			modifier *= 1.5;
-		if (move.type === 'Fire' && toId(globalConditions.weather) in { desolateland: 1, sunnyday: 1 }) modifier *= 1.5;
-
-		if (globalConditions.weather === 'desolateland' && move.type === 'Water') modifier = 0;
-		if (globalConditions.weather === 'primordialsea' && move.type === 'Fire') modifier = 0;
-
-		if (globalConditions.weather === 'sunnyday' && move.type === 'Water') modifier *= 0.5;
-		if (globalConditions.weather === 'raindance' && move.type === 'Fire') modifier *= 0.5;
-
-		if (gen >= 4 && defTypes.includes('Rock') && globalConditions.weather === 'sandstorm') {
-			if (defStat === 'spd') def = Math.floor(def * 1.5);
-		}
-
-		if (gen >= 9 && defTypes.includes('Ice') && ['hail', 'snow'].includes(toId(globalConditions.weather))) {
-			if (defStat === 'def') def = Math.floor(def * 1.5);
+		const weather = toId(globalConditions.weather);
+		switch (weather) {
+			case 'primordialsea':
+			case 'raindance':
+				if (move.type === 'Water') modifier *= 1.5;
+				if (move.type === 'Fire') modifier *= weather === 'raindance' ? 0.5 : 0;
+				break;
+			case 'desolateland':
+			case 'sunnyday':
+				if (move.type === 'Fire') modifier *= 1.5;
+				if (move.type === 'Water') modifier *= weather === 'sunnyday' ? 0.5 : 0;
+				break;
+			case 'sandstorm':
+				if (gen >= 4 && defTypes.includes('Rock') && defStat === 'spd') def = Math.floor(def * 1.5);
+				break;
+			case 'snow':
+				if (gen >= 9 && defTypes.includes('Ice') && defStat === 'def') def = Math.floor(def * 1.5);
+				break;
 		}
 	}
 
@@ -1399,8 +1401,9 @@ export function calculate(
 		if (globalConditions.psychicterrain && moveType === 'Psychic') bp = Math.floor(bp * terrainBoost);
 	}
 	if (defPoke.isGrounded(defConditions)) {
-		if (globalConditions.grassyterrain && move.id in { bulldoze: 1, earthquake: 1, magnitude: 1 })
+		if (globalConditions.grassyterrain && ['bulldoze', 'earthquake', 'magnitude'].includes(move.id)) {
 			bp = Math.floor(bp * 0.5);
+		}
 		if (globalConditions.psychicterrain && movePriority > 0) modifier = 0;
 		if (globalConditions.mistyterrain && moveType === 'Dragon') bp = Math.floor(bp * 0.5);
 	}

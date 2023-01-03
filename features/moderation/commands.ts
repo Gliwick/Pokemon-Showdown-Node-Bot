@@ -725,7 +725,7 @@ export const commands: Record<string, string | Command> = {
 		if (tarRoom !== 'global' && (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat'))
 			return this.reply(this.trad('notchat') + textHelper);
 
-		if (Bot.rooms[tarRoom] && Bot.rooms[tarRoom].type === 'chat' && toId(arg) in { on: 1, enable: 1 }) {
+		if (Bot.rooms[tarRoom] && Bot.rooms[tarRoom].type === 'chat' && ['on', 'enable'].includes(toId(arg))) {
 			if (!this.isRanked(getGroup('roomowner'))) return false;
 			if (!Settings.settings.jpdisable) Settings.settings.jpdisable = {};
 			if (!Settings.settings.jpdisable[tarRoom]) return this.reply(this.trad('ae') + textHelper);
@@ -735,7 +735,7 @@ export const commands: Record<string, string | Command> = {
 			return this.reply(this.trad('e') + textHelper);
 		}
 
-		if (Bot.rooms[tarRoom] && Bot.rooms[tarRoom].type === 'chat' && toId(arg) in { off: 1, disable: 1 }) {
+		if (Bot.rooms[tarRoom] && Bot.rooms[tarRoom].type === 'chat' && ['off', 'disable'].includes(toId(arg))) {
 			if (!this.isRanked(getGroup('roomowner'))) return false;
 			if (!Settings.settings.jpdisable) Settings.settings.jpdisable = {};
 			if (Settings.settings.jpdisable[tarRoom]) return this.reply(this.trad('ad') + textHelper);

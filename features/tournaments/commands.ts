@@ -202,7 +202,7 @@ export const commands: Record<string, string | Command> = {
 		const args = arg.split(',');
 		let opt = cmd;
 		let tarRoom = '';
-		if (cmd in { leaderboards: 1, leaderboard: 1 }) {
+		if (cmd.startsWith('leaderboard')) {
 			opt = toId(args.shift());
 			cmd += ' ' + opt + ',';
 		}
@@ -398,26 +398,17 @@ export const commands: Record<string, string | Command> = {
 				tarRoom = toRoomid(args[0]);
 				const enabled = toId(args[1]);
 				const rConfAux = manager.leaderboards.getConfig(tarRoom);
-				if (enabled in { on: 1, enabled: 1 }) {
+				if (['on', 'enabled'].includes(enabled)) {
 					if (args[2]) rConfAux.winnerPoints = parseInt(args[2]);
 					if (args[3]) rConfAux.finalistPoints = parseInt(args[3]);
 					if (args[4]) rConfAux.semiFinalistPoints = parseInt(args[4]);
 					if (args[5]) rConfAux.battlePoints = parseInt(args[5]);
-					if (args[6]) {
-						switch (toId(args[6])) {
-							case 'official':
-								rConfAux.onlyOfficial = true;
-								break;
-							case 'all':
-								rConfAux.onlyOfficial = false;
-								break;
-						}
-					}
+					if (args[6]) rConfAux.onlyOfficial = toId(args[6]) === 'official';
 					this.sclog();
 					Settings.settings.leaderboards[tarRoom] = rConfAux;
 					Settings.save();
 					this.reply(this.trad('wasset') + ' ' + tarRoom);
-				} else if (enabled in { off: 1, disabled: 1 }) {
+				} else if (['enabled', 'disabled'].includes(enabled)) {
 					if (Settings.settings.leaderboards && Settings.settings.leaderboards[tarRoom]) {
 						this.sclog();
 						delete Settings.settings.leaderboards[tarRoom];

@@ -56,13 +56,13 @@ export const commands: Record<string, string | Command> = {
 		if (!Settings.settings.autopromote[tarRoom]) {
 			Settings.settings.autopromote[tarRoom] = { enabled: false, all: null, users: {} };
 		}
-		if (cmd in { setautopromote: 1, setautorank: 1 }) {
-			if (toId(arg) in { on: 1, enable: 1 }) {
+		if (['setautopromote', 'setautorank'].includes(cmd)) {
+			if (['on', 'enable'].includes(toId(arg))) {
 				Settings.settings.autopromote[tarRoom].enabled = true;
 				Settings.save();
 				this.sclog();
 				this.reply(this.trad('on') + textHelper);
-			} else if (toId(arg) in { off: 1, disable: 1 }) {
+			} else if (['off', 'disable'].includes(toId(arg))) {
 				Settings.settings.autopromote[tarRoom].enabled = false;
 				Settings.save();
 				this.sclog();
@@ -73,14 +73,16 @@ export const commands: Record<string, string | Command> = {
 			return;
 		}
 		if (!Settings.settings.autopromote[tarRoom].enabled) return this.reply(this.trad('dis') + textHelper);
-		if (cmd in { listautopromote: 1, listautorank: 1 }) {
-			let txt = 'Automated promotion in ' + tarRoom + ':\n\n';
-			txt +=
-				'General promotion: ' +
-				(Settings.settings.autopromote[tarRoom].all ? Settings.settings.autopromote[tarRoom].all : '(deauth)') +
-				'\n\n';
-			const users = Object.values(Settings.settings.autopromote[tarRoom].users).map((user, i) => user + i);
-			txt += users.join(', ');
+		if (['listautopromote', 'listautorank'].includes(cmd)) {
+			const txt =
+				'Automated promotion in ' +
+				tarRoom +
+				':\n\nGeneral promotion: ' +
+				(Settings.settings.autopromote[tarRoom].all || '(deauth)') +
+				'\n\n' +
+				Object.values(Settings.settings.autopromote[tarRoom].users)
+					.map((user, i) => user + i)
+					.join(', ');
 			uploadToHastebin(
 				txt,
 				function (this: Context, r: boolean, link: any): void {
@@ -121,7 +123,7 @@ export const commands: Record<string, string | Command> = {
 						' [rank] ' +
 						this.trad('usage2')
 				);
-			if (rank in { off: 1, disable: 1, deauth: 1 }) {
+			if (['off', 'disable', 'deauth'].includes(rank)) {
 				Settings.settings.autopromote[tarRoom].all = null;
 				Settings.save();
 				this.sclog();
@@ -153,9 +155,10 @@ export const commands: Record<string, string | Command> = {
 						' [rank] ' +
 						this.trad('usage2')
 				);
-			if (rank in { off: 1, disable: 1, deauth: 1 }) {
-				if (!Settings.settings.autopromote[tarRoom].users[userid])
+			if (['off', 'disable', 'deauth'].includes(rank)) {
+				if (!Settings.settings.autopromote[tarRoom].users[userid]) {
 					return this.reply(this.trad('user') + ' ' + userid + ' ' + this.trad('notuser') + textHelper);
+				}
 				delete Settings.settings.autopromote[tarRoom].users[userid];
 				Settings.save();
 				this.sclog();

@@ -278,7 +278,11 @@ export const commands: Record<string, string | Command> = {
 		const args = arg.split(',');
 		let text = '__' + this.trad('r') + '__: ';
 		let whichRandom = 'randomBattleMoves';
-		if (args[1] && toId(args[1]) in { doubles: 1, 2: 1, double: 1, triples: 1, triple: 1, 3: 1 }) {
+		const gameType = toId(args[1]);
+		if (
+			gameType &&
+			(gameType.startsWith('double') || gameType.startsWith('triple') || ['2', '3'].includes(gameType))
+		) {
 			whichRandom = 'randomDoubleBattleMoves';
 			text = '__' + this.trad('rd') + '__: ';
 		}

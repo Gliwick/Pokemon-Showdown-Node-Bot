@@ -474,12 +474,9 @@ export class TeamBuilder {
 
 			// ability
 			j = buf.indexOf('|', i);
-			const ability = buf.substring(i, j);
+			const ability = buf.substring(i, j) || '0';
 			const template = getPokemon(set.species);
-			set.ability =
-				template.abilities && ability in { '': 1, 0: 1, 1: 1, H: 1 }
-					? template.abilities[ability || '0']
-					: ability;
+			set.ability = template.abilities[ability] || ability;
 			i = j + 1;
 
 			// moves
