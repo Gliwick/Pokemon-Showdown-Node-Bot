@@ -4,7 +4,7 @@
 
 import { ConfigType, validateConfigObject } from '../../config-tools';
 import { equalOrHigherRank, getGroup, toId } from '../../tools';
-import { Feature } from '../index';
+import { Feature } from '..';
 
 const DEFAULT_MOD_CONSTS: Required<ConfigType['moderation']['MOD_CONSTS']> = {
 	FLOOD_MESSAGE_NUM: 5,

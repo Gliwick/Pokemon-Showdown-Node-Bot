@@ -137,6 +137,11 @@ export interface ConfigType {
 		};
 		logIntroMessages: boolean;
 	};
+	autoInvite: {
+		linked: string;
+		private: string;
+		rank: string;
+	}[];
 	groupchats: Record<string, { toJoin: string[]; onJoin: string[]; onLeave: string[] }>;
 	groupChatTryJoinInterval: number;
 	disableDownload?: boolean;
@@ -147,7 +152,7 @@ export interface ConfigType {
 
 type KeyOfValueType<T, V> = { [K in keyof T]-?: V extends T[K] ? K : never }[keyof T];
 
-function validateConfigArray(key: KeyOfValueType<ConfigType, any[]>): void {
+export function validateConfigArray(key: KeyOfValueType<ConfigType, any[]>): void {
 	if (!Config[key] || !Array.isArray(Config[key])) {
 		issue('Config.' + key + ' is not an array');
 		Config[key] = [];

@@ -4,7 +4,7 @@
 
 import { errlog, error } from '../../log';
 import { uncacheTree } from '../../tools';
-import { Feature } from '../index';
+import { Feature } from '..';
 import { BattleBot } from './battle-ai';
 import { ChallengeManager } from './challenges';
 import { LadderManager } from './ladder';

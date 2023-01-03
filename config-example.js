@@ -353,6 +353,14 @@ exports.chatLogger = {
 };
 
 /*
+ * Auto-Invite
+ */
+
+exports.autoInvite = [
+	//{linked: 'public room linked', private: 'private room', rank: '+'}
+];
+
+/*
  * Groupchats
  */
 

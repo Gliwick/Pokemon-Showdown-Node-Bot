@@ -3,7 +3,7 @@
 */
 
 import { ConfigType } from '../../config-tools';
-import { Feature } from '../index';
+import { Feature } from '..';
 import { LeaderboardsManager } from './leaderboards';
 
 const CurrentGen = 9;
