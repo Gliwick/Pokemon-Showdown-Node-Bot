@@ -215,18 +215,22 @@ export class Pokemon implements PokemonDetails {
 		if (this.hasItem('choicescarf')) spe = Math.floor(spe * 1.5);
 		if (this.hasItem('quickpowder') && this.template.species === 'Ditto') spe = Math.floor(spe * 2);
 		if (conditions.volatiles.unburden) spe *= 2;
-		if (conditions.volatiles.protosynthesis === 'spe' || conditions.volatiles.quarkdrive === 'spe')
+		if (conditions.volatiles.protosynthesis === 'spe' || conditions.volatiles.quarkdrive === 'spe') {
 			spe = Math.floor(spe * 1.5);
+		}
 
 		const globalConditions = battle.conditions;
 		if (globalConditions.tailwind) spe *= 2;
 		if (globalConditions.weather && !globalConditions.supressedWeather) {
-			if (['desolateland', 'sunnyday'].includes(toId(globalConditions.weather)) && this.hasAbility('chlorophyll'))
+			const weather = toId(globalConditions.weather);
+			if (
+				(['desolateland', 'sunnyday'].includes(weather) && this.hasAbility('chlorophyll')) ||
+				(['primordealsea', 'raindance'].includes(weather) && this.hasAbility('swiftswim')) ||
+				(weather === 'sandstorm' && this.hasAbility('sandrush')) ||
+				(['hail', 'snow'].includes(weather) && this.hasAbility('slushrush'))
+			) {
 				spe *= 2;
-			if (['primordealsea', 'raindance'].includes(toId(globalConditions.weather)) && this.hasAbility('swiftswim'))
-				spe *= 2;
-			if (toId(globalConditions.weather) === 'sandstorm' && this.hasAbility('sandrush')) spe *= 2;
-			if (['hail', 'snow'].includes(toId(globalConditions.weather)) && this.hasAbility('slushrush')) spe *= 2;
+			}
 		}
 		if (globalConditions.electricterrain && this.hasAbility('surgesurfer')) spe = Math.floor(spe * 2);
 
@@ -488,8 +492,8 @@ export function calculate(
 		atkPoke.hasAbility({ airlock: 1, cloudnine: 1 }) || defPoke.hasAbility({ airlock: 1, cloudnine: 1 });
 	const supressedWeather = globalConditions.supressedWeather;
 
-	const atkStats = atkPoke.getStats(),
-		defStats = defPoke.getStats();
+	const atkStats = atkPoke.getStats();
+	const defStats = defPoke.getStats();
 	const atkSpe = atkPoke.getFullSpe({ conditions: globalConditions, gen }, atkConditions, false);
 	const defSpe = defPoke.getFullSpe({ conditions: globalConditions, gen }, defConditions, false);
 
@@ -551,8 +555,9 @@ export function calculate(
 	const moveType = getMoveType(atkPoke, move, atkConditions, globalConditions, gen) || 'Normal';
 	let movePriority = move.priority;
 
-	if (move.id === 'grassyglide' && globalConditions.grassyterrain && atkPoke.isGrounded(atkConditions))
+	if (move.id === 'grassyglide' && globalConditions.grassyterrain && atkPoke.isGrounded(atkConditions)) {
 		movePriority++;
+	}
 
 	if (atkPoke.ability && !atkPoke.supressedAbility && !defPoke.hasAbility('neutralizinggas')) {
 		switch (atkPoke.ability.id) {
@@ -711,16 +716,18 @@ export function calculate(
 	if (
 		['Fighting', 'Normal'].includes(moveType) &&
 		(defConditions.volatiles.foresight || atkPoke.hasAbility('scrappy'))
-	)
+	) {
 		notImmune = true;
+	}
 	if (moveType === 'Ground' && (move.id === 'thousandarrows' || globalConditions.gravity)) notImmune = true;
 
 	const { inversebattle } = globalConditions;
 	const defTypes = [...defPoke.getTypes(defConditions)];
 	let typeEffectiveness = getMultipleEff(moveType, defTypes, gen, notImmune, !!inversebattle, battleId);
-	if (move.id === 'flyingpress')
+	if (move.id === 'flyingpress') {
 		typeEffectiveness *= getMultipleEff('Flying', defTypes, gen, notImmune, !!inversebattle, battleId);
-	if (move.id === 'freezedry' && defTypes.includes('Water'))
+	}
+	if (move.id === 'freezedry' && defTypes.includes('Water')) {
 		typeEffectiveness =
 			2 *
 			getMultipleEff(
@@ -731,6 +738,7 @@ export function calculate(
 				!!inversebattle,
 				battleId
 			);
+	}
 	if (move.type === 'Shadow') typeEffectiveness = 2;
 
 	let immune = false;
@@ -1354,9 +1362,9 @@ export function calculate(
 	const willCrit =
 		atkConditions.immediate.crit ||
 		move.willCrit ||
-		(['farfetchd', 'farfetchdgalar', 'sirfetchd'].includes(atkPoke.template.id) &&
-			atkPoke.hasItem({ leek: 1, stick: 1 })) ||
-		(atkPoke.template.species === 'Chansey' && atkPoke.hasItem('luckypunch'));
+		(atkPoke.hasItem({ leek: 1, luckypunch: 1, stick: 1 }) &&
+			atkPoke.item &&
+			atkPoke.item.itemUser.includes(atkPoke.template.species));
 
 	if (defConditions.boosts[defStat]) {
 		if (!willCrit && !move.ignoreDefensive && !atkPoke.hasAbility('unaware')) {
@@ -1374,10 +1382,12 @@ export function calculate(
 
 	/* Volatiles */
 
-	if (atkStat === atkConditions.volatiles.protosynthesis || atkStat === atkConditions.volatiles.quarkdrive)
+	if (atkStat === atkConditions.volatiles.protosynthesis || atkStat === atkConditions.volatiles.quarkdrive) {
 		atk = Math.floor(atk * 1.3);
-	if (defStat === defConditions.volatiles.protosynthesis || defStat === defConditions.volatiles.quarkdrive)
+	}
+	if (defStat === defConditions.volatiles.protosynthesis || defStat === defConditions.volatiles.quarkdrive) {
 		def = Math.floor(def * 1.3);
+	}
 
 	if (defConditions.volatiles.magnetrise && moveType === 'Ground') modifier = 0;
 
