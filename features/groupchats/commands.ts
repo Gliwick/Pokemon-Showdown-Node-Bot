@@ -80,8 +80,8 @@ export const commands: Record<string, string | Command> = {
 				':\n\nGeneral promotion: ' +
 				(Settings.settings.autopromote[tarRoom].all || '(deauth)') +
 				'\n\n' +
-				Object.values(Settings.settings.autopromote[tarRoom].users)
-					.map((user, i) => user + i)
+				Object.entries(Settings.settings.autopromote[tarRoom].users)
+					.map(([i, user]) => user + i)
 					.join(', ');
 			uploadToHastebin(
 				txt,
