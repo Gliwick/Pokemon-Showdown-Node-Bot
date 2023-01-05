@@ -2,7 +2,7 @@
 	Minors
 */
 
-import { debug, error } from '../../../log';
+import { error } from '../../../log';
 import { toId } from '../../../tools';
 import { Battle } from './battle';
 import { getAbility, getEffect, getItem, getMove, getPokemon, Type } from './battle-data';
@@ -654,7 +654,7 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 	'-message': function (this: Battle, args, kwargs) {
 		if (args[1] && args[1].includes('NOTE: This is an Inverse Battle')) {
 			this.conditions['inversebattle'] = true;
-			debug(this.id + ': Changed to inverse Battle');
+			this.debug(this.id + ': Changed to inverse Battle');
 		}
 	},
 };
