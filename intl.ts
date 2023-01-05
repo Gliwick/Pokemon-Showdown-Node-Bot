@@ -45,20 +45,19 @@ export class Intl {
 				}
 			}
 		});
-		if (reloading)
+		if (reloading) {
 			info(
-				'Languages reloaded' +
-					(errs.length ? '. Errors: ' + errs.join(', ') : '') +
-					'. Languages: ' +
-					Object.keys(this.translations).join(', ')
+				`Languages reloaded${errs.length ? '. Errors: ' + errs.join(', ') : ''}. Languages: ${Object.keys(this.translations).join(
+					', '
+				)}`
 			);
-		else
+		} else {
 			ok(
-				'Loaded languages' +
-					(errs.length ? '. Errors: ' + errs.join(', ') : '') +
-					'. Languages: ' +
-					Object.keys(this.translations).join(', ')
+				`Loaded languages${errs.length ? '. Errors: ' + errs.join(', ') : ''}. Languages: ${Object.keys(this.translations).join(
+					', '
+				)}`
 			);
+		}
 		return errs;
 	}
 
