@@ -69,14 +69,14 @@ export const commands: Record<string, string | Command> = {
 	delcmd: function (arg) {
 		if (!this.isRanked(getGroup('admin'))) return false;
 		const dcmd = toId(arg);
-		if (CommandParser.dynCommands[dcmd]) {
-			delete CommandParser.dynCommands[dcmd];
-			CommandParser.saveDynCmds();
-			this.sclog();
-			this.reply(this.trad('c') + ' "' + dcmd + '" ' + this.trad('d'));
-		} else {
-			this.reply(this.trad('c') + ' "' + dcmd + '" ' + this.trad('n'));
+		if (!CommandParser.dynCommands[dcmd]) {
+			return this.reply(this.trad('c') + ' "' + dcmd + '" ' + this.trad('n'));
 		}
+
+		delete CommandParser.dynCommands[dcmd];
+		CommandParser.saveDynCmds();
+		this.sclog();
+		this.reply(this.trad('c') + ' "' + dcmd + '" ' + this.trad('d'));
 	},
 
 	setcommand: 'setcmd',
@@ -85,17 +85,13 @@ export const commands: Record<string, string | Command> = {
 		if (!CommandParser.tempVar) {
 			return this.reply(this.trad('notemp'));
 		}
+
 		const dcmd = toId(arg);
-		let text = '';
-		if (CommandParser.dynCommands[dcmd]) {
-			text = this.trad('c') + ' "' + dcmd + '" ' + this.trad('modified');
-		} else {
-			text = this.trad('c') + ' "' + dcmd + '" ' + this.trad('created');
-		}
+		const created = !CommandParser.dynCommands[dcmd];
 		CommandParser.dynCommands[dcmd] = CommandParser.tempVar;
 		CommandParser.saveDynCmds();
 		this.sclog();
-		this.reply(text);
+		this.reply(`${this.trad('c')} "${dcmd}" ${this.trad(created ? 'created' : 'modified')}`);
 	},
 
 	setalias: 'setcmdalias',
@@ -107,9 +103,7 @@ export const commands: Record<string, string | Command> = {
 		const dcmd = toId(args[1]);
 		if (!alias || !dcmd || alias === dcmd) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 		if (!CommandParser.dynCommands[dcmd]) return this.reply(this.trad('c') + ' "' + dcmd + '" ' + this.trad('n'));
-		if (CommandParser.dynCommands[dcmd].startsWith('/ref')) {
-			return this.reply(this.trad('c') + ' "' + dcmd + '" ' + this.trad('already'));
-		}
+		if (CommandParser.dynCommands[dcmd].startsWith('/ref')) return this.reply(`${this.trad('c')} "${dcmd}" ${this.trad('already')}`);
 
 		CommandParser.dynCommands[alias] = '/ref ' + dcmd;
 		CommandParser.saveDynCmds();
@@ -122,14 +116,14 @@ export const commands: Record<string, string | Command> = {
 		if (!this.isRanked(getGroup('admin'))) return false;
 		const list = Object.keys(CommandParser.dynCommands).sort();
 		if (!list.length) return this.pmReply(this.trad('nocmds'));
-		let text = this.trad('list') + ':\n\n';
-		for (const i in CommandParser.dynCommands) {
-			if (CommandParser.dynCommands[i].startsWith('/ref')) {
-				text += i + ' ~ ' + toId(CommandParser.dynCommands[i].substr(5)) + '\n';
-				continue;
-			}
-			text += i + ' -> "' + CommandParser.dynCommands[i] + '"' + '\n';
-		}
+		const text =
+			this.trad('list') +
+			':\n\n' +
+			Object.values(CommandParser.dynCommands)
+				.map(([key, dynCommand]) => {
+					dynCommand.startsWith('/ref') ? `${key} ~ ${toId(dynCommand.substr('/ref'.length))}` : `${key} -> "${dynCommand}"`;
+				})
+				.join('\n');
 		uploadToHastebin(
 			text,
 			function (this: Context, r: boolean, link: any): void {
