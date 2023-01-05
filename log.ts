@@ -62,42 +62,32 @@ export type MonitorType = 'room' | 'battle' | 'status';
 export type MonitorFlag = 'join' | 'leave' | 'error';
 
 export function monitor(str: string, type?: MonitorType, flag?: MonitorFlag): void {
+	let color: (s: string) => string;
+	switch (flag) {
+		case 'join':
+			color = colors.green;
+			break;
+		case 'leave':
+			color = colors.yellow;
+			break;
+		case 'error':
+			color = colors.red;
+			break;
+		default:
+			color = colors.blue;
+	}
 	switch (type) {
 		case 'room':
 			if (AppOptions.debugmode) {
 				if (AppOptions.debugmode > 3) return;
 			} else if (Config.debug?.room === false) return;
-			switch (flag) {
-				case 'join':
-					console.log(colors.green('room') + '\t' + str);
-					break;
-				case 'leave':
-					console.log(colors.yellow('room') + '\t' + str);
-					break;
-				case 'error':
-					console.log(colors.red('room') + '\t' + str);
-					break;
-				default:
-					console.log(colors.blue('room') + '\t' + str);
-			}
+			console.log(color('room') + '\t' + str);
 			break;
 		case 'battle':
 			if (AppOptions.debugmode) {
 				if (AppOptions.debugmode > 2) return;
 			} else if (Config.debug?.battle === false) return;
-			switch (flag) {
-				case 'join':
-					console.log(colors.green('battle') + '\t' + str);
-					break;
-				case 'leave':
-					console.log(colors.yellow('battle') + '\t' + str);
-					break;
-				case 'error':
-					console.log(colors.red('battle') + '\t' + str);
-					break;
-				default:
-					console.log(colors.blue('battle') + '\t' + str);
-			}
+			console.log(color('battle') + '\t' + str);
 			break;
 		case 'status':
 			if (AppOptions.debugmode) {
