@@ -134,25 +134,21 @@ export const commands: Record<string, string | Command> = {
 		arg = toId(arg);
 		if (!arg || arg.length > 18) return this.pmReply(this.trad('inv'));
 		const alts = Settings.userManager.getAlts(arg);
-		if (alts.length) {
-			if (this.can('alts')) {
-				const cmds = joinWithLengthLimit(alts, this.trad('alts') + ' ' + Settings.userManager.getName(arg) + ': ');
-				this.pmReply(cmds);
-				return;
-			}
+		if (!alts.length) {
+			return this.pmReply(this.trad('n') + ' ' + Settings.userManager.getName(arg));
+		}
 
-			let text = '';
-			if (alts.length <= 10) {
-				text += this.trad('alts') + ' ' + Settings.userManager.getName(arg) + ': ' + alts.join(', ');
-			} else {
-				const fAlts = alts.reverse().slice(0, 10);
-				text += this.trad('alts') + ' ' + Settings.userManager.getName(arg) + ': ' + fAlts.join(', ');
-				if (alts.length > 10) text += ', (' + (alts.length - 10) + this.trad('more') + ')';
-				this.pmReply(text);
-			}
+		if (this.can('alts')) {
+			return this.pmReply(joinWithLengthLimit(alts, this.trad('alts') + ' ' + Settings.userManager.getName(arg) + ': '));
+		}
+
+		if (alts.length <= 10) {
+			this.pmReply(this.trad('alts') + ' ' + Settings.userManager.getName(arg) + ': ' + alts.join(', '));
 		} else {
-			const text = this.trad('n') + ' ' + Settings.userManager.getName(arg);
-			this.pmReply(text);
+			const fAlts = alts.reverse().slice(0, 10);
+			this.pmReply(
+				`${this.trad('alts')} ${Settings.userManager.getName(arg)}: ${fAlts.join(', ')}, (${alts.length - 10} ${this.trad('more')})`
+			);
 		}
 	},
 
