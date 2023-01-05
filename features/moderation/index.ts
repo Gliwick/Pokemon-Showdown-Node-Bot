@@ -230,6 +230,7 @@ export class ModerationManager implements Feature {
 
 		// removes extra spaces and null characters so messages that should trigger stretching do so
 		const msg = message.trim().replace(/[ \u0000\u200B-\u200F]+/g, ' ');
+		const msgLow = msg.toLowerCase();
 
 		if (!this.chatData[room]) this.chatData[room] = {};
 
@@ -264,8 +265,8 @@ export class ModerationManager implements Feature {
 			capsMatchArray.length >= Math.floor(toId(msg).length * this.getConst('MIN_CAPS_PROPORTION'));
 		const stretchRegExp = new RegExp('(.)\\1{' + this.getConst('MAX_STRETCH').toString() + ',}', 'g');
 		const repeatRegExp = new RegExp('(..+)\\1{' + this.getConst('MAX_REPEAT').toString() + ',}', 'g');
-		const stretchMatch = msg.toLowerCase().match(stretchRegExp);
-		const inlineSpam = stretchMatch ? false : msg.toLowerCase().match(repeatRegExp);
+		const stretchMatch = msgLow.match(stretchRegExp);
+		const inlineSpam = stretchMatch ? false : msgLow.match(repeatRegExp);
 		const isFlooding =
 			times.length >= this.getConst('FLOOD_MESSAGE_NUM') &&
 			time - times[times.length - this.getConst('FLOOD_MESSAGE_NUM')] < this.getConst('FLOOD_MESSAGE_TIME') &&
@@ -290,11 +291,7 @@ export class ModerationManager implements Feature {
 					}
 				}
 				if (isSpamming) {
-					if (
-						msg.toLowerCase().indexOf('http://') > -1 ||
-						msg.toLowerCase().indexOf('https://') > -1 ||
-						msg.toLowerCase().indexOf('www.') > -1
-					) {
+					if (msgLow.includes('http://') || msgLow.includes('https://') || msgLow.includes('www.')) {
 						if (modSettings.spam) {
 							muteMessage = ', ' + this.trad('automod', room) + ': ' + this.trad('sl', room);
 							pointVal = this.getValue('spam-link');
@@ -304,7 +301,7 @@ export class ModerationManager implements Feature {
 							addFlood = true;
 						}
 					} else {
-						if (msg.length > 70 || capsMatch || msg.toLowerCase().indexOf('**') > -1 || stretchMatch || inlineSpam) {
+						if (msg.length > 70 || capsMatch || msgLow.includes('**') || stretchMatch || inlineSpam) {
 							if (modSettings.spam) {
 								muteMessage = ', ' + this.trad('automod', room) + ': ' + this.trad('s', room);
 								pointVal = this.getValue('spam');
@@ -335,14 +332,10 @@ export class ModerationManager implements Feature {
 			) {
 				pointVal = pv;
 				muteMessage = ', ' + this.trad('automod', room) + ': ' + this.trad('fs', room);
-				if (
-					msg.toLowerCase().indexOf('http://') > -1 ||
-					msg.toLowerCase().indexOf('https://') > -1 ||
-					msg.toLowerCase().indexOf('www.') > -1
-				) {
+				if (msgLow.includes('http://') || msgLow.includes('https://') || msgLow.includes('www.')) {
 					muteMessage = ', ' + this.trad('automod', room) + ': ' + this.trad('sl', room);
 					pointVal = this.getValue('spam-link');
-				} else if (msg.length > 70 || capsMatch || msg.toLowerCase().indexOf('**') > -1 || stretchMatch || inlineSpam) {
+				} else if (msg.length > 70 || capsMatch || msgLow.includes('**') || stretchMatch || inlineSpam) {
 					muteMessage = ', ' + this.trad('automod', room) + ': ' + this.trad('s', room);
 					pointVal = this.getValue('spam');
 				}
@@ -396,7 +389,7 @@ export class ModerationManager implements Feature {
 		 ******************************/
 
 		pv = this.getValue('spoiler');
-		if (modSettings.spoiler && (msg.toLowerCase().indexOf('spoiler:') > -1 || msg.toLowerCase().indexOf('spoilers:') > -1)) {
+		if (modSettings.spoiler && (msgLow.includes('spoiler:') || msgLow.includes('spoilers:'))) {
 			infractions.push(this.trad('spoiler-0', room));
 			totalPointVal += pv;
 			if (pointVal < pv) {
@@ -406,10 +399,7 @@ export class ModerationManager implements Feature {
 		}
 
 		pv = this.getValue('youtube');
-		if (
-			modSettings.youtube &&
-			(msg.toLowerCase().indexOf('youtube.com/channel/') > -1 || msg.toLowerCase().indexOf('youtube.com/user/') > -1)
-		) {
+		if (modSettings.youtube && (msgLow.includes('youtube.com/channel/') || msgLow.includes('youtube.com/user/'))) {
 			infractions.push(this.trad('youtube-0', room));
 			totalPointVal += pv;
 			if (pointVal < pv) {
@@ -419,7 +409,7 @@ export class ModerationManager implements Feature {
 		}
 
 		pv = this.getValue('replays');
-		if (modSettings.replays && msg.toLowerCase().indexOf('replay.pokemonshowdown.com/') > -1) {
+		if (modSettings.replays && msgLow.includes('replay.pokemonshowdown.com/')) {
 			infractions.push(this.trad('replays-0', room));
 			totalPointVal += pv;
 			if (pointVal < pv) {
@@ -429,7 +419,7 @@ export class ModerationManager implements Feature {
 		}
 
 		pv = this.getValue('servers');
-		if (modSettings.psservers && msg.toLowerCase().indexOf('.psim.us') > -1) {
+		if (modSettings.psservers && msgLow.includes('.psim.us')) {
 			const serverAds = this.getServersAds(msg);
 			for (let z = 0; z < serverAds.length; z++) {
 				if (Config.moderation.psServersExcepts && Config.moderation.psServersExcepts.includes(serverAds[z])) {
@@ -455,9 +445,9 @@ export class ModerationManager implements Feature {
 			const inapropiatePhrases = !!inapropiatephraseSettings
 				? Object.keys({ ...inapropiatephraseSettings[room], ...inapropiatephraseSettings['global'] })
 				: [];
-			const msgrip = ' ' + msg.toLowerCase().replace(/[^a-zа-яё0-9]/g, ' ') + ' ';
+			const msgrip = ' ' + msgLow.replace(/[^a-zа-яё0-9]/g, ' ') + ' ';
 			for (let i = 0; i < inapropiatePhrases.length; i++) {
-				if (msgrip.indexOf(' ' + inapropiatePhrases[i] + ' ') > -1) {
+				if (msgrip.includes(' ' + inapropiatePhrases[i] + ' ')) {
 					infractions.push(this.trad('inapword-0', room));
 					totalPointVal += pv;
 					if (pointVal < pv) {
@@ -473,9 +463,8 @@ export class ModerationManager implements Feature {
 		if (modSettings.bannedwords) {
 			const banphraseSettings = Settings.settings.bannedphrases;
 			const bannedPhrases = !!banphraseSettings ? Object.keys({ ...banphraseSettings[room], ...banphraseSettings['global'] }) : [];
-			const msglow = msg.toLowerCase();
 			for (let i = 0; i < bannedPhrases.length; i++) {
-				if (msglow.indexOf(bannedPhrases[i]) > -1) {
+				if (msgLow.includes(bannedPhrases[i])) {
 					infractions.push(this.trad('banword-0', room));
 					totalPointVal += pv;
 					if (pointVal < pv) {
