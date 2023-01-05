@@ -184,13 +184,7 @@ export class Context {
 	}
 
 	sclog(data?: string): void {
-		if (data) {
-			SecurityLog.log('[' + this.room + '] [' + this.by + '] [' + this.handler + '] ' + data);
-		} else {
-			SecurityLog.log(
-				'[' + this.room + '] [' + this.by + '] [' + this.handler + '] ' + 'Command: ' + this.cmdToken + this.cmd + ' ' + this.arg
-			);
-		}
+		SecurityLog.log(`[${this.room}] [${this.by}] [${this.handler}] ${data || 'Command: ' + this.cmdToken + this.cmd + ' ' + this.arg}`);
 	}
 
 	getModule<T extends CommandModuleManager>(moduleClass: new () => T): T {
@@ -234,25 +228,9 @@ class ResourceMonitor {
 				SecurityLog.log('User ' + user + ' has used ' + this.cmdusage[user] + ' commands in the last ' + duration + ' ms');
 			} else if (this.cmdusage[user] >= MAX_CMD_FLOOD) {
 				this.lock(user);
-				monitor(
-					'User ' +
-						user +
-						' has been ignored (command flood: ' +
-						this.cmdusage[user] +
-						' commands in the last ' +
-						duration +
-						' ms' +
-						')'
-				);
+				monitor(`User ${user} has been ignored (command flood: ${this.cmdusage[user]} commands in the last ${duration} ms)`);
 				SecurityLog.log(
-					'User ' +
-						user +
-						' has been ignored (command flood: ' +
-						this.cmdusage[user] +
-						' commands in the last ' +
-						duration +
-						' ms' +
-						')'
+					`User ${user} has been ignored (command flood: ${this.cmdusage[user]} commands in the last ${duration} ms)`
 				);
 				return true;
 			}
