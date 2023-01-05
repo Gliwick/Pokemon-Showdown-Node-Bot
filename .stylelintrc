@@ -18,6 +18,7 @@
 		"declaration-block-semicolon-newline-after": null,
 		"declaration-block-trailing-semicolon": null,
 		"scss/selector-no-redundant-nesting-selector": null,
-		"no-missing-end-of-source-newline": null
+		"no-missing-end-of-source-newline": null,
+		"max-line-length": 140
 	}
 }

@@ -31,10 +31,11 @@ export const commands: Record<string, string | Command> = {
 	pm: function (arg, by, room, cmd) {
 		if (!this.isRanked('admin')) return false;
 		const args = arg.split(',');
-		if (args.length < 2) return this.reply('Usage: ' + this.cmdToken + cmd + ' [user], [message]');
+		if (args.length < 2) return this.reply(`Usage: ${this.cmdToken + cmd} [user], [message]`);
 		const targetUser = toId(args.shift());
 		const msg = args.join(',').trim();
-		if (!targetUser || !msg) return this.reply('Usage: ' + this.cmdToken + cmd + ' [user], [message]');
+		if (!targetUser || !msg) return this.reply(`Usage: ${this.cmdToken + cmd} [user], [message]`);
+
 		this.sclog();
 		this.sendPM(targetUser, msg);
 	},
@@ -63,14 +64,13 @@ export const commands: Record<string, string | Command> = {
 	joinrooms: 'joinall',
 	joinall: function (arg, by, room, cmd) {
 		if (!this.isRanked('admin')) return false;
-		let target = 'all';
+		let target: 'official' | 'public' | 'all' = 'all';
 		arg = toId(arg);
 		if (arg.length || cmd === 'joinrooms') {
-			if (arg === 'official') target = 'official';
-			else if (arg === 'public') target = 'public';
-			else if (arg === 'all') target = 'all';
-			else return this.reply('Usage: ' + this.cmdToken + cmd + ' [official/public/all]');
+			if (arg === 'official' || arg === 'public' || arg === 'all') target = arg;
+			else return this.reply(`Usage: ${this.cmdToken + cmd} [official/public/all]`);
 		}
+
 		const qParser = (data: string): void => {
 			const command = data.split('|')[0];
 			if (command === 'rooms') {
@@ -107,17 +107,11 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {
-			return this.reply(this.trad('notchat') + textHelper);
-		}
+		if (Bot.rooms[tarRoom]?.type !== 'chat') this.reply(this.trad('notchat') + textHelper);
 		const lang = toId(arg);
-		if (!lang.length)
-			return this.reply(
-				this.trad('nolang') + '. ' + this.trad('v') + ': ' + Object.keys(I18n.translations).join(', ')
-			);
-		if (!I18n.translations[lang]) {
-			return this.reply(this.trad('v') + ': ' + Object.keys(I18n.translations).join(', '));
-		}
+		if (!lang.length) return this.reply(`${this.trad('nolang')}. ${this.trad('v')}: ${Object.keys(I18n.translations).join(', ')}`);
+		if (!I18n.translations[lang]) return this.reply(`${this.trad('v')}: ${Object.keys(I18n.translations).join(', ')}`);
+
 		if (!Settings.settings['language']) Settings.settings['language'] = {};
 		Settings.settings['language'][tarRoom] = lang;
 		Settings.save();
@@ -137,40 +131,36 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
-			return this.reply(this.trad('notchat') + textHelper);
+		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		const args = arg.split(',');
-		if (args.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
+		if (args.length < 2) return this.reply(`${this.trad('u1')}: ${this.cmdToken + cmd} ${this.trad('u2')}`);
+
 		const perm = toId(args[0]);
 		const rank = args[1].trim();
 		if (!(perm in Settings.permissions)) {
-			return this.reply(this.trad('ps') + ': ' + Object.keys(Settings.permissions).sort().join(', '));
+			return this.reply(`${this.trad('ps')}: ${Object.keys(Settings.permissions).sort().join(', ')}`);
 		}
 		if (['off', 'disable'].includes(rank)) {
 			if (!this.canSet(perm, highestRank())) return this.reply(this.trad('denied'));
 			Settings.setPermission(tarRoom, perm, highestRank());
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('d') + textHelper);
+			return this.reply(`${this.trad('p')} **${perm}** ${this.trad('d') + textHelper}`);
 		}
 		if (['on', 'all', 'enable'].includes(rank)) {
 			if (!this.canSet(perm, ' ')) return this.reply(this.trad('denied'));
 			Settings.setPermission(tarRoom, perm, ' ');
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('a') + textHelper);
+			return this.reply(`${this.trad('p')} **${perm}** ${this.trad('a') + textHelper}`);
 		}
-		if (Config.ranks.indexOf(rank) >= 0) {
-			if (!this.canSet(perm, rank)) return this.reply(this.trad('denied'));
-			Settings.setPermission(tarRoom, perm, rank);
-			Settings.save();
-			this.sclog();
-			return this.reply(
-				this.trad('p') + ' **' + perm + '** ' + this.trad('r') + ' ' + rank + ' ' + this.trad('r2') + textHelper
-			);
-		} else {
-			return this.reply(this.trad('not1') + ' ' + rank + ' ' + this.trad('not2'));
-		}
+		if (!Config.ranks.includes(rank)) return this.reply(`${this.trad('not1')} ${rank} ${this.trad('not2')}`);
+		if (!this.canSet(perm, rank)) return this.reply(this.trad('denied'));
+
+		Settings.setPermission(tarRoom, perm, rank);
+		Settings.save();
+		this.sclog();
+		return this.reply(`${this.trad('p')} **${perm}** ${this.trad('r')} ${rank} ${this.trad('r2') + textHelper}`);
 	},
 
 	battlepermissions: 'battleset',
@@ -178,33 +168,29 @@ export const commands: Record<string, string | Command> = {
 	battleset: function (arg, by, room, cmd) {
 		if (!this.isRanked('admin')) return false;
 		const args = arg.split(',');
-		if (args.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
+		if (args.length < 2) return this.reply(`${this.trad('u1')}: ${this.cmdToken + cmd} ${this.trad('u2')}`);
 		const perm = toId(args[0]);
 		const rank = args[1].trim();
-		if (!(perm in Settings.permissions)) {
-			return this.reply(this.trad('ps') + ': ' + Object.keys(Settings.permissions).sort().join(', '));
-		}
+		if (!(perm in Settings.permissions))
+			return this.reply(`${this.trad('ps')}: ${Object.keys(Settings.permissions).sort().join(', ')}`);
+
 		if (['off', 'disable'].includes(rank)) {
 			Settings.setPermission('battle-', perm, highestRank());
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('d'));
+			return this.reply(`${this.trad('p')} **${perm}** ${this.trad('d')}`);
 		}
 		if (['on', 'all', 'enable'].includes(rank)) {
 			Settings.setPermission('battle-', perm, ' ');
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('p') + ' **' + perm + '** ' + this.trad('a'));
+			return this.reply(`${this.trad('p')} **${perm}** ${this.trad('a')}`);
 		}
-		if (Config.ranks.indexOf(rank) >= 0) {
-			Settings.setPermission('battle-', perm, rank);
-			Settings.save();
-			this.sclog();
-			return this.reply(
-				this.trad('p') + ' **' + perm + '** ' + this.trad('r') + ' ' + rank + ' ' + this.trad('r2')
-			);
-		} else {
-			return this.reply(this.trad('not1') + ' ' + rank + ' ' + this.trad('not2'));
-		}
+		if (!Config.ranks.includes(rank)) return this.reply(`${this.trad('not1')} ${rank} ${this.trad('not2')}`);
+
+		Settings.setPermission('battle-', perm, rank);
+		Settings.save();
+		this.sclog();
+		return this.reply(`${this.trad('p')} **${perm}** ${this.trad('r')} ${rank} ${this.trad('r2')}`);
 	},
 };

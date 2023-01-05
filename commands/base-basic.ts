@@ -18,14 +18,7 @@ export const commands: Record<string, string | Command> = {
 	bot: 'about',
 	about: function () {
 		this.restrictReply(
-			this.trad('about') +
-				'. ' +
-				this.trad('author') +
-				': ' +
-				Settings.package.author.name +
-				'. (' +
-				Settings.package.homepage +
-				')',
+			this.trad('about') + '. ' + this.trad('author') + ': ' + Settings.package.author.name + '. (' + Settings.package.homepage + ')',
 			'info'
 		);
 	},
@@ -44,9 +37,7 @@ export const commands: Record<string, string | Command> = {
 	botguide: 'help',
 	help: function () {
 		this.restrictReply(
-			this.trad('guide') +
-				': ' +
-				(Config.botguide || Settings.package.homepage + '/blob/master/commands/README.md'),
+			this.trad('guide') + ': ' + (Config.botguide || Settings.package.homepage + '/blob/master/commands/README.md'),
 			'info'
 		);
 	},
@@ -61,13 +52,7 @@ export const commands: Record<string, string | Command> = {
 		let text = '';
 		text += '**Uptime:** ';
 		const divisors = [52, 7, 24, 60, 60];
-		const unitNames = [
-			this.trad('week'),
-			this.trad('day'),
-			this.trad('hour'),
-			this.trad('minute'),
-			this.trad('second'),
-		];
+		const unitNames = ['week', 'day', 'hour', 'minute', 'second'].map(this.trad);
 		const buffer: string[] = [];
 		let uptime = ~~process.uptime();
 		do {
@@ -151,10 +136,7 @@ export const commands: Record<string, string | Command> = {
 		const alts = Settings.userManager.getAlts(arg);
 		if (alts.length) {
 			if (this.can('alts')) {
-				const cmds = joinWithLengthLimit(
-					alts,
-					this.trad('alts') + ' ' + Settings.userManager.getName(arg) + ': '
-				);
+				const cmds = joinWithLengthLimit(alts, this.trad('alts') + ' ' + Settings.userManager.getName(arg) + ': ');
 				this.pmReply(cmds);
 				return;
 			}

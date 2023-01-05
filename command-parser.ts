@@ -54,8 +54,7 @@ export class Context {
 		this.roomType = this.room.charAt(0) === ',' ? 'pm' : Bot.rooms[this.room]?.type || 'chat';
 		this.botName = Bot.status.nickName;
 		this.isExcepted = equalOrHigherRank(this.by, highestRank());
-		this.language =
-			(this.roomType === 'chat' && Settings.settings.language?.[this.room]) || Config.language || 'english';
+		this.language = (this.roomType === 'chat' && Settings.settings.language?.[this.room]) || Config.language || 'english';
 		this.parser = parser;
 	}
 
@@ -120,9 +119,7 @@ export class Context {
 
 	canSet(permission: string, rank: string): boolean {
 		const rankSet =
-			Settings.settings.commands?.[this.room]?.[permission] ||
-			Config.permissionExceptions[permission] ||
-			Config.defaultPermission;
+			Settings.settings.commands?.[this.room]?.[permission] || Config.permissionExceptions[permission] || Config.defaultPermission;
 
 		if (equalOrHigherRank(this.by, rankSet) && equalOrHigherRank(this.by, rank)) return true;
 		return false;
@@ -191,18 +188,7 @@ export class Context {
 			SecurityLog.log('[' + this.room + '] [' + this.by + '] [' + this.handler + '] ' + data);
 		} else {
 			SecurityLog.log(
-				'[' +
-					this.room +
-					'] [' +
-					this.by +
-					'] [' +
-					this.handler +
-					'] ' +
-					'Command: ' +
-					this.cmdToken +
-					this.cmd +
-					' ' +
-					this.arg
+				'[' + this.room + '] [' + this.by + '] [' + this.handler + '] ' + 'Command: ' + this.cmdToken + this.cmd + ' ' + this.arg
 			);
 		}
 	}
@@ -241,19 +227,11 @@ class ResourceMonitor {
 		if (user in this.cmdusage && duration < FLOOD_INTERVAL) {
 			this.cmdusage[user]++;
 			if (this.cmdusage[user] < MAX_CMD_FLOOD && this.cmdusage[user] % 10 === 0 && duration < 12 * 1000) {
-				monitor(
-					'User ' + user + ' has used ' + this.cmdusage[user] + ' commands in the last ' + duration + ' ms'
-				);
-				SecurityLog.log(
-					'User ' + user + ' has used ' + this.cmdusage[user] + ' commands in the last ' + duration + ' ms'
-				);
+				monitor('User ' + user + ' has used ' + this.cmdusage[user] + ' commands in the last ' + duration + ' ms');
+				SecurityLog.log('User ' + user + ' has used ' + this.cmdusage[user] + ' commands in the last ' + duration + ' ms');
 			} else if (this.cmdusage[user] < MAX_CMD_FLOOD && this.cmdusage[user] % 20 === 0 && duration < 24 * 1000) {
-				monitor(
-					'User ' + user + ' has used ' + this.cmdusage[user] + ' commands in the last ' + duration + ' ms'
-				);
-				SecurityLog.log(
-					'User ' + user + ' has used ' + this.cmdusage[user] + ' commands in the last ' + duration + ' ms'
-				);
+				monitor('User ' + user + ' has used ' + this.cmdusage[user] + ' commands in the last ' + duration + ' ms');
+				SecurityLog.log('User ' + user + ' has used ' + this.cmdusage[user] + ' commands in the last ' + duration + ' ms');
 			} else if (this.cmdusage[user] >= MAX_CMD_FLOOD) {
 				this.lock(user);
 				monitor(
@@ -388,22 +366,14 @@ export class CommandParser {
 		let cmdToken = null;
 
 		for (let i = 0; i < this.commandTokens.length; i++) {
-			if (
-				typeof this.commandTokens[i] === 'string' &&
-				msg.substr(0, this.commandTokens[i].length) === this.commandTokens[i]
-			) {
+			if (typeof this.commandTokens[i] === 'string' && msg.substr(0, this.commandTokens[i].length) === this.commandTokens[i]) {
 				cmdToken = this.commandTokens[i];
 				break;
 			}
 		}
 
 		if (!cmdToken) {
-			if (
-				room.charAt(0) === ',' &&
-				msg.charAt(0) !== '/' &&
-				Config.pmhelp &&
-				this.resourceMonitor.counthelp(by)
-			) {
+			if (room.charAt(0) === ',' && msg.charAt(0) !== '/' && Config.pmhelp && this.resourceMonitor.counthelp(by)) {
 				Bot.pm(by, stripCommands(Config.pmhelp.replace(/#USER/g, by.substr(1))));
 			}
 			return;
@@ -457,18 +427,7 @@ export class CommandParser {
 				} catch (e: any) {
 					errlog(e.stack);
 					error('Command crash: ' + cmd + ' | by: ' + by + ' | room: ' + room + ' | ' + inspect(e));
-					SecurityLog.log(
-						'COMMAND CRASH: ' +
-							e.message +
-							'\ncmd: ' +
-							cmd +
-							' | by: ' +
-							by +
-							' | room: ' +
-							room +
-							'\n' +
-							e.stack
-					);
+					SecurityLog.log('COMMAND CRASH: ' + e.message + '\ncmd: ' + cmd + ' | by: ' + by + ' | room: ' + room + '\n' + e.stack);
 					Bot.say(room, 'The command crashed: ' + inspect(e).toString().split('\n').join(' '));
 				}
 			} else {
