@@ -11,18 +11,6 @@ import { errlog, error, info } from '../log';
 import { joinWithLengthLimit, toId, toRoomid, uncacheTree } from '../tools';
 
 export const commands: Record<string, string | Command> = {
-	eval: 'js',
-	js: function (arg, by, room) {
-		if (!this.isExcepted) return false;
-		this.sclog();
-		try {
-			const result = eval(arg.trim());
-			this.say(room, '``' + JSON.stringify(result) + '``');
-		} catch (e: any) {
-			this.say(room, e.name + ': ' + e.message);
-		}
-	},
-
 	send: function (arg) {
 		if (!this.isExcepted) return false;
 		this.sclog();
