@@ -15,7 +15,6 @@
 		"@typescript-eslint/no-use-before-define": [1],
 		"@typescript-eslint/no-var-requires": "off",
 		"indent": 0,
-		"max-len": [1, 150],
 		"no-use-before-define": [0],
 		"prettier/prettier": ["error", { "endOfLine": "auto", "printWidth": 140 }],
 		"quotes": [2, "single", { "avoidEscape": true }],
