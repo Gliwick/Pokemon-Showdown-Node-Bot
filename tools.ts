@@ -282,8 +282,8 @@ export function parseAliases(format?: string): string {
 
 /* Generics */
 
-export function isUndefinedOrDefault<T>(v: T | undefined, defaultValue: T): boolean {
-	return typeof v === 'undefined' || v === defaultValue;
+export function isUndefinedOrEquals<T>(v: T | undefined, other: T): boolean {
+	return (v ?? other) === other;
 }
 
 export function deepcopy<T>(prop: T): T {

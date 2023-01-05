@@ -4,7 +4,7 @@ import { inspect } from 'util';
 
 import { Stat, typechart } from '../../data/typechart';
 import { debug, errlog, error } from '../../log';
-import { isUndefinedOrDefault, toId, uncacheTree } from '../../tools';
+import { isUndefinedOrEquals, toId, uncacheTree } from '../../tools';
 import { getItem, getMove, getPokemon } from './data';
 
 const TEAMS_DATA_FILE = AppOptions.data + 'teams.json';
@@ -284,12 +284,12 @@ export class TeamBuilder {
 			const setIvs = set.ivs;
 			if (setIvs) {
 				Stats.map((stat) => setIvs[stat])
-					.map((v) => (isUndefinedOrDefault(v, 31) ? '' : v))
+					.map((v) => (isUndefinedOrEquals(v, 31) ? '' : v))
 					.join(',');
 				ivs =
 					'|' +
 					Stats.map((stat) => setIvs[stat])
-						.map((v) => (isUndefinedOrDefault(v, 31) ? '' : v))
+						.map((v) => (isUndefinedOrEquals(v, 31) ? '' : v))
 						.join(',');
 			}
 			if (ivs === '|,,,,,') {
@@ -310,23 +310,17 @@ export class TeamBuilder {
 				buf += '|';
 			}
 			// happiness
-			if (!isUndefinedOrDefault(set.happiness, 255)) {
+			if (!isUndefinedOrEquals(set.happiness, 255)) {
 				buf += '|' + set.happiness;
 			} else {
 				buf += '|';
 			}
 
-			if (
-				set.pokeball ||
-				set.hpType ||
-				set.gigantamax ||
-				!isUndefinedOrDefault(set.dynamaxLevel, 10) ||
-				set.teraType
-			) {
+			if (set.pokeball || set.hpType || set.gigantamax || !isUndefinedOrEquals(set.dynamaxLevel, 10) || set.teraType) {
 				buf += ',' + (set.hpType || '');
 				buf += ',' + toId(set.pokeball);
 				buf += ',' + (set.gigantamax ? 'G' : '');
-				buf += ',' + (!isUndefinedOrDefault(set.dynamaxLevel, 10) ? set.dynamaxLevel : '');
+				buf += ',' + (!isUndefinedOrEquals(set.dynamaxLevel, 10) ? set.dynamaxLevel : '');
 				buf += ',' + (set.teraType || '');
 			}
 		}
@@ -613,17 +607,13 @@ export class TeamBuilder {
 						if (!hpType || !typechart[hpType]?.HPivs) {
 							continue;
 						}
-						if (
-							Stats.some(
-								(stat) => (ivs[stat] ?? 31) !== (typechart[hpType as string].HPivs?.[stat] || 31)
-							)
-						) {
+						if (Stats.some((stat) => (ivs[stat] ?? 31) !== (typechart[hpType as string].HPivs?.[stat] || 31))) {
 							defaultIvs = false;
 						}
 					}
 				}
 				if (defaultIvs && !hpType) {
-					if (Stats.some((stat) => !isUndefinedOrDefault(ivs[stat], 31))) {
+					if (Stats.some((stat) => !isUndefinedOrEquals(ivs[stat], 31))) {
 						defaultIvs = false;
 					}
 				}
