@@ -146,11 +146,13 @@ export const commands: Record<string, string | Command> = {
 				}
 			}
 		}
-		if (!translations?.length)
+		if (!translations?.length) {
 			return this.restrictReply(
 				this.trad('not1') + ' "' + word + '" ' + this.trad('not2') + ' (' + from + ' - ' + to + ')',
 				'pokemon'
 			);
+		}
+
 		let text = '';
 		if (normalize(translations[0].from) !== normalize(word)) text += this.trad('not1') + ' "' + word + '" ' + this.trad('not3') + '. ';
 		text += this.trad('tra') + ' **' + toName(translations[0].from) + '** (' + from + ' - ' + to + '): ';

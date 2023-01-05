@@ -158,16 +158,15 @@ export class ModerationManager implements Feature {
 	}
 
 	removeZeroTolUser(user: string): boolean {
-		if (Settings.settings['zerotol'] && Settings.settings['zerotol'][user]) {
-			delete Settings.settings['zerotol'][user];
+		if (Settings.settings.zerotol?.[user]) {
+			delete Settings.settings.zerotol[user];
 			return true;
 		}
 		return false;
 	}
 
 	getZeroTol(user: string): string | false {
-		if (Settings.settings['zerotol'] && Settings.settings['zerotol'][user]) return Settings.settings['zerotol'][user];
-		return false;
+		return Settings.settings.zerotol?.[user] || false;
 	}
 
 	getServersAds(text: string): string[] {
