@@ -71,9 +71,7 @@ function botAfterConnect(): void {
 export function setupBot(globalMonitor: GlobalMonitor): void {
 	Bot.on('connect', (): void => {
 		ok('Connected to server ' + Config.serverid + ' (' + getDateString() + ')');
-		SecurityLog.log(
-			'Connected to server ' + Bot.opts.server + ':' + Bot.opts.port + ' (' + Bot.opts.serverid + ')'
-		);
+		SecurityLog.log('Connected to server ' + Bot.opts.server + ':' + Bot.opts.port + ' (' + Bot.opts.serverid + ')');
 		globalMonitor.connected = true;
 		for (const f in Features.features) {
 			try {
@@ -182,11 +180,7 @@ export function setupBot(globalMonitor: GlobalMonitor): void {
 	});
 
 	Bot.on('rename', (name: string, named: number): void => {
-		monitor(
-			'Bot nickname has changed: ' +
-				(named ? colors.green(name) : colors.yellow(name)) +
-				(named ? '' : ' [guest]')
-		);
+		monitor('Bot nickname has changed: ' + (named ? colors.green(name) : colors.yellow(name)) + (named ? '' : ' [guest]'));
 		SecurityLog.log('Bot nickname has changed to: ' + name + (named ? '' : ' [guest]'));
 		if (named) {
 			if (!Config.nick) {

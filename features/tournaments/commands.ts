@@ -112,20 +112,14 @@ export const commands: Record<string, string | Command> = {
 							break;
 						default:
 							return this.reply(
-								this.trad('param') +
-									' ' +
-									idArg +
-									' ' +
-									this.trad('paramhelp') +
-									': tier, timer, dq, users, type, scout'
+								this.trad('param') + ' ' + idArg + ' ' + this.trad('paramhelp') + ': tier, timer, dq, users, type, scout'
 							);
 					}
 				}
 			}
 			if (params.format) {
 				const format = parseAliases(params.format);
-				if (!Formats[format] || !Formats[format].chall)
-					return this.reply(this.trad('e31') + ' ' + format + ' ' + this.trad('e32'));
+				if (!Formats[format] || !Formats[format].chall) return this.reply(this.trad('e31') + ' ' + format + ' ' + this.trad('e32'));
 				details.format = format;
 			}
 			if (params.timeToStart) {
@@ -214,10 +208,7 @@ export const commands: Record<string, string | Command> = {
 				if (this.roomType !== 'chat') tarRoom = toRoomid(args.shift() || '');
 				if (args.length > 1) tarRoom = toRoomid(args.shift() || '');
 				if (!tarRoom) {
-					return this.restrictReply(
-						this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room], [user]',
-						'rank'
-					);
+					return this.restrictReply(this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room], [user]', 'rank');
 				}
 				if (!manager.leaderboards.isConfigured(tarRoom)) {
 					return this.restrictReply(this.trad('not') + ' ' + tarRoom, 'rank');
@@ -255,16 +246,7 @@ export const commands: Record<string, string | Command> = {
 					this.trad('times') +
 					'. ';
 				txt +=
-					this.trad('total') +
-					': ' +
-					rank.tours +
-					' ' +
-					this.trad('tours') +
-					', ' +
-					rank.battles +
-					' ' +
-					this.trad('bwon') +
-					'.';
+					this.trad('total') + ': ' + rank.tours + ' ' + this.trad('tours') + ', ' + rank.battles + ' ' + this.trad('bwon') + '.';
 				this.restrictReply(txt, 'rank');
 				break;
 			case 'top':
@@ -278,9 +260,7 @@ export const commands: Record<string, string | Command> = {
 				}
 				const top = manager.leaderboards.getTop(tarRoom);
 				if (!top || !top.length) return this.restrictReply(this.trad('empty') + ' ' + tarRoom, 'rank');
-				const topResults = top
-					.slice(0, 5)
-					.map((t, i) => '__#' + (i + 1) + '__ **' + toName(t[0]) + '** (' + t[6] + ')');
+				const topResults = top.slice(0, 5).map((t, i) => '__#' + (i + 1) + '__ **' + toName(t[0]) + '** (' + t[6] + ')');
 				this.restrictReply('**' + toName(tryGetRoomName(tarRoom)) + '** | ' + topResults.join(', '), 'rank');
 				break;
 			case 'table':
@@ -381,19 +361,11 @@ export const commands: Record<string, string | Command> = {
 				if (!Settings.settings.leaderboards) Settings.settings.leaderboards = {};
 				if (args.length < 2 || !toId(args[0]))
 					return this.reply(
-						this.trad('usage') +
-							': ' +
-							this.cmdToken +
-							cmd +
-							' [room], [on/off], [W], [F], [SF], [B], [official/all]'
+						this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room], [on/off], [W], [F], [SF], [B], [official/all]'
 					);
 				if (args[6] && toId(args[6]) !== 'official' && toId(args[6]) !== 'all')
 					return this.reply(
-						this.trad('usage') +
-							': ' +
-							this.cmdToken +
-							cmd +
-							' [room], [on/off], [W], [F], [SF], [B], [official/all]'
+						this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room], [on/off], [W], [F], [SF], [B], [official/all]'
 					);
 				tarRoom = toRoomid(args[0]);
 				const enabled = toId(args[1]);
@@ -419,11 +391,7 @@ export const commands: Record<string, string | Command> = {
 					}
 				} else {
 					return this.reply(
-						this.trad('usage') +
-							': ' +
-							this.cmdToken +
-							cmd +
-							' [room], [on/off], [W], [F], [SF], [B], [official/all]'
+						this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room], [on/off], [W], [F], [SF], [B], [official/all]'
 					);
 				}
 				break;

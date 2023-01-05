@@ -126,8 +126,7 @@ export const commands: Record<string, string | Command> = {
 			text += this.trad('u') + ' "' + removed.join('", "') + '" ' + this.trad('r') + ' ';
 			Settings.save();
 		}
-		if (notRemoved.length)
-			text += (text.length ? this.trad('noother') + ' ' : this.trad('no') + ' ') + this.trad('nopresent');
+		if (notRemoved.length) text += (text.length ? this.trad('noother') + ' ' : this.trad('no') + ' ') + this.trad('nopresent');
 		this.reply(text);
 	},
 
@@ -169,10 +168,7 @@ export const commands: Record<string, string | Command> = {
 		Settings.save();
 		this.sclog('Blacklisted RegExp: ' + regex);
 		if (!Config.moderation.disableModNote) {
-			this.say(
-				tarRoom,
-				'/modnote ' + this.trad('re') + ' ' + regex + ' ' + this.trad('addby') + ' ' + user + '.'
-			);
+			this.say(tarRoom, '/modnote ' + this.trad('re') + ' ' + regex + ' ' + this.trad('addby') + ' ' + user + '.');
 		}
 		this.reply(this.trad('re') + ' ' + regex + ' ' + this.trad('add'));
 	},
@@ -379,15 +375,13 @@ export const commands: Record<string, string | Command> = {
 						text += this.trad('users') + ' "' + levelFail.join('", "') + '" ' + this.trad('invalid') + '. ';
 					}
 					if (alreadyAdded.length) {
-						text +=
-							this.trad('users') + ' "' + alreadyAdded.join('", "') + '" ' + this.trad('already') + '. ';
+						text += this.trad('users') + ' "' + alreadyAdded.join('", "') + '" ' + this.trad('already') + '. ';
 					}
 					this.reply(text);
 					break;
 				case 'delete':
 				case 'remove':
-					if (args.length < 2)
-						return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
+					if (args.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 					const removed: string[] = [];
 					const notFound: string[] = [];
 					for (const user of args) {
@@ -845,9 +839,7 @@ export const commands: Record<string, string | Command> = {
 			return this.reply(Settings.settings.joinphrases[tarRoom][arg] || this.trad('not') + ' ' + arg + '.');
 		}
 
-		const list = Object.entries(Settings.settings.joinphrases[tarRoom]).map(
-			([i, joinPhrase]) => i + ' => ' + joinPhrase
-		);
+		const list = Object.entries(Settings.settings.joinphrases[tarRoom]).map(([i, joinPhrase]) => i + ' => ' + joinPhrase);
 		if (!list.length) return this.reply(this.trad('empty') + textHelper);
 		uploadToHastebin(
 			this.trad('jp') +
@@ -883,16 +875,12 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
-			return this.reply(this.trad('notchat') + textHelper);
+		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		if (!arg) {
 			const exceptionSettings = Settings.settings.modexception || {};
 			const ex = exceptionSettings[tarRoom] || Config.moderation.modException;
 			const translation = ex === ' ' ? '**' + this.trad('all') + '**' : this.trad('rank') + ' **' + ex + '**';
-			return this.restrictReply(
-				this.trad('modex-inf1') + ' ' + translation + ' ' + this.trad('modex-inf2') + textHelper,
-				'info'
-			);
+			return this.restrictReply(this.trad('modex-inf1') + ' ' + translation + ' ' + this.trad('modex-inf2') + textHelper, 'info');
 		}
 		if (!this.isRanked(getGroup('roomowner'))) return false;
 		if (!Settings.settings.modexception) Settings.settings.modexception = {};
@@ -902,22 +890,13 @@ export const commands: Record<string, string | Command> = {
 			Settings.save();
 			this.sclog();
 			return this.reply(
-				this.trad('modex-set1') +
-					' ' +
-					this.trad('rank') +
-					' **' +
-					rank +
-					'** ' +
-					this.trad('modex-set2') +
-					textHelper
+				this.trad('modex-set1') + ' ' + this.trad('rank') + ' **' + rank + '** ' + this.trad('modex-set2') + textHelper
 			);
 		} else if (toId(rank) === 'all') {
 			Settings.settings.modexception[tarRoom] = ' ';
 			Settings.save();
 			this.sclog();
-			return this.reply(
-				this.trad('modex-set1') + ' **' + this.trad('all') + '** ' + this.trad('modex-set2') + textHelper
-			);
+			return this.reply(this.trad('modex-set1') + ' **' + this.trad('all') + '** ' + this.trad('modex-set2') + textHelper);
 		} else {
 			return this.reply(this.trad('not1') + ' ' + rank + ' ' + this.trad('not2'));
 		}

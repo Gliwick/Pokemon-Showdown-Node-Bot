@@ -105,11 +105,7 @@ export const commands: Record<string, string | Command> = {
 			});
 			const cmds = joinWithLengthLimit(
 				roomsArray.length ? roomsArray : ['(none)'],
-				'**Bot status** |' +
-					(Settings.lockdown ? ' **Lockdown** |' : '') +
-					' Username: ``' +
-					Bot.status.nickName +
-					'`` | Rooms: '
+				'**Bot status** |' + (Settings.lockdown ? ' **Lockdown** |' : '') + ' Username: ``' + Bot.status.nickName + '`` | Rooms: '
 			);
 			return this.pmReply(cmds);
 		}
@@ -301,8 +297,7 @@ export const commands: Record<string, string | Command> = {
 			console.log('Forced Kill. By: ' + by);
 			process.exit();
 		} else {
-			if (!Settings.lockdown)
-				return this.reply('To kill the process you must use ``' + this.cmdToken + 'lockdown`` first');
+			if (!Settings.lockdown) return this.reply('To kill the process you must use ``' + this.cmdToken + 'lockdown`` first');
 			for (const f in Features.features) {
 				const readyToDie = Features.features[f].readyToDie;
 				if (!readyToDie) continue;

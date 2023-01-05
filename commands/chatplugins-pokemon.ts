@@ -99,11 +99,7 @@ export const commands: Record<string, string | Command> = {
 	tra: 'translate',
 	trans: 'translate',
 	translate: function (arg) {
-		if (!arg)
-			return this.restrictReply(
-				this.trad('u1') + ': ' + this.cmdToken + this.cmd + ' ' + this.trad('u2'),
-				'pokemon'
-			);
+		if (!arg) return this.restrictReply(this.trad('u1') + ': ' + this.cmdToken + this.cmd + ' ' + this.trad('u2'), 'pokemon');
 		const args = arg.split(',');
 		let word = args[0];
 		let from = toId(args[1] || '');
@@ -120,10 +116,7 @@ export const commands: Record<string, string | Command> = {
 		if (LangAliases[from]) from = LangAliases[from];
 		if (LangAliases[to]) to = LangAliases[to];
 		if (!from || !to || from === to || !word)
-			return this.restrictReply(
-				this.trad('u1') + ': ' + this.cmdToken + this.cmd + ' ' + this.trad('u2'),
-				'pokemon'
-			);
+			return this.restrictReply(this.trad('u1') + ': ' + this.cmdToken + this.cmd + ' ' + this.trad('u2'), 'pokemon');
 		const validlangs = Object.keys(I18n.translations);
 		if (validlangs.indexOf(from) < 0)
 			return this.restrictReply(
@@ -131,25 +124,13 @@ export const commands: Record<string, string | Command> = {
 				'pokemon'
 			);
 		if (validlangs.indexOf(to) < 0)
-			return this.restrictReply(
-				this.trad('lnot1') + ' "' + to + '" ' + this.trad('lnot2') + ': ' + validlangs.join(', '),
-				'pokemon'
-			);
+			return this.restrictReply(this.trad('lnot1') + ' "' + to + '" ' + this.trad('lnot2') + ': ' + validlangs.join(', '), 'pokemon');
 		if (from === 'english' || (to === 'english' && bidirectional)) {
 			try {
 				const aliases = DataDownloader.getAliases();
 				if (aliases[toId(word)]) word = aliases[toId(word)];
 			} catch (e) {
-				debug(
-					'Could not fetch aliases. Cmd: ' +
-						this.cmd +
-						' ' +
-						arg +
-						' | Room: ' +
-						this.room +
-						' | By: ' +
-						this.by
-				);
+				debug('Could not fetch aliases. Cmd: ' + this.cmd + ' ' + arg + ' | Room: ' + this.room + ' | By: ' + this.by);
 			}
 		}
 		//translation itself
@@ -157,11 +138,7 @@ export const commands: Record<string, string | Command> = {
 		if (bidirectional) {
 			const translationsInv = getTranslations(to, from, word);
 			if (translationsInv && translationsInv.length) {
-				if (
-					!translations ||
-					!translations.length ||
-					translationsInv[0].levenstein < translations[0].levenstein
-				) {
+				if (!translations || !translations.length || translationsInv[0].levenstein < translations[0].levenstein) {
 					translations = translationsInv;
 					const temp = to;
 					to = from;
@@ -175,25 +152,14 @@ export const commands: Record<string, string | Command> = {
 				'pokemon'
 			);
 		let text = '';
-		if (normalize(translations[0].from) !== normalize(word))
-			text += this.trad('not1') + ' "' + word + '" ' + this.trad('not3') + '. ';
+		if (normalize(translations[0].from) !== normalize(word)) text += this.trad('not1') + ' "' + word + '" ' + this.trad('not3') + '. ';
 		text += this.trad('tra') + ' **' + toName(translations[0].from) + '** (' + from + ' - ' + to + '): ';
 		for (let i = 0; i < translations.length; i++) {
 			if (normalize(translations[0].from) !== normalize(translations[i].from)) continue;
 			if (typeof translations[i].to === 'string') {
-				text +=
-					'**' +
-					toName(translations[i].to) +
-					'** (' +
-					(this.trad(translations[i].type) || translations[i].type) +
-					')';
+				text += '**' + toName(translations[i].to) + '** (' + (this.trad(translations[i].type) || translations[i].type) + ')';
 			} else {
-				text +=
-					'**' +
-					toName(translations[i].to[0]) +
-					'** (' +
-					(this.trad(translations[i].type) || translations[i].type) +
-					')';
+				text += '**' + toName(translations[i].to[0]) + '** (' + (this.trad(translations[i].type) || translations[i].type) + ')';
 			}
 			if (i < translations.length - 1) text += ', ';
 		}
@@ -279,10 +245,7 @@ export const commands: Record<string, string | Command> = {
 		let text = '__' + this.trad('r') + '__: ';
 		let whichRandom = 'randomBattleMoves';
 		const gameType = toId(args[1]);
-		if (
-			gameType &&
-			(gameType.startsWith('double') || gameType.startsWith('triple') || ['2', '3'].includes(gameType))
-		) {
+		if (gameType && (gameType.startsWith('double') || gameType.startsWith('triple') || ['2', '3'].includes(gameType))) {
 			whichRandom = 'randomDoubleBattleMoves';
 			text = '__' + this.trad('rd') + '__: ';
 		}
@@ -394,10 +357,7 @@ export const commands: Record<string, string | Command> = {
 				(move) =>
 					(move.boosts && move.target === 'self' && move.id !== 'doubleteam' && move.id !== 'minimize') ||
 					move.id === 'bellydrum' ||
-					(move.secondary &&
-						move.secondary.chance === 100 &&
-						move.secondary.self &&
-						move.secondary.self.boosts)
+					(move.secondary && move.secondary.chance === 100 && move.secondary.self && move.secondary.self.boosts)
 			);
 			if (boostingmoves === null) {
 				return this.pmReply(this.trad('err'));
@@ -453,9 +413,7 @@ export const commands: Record<string, string | Command> = {
 		arg = toId(arg);
 		if (aliases[arg]) arg = toId(aliases[arg]);
 		if (pokedex[arg]) {
-			const hazards = getPokemonMoves(arg, (move) =>
-				['spikes', 'stealthrock', 'stickyweb', 'toxicspikes'].includes(move.id)
-			);
+			const hazards = getPokemonMoves(arg, (move) => ['spikes', 'stealthrock', 'stickyweb', 'toxicspikes'].includes(move.id));
 			if (hazards === null) {
 				return this.pmReply(this.trad('err'));
 			}

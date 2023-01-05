@@ -145,19 +145,11 @@ function getUsage(this: Context, arg: string, link?: string): void {
 			function (this: Context, data: string | null, err: NodeJS.ErrnoException | null): void {
 				this.getModule(Downloader).markDownload(link + 'moveset/' + tier + '-' + ladderType + '.txt', false);
 				if (err || !data) {
-					return this.restrictReply(
-						this.trad('err') + ' ' + link + 'moveset/' + tier + '-' + ladderType + '.txt',
-						'usage'
-					);
+					return this.restrictReply(this.trad('err') + ' ' + link + 'moveset/' + tier + '-' + ladderType + '.txt', 'usage');
 				}
 				if (data.indexOf('+----------------------------------------+') === -1)
-					return this.restrictReply(
-						this.trad('tiererr1') + ' "' + tierName(tier) + '" ' + this.trad('tiererr3'),
-						'usage'
-					);
-				const pokes = data.split(
-					' +----------------------------------------+ \n +----------------------------------------+ '
-				);
+					return this.restrictReply(this.trad('tiererr1') + ' "' + tierName(tier) + '" ' + this.trad('tiererr3'), 'usage');
+				const pokes = data.split(' +----------------------------------------+ \n +----------------------------------------+ ');
 				const pokeData = pokes.map((p) => p.split('\n')).filter((p) => toId(p[1]) === poke)[0];
 				const chosen = !!pokeData;
 				if (!chosen)
@@ -245,10 +237,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 		);
 	} else {
 		if (args.length < 1)
-			return this.restrictReply(
-				this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [pokemon], (tier)',
-				'usage'
-			);
+			return this.restrictReply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [pokemon], (tier)', 'usage');
 		if (args[1]) {
 			tier = parseAliases(args[1]);
 			if (!Formats[tier] && !Formats[tier + 'suspecttest'])
@@ -264,17 +253,11 @@ function getUsage(this: Context, arg: string, link?: string): void {
 			function (this: Context, data: string | null, err: NodeJS.ErrnoException | null): void {
 				this.getModule(Downloader).markDownload(url, false);
 				if (err || !data) {
-					return this.restrictReply(
-						this.trad('err') + ' ' + link + tier + '-' + ladderType + '.txt',
-						'usage'
-					);
+					return this.restrictReply(this.trad('err') + ' ' + link + tier + '-' + ladderType + '.txt', 'usage');
 				}
 				const lines = data.split('\n');
 				if (lines[0].indexOf('Total battles:') === -1)
-					return this.restrictReply(
-						this.trad('tiererr1') + ' "' + tierName(tier) + '" ' + this.trad('tiererr3'),
-						'usage'
-					);
+					return this.restrictReply(this.trad('tiererr1') + ' "' + tierName(tier) + '" ' + this.trad('tiererr3'), 'usage');
 				const dataRes = { name: poke, pos: -1, usage: '', raw: '' };
 				let line;
 				for (let i = 5; i < lines.length; i++) {
@@ -342,8 +325,7 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
-			return this.reply(this.trad('notchat') + textHelper);
+		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		const tier = toId(arg);
 		if (!tier) return this.reply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [tier]');
 		if (!Formats[tier] && !Formats[tier + 'suspecttest'])
@@ -413,9 +395,7 @@ export const commands: Record<string, string | Command> = {
 				this.trad('nosuspect') +
 					' ' +
 					tierName(tier) +
-					(this.isRanked('admin')
-						? '. ' + this.trad('aux1') + ' ``' + this.cmdToken + 'setsuspect`` ' + this.trad('aux2')
-						: ''),
+					(this.isRanked('admin') ? '. ' + this.trad('aux1') + ' ``' + this.cmdToken + 'setsuspect`` ' + this.trad('aux2') : ''),
 				'info'
 			);
 		} else {
@@ -430,9 +410,7 @@ export const commands: Record<string, string | Command> = {
 	usage: function (arg) {
 		if (!arg) {
 			this.restrictReply(
-				this.trad(this.cmd.substring('usage'.length) || 'stats') +
-					': ' +
-					(this.cmd === 'usagedata' ? 'moveset/' : ''),
+				this.trad(this.cmd.substring('usage'.length) || 'stats') + ': ' + (this.cmd === 'usagedata' ? 'moveset/' : ''),
 				'usage'
 			);
 		}

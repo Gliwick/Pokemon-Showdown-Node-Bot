@@ -64,17 +64,13 @@ export class Intl {
 
 	translateCmd(cmd: string, data: string, lang: string): string {
 		return (
-			this.translations[lang]?.commands?.[cmd]?.[data] ||
-			this.translations['english']?.commands?.[cmd]?.[data] ||
-			'__(not found)__'
+			this.translations[lang]?.commands?.[cmd]?.[data] || this.translations['english']?.commands?.[cmd]?.[data] || '__(not found)__'
 		);
 	}
 
 	translateGlobal(glob: string, data: string, lang: string): string {
 		return (
-			this.translations[lang]?.globals?.[glob]?.[data] ||
-			this.translations['english']?.globals?.[glob]?.[data] ||
-			'__(not found)__'
+			this.translations[lang]?.globals?.[glob]?.[data] || this.translations['english']?.globals?.[glob]?.[data] || '__(not found)__'
 		);
 	}
 }

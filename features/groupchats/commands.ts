@@ -50,8 +50,7 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
-			return this.reply(this.trad('notchat') + textHelper);
+		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		if (!Settings.settings.autopromote) Settings.settings.autopromote = {};
 		if (!Settings.settings.autopromote[tarRoom]) {
 			Settings.settings.autopromote[tarRoom] = { enabled: false, all: null, users: {} };
@@ -204,21 +203,16 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
-			return this.reply(this.trad('notchat') + textHelper);
+		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		if (!Settings.settings.pmwmsg) Settings.settings.pmwmsg = {};
 		switch (cmd) {
 			case 'wpm':
-				if (!arg)
-					return this.reply(
-						this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [enable / disable / view]'
-					);
+				if (!arg) return this.reply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [enable / disable / view]');
 				switch (toId(arg)) {
 					case 'on':
 					case 'enable':
 						if (!this.isExcepted) return;
-						if (!Settings.settings.pmwmsg[tarRoom])
-							Settings.settings.pmwmsg[tarRoom] = { msg: '', enabled: true };
+						if (!Settings.settings.pmwmsg[tarRoom]) Settings.settings.pmwmsg[tarRoom] = { msg: '', enabled: true };
 						Settings.settings.pmwmsg[tarRoom].enabled = true;
 						Settings.save();
 						this.sclog();
@@ -227,8 +221,7 @@ export const commands: Record<string, string | Command> = {
 					case 'off':
 					case 'disable':
 						if (!this.isExcepted) return;
-						if (!Settings.settings.pmwmsg[tarRoom])
-							Settings.settings.pmwmsg[tarRoom] = { msg: '', enabled: false };
+						if (!Settings.settings.pmwmsg[tarRoom]) Settings.settings.pmwmsg[tarRoom] = { msg: '', enabled: false };
 						Settings.settings.pmwmsg[tarRoom].enabled = false;
 						if (!Settings.settings.pmwmsg[tarRoom].msg) delete Settings.settings.pmwmsg[tarRoom];
 						Settings.save();
@@ -242,9 +235,7 @@ export const commands: Record<string, string | Command> = {
 						this.reply(stripCommands(message));
 						break;
 					default:
-						return this.reply(
-							this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [enable / disable / view]'
-						);
+						return this.reply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [enable / disable / view]');
 				}
 				break;
 			case 'setwpm':

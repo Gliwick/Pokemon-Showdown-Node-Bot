@@ -104,8 +104,7 @@ export const commands: Record<string, string | Command> = {
 		} else if (cmd === 'getquote') {
 			const id = toId(arg);
 			if (!id) return this.reply(this.trad('noid'));
-			if (!repo.quotes[id])
-				return this.restrictReply(this.trad('quote') + ' "' + id + '" ' + this.trad('n'), 'quote');
+			if (!repo.quotes[id]) return this.restrictReply(this.trad('quote') + ' "' + id + '" ' + this.trad('n'), 'quote');
 			return this.restrictReply(stripCommands(repo.quotes[id]), 'quote');
 		} else {
 			const quote = repo.randQuote();
@@ -172,8 +171,7 @@ export const commands: Record<string, string | Command> = {
 		} else if (cmd === 'getjoke') {
 			const id = toId(arg);
 			if (!id) return this.reply(this.trad('noid'));
-			if (!repo.jokes[id])
-				return this.restrictReply(this.trad('joke') + ' "' + id + '" ' + this.trad('n'), 'joke');
+			if (!repo.jokes[id]) return this.restrictReply(this.trad('joke') + ' "' + id + '" ' + this.trad('n'), 'joke');
 			return this.restrictReply(stripCommands(repo.jokes[id]), 'joke');
 		} else {
 			const joke = repo.randJoke();

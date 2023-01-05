@@ -16,9 +16,7 @@ export const manager = DynamicModule;
 
 function getCmdList(head: string): string[] | null {
 	const cmdArr = Object.keys(CommandParser.dynCommands).sort();
-	const newCmdArr = cmdArr.filter(
-		(cmd) => !(CommandParser.dynCommands[cmd] && CommandParser.dynCommands[cmd].substr(0, 4) === '/ref')
-	);
+	const newCmdArr = cmdArr.filter((cmd) => !(CommandParser.dynCommands[cmd] && CommandParser.dynCommands[cmd].substr(0, 4) === '/ref'));
 	if (!newCmdArr.length) return null;
 	return joinWithLengthLimit(newCmdArr, head);
 }
@@ -106,8 +104,7 @@ export const commands: Record<string, string | Command> = {
 		if (args.length !== 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 		const alias = toId(args[0]);
 		const dcmd = toId(args[1]);
-		if (!alias || !dcmd || alias === dcmd)
-			return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
+		if (!alias || !dcmd || alias === dcmd) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 		if (!CommandParser.dynCommands[dcmd]) return this.reply(this.trad('c') + ' "' + dcmd + '" ' + this.trad('n'));
 		if (CommandParser.dynCommands[dcmd].substr(0, 4) === '/ref')
 			return this.reply(this.trad('c') + ' "' + dcmd + '" ' + this.trad('already'));

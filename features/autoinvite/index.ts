@@ -32,11 +32,7 @@ export class AutoInviteManager implements Feature {
 
 	getRoomLinked(room: string): string[] {
 		return Array.from(
-			new Set(
-				this.linkedRooms
-					.filter((linkedRoom) => room === linkedRoom.linked)
-					.map((linkedRoom) => linkedRoom.private)
-			)
+			new Set(this.linkedRooms.filter((linkedRoom) => room === linkedRoom.linked).map((linkedRoom) => linkedRoom.private))
 		);
 	}
 
@@ -45,10 +41,7 @@ export class AutoInviteManager implements Feature {
 	}
 
 	getRank(room: string, from: string): string {
-		return (
-			this.linkedRooms.filter((linkedRoom) => from === linkedRoom.linked && room === linkedRoom.private)[0]
-				?.rank || '+'
-		);
+		return this.linkedRooms.filter((linkedRoom) => from === linkedRoom.linked && room === linkedRoom.private)[0]?.rank || '+';
 	}
 
 	hasAuth(room: string, user: string, from: string): boolean {

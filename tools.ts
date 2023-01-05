@@ -176,8 +176,7 @@ export function getTimeAgo(time: number, lang?: string): string {
 	if (time >= 60) {
 		time = (time - seconds) / 60; // converts to minutes
 		minutes = time % 60;
-		if (minutes)
-			times = [String(minutes) + ' ' + (minutes === 1 ? trans('minute') : trans('minutes'))].concat(times);
+		if (minutes) times = [String(minutes) + ' ' + (minutes === 1 ? trans('minute') : trans('minutes'))].concat(times);
 		if (time >= 60) {
 			time = (time - minutes) / 60; // converts to hours
 			hours = time % 24;

@@ -296,12 +296,7 @@ export class Client {
 		if (!pass) {
 			requestOptions.method = 'GET';
 			requestOptions.path +=
-				'?act=getassertion&userid=' +
-				toId(nick) +
-				'&challengekeyid=' +
-				this.challstr.id +
-				'&challenge=' +
-				this.challstr.str;
+				'?act=getassertion&userid=' + toId(nick) + '&challengekeyid=' + this.challstr.id + '&challenge=' + this.challstr.str;
 			this.debug('Sending log in request to: ' + requestOptions.path);
 		} else {
 			requestOptions.method = 'POST';
@@ -320,10 +315,7 @@ export class Client {
 			};
 			this.debug('Sending log in request to: ' + requestOptions.path + ' | Data -> ' + data);
 		}
-		const req = request(
-			requestOptions,
-			((res: IncomingMessage): void => this.onRename(res, nick, pass)).bind(this)
-		);
+		const req = request(requestOptions, ((res: IncomingMessage): void => this.onRename(res, nick, pass)).bind(this));
 		req.on(
 			'error',
 			((err: Error): void => {

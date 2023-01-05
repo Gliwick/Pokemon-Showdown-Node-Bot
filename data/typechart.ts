@@ -1,12 +1,6 @@
 export type Stat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 
-export const typechart: Record<
-	string,
-	{
-		damageTaken: Record<string, 0 | 1 | 2 | 3>;
-		HPivs?: Partial<Record<Stat, number>>;
-	}
-> = {
+export const typechart: Record<string, { damageTaken: Record<string, 0 | 1 | 2 | 3>; HPivs?: Partial<Record<Stat, number>> }> = {
 	Bug: {
 		damageTaken: {
 			Bug: 0,

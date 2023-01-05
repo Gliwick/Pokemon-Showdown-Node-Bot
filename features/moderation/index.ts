@@ -93,16 +93,11 @@ export class ModerationManager implements Feature {
 					delete this.chatData[room][user];
 					continue;
 				}
-				if (
-					now - this.chatData[room][user].times[this.chatData[room][user].times.length - 1] >
-					24 * 60 * 60 * 1000
-				) {
+				if (now - this.chatData[room][user].times[this.chatData[room][user].times.length - 1] > 24 * 60 * 60 * 1000) {
 					delete this.chatData[room][user];
 					continue;
 				}
-				this.chatData[room][user].times = this.chatData[room][user].times.filter(
-					(time) => now - time < 60 * 60 * 1000
-				);
+				this.chatData[room][user].times = this.chatData[room][user].times.filter((time) => now - time < 60 * 60 * 1000);
 				this.chatData[room][user].points--;
 			}
 		}
@@ -150,9 +145,7 @@ export class ModerationManager implements Feature {
 	getJoinPhrase(room: string, user: string): string | false {
 		user = toId(user);
 		if (Settings.settings.jpdisable?.[room]) return false;
-		return (
-			Settings.settings.joinphrases?.[room]?.[user] || Settings.settings.joinphrases?.['global']?.[user] || false
-		);
+		return Settings.settings.joinphrases?.[room]?.[user] || Settings.settings.joinphrases?.['global']?.[user] || false;
 	}
 
 	addZeroTolUser(user: string, level: string): boolean {
@@ -173,8 +166,7 @@ export class ModerationManager implements Feature {
 	}
 
 	getZeroTol(user: string): string | false {
-		if (Settings.settings['zerotol'] && Settings.settings['zerotol'][user])
-			return Settings.settings['zerotol'][user];
+		if (Settings.settings['zerotol'] && Settings.settings['zerotol'][user]) return Settings.settings['zerotol'][user];
 		return false;
 	}
 
@@ -237,12 +229,12 @@ export class ModerationManager implements Feature {
 		this.chatLog[room].users = this.pushAndShift(this.chatLog[room].users, user);
 		this.chatLog[room].msgs = this.pushAndShift(this.chatLog[room].msgs, message);
 
-		const msg = message.trim().replace(/[ \u0000\u200B-\u200F]+/g, ' '); // removes extra spaces and null characters so messages that should trigger stretching do so
+		// removes extra spaces and null characters so messages that should trigger stretching do so
+		const msg = message.trim().replace(/[ \u0000\u200B-\u200F]+/g, ' ');
 
 		if (!this.chatData[room]) this.chatData[room] = {};
 
-		if (!this.chatData[room][user])
-			this.chatData[room][user] = { times: [], lastMsgs: ['', '', ''], points: 0, lastAction: 0 };
+		if (!this.chatData[room][user]) this.chatData[room][user] = { times: [], lastMsgs: ['', '', ''], points: 0, lastAction: 0 };
 
 		this.chatData[room][user].lastMsgs.push(msg);
 		this.chatData[room][user].lastMsgs.shift();
@@ -313,13 +305,7 @@ export class ModerationManager implements Feature {
 							addFlood = true;
 						}
 					} else {
-						if (
-							msg.length > 70 ||
-							capsMatch ||
-							msg.toLowerCase().indexOf('**') > -1 ||
-							stretchMatch ||
-							inlineSpam
-						) {
+						if (msg.length > 70 || capsMatch || msg.toLowerCase().indexOf('**') > -1 || stretchMatch || inlineSpam) {
 							if (modSettings.spam) {
 								muteMessage = ', ' + this.trad('automod', room) + ': ' + this.trad('s', room);
 								pointVal = this.getValue('spam');
@@ -357,13 +343,7 @@ export class ModerationManager implements Feature {
 				) {
 					muteMessage = ', ' + this.trad('automod', room) + ': ' + this.trad('sl', room);
 					pointVal = this.getValue('spam-link');
-				} else if (
-					msg.length > 70 ||
-					capsMatch ||
-					msg.toLowerCase().indexOf('**') > -1 ||
-					stretchMatch ||
-					inlineSpam
-				) {
+				} else if (msg.length > 70 || capsMatch || msg.toLowerCase().indexOf('**') > -1 || stretchMatch || inlineSpam) {
 					muteMessage = ', ' + this.trad('automod', room) + ': ' + this.trad('s', room);
 					pointVal = this.getValue('spam');
 				}
@@ -417,10 +397,7 @@ export class ModerationManager implements Feature {
 		 ******************************/
 
 		pv = this.getValue('spoiler');
-		if (
-			modSettings.spoiler &&
-			(msg.toLowerCase().indexOf('spoiler:') > -1 || msg.toLowerCase().indexOf('spoilers:') > -1)
-		) {
+		if (modSettings.spoiler && (msg.toLowerCase().indexOf('spoiler:') > -1 || msg.toLowerCase().indexOf('spoilers:') > -1)) {
 			infractions.push(this.trad('spoiler-0', room));
 			totalPointVal += pv;
 			if (pointVal < pv) {
@@ -432,8 +409,7 @@ export class ModerationManager implements Feature {
 		pv = this.getValue('youtube');
 		if (
 			modSettings.youtube &&
-			(msg.toLowerCase().indexOf('youtube.com/channel/') > -1 ||
-				msg.toLowerCase().indexOf('youtube.com/user/') > -1)
+			(msg.toLowerCase().indexOf('youtube.com/channel/') > -1 || msg.toLowerCase().indexOf('youtube.com/user/') > -1)
 		) {
 			infractions.push(this.trad('youtube-0', room));
 			totalPointVal += pv;
@@ -497,9 +473,7 @@ export class ModerationManager implements Feature {
 		pv = this.getValue('banwords');
 		if (modSettings.bannedwords) {
 			const banphraseSettings = Settings.settings.bannedphrases;
-			const bannedPhrases = !!banphraseSettings
-				? Object.keys({ ...banphraseSettings[room], ...banphraseSettings['global'] })
-				: [];
+			const bannedPhrases = !!banphraseSettings ? Object.keys({ ...banphraseSettings[room], ...banphraseSettings['global'] }) : [];
 			const msglow = msg.toLowerCase();
 			for (let i = 0; i < bannedPhrases.length; i++) {
 				if (msglow.indexOf(bannedPhrases[i]) > -1) {
@@ -521,21 +495,14 @@ export class ModerationManager implements Feature {
 		if (modSettings.multiple) {
 			if (infractions.length >= 2) {
 				pointVal = totalPointVal;
-				muteMessage =
-					', ' + this.trad('automod', room) + '. ' + this.trad('mult', room) + ': ' + infractions.join(', ');
+				muteMessage = ', ' + this.trad('automod', room) + '. ' + this.trad('mult', room) + ': ' + infractions.join(', ');
 			}
 		}
 
 		/* Zero Tolerance */
 
 		const zerotol = this.getZeroTol(user);
-		if (
-			modSettings.zerotol &&
-			pointVal > 0 &&
-			Config.moderation &&
-			Config.moderation.zeroToleranceLevels &&
-			zerotol
-		) {
+		if (modSettings.zerotol && pointVal > 0 && Config.moderation && Config.moderation.zeroToleranceLevels && zerotol) {
 			const ztObj = Config.moderation.zeroToleranceLevels[zerotol];
 			if (ztObj && ztObj.value) {
 				muteMessage += ' ' + this.trad('0tol', room);
@@ -582,9 +549,7 @@ export class ModerationManager implements Feature {
 			Bot.say(room, '/roomban ' + by + ', ' + this.trad('ab', room) + (ban === '#range' ? ' (RegExp)' : ''));
 			if (ban !== '#range' && !this.isBanned(room, old)) {
 				this.blacklistUser(old, room); // Blacklist alt
-				SecurityLog.log(
-					'User "' + old + '" was blacklisted for being alt of "' + toId(by) + '" | Room: ' + room
-				);
+				SecurityLog.log('User "' + old + '" was blacklisted for being alt of "' + toId(by) + '" | Room: ' + room);
 			}
 		}
 	}
@@ -624,12 +589,7 @@ export class ModerationManager implements Feature {
 			case 'c:':
 				by = spl[2];
 				timeOff = parseInt(spl[1]) * 1000;
-				this.parseChat(
-					room,
-					timeOff,
-					by,
-					message.substr(('|' + spl[0] + '|' + spl[1] + '|' + spl[2] + '|').length)
-				);
+				this.parseChat(room, timeOff, by, message.substr(('|' + spl[0] + '|' + spl[1] + '|' + spl[2] + '|').length));
 				break;
 
 			case 'J':

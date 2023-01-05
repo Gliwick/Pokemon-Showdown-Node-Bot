@@ -64,12 +64,7 @@ export const commands: Record<string, string | Command> = {
 		if (this.getModule<UserRepo>(UserRepo).getDownload(toId(this.by))) {
 			return this.pmReply(this.trad('busy'));
 		}
-		const callback = function (
-			this: Context,
-			dataString: string | null,
-			err: Error | null,
-			nocache?: boolean
-		): void {
+		const callback = function (this: Context, dataString: string | null, err: Error | null, nocache?: boolean): void {
 			this.getModule<UserRepo>(UserRepo).markDownload(toId(this.by), false);
 			if (err || !dataString) return this.pmReply(this.trad('err') + ' ' + url);
 			let data: User;
@@ -83,8 +78,7 @@ export const commands: Record<string, string | Command> = {
 				error('Regdate | Corrupted data: ' + JSON.stringify(data));
 				return this.pmReply(this.trad('err') + ' ' + url);
 			}
-			if (data.registertime <= 0)
-				return this.pmReply(this.trad('user') + ' ' + (data.username || target) + ' ' + this.trad('not'));
+			if (data.registertime <= 0) return this.pmReply(this.trad('user') + ' ' + (data.username || target) + ' ' + this.trad('not'));
 			if (!nocache) {
 				const regdateCache = this.getModule<UserRepo>(UserRepo).regdateCache;
 				regdateCache.push(data);
@@ -105,8 +99,7 @@ export const commands: Record<string, string | Command> = {
 						this.trad('regtime2')
 				);
 			} else {
-				regTimestamp +=
-					1000 * 60 * 60 * getESTDiff(regTimestamp) + new Date().getTimezoneOffset() * 60 * 1000 - 364000;
+				regTimestamp += 1000 * 60 * 60 * getESTDiff(regTimestamp) + new Date().getTimezoneOffset() * 60 * 1000 - 364000;
 				this.pmReply(
 					this.trad('user') +
 						' ' +

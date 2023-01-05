@@ -90,9 +90,7 @@ export class SecurityLogger {
 			});
 			sweep(LOGS_PATH + 'security-log' + '/', Config.securityLog);
 		}
-		this.logStream.write(
-			'[' + [f.getHours(), f.getMinutes(), f.getSeconds()].map((n) => pad(n, 2)).join(':') + ']' + message + '\n'
-		);
+		this.logStream.write('[' + [f.getHours(), f.getMinutes(), f.getSeconds()].map((n) => pad(n, 2)).join(':') + ']' + message + '\n');
 	}
 
 	log(message: string): void {
