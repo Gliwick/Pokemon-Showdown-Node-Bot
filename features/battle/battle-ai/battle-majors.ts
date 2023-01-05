@@ -7,10 +7,7 @@ import { toId, toName } from '../../../tools';
 import { Battle, BattleType, BattleTypeActiveSlots, PlayerId, Request } from './battle';
 import { BoostedStat, getEffect, getMove, getPokemon, Move, Pokemon } from './battle-data';
 
-export const majors: Record<
-	string,
-	string | ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void)
-> = {
+export const majors: Record<string, string | ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void)> = {
 	rated: function (this: Battle, args, kwargs) {
 		this.rated = true;
 	},

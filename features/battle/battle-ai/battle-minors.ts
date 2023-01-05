@@ -9,10 +9,7 @@ import { getAbility, getEffect, getItem, getMove, getPokemon, Type } from './bat
 
 export type Minor = `-${string}`;
 
-export const minors: Record<
-	Minor,
-	Minor | ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void)
-> = {
+export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void)> = {
 	'-damage': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const hp = this.parseHealth(args[2]);
@@ -501,10 +498,7 @@ export const minors: Record<
 
 				if (!fromeffect?.id) {
 					const side = args[1].substr(0, 2);
-					const helpers =
-						toId(this.players[side].name) === toId(Bot.status.nickName)
-							? this.helpers.self
-							: this.helpers.foe;
+					const helpers = toId(this.players[side].name) === toId(Bot.status.nickName) ? this.helpers.self : this.helpers.foe;
 					const pokeId = poke.name + '|' + poke.species;
 					if (!helpers[pokeId]) helpers[pokeId] = {};
 					if (!helpers[pokeId].template) helpers[pokeId].template = {};

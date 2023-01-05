@@ -1053,13 +1053,7 @@ function getChart(gen: number = CurrentGen, battleId?: string): TypeChart {
 	return typechart[('gen' + gen) as Gen] || typechart[('gen' + CurrentGen) as Gen];
 }
 
-export function getEffectiveness(
-	typeA: Type,
-	typeB: Type,
-	gen: number = CurrentGen,
-	inverse: boolean,
-	battleId?: string
-): number {
+export function getEffectiveness(typeA: Type, typeB: Type, gen: number = CurrentGen, inverse: boolean, battleId?: string): number {
 	const chart = getChart(gen, battleId)[typeB];
 
 	if (!chart || !chart[typeA]) return 1;
@@ -1075,14 +1069,7 @@ export function getEffectiveness(
 	}
 }
 
-export function getMultipleEff(
-	typeA: Type,
-	typesB: Type[],
-	gen: number,
-	notImmune: boolean,
-	inverse: boolean,
-	battleId?: string
-): number {
+export function getMultipleEff(typeA: Type, typesB: Type[], gen: number, notImmune: boolean, inverse: boolean, battleId?: string): number {
 	return typesB
 		.map((type) => getEffectiveness(typeA, type, gen, inverse, battleId))
 		.map((eff) => (notImmune && eff === 0 ? 1 : eff))

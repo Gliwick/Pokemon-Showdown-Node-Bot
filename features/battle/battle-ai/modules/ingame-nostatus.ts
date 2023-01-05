@@ -26,30 +26,12 @@ import { calculate, Conditions, Pokemon } from './../calc';
 /*
  * Bad moves for 1v1
  */
-const BadMoves = [
-	'dreameater',
-	'focuspunch',
-	'explosion',
-	'lastresort',
-	'mistyexplosion',
-	'selfdestruct',
-	'shelltrap',
-	'snore',
-];
+const BadMoves = ['dreameater', 'focuspunch', 'explosion', 'lastresort', 'mistyexplosion', 'selfdestruct', 'shelltrap', 'snore'];
 
 /*
  * Moves which require 2 turs without any protection
  */
-const DoubleTurnMoves = [
-	'iceburn',
-	'freezeshock',
-	'meteorbeam',
-	'razorwind',
-	'skullbash',
-	'skyattack',
-	'solarbeam',
-	'solarblade',
-];
+const DoubleTurnMoves = ['iceburn', 'freezeshock', 'meteorbeam', 'razorwind', 'skullbash', 'skyattack', 'solarbeam', 'solarblade'];
 
 /*
  * Team and Switch Decisions

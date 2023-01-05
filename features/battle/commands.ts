@@ -136,8 +136,7 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat')
-			return this.reply(this.trad('notchat') + textHelper);
+		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		if (!Settings.settings['jointours']) Settings.settings['jointours'] = {};
 		if (toId(arg) === 'off') {
 			if (!Settings.settings['jointours'][tarRoom]) return this.reply(this.trad('ad') + ' ' + tarRoom);
@@ -274,8 +273,7 @@ export const commands: Record<string, string | Command> = {
 				if (link.substr(-1) === '/') link = link.substr(0, link.length - 1);
 				const splitedLink = link.split('/');
 				link = 'http://hastebin.com/raw/' + splitedLink[splitedLink.length - 1];
-				if (!Formats[format])
-					return this.reply(this.trad('format') + ' __' + format + '__ ' + this.trad('notexists'));
+				if (!Formats[format]) return this.reply(this.trad('format') + ' __' + format + '__ ' + this.trad('notexists'));
 				this.reply(this.trad('download') + '... (' + link + ')');
 				const getTeamCallbackFn = getTeamCallback.bind(this);
 				get(link, ((res: IncomingMessage): void => getTeamCallbackFn(name, format, res)).bind(this)).on(
@@ -286,8 +284,7 @@ export const commands: Record<string, string | Command> = {
 				);
 				break;
 			case 'get':
-				if (argArray.length < 2)
-					return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u5'));
+				if (argArray.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u5'));
 				id = toId(argArray[1]);
 				if (!teamBuilder.dynTeams[id]) {
 					return this.reply(this.trad('team') + ' __' + id + '__ ' + this.trad('notexists'));
@@ -307,8 +304,7 @@ export const commands: Record<string, string | Command> = {
 				}
 				break;
 			case 'check':
-				if (argArray.length < 2)
-					return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u6'));
+				if (argArray.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u6'));
 				id = toId(argArray[1]);
 				if (!teamBuilder.dynTeams[id]) {
 					return this.reply(this.trad('team') + ' __' + id + '__ ' + this.trad('notexists'));
@@ -322,8 +318,7 @@ export const commands: Record<string, string | Command> = {
 				break;
 			case 'delete':
 			case 'remove':
-				if (argArray.length < 2)
-					return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u4'));
+				if (argArray.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u4'));
 				name = toId(argArray[1]);
 				if (teamBuilder.removeTeam(name)) {
 					this.sclog();
@@ -348,14 +343,7 @@ export const commands: Record<string, string | Command> = {
 			.flatMap(([format, formatTeams]) => formatTeams.map((team) => [format, team]))
 			.map(
 				([format, team]) =>
-					this.trad('format') +
-					': ' +
-					format +
-					' | ' +
-					this.trad('pokemon') +
-					': ' +
-					teamBuilder.teamOverview(team) +
-					'\n'
+					this.trad('format') + ': ' + format + ' | ' + this.trad('pokemon') + ': ' + teamBuilder.teamOverview(team) + '\n'
 			);
 		const nTeams = teams.length;
 		if (!nTeams) return this.pmReply(this.trad('empty'));

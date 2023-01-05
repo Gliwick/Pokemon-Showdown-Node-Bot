@@ -32,13 +32,7 @@ export class MoveDecision extends Decision {
 	transformation: Transformation | null;
 	moveData: Record<string, any> | null = null;
 
-	constructor(
-		moveId: number,
-		target: number | null,
-		transformation: Transformation | null,
-		move: string,
-		movePP: number
-	) {
+	constructor(moveId: number, target: number | null, transformation: Transformation | null, move: string, movePP: number) {
 		super('move');
 		this.moveId = moveId || 0;
 		this.target = target;
@@ -293,13 +287,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 						if (mega) tables[i].push(new MoveDecision(j, target, 'mega', move.move, move.pp));
 						if (active.canTerastallize)
 							tables[i].push(
-								new MoveDecision(
-									j,
-									target,
-									{ terastallize: active.canTerastallize as Type },
-									move.move,
-									move.pp
-								)
+								new MoveDecision(j, target, { terastallize: active.canTerastallize as Type }, move.move, move.pp)
 							);
 					}
 
@@ -322,9 +310,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 
 					const targets = getTargets(battle, i, maxMove);
 					for (const target of targets) {
-						tables[i].push(
-							new MoveDecision(j, target, active.canDynamax ? 'dynamax' : null, maxMove.move, baseMove.pp)
-						);
+						tables[i].push(new MoveDecision(j, target, active.canDynamax ? 'dynamax' : null, maxMove.move, baseMove.pp));
 					}
 				}
 			}

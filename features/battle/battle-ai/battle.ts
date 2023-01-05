@@ -10,17 +10,7 @@ import { colors } from '../../../index';
 import { errlog, error } from '../../../log';
 import { toId, toName } from '../../../tools';
 import { BattleBot } from '.';
-import {
-	CurrentGen,
-	getAbility,
-	getItem,
-	getPokemon,
-	Player,
-	Pokemon,
-	PokemonDetails,
-	StatsTable,
-	Type,
-} from './battle-data';
+import { CurrentGen, getAbility, getItem, getPokemon, Player, Pokemon, PokemonDetails, StatsTable, Type } from './battle-data';
 import { majors } from './battle-majors';
 import { Minor, minors } from './battle-minors';
 import { Pokemon as CalcPokemon } from './calc';
@@ -551,8 +541,7 @@ export class Battle {
 
 		if (!details || !ident) throw new Error('Request pokemon has no details or ident: ' + JSON.stringify(p));
 
-		const side: keyof Battle['helpers'] =
-			toId(this.request.side.name) === toId(Bot.status.nickName) ? 'self' : 'foe';
+		const side: keyof Battle['helpers'] = toId(this.request.side.name) === toId(Bot.status.nickName) ? 'self' : 'foe';
 		const pokeId = p.ident.split(': ')[1] + '|' + details.species;
 
 		const poke = new CalcPokemon(

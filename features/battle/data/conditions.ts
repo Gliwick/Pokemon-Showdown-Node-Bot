@@ -437,8 +437,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 		noCopy: true,
 		onStart(pokemon) {
 			if (!this.activeMove) throw new Error('Battle.activeMove is null');
-			if (!this.activeMove.id || this.activeMove.hasBounced || this.activeMove.sourceEffect === 'snatch')
-				return false;
+			if (!this.activeMove.id || this.activeMove.hasBounced || this.activeMove.sourceEffect === 'snatch') return false;
 			this.effectState.move = this.activeMove.id;
 		},
 		onBeforeMove(pokemon, target, move) {
@@ -446,12 +445,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 				pokemon.removeVolatile('choicelock');
 				return;
 			}
-			if (
-				!pokemon.ignoringItem() &&
-				!pokemon.volatiles['dynamax'] &&
-				move.id !== this.effectState.move &&
-				move.id !== 'struggle'
-			) {
+			if (!pokemon.ignoringItem() && !pokemon.volatiles['dynamax'] && move.id !== this.effectState.move && move.id !== 'struggle') {
 				// Fails unless the Choice item is being ignored, and no PP is lost
 				this.addMove('move', pokemon, move.name);
 				this.attrLastMove('[still]');
@@ -546,13 +540,7 @@ export const Conditions: { [k: string]: ConditionData } = {
 		onSwitchIn(target) {
 			if (!target.fainted) {
 				target.heal(target.maxhp);
-				this.add(
-					'-heal',
-					target,
-					target.getHealth,
-					'[from] move: ' + this.effectState.sourceEffect,
-					'[zeffect]'
-				);
+				this.add('-heal', target, target.getHealth, '[from] move: ' + this.effectState.sourceEffect, '[zeffect]');
 				target.side.removeSlotCondition(target, 'healreplacement');
 			}
 		},

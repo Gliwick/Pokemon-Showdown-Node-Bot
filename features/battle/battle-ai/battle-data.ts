@@ -308,9 +308,7 @@ export function getAbility(abilityId: string, gen: number = CurrentGen, battleId
 	} catch (e) {}
 	for (let i = CurrentGen - 1; i >= gen; i--) {
 		try {
-			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + i + '/abilities.js').BattleAbilities[
-				abilityId
-			];
+			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + i + '/abilities.js').BattleAbilities[abilityId];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
@@ -326,9 +324,7 @@ export function getAbility(abilityId: string, gen: number = CurrentGen, battleId
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/abilities.js').BattleAbilities[
-				abilityId
-			];
+			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/abilities.js').BattleAbilities[abilityId];
 		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
@@ -614,8 +610,7 @@ export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?
 	} catch (e) {}
 	for (let gen = CurrentGen - 1; gen >= gen; gen--) {
 		try {
-			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + gen + '/formats-data.js')
-				.BattleFormatsData[poke];
+			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + gen + '/formats-data.js').BattleFormatsData[poke];
 			if (!temp) continue;
 		} catch (e) {
 			continue;
@@ -631,9 +626,7 @@ export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?
 	if (formatMod) {
 		temp = null;
 		try {
-			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/formats-data.js').BattleFormatsData[
-				poke
-			];
+			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/formats-data.js').BattleFormatsData[poke];
 		} catch (e) {}
 		if (temp) {
 			if (!temp.inherit) {
