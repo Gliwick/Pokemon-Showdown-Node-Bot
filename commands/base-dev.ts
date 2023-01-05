@@ -302,7 +302,7 @@ export const commands: Record<string, string | Command> = {
 								'forcekill`` if you want to kill the process anyway'
 						);
 					}
-				} catch (e) {
+				} catch (e: any) {
 					return this.reply(
 						'Feature "' +
 							f +

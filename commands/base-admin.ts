@@ -86,7 +86,7 @@ export const commands: Record<string, string | Command> = {
 						.map((room) => toId(room.title))
 						.filter((room) => !!room)
 						.map((room) => '|/join ' + room);
-				} catch (e) {}
+				} catch (e: any) {}
 				Bot.send(cmds, 2000);
 				Bot.removeListener('queryresponse', qParser);
 			}

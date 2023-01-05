@@ -106,7 +106,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 	try {
 		const aliases = DataDownloader.getAliases();
 		if (aliases[poke]) poke = toId(aliases[poke]);
-	} catch (e) {
+	} catch (e: any) {
 		debug('Could not fetch aliases. Cmd: ' + this.cmd + ' ' + arg + ' | Room: ' + this.room + ' | By: ' + this.by);
 	}
 	if (parseInt(poke)) searchIndex = parseInt(poke);

@@ -276,7 +276,7 @@ export function parseAliases(format?: string): string {
 	try {
 		const psAliases = DataDownloader.getAliases();
 		if (psAliases[format]) format = toId(psAliases[format]);
-	} catch (e) {}
+	} catch (e: any) {}
 	return format;
 }
 

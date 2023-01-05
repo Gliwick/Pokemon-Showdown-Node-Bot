@@ -271,7 +271,7 @@ export class Client {
 				this.events.emit('renamefailure', -4);
 				return;
 			}
-		} catch (e) {}
+		} catch (e: any) {}
 		this.debug('Sending log in trn...');
 		this.send('|/trn ' + nick + ',0,' + data.data);
 	}

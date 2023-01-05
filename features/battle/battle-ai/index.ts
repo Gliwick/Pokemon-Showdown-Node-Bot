@@ -28,7 +28,7 @@ export class BattleBot {
 		for (const room in this.battles) {
 			try {
 				this.battles[room].destroy();
-			} catch (e) {}
+			} catch (e: any) {}
 			delete this.battles[room];
 		}
 		this.battlesCount = 0;
@@ -72,7 +72,7 @@ export class BattleBot {
 			if (this.battles[room]) {
 				try {
 					this.battles[room].destroy();
-				} catch (e) {}
+				} catch (e: any) {}
 			}
 			this.battles[room] = new Battle(this, room);
 			createStream(this.battles[room]);
@@ -86,7 +86,7 @@ export class BattleBot {
 			if (this.battles[room]) {
 				try {
 					this.battles[room].destroy();
-				} catch (e) {}
+				} catch (e: any) {}
 				delete this.battles[room];
 				this.battlesCount--;
 				this.updateBattleAutojoin();
@@ -98,7 +98,7 @@ export class BattleBot {
 		for (const room in this.battles) {
 			try {
 				this.battles[room].destroy();
-			} catch (e) {}
+			} catch (e: any) {}
 			delete this.battles[room];
 			this.battlesCount--;
 		}

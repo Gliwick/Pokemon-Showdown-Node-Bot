@@ -98,7 +98,7 @@ export const commands: Record<string, string | Command> = {
 		try {
 			Features.getFeature(BattleManager).reloadBot();
 			this.reply('Battle modules hotpatched');
-		} catch (e) {
+		} catch (e: any) {
 			this.reply('Error: ' + inspect(e));
 		}
 	},

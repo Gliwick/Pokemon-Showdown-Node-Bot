@@ -118,7 +118,7 @@ export class ModerationManager implements Feature {
 				try {
 					const regexObj = new RegExp(i.substr(1, i.length - 3), 'i');
 					if (regexObj.test(user)) return '#range';
-				} catch (e) {}
+				} catch (e: any) {}
 			}
 		}
 		return false;

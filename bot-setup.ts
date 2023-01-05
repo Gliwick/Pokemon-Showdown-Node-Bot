@@ -43,7 +43,7 @@ function joinByQueryRequest(target: 'all' | 'official' | 'public' | string[]): v
 				if (target === 'all' || target === 'public') {
 					cmds = cmds.concat(publicRooms.map((room) => '|/join ' + room));
 				}
-			} catch (e) {}
+			} catch (e: any) {}
 			cmds = cmds.concat(Config.initCmds).concat(getFeatureInitCmds());
 			Bot.send(cmds, 2000);
 			Bot.removeListener('queryresponse', qParser);

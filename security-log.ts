@@ -63,7 +63,7 @@ export function sweep(dir: PathLike, config?: LogConfig): void {
 export function checkDir(dir: PathLike): void {
 	try {
 		if (!existsSync(dir)) mkdirSync(dir);
-	} catch (e) {}
+	} catch (e: any) {}
 }
 
 export class SecurityLogger {
@@ -81,7 +81,7 @@ export class SecurityLogger {
 			if (this.logStream) {
 				try {
 					this.logStream.close();
-				} catch (e) {}
+				} catch (e: any) {}
 			}
 			this.logDate = fstr;
 			checkDir(LOGS_PATH + 'security-log' + '/');

@@ -77,7 +77,7 @@ export class DataDownloader {
 				}
 				try {
 					uncacheTree('./data/' + file);
-				} catch (e) {}
+				} catch (e: any) {}
 				debug('Downloaded data file: ' + '../data/' + file);
 				if (typeof callback === 'function') callback(true);
 			});

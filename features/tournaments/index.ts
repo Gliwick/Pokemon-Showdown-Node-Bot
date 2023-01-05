@@ -116,7 +116,7 @@ export class TournamentsManager implements Feature {
 			try {
 				const timer = this.tournaments[i].startTimer;
 				if (timer) clearTimeout(timer);
-			} catch (e) {}
+			} catch (e: any) {}
 			delete this.tournaments[i];
 		}
 		this.tourData = {};
@@ -154,7 +154,7 @@ export class TournamentsManager implements Feature {
 				try {
 					const data = JSON.parse(spl[2]) as TourData;
 					this.tourData[room] = Object.assign(this.tourData[room] || {}, data);
-				} catch (e) {}
+				} catch (e: any) {}
 				break;
 			case 'updateEnd':
 				if (!this.tournaments[room]) break;
@@ -166,7 +166,7 @@ export class TournamentsManager implements Feature {
 				try {
 					const data = JSON.parse(spl[2]) as TourData;
 					this.tourData[room] = Object.assign(this.tourData[room] || {}, data);
-				} catch (e) {}
+				} catch (e: any) {}
 				this.leaderboards.onTournamentEnd(room, this.tourData[room]);
 				delete this.tourData[room];
 				timer = this.tournaments[room]?.startTimer;

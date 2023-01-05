@@ -1047,7 +1047,7 @@ function getChart(gen: number = CurrentGen, battleId?: string): TypeChart {
 		try {
 			const temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/typechart.js').BattleTypeChart;
 			if (temp) return temp as TypeChart;
-		} catch (e) {}
+		} catch (e: any) {}
 	}
 
 	return typechart[('gen' + gen) as Gen] || typechart[('gen' + CurrentGen) as Gen];

@@ -44,7 +44,7 @@ export class TourManager implements Parser {
 				try {
 					const data = JSON.parse(spl[2]);
 					this.tourData[room] = Object.assign(this.tourData[room] || {}, data);
-				} catch (e) {}
+				} catch (e: any) {}
 				break;
 			case 'updateEnd':
 				if (

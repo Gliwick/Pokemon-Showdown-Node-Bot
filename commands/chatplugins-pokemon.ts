@@ -75,7 +75,7 @@ function getPokemonMoves(pokemon: string, filter: (move: any) => boolean): strin
 		pokedex = DataDownloader.getPokedex();
 		movedex = DataDownloader.getMovedex();
 		learnsets = DataDownloader.getLearnsets();
-	} catch (e) {
+	} catch (e: any) {
 		return null;
 	}
 	const pokemonToCheck: string[] = [];
@@ -129,7 +129,7 @@ export const commands: Record<string, string | Command> = {
 			try {
 				const aliases = DataDownloader.getAliases();
 				if (aliases[toId(word)]) word = aliases[toId(word)];
-			} catch (e) {
+			} catch (e: any) {
 				debug('Could not fetch aliases. Cmd: ' + this.cmd + ' ' + arg + ' | Room: ' + this.room + ' | By: ' + this.by);
 			}
 		}
@@ -175,7 +175,7 @@ export const commands: Record<string, string | Command> = {
 		let pokedex;
 		try {
 			pokedex = DataDownloader.getPokedex();
-		} catch (e) {
+		} catch (e: any) {
 			return this.pmReply(this.trad('err'));
 		}
 		const pokeList = Object.keys(pokedex);
@@ -194,7 +194,7 @@ export const commands: Record<string, string | Command> = {
 			movedex = DataDownloader.getMovedex();
 			abilities = DataDownloader.getAbilities();
 			items = DataDownloader.getItems();
-		} catch (e) {
+		} catch (e: any) {
 			return this.pmReply(this.trad('err'));
 		}
 		let id = toId(arg);
@@ -240,7 +240,7 @@ export const commands: Record<string, string | Command> = {
 			aliases = DataDownloader.getAliases();
 			formatsdata = DataDownloader.getFormatsData();
 			movedex = DataDownloader.getMovedex();
-		} catch (e) {
+		} catch (e: any) {
 			return this.pmReply(this.trad('err'));
 		}
 		const args = arg.split(',');
@@ -272,7 +272,7 @@ export const commands: Record<string, string | Command> = {
 		try {
 			aliases = DataDownloader.getAliases();
 			pokedex = DataDownloader.getPokedex();
-		} catch (e) {
+		} catch (e: any) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';
@@ -302,7 +302,7 @@ export const commands: Record<string, string | Command> = {
 		try {
 			aliases = DataDownloader.getAliases();
 			pokedex = DataDownloader.getPokedex();
-		} catch (e) {
+		} catch (e: any) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';
@@ -323,7 +323,7 @@ export const commands: Record<string, string | Command> = {
 		try {
 			aliases = DataDownloader.getAliases();
 			pokedex = DataDownloader.getPokedex();
-		} catch (e) {
+		} catch (e: any) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';
@@ -347,7 +347,7 @@ export const commands: Record<string, string | Command> = {
 		try {
 			pokedex = DataDownloader.getPokedex();
 			aliases = DataDownloader.getAliases();
-		} catch (e) {
+		} catch (e: any) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';
@@ -377,7 +377,7 @@ export const commands: Record<string, string | Command> = {
 		try {
 			pokedex = DataDownloader.getPokedex();
 			aliases = DataDownloader.getAliases();
-		} catch (e) {
+		} catch (e: any) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';
@@ -408,7 +408,7 @@ export const commands: Record<string, string | Command> = {
 		try {
 			pokedex = DataDownloader.getPokedex();
 			aliases = DataDownloader.getAliases();
-		} catch (e) {
+		} catch (e: any) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';

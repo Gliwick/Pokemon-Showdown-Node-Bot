@@ -87,7 +87,7 @@ export class TeamBuilder {
 			}
 			this.mergeTeams();
 			return true;
-		} catch (e) {
+		} catch (e: any) {
 			error('failed to load teams: ' + inspect(e));
 			return false;
 		}
