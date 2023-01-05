@@ -267,6 +267,7 @@ export const commands: Record<string, string | Command> = {
 		}
 	},
 
+	heatcrash: 'heavyslam',
 	heavyslam: function (arg) {
 		let pokedex, aliases;
 		try {
