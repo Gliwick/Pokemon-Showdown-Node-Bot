@@ -490,9 +490,9 @@ export class ModerationManager implements Feature {
 		/* Zero Tolerance */
 
 		const zerotol = this.getZeroTol(user);
-		if (modSettings.zerotol && pointVal > 0 && Config.moderation && Config.moderation.zeroToleranceLevels && zerotol) {
+		if (modSettings.zerotol && pointVal > 0 && Config.moderation.zeroToleranceLevels && zerotol) {
 			const ztObj = Config.moderation.zeroToleranceLevels[zerotol];
-			if (ztObj && ztObj.value) {
+			if (ztObj?.value) {
 				muteMessage += ' ' + this.trad('0tol', room);
 				pointVal += ztObj.value;
 			}
