@@ -62,9 +62,7 @@ export class FeatureManager {
 				}
 			}
 		});
-		(reloading ? info : ok)(
-			'this.features ' + (reloading ? 'reloaded' : 'loaded') + (errs.length ? '. Errors: ' + errs.join(', ') : '')
-		);
+		(reloading ? info : ok)('Features ' + (reloading ? 'reloaded' : 'loaded') + (errs.length ? '. Errors: ' + errs.join(', ') : ''));
 		return errs;
 	}
 
