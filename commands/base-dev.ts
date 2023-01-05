@@ -80,20 +80,17 @@ export const commands: Record<string, string | Command> = {
 		if (!arg) {
 			const roomsArray = Object.entries(Bot.rooms).map(([i, room]) => {
 				const botIdent = room.users[toId(Bot.status.nickName)] || ' ';
-				return (
-					'<<' +
-					i +
-					'>> (' +
+				return `<<${i}>> (${
 					room.type.charAt(0).toLowerCase() +
 					(Settings.isSleeping(i) ? 's' : 'r') +
-					(botIdent.charAt(0) !== ' ' ? botIdent.charAt(0) : 'u') +
-					(Config.privateRooms.includes(i) ? 'h' : 'p') +
-					')'
-				);
+					(botIdent.charAt(0).trim() || 'u') +
+					(Config.privateRooms.includes(i) ? 'h' : 'p')
+				})`;
 			});
+			if (!roomsArray.length) roomsArray.push('(none)');
 			const cmds = joinWithLengthLimit(
-				roomsArray.length ? roomsArray : ['(none)'],
-				'**Bot status** |' + (Settings.lockdown ? ' **Lockdown** |' : '') + ' Username: ``' + Bot.status.nickName + '`` | Rooms: '
+				roomsArray,
+				`**Bot status** |${Settings.lockdown ? ' **Lockdown** |' : ''} Username: \`\`${Bot.status.nickName}\`\` | Rooms: `
 			);
 			return this.pmReply(cmds);
 		}
@@ -101,24 +98,15 @@ export const commands: Record<string, string | Command> = {
 		const tarRoom = toRoomid(arg);
 		const roomObj = this.getRoom(tarRoom);
 		if (!roomObj) return this.pmReply('Room "' + tarRoom + '" not found');
+
 		const sleep = Settings.isSleeping(tarRoom) ? 'Sleeping' : 'Ready';
 		const botIdent = Bot.rooms[roomObj.id].users[toId(Bot.status.nickName)] || ' ';
 		this.pmReply(
-			'**' +
-				roomObj.title +
-				'** <<' +
-				roomObj.id +
-				'>> | Type: ``' +
-				roomObj.type +
-				'``' +
-				(Config.privateRooms.includes(roomObj.id) ? ' (Hidden)' : '') +
-				' | Users: ``' +
-				roomObj.users.length +
-				'`` | Bot group: ``' +
-				(botIdent.charAt(0) !== ' ' ? botIdent.charAt(0) : '(regular user)') +
-				'`` | Status: ``' +
-				sleep +
-				'``'
+			`**${roomObj.title}** <<${roomObj.id}>> | Type: \`\`${roomObj.type}\`\`${
+				Config.privateRooms.includes(roomObj.id) ? ' (Hidden)' : ''
+			} | Users: \`\`${roomObj.users.length}\`\` | Bot group: \`\`${
+				botIdent.charAt(0).trim() || '(regular user)'
+			}\`\` | Status: \`\`${sleep}\`\``
 		);
 	},
 
@@ -249,8 +237,7 @@ export const commands: Record<string, string | Command> = {
 						return;
 					}
 				}
-				const entry = 'Running `' + cmd + '`';
-				this.reply(entry);
+				this.reply('Running `' + cmd + '`');
 				exec(
 					cmd,
 					function (this: Context, error: ExecException | null, stdout: string, stderr: string): void {
@@ -293,24 +280,14 @@ export const commands: Record<string, string | Command> = {
 					const err = readyToDie();
 					if (err) {
 						return this.reply(
-							'Feature "' +
-								f +
-								'" not ready | ' +
-								err +
-								' | Use ``' +
-								this.cmdToken +
-								'forcekill`` if you want to kill the process anyway'
+							`Feature "${f}" not ready | ${err} | Use \`\`${this.cmdToken}forcekill\`\` if you want to kill the process anyway`
 						);
 					}
 				} catch (e: any) {
 					return this.reply(
-						'Feature "' +
-							f +
-							'" not ready | ' +
-							inspect(e) +
-							' | Use ``' +
-							this.cmdToken +
-							'forcekill`` if you want to kill the process anyway'
+						`Feature "${f}" not ready | ${inspect(e)} | Use \`\`${
+							this.cmdToken
+						}forcekill\`\` if you want to kill the process anyway`
 					);
 				}
 			}
