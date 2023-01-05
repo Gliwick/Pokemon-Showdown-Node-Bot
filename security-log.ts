@@ -16,17 +16,14 @@ interface Date {
 	year: number;
 }
 
+const DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
 export function dateDifference(date1: Date, date2: Date): number {
 	if (!date1 || !date1.day || !date1.month || !date1.year) return 0;
 	if (!date2 || !date2.day || !date2.month || !date2.year) return 0;
-	let dif = 0;
-	dif += 365 * (date1.year - date2.year);
-	const days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-	const daysA = days.slice(1, date1.month).reduce((acc, v) => acc + v, date1.day);
-	const daysB = days.slice(1, date2.month).reduce((acc, v) => acc + v, date2.day);
-	dif += daysA - daysB;
-	dif = Math.abs(dif);
-	return dif;
+	const daysA = DAYS.slice(1, date1.month).reduce((acc, v) => acc + v, date1.day);
+	const daysB = DAYS.slice(1, date2.month).reduce((acc, v) => acc + v, date2.day);
+	return Math.abs(365 * (date1.year - date2.year) + (daysA - daysB));
 }
 
 export function sweep(dir: PathLike, config?: LogConfig): void {
