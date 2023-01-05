@@ -138,7 +138,7 @@ export const commands: Record<string, string | Command> = {
 		if (bidirectional) {
 			const translationsInv = getTranslations(to, from, word);
 			if (translationsInv && translationsInv.length) {
-				if (!translations || !translations.length || translationsInv[0].levenstein < translations[0].levenstein) {
+				if (!translations?.length || translationsInv[0].levenstein < translations[0].levenstein) {
 					translations = translationsInv;
 					const temp = to;
 					to = from;
@@ -146,7 +146,7 @@ export const commands: Record<string, string | Command> = {
 				}
 			}
 		}
-		if (!translations || !translations.length)
+		if (!translations?.length)
 			return this.restrictReply(
 				this.trad('not1') + ' "' + word + '" ' + this.trad('not2') + ' (' + from + ' - ' + to + ')',
 				'pokemon'
