@@ -15,7 +15,6 @@
  *	- Priority -100000 - Moves 0 damage
  */
 
-import { debug } from '../../../../log';
 import { toId } from '../../../../tools';
 import { Battle } from '../battle';
 import { Decision, MoveDecision, SwitchDecision, TeamDecision } from '../decision';
@@ -78,7 +77,7 @@ export class IngameNoStatus implements BattleModule {
 					battle.conditions,
 					battle
 				);
-				debug('DMG [' + pokeA.species + ', ' + poke.species + ', ' + move.name + '] = ' + dmg.getMax());
+				battle.debug('DMG [' + pokeA.species + ', ' + poke.species + ', ' + move.name + '] = ' + dmg.getMax());
 				if (DoubleTurnMoves.includes(move.id)) calcVal += dmg.getMax() * 0.5;
 				else calcVal += dmg.getMax();
 			}
@@ -152,7 +151,7 @@ export class IngameNoStatus implements BattleModule {
 					battle.conditions,
 					battle
 				);
-				debug('DMG [' + pokeA.species + ', ' + pokeB.species + ', ' + move.name + '] = ' + dmg.getMax());
+				battle.debug('DMG [' + pokeA.species + ', ' + pokeB.species + ', ' + move.name + '] = ' + dmg.getMax());
 				if (DoubleTurnMoves.includes(move.id)) final += dmg.getMax() * 0.5;
 				else final += dmg.getMax();
 			}
@@ -240,7 +239,7 @@ export class IngameNoStatus implements BattleModule {
 				battle.conditions,
 				battle
 			);
-			debug('DMG [' + pokeA.species + ', ' + pokeB.species + ', ' + move.name + '] = ' + dmg.getMax());
+			battle.debug('DMG [' + pokeA.species + ', ' + pokeB.species + ', ' + move.name + '] = ' + dmg.getMax());
 			if (DoubleTurnMoves.includes(move.id)) final += dmg.getMax() * 0.5;
 			else final += dmg.getMax();
 		}
