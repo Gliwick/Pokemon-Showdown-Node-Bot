@@ -16,7 +16,7 @@ export const manager = DynamicModule;
 
 function getCmdList(head: string): string[] | null {
 	const cmdArr = Object.keys(CommandParser.dynCommands).sort();
-	const newCmdArr = cmdArr.filter((cmd) => !(CommandParser.dynCommands[cmd] && CommandParser.dynCommands[cmd].substr(0, 4) === '/ref'));
+	const newCmdArr = cmdArr.filter((cmd) => !(CommandParser.dynCommands[cmd] && CommandParser.dynCommands[cmd].startsWith('/ref')));
 	if (!newCmdArr.length) return null;
 	return joinWithLengthLimit(newCmdArr, head);
 }
@@ -28,9 +28,9 @@ export const commands: Record<string, string | Command> = {
 	info: 'dyn',
 	dyn: function (arg, by, room, cmd) {
 		const dcmd = toId(arg);
-		if (dcmd && CommandParser.dynCommands[dcmd] && CommandParser.dynCommands[dcmd].substr(0, 4) === '/ref') {
+		if (dcmd && CommandParser.dynCommands[dcmd] && CommandParser.dynCommands[dcmd].startsWith('/ref')) {
 			const basicCmd = toId(CommandParser.dynCommands[dcmd].substr(5));
-			if (CommandParser.dynCommands[basicCmd] && CommandParser.dynCommands[basicCmd].substr(0, 4) !== '/ref') {
+			if (CommandParser.dynCommands[basicCmd] && !CommandParser.dynCommands[basicCmd].startsWith('/ref')) {
 				this.parse(this.cmdToken + cmd + ' ' + basicCmd);
 			} else {
 				if (CommandParser.dynCommands[basicCmd]) error('Recursive dynamic command "' + dcmd + '"');
@@ -106,8 +106,10 @@ export const commands: Record<string, string | Command> = {
 		const dcmd = toId(args[1]);
 		if (!alias || !dcmd || alias === dcmd) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 		if (!CommandParser.dynCommands[dcmd]) return this.reply(this.trad('c') + ' "' + dcmd + '" ' + this.trad('n'));
-		if (CommandParser.dynCommands[dcmd].substr(0, 4) === '/ref')
+		if (CommandParser.dynCommands[dcmd].startsWith('/ref')) {
 			return this.reply(this.trad('c') + ' "' + dcmd + '" ' + this.trad('already'));
+		}
+
 		CommandParser.dynCommands[alias] = '/ref ' + dcmd;
 		CommandParser.saveDynCmds();
 		this.sclog();
@@ -121,7 +123,7 @@ export const commands: Record<string, string | Command> = {
 		if (!list.length) return this.pmReply(this.trad('nocmds'));
 		let text = this.trad('list') + ':\n\n';
 		for (const i in CommandParser.dynCommands) {
-			if (CommandParser.dynCommands[i].substr(0, 4) === '/ref') {
+			if (CommandParser.dynCommands[i].startsWith('/ref')) {
 				text += i + ' ~ ' + toId(CommandParser.dynCommands[i].substr(5)) + '\n';
 				continue;
 			}
