@@ -18,7 +18,7 @@ export const commands: Record<string, string | Command> = {
 	bot: 'about',
 	about: function () {
 		this.restrictReply(
-			this.trad('about') + '. ' + this.trad('author') + ': ' + Settings.package.author.name + '. (' + Settings.package.homepage + ')',
+			`${this.trad('about')}. ${this.trad('author')}: ${Settings.package.author.name}. (${Settings.package.homepage})`,
 			'info'
 		);
 	},
@@ -37,20 +37,17 @@ export const commands: Record<string, string | Command> = {
 	botguide: 'help',
 	help: function () {
 		this.restrictReply(
-			this.trad('guide') + ': ' + (Config.botguide || Settings.package.homepage + '/blob/master/commands/README.md'),
+			`${this.trad('guide')}: ${Config.botguide || Settings.package.homepage + '/blob/master/commands/README.md'}`,
 			'info'
 		);
 	},
 
 	bottime: 'time',
 	time: function () {
-		const f = new Date();
-		this.restrictReply('**' + this.trad('time') + ':** __' + f.toString() + '__', 'info');
+		this.restrictReply(`**${this.trad('time')}:** __${new Date().toString()}__`, 'info');
 	},
 
 	uptime: function () {
-		let text = '';
-		text += '**Uptime:** ';
 		const divisors = [52, 7, 24, 60, 60];
 		const unitNames = ['week', 'day', 'hour', 'minute', 'second'].map(this.trad);
 		const buffer: string[] = [];
@@ -68,63 +65,26 @@ export const commands: Record<string, string | Command> = {
 			uptime = ~~(uptime / divisor);
 		} while (uptime);
 
-		switch (buffer.length) {
-			case 5:
-				text += buffer[4] + ', ';
-				text += buffer[3] + ', ';
-				text += buffer[2] + ', ' + buffer[1] + ', ' + this.trad('and') + ' ' + buffer[0];
-				break;
-			case 4:
-				text += buffer[3] + ', ';
-				text += buffer[2] + ', ' + buffer[1] + ', ' + this.trad('and') + ' ' + buffer[0];
-				break;
-			case 3:
-				text += buffer[2] + ', ' + buffer[1] + ', ' + this.trad('and') + ' ' + buffer[0];
-				break;
-			case 2:
-				text += buffer[1] + ' ' + this.trad('and') + ' ' + buffer[0];
-				break;
-			case 1:
-				text += buffer[0];
-				break;
-		}
-		this.restrictReply(text, 'info');
+		this.restrictReply(
+			'**Uptime:** ' + [buffer.slice(1, 5).reverse().join(', '), buffer[0]].filter((t) => !!t).join(` ${this.trad('and')} `),
+			'info'
+		);
 	},
 
 	seen: function (arg, by) {
-		let text = '';
 		arg = toId(arg);
 		if (!arg || arg.length > 18) return this.pmReply(this.trad('inv'));
 		if (arg === toId(Bot.status.nickName)) return this.pmReply(this.trad('bot'));
 		if (arg === toId(by)) return this.pmReply(this.trad('self'));
 		const dSeen = Settings.userManager.getSeen(arg);
-		if (dSeen) {
-			text +=
-				'**' +
-				(dSeen.name || arg).trim() +
-				'** ' +
-				this.trad('s1') +
-				' __' +
-				getTimeAgo(dSeen.time, this.language).trim() +
-				(this.trad('s2') ? '__ ' + this.trad('s2') : '__');
-			if (dSeen.room && dSeen.action && dSeen.args) {
-				switch (dSeen.action) {
-					case 'j':
-						text += ', ' + this.trad('j') + ' <<' + dSeen.room + '>>';
-						break;
-					case 'l':
-						text += ', ' + this.trad('l') + ' <<' + dSeen.room + '>>';
-						break;
-					case 'c':
-						text += ', ' + this.trad('c') + ' <<' + dSeen.room + '>>';
-						break;
-					case 'n':
-						text += ', ' + this.trad('n') + ' **' + dSeen.args[0] + '**';
-						break;
-				}
-			}
-		} else {
-			text += this.trad('n1') + ' ' + arg + ' ' + this.trad('n2');
+		if (!dSeen) return this.pmReply(`${this.trad('n1')} ${arg} ${this.trad('n2')}`);
+
+		let text = `**${(dSeen.name || arg).trim()}** ${this.trad('s1')} __${getTimeAgo(dSeen.time, this.language).trim()}__ ${this.trad(
+			's2'
+		)}`;
+		if (dSeen.room && dSeen.action && dSeen.args) {
+			const action = dSeen.action;
+			text = `${text.trimEnd()}, ${this.trad(action)} <<${action === 'n' ? dSeen.args[0] : dSeen.room}>>`;
 		}
 		this.pmReply(text);
 	},
@@ -134,16 +94,13 @@ export const commands: Record<string, string | Command> = {
 		arg = toId(arg);
 		if (!arg || arg.length > 18) return this.pmReply(this.trad('inv'));
 		const alts = Settings.userManager.getAlts(arg);
-		if (!alts.length) {
-			return this.pmReply(this.trad('n') + ' ' + Settings.userManager.getName(arg));
-		}
-
+		if (!alts.length) return this.pmReply(`${this.trad('n')} ${Settings.userManager.getName(arg)}`);
 		if (this.can('alts')) {
-			return this.pmReply(joinWithLengthLimit(alts, this.trad('alts') + ' ' + Settings.userManager.getName(arg) + ': '));
+			return this.pmReply(joinWithLengthLimit(alts, `${this.trad('alts')} ${Settings.userManager.getName(arg)}: `));
 		}
 
 		if (alts.length <= 10) {
-			this.pmReply(this.trad('alts') + ' ' + Settings.userManager.getName(arg) + ': ' + alts.join(', '));
+			this.pmReply(`${this.trad('alts')} ${Settings.userManager.getName(arg)}: ${alts.join(', ')}`);
 		} else {
 			const fAlts = alts.reverse().slice(0, 10);
 			this.pmReply(

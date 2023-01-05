@@ -15,10 +15,11 @@ class DynamicModule implements CommandModuleManager {
 export const manager = DynamicModule;
 
 function getCmdList(head: string): string[] | null {
-	const cmdArr = Object.keys(CommandParser.dynCommands).sort();
-	const newCmdArr = cmdArr.filter((cmd) => !(CommandParser.dynCommands[cmd] && CommandParser.dynCommands[cmd].startsWith('/ref')));
-	if (!newCmdArr.length) return null;
-	return joinWithLengthLimit(newCmdArr, head);
+	const cmdArr = Object.keys(CommandParser.dynCommands)
+		.sort()
+		.filter((cmd) => !(CommandParser.dynCommands[cmd] && CommandParser.dynCommands[cmd].startsWith('/ref')));
+	if (!cmdArr.length) return null;
+	return joinWithLengthLimit(cmdArr, head);
 }
 
 export const commands: Record<string, string | Command> = {
