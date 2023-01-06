@@ -38,10 +38,11 @@ export class GroupChatsManager implements Feature {
 		if (!autoPromotion?.enabled) return;
 		const userid = toId(by);
 		if (autoPromotion.users[userid] && !equalOrHigherRank(by.charAt(0), autoPromotion.users[userid])) {
-			return Bot.say(room, '/roompromote ' + userid + ',' + autoPromotion.users[userid]);
+			return Bot.say(room, `/roompromote ${userid},${autoPromotion.users[userid]}`);
 		}
-		if (autoPromotion.all && !equalOrHigherRank(by.charAt(0), autoPromotion.all))
-			return Bot.say(room, '/roompromote ' + userid + ',' + autoPromotion.all);
+		if (autoPromotion.all && !equalOrHigherRank(by.charAt(0), autoPromotion.all)) {
+			return Bot.say(room, `/roompromote ${userid},${autoPromotion.all}`);
+		}
 	}
 
 	runWelcomeMessage(room: string, by: string): void {

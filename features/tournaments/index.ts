@@ -37,7 +37,7 @@ export class Tournament {
 	createTour(): void {
 		Bot.say(
 			this.room,
-			'/tournament create ' + this.format + ', ' + this.type + (this.type === 'elimination' ? ',, ' + this.eliminationCount : '')
+			`/tournament create ${this.format}, ${this.type + (this.type === 'elimination' ? ',, ' + this.eliminationCount : '')}`
 		);
 	}
 
