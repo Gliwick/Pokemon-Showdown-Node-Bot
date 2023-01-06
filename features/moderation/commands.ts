@@ -34,10 +34,8 @@ export const commands: Record<string, string | Command> = {
 			textHelper = ' (' + tarRoom + ')';
 		}
 		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
-		const moderator = getGroup('moderator');
-		if (!this.isExcepted && !this.botRanked(moderator)) {
-			return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', moderator));
-		}
+		const mod = getGroup('moderator');
+		if (!this.isExcepted && !this.botRanked(mod)) return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', mod));
 
 		const argArray = arg.split(',');
 		if (!argArray.join('').length) return this.reply(this.trad('notarg'));
@@ -91,13 +89,9 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {
-			return this.reply(this.trad('notchat') + textHelper);
-		}
-		const moderator = getGroup('moderator');
-		if (!this.isExcepted && !this.botRanked(moderator)) {
-			return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', moderator));
-		}
+		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
+		const mod = getGroup('moderator');
+		if (!this.isExcepted && !this.botRanked(mod)) return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', mod));
 
 		const argArray = arg.split(',');
 
@@ -141,13 +135,9 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {
-			return this.reply(this.trad('notchat') + textHelper);
-		}
-		const moderator = getGroup('moderator');
-		if (!this.isExcepted && !this.botRanked(moderator)) {
-			return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', moderator));
-		}
+		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
+		const mod = getGroup('moderator');
+		if (!this.isExcepted && !this.botRanked(mod)) return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', mod));
 
 		if (!arg) return this.reply(this.trad('notarg'));
 
@@ -158,13 +148,11 @@ export const commands: Record<string, string | Command> = {
 		}
 
 		if (/^(?:(?:\.+|[a-z0-9]|\\[a-z0-9SbB])(?![a-z0-9\.\\])(?:\*|\{\d+\,(?:\d+)?\}))+$/i.test(arg)) {
-			return this.reply(this.trad('re') + ' /' + arg + '/i ' + this.trad('notadd'));
+			return this.reply(`${this.trad('re')} /${arg}/i ${this.trad('notadd')}`);
 		}
-
 		const regex = '/' + arg + '/i';
-		if (!Features.getFeature(ModerationManager).blacklistRegex(regex, tarRoom)) {
-			return this.reply('/' + regex + '/ ' + this.trad('already'));
-		}
+		if (!Features.getFeature(ModerationManager).blacklistRegex(regex, tarRoom)) return this.reply(`/${regex}/ ${this.trad('already')}`);
+
 		Settings.save();
 		this.sclog('Blacklisted RegExp: ' + regex);
 		if (!Config.moderation.disableModNote) {
@@ -184,24 +172,18 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {
-			return this.reply(this.trad('notchat') + textHelper);
-		}
-		const moderator = getGroup('moderator');
-		if (!this.isExcepted && !this.botRanked(moderator)) {
-			return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', moderator));
-		}
-
+		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
+		const mod = getGroup('moderator');
+		if (!this.isExcepted && !this.botRanked(mod)) return this.reply(this.botName + ' ' + this.trad('notmod').replace('@', mod));
 		if (!arg) return this.reply(this.trad('notarg'));
-
 		arg = '/' + arg.replace(/\\\\/g, '\\') + '/i';
-		if (!Features.getFeature(ModerationManager).unblacklistRegex(arg, tarRoom))
-			return this.reply(this.trad('re') + ' ' + arg + ' ' + this.trad('notpresent'));
+		if (!Features.getFeature(ModerationManager).unblacklistRegex(arg, tarRoom)) {
+			return this.reply(`${this.trad('re')} ${arg} ${this.trad('notpresent')}`);
+		}
+
 		Settings.save();
 		this.sclog('Un-Blacklisted RegExp: ' + arg);
-		if (!Config.moderation.disableModNote) {
-			this.say(tarRoom, '/modnote ' + this.trad('re') + ' ' + arg + ' ' + this.trad('rby') + ' ' + user + '.');
-		}
+		if (!Config.moderation.disableModNote) this.say(tarRoom, `/modnote ${this.trad('re')} ${arg} ${this.trad('rby')} ${user}.`);
 		this.reply(this.trad('re') + ' ' + arg + ' ' + this.trad('r'));
 	},
 
@@ -218,9 +200,7 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {
-			return this.reply(this.trad('notchat') + textHelper);
-		}
+		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 
 		if (arg.length) {
 			if (!Settings.settings.autoban?.[tarRoom]) {
@@ -232,17 +212,9 @@ export const commands: Record<string, string | Command> = {
 				return this.pmReply(this.trad('iu') + ': "' + nick + '".');
 			} else {
 				return this.pmReply(
-					this.trad('u') +
-						' "' +
-						nick +
-						'" ' +
-						this.trad('currently') +
-						' ' +
-						(nick in Settings.settings.autoban[tarRoom] ? '' : this.trad('not') + ' ') +
-						this.trad('b') +
-						' ' +
-						tarRoom +
-						'.'
+					`${this.trad('u')} "${nick}" ${
+						this.trad('currently') + (nick in Settings.settings.autoban[tarRoom] ? '' : this.trad('not') + ' ') + this.trad('b')
+					} ${tarRoom}.`
 				);
 			}
 		}
@@ -318,25 +290,16 @@ export const commands: Record<string, string | Command> = {
 			let level = Features.getFeature(ModerationManager).getZeroTol(user);
 			if (level) level = ztLevels[level]?.name || level;
 			this.reply(
-				this.trad('user') +
-					' "' +
-					user +
-					'" ' +
-					this.trad('is') +
-					' ' +
-					(level ? this.trad('y') : this.trad('n')) +
-					' ' +
-					this.trad('in') +
-					'. ' +
-					(level ? '(' + level + ')' : '')
+				`${this.trad('user')} "${user}" ${this.trad('is')} ${this.trad(level ? 'y' : 'n')} ${this.trad('in')}. ${
+					level ? '(' + level + ')' : ''
+				}`
 			);
 		} else {
 			let text;
 			switch (toId(args[0])) {
 				case 'add':
-					if (args.length < 2) {
-						return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-					}
+					if (args.length < 2) return this.reply(`${this.trad('u1')}: ${this.cmdToken + cmd} ${this.trad('u2')}`);
+
 					const added: string[] = [];
 					const illegal: string[] = [];
 					const alreadyAdded: string[] = [];
@@ -432,18 +395,15 @@ export const commands: Record<string, string | Command> = {
 			textHelper = ' (' + tarRoom + ')';
 		}
 
-		if (tarRoom !== 'global' && (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat'))
-			return this.reply(this.trad('notchat') + textHelper);
+		if (tarRoom !== 'global' && Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		arg = arg.trim().toLowerCase();
 
 		if (!Settings.settings.bannedphrases) Settings.settings.bannedphrases = {};
 		if (!Settings.settings.bannedphrases[tarRoom]) Settings.settings.bannedphrases[tarRoom] = {};
 		const bannedPhrases = Settings.settings.bannedphrases[tarRoom];
-		if (bannedPhrases[arg]) {
-			return this.reply(this.trad('phrase') + ' "' + arg + '" ' + this.trad('already') + textHelper);
-		}
-		bannedPhrases[arg] = true;
+		if (bannedPhrases[arg]) return this.reply(`${this.trad('phrase')} "${arg}" ${this.trad('already') + textHelper}`);
 
+		bannedPhrases[arg] = true;
 		Settings.save();
 		this.sclog();
 		this.reply(this.trad('phrase') + ' "' + arg + '" ' + this.trad('ban') + textHelper);
@@ -470,24 +430,17 @@ export const commands: Record<string, string | Command> = {
 			textHelper = ' (' + tarRoom + ')';
 		}
 
-		if (tarRoom !== 'global' && (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat'))
-			return this.reply(this.trad('notchat') + textHelper);
+		if (tarRoom !== 'global' && Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		arg = arg.trim().toLowerCase();
 
-		if (!Settings.settings.bannedphrases) {
-			return this.reply(this.trad('phrase') + ' "' + arg + '" ' + this.trad('not') + textHelper);
+		if (!Settings.settings.bannedphrases?.[tarRoom]?.[arg]) {
+			return this.reply(`${this.trad('phrase')} "${arg}" ${this.trad('not') + textHelper}`);
 		}
 
-		const bannedPhrases = Settings.settings.bannedphrases[tarRoom];
-		if (!bannedPhrases?.[arg]) {
-			return this.reply(this.trad('phrase') + ' "' + arg + '" ' + this.trad('not') + textHelper);
-		}
-
-		delete bannedPhrases[arg];
-		if (!Object.keys(bannedPhrases).length) {
+		delete Settings.settings.bannedphrases[tarRoom][arg];
+		if (!Object.keys(Settings.settings.bannedphrases[tarRoom]).length) {
 			delete Settings.settings.bannedphrases[tarRoom];
 		}
-
 		Settings.save();
 		this.sclog();
 		this.reply(this.trad('phrase') + ' "' + arg + '" ' + this.trad('unban') + textHelper);
@@ -513,29 +466,19 @@ export const commands: Record<string, string | Command> = {
 			textHelper = ' (' + tarRoom + ')';
 		}
 
-		if (tarRoom !== 'global' && (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat'))
-			return this.reply(this.trad('notchat') + textHelper);
+		if (tarRoom !== 'global' && Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 
 		if (tarRoom === 'global') bannedFrom += this.trad('globally');
 		else bannedFrom += this.trad('in') + ' ' + tarRoom;
 
-		if (!Settings.settings.bannedphrases) return this.reply(this.trad('nowords') + textHelper);
-		const bannedPhrases = Settings.settings.bannedphrases[tarRoom];
+		const bannedPhrases = Settings.settings.bannedphrases?.[tarRoom];
 		if (!bannedPhrases) return this.reply(this.trad('nowords') + textHelper);
 
 		if (arg.length) {
 			return this.reply(
-				this.trad('phrase') +
-					' "' +
-					arg +
-					'" ' +
-					this.trad('curr') +
-					' ' +
-					(bannedPhrases[arg] ? '' : this.trad('not') + ' ') +
-					this.trad('banned') +
-					' ' +
-					bannedFrom +
-					'.'
+				`${this.trad('phrase')} "${arg}" ${this.trad('curr')}${
+					(bannedPhrases[arg] ? '' : this.trad('not') + ' ') + this.trad('banned')
+				} ${bannedFrom}.`
 			);
 		}
 
@@ -572,18 +515,15 @@ export const commands: Record<string, string | Command> = {
 			textHelper = ' (' + tarRoom + ')';
 		}
 
-		if (tarRoom !== 'global' && (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat'))
-			return this.reply(this.trad('notchat') + textHelper);
+		if (tarRoom !== 'global' && Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		arg = arg.trim().toLowerCase();
 
 		if (!Settings.settings.inapropiatephrases) Settings.settings.inapropiatephrases = {};
 		if (!Settings.settings.inapropiatephrases[tarRoom]) Settings.settings.inapropiatephrases[tarRoom] = {};
-		const bannedPhrases = Settings.settings.inapropiatephrases[tarRoom];
-		if (bannedPhrases[arg]) {
-			return this.reply(this.trad('phrase') + ' "' + arg + '" ' + this.trad('already') + textHelper);
-		}
-		bannedPhrases[arg] = true;
+		const inapPhrases = Settings.settings.inapropiatephrases[tarRoom];
+		if (inapPhrases[arg]) return this.reply(`${this.trad('phrase')} "${arg}" ${this.trad('already') + textHelper}`);
 
+		inapPhrases[arg] = true;
 		Settings.save();
 		this.sclog();
 		this.reply(this.trad('phrase') + ' "' + arg + '" ' + this.trad('ban') + textHelper);
@@ -610,23 +550,17 @@ export const commands: Record<string, string | Command> = {
 			textHelper = ' (' + tarRoom + ')';
 		}
 
-		if (tarRoom !== 'global' && (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat'))
-			return this.reply(this.trad('notchat') + textHelper);
+		if (tarRoom !== 'global' && Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		arg = arg.trim().toLowerCase();
 
-		if (!Settings.settings.inapropiatephrases) {
-			return this.reply(this.trad('phrase') + ' "' + arg + '" ' + this.trad('not') + textHelper);
+		if (!Settings.settings.inapropiatephrases?.[tarRoom]?.[arg]) {
+			return this.reply(`${this.trad('phrase')} "${arg}" ${this.trad('not') + textHelper}`);
 		}
 
-		const bannedPhrases = Settings.settings.inapropiatephrases[tarRoom];
-		if (!bannedPhrases?.[arg]) {
-			return this.reply(this.trad('phrase') + ' "' + arg + '" ' + this.trad('not') + textHelper);
-		}
-		delete bannedPhrases[arg];
-		if (!Object.keys(bannedPhrases).length) {
+		delete Settings.settings.inapropiatephrases[tarRoom][arg];
+		if (!Object.keys(Settings.settings.inapropiatephrases[tarRoom]).length) {
 			delete Settings.settings.inapropiatephrases[tarRoom];
 		}
-
 		Settings.save();
 		this.sclog();
 		this.reply(this.trad('phrase') + ' "' + arg + '" ' + this.trad('unban') + textHelper);
@@ -652,33 +586,23 @@ export const commands: Record<string, string | Command> = {
 			textHelper = ' (' + tarRoom + ')';
 		}
 
-		if (tarRoom !== 'global' && (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat'))
-			return this.reply(this.trad('notchat') + textHelper);
+		if (tarRoom !== 'global' && Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 
 		if (tarRoom === 'global') bannedFrom += this.trad('globally');
 		else bannedFrom += this.trad('in') + ' ' + tarRoom;
 
-		if (!Settings.settings.inapropiatephrases) return this.reply(this.trad('nowords') + textHelper);
-		const bannedPhrases = Settings.settings.inapropiatephrases[tarRoom];
-		if (!bannedPhrases) return this.reply(this.trad('nowords') + textHelper);
+		const inapPhrases = Settings.settings.inapropiatephrases?.[tarRoom];
+		if (!inapPhrases) return this.reply(this.trad('nowords') + textHelper);
 
 		if (arg.length) {
 			return this.reply(
-				this.trad('phrase') +
-					' "' +
-					arg +
-					'" ' +
-					this.trad('curr') +
-					' ' +
-					(bannedPhrases[arg] || this.trad('not') + ' ') +
-					this.trad('banned') +
-					' ' +
-					bannedFrom +
-					'.'
+				`${this.trad('phrase')} "${arg}" ${this.trad('curr')} ${
+					(inapPhrases[arg] || this.trad('not') + ' ') + this.trad('banned')
+				} ${bannedFrom}.`
 			);
 		}
 
-		const banList = Object.keys(bannedPhrases);
+		const banList = Object.keys(inapPhrases);
 		if (!banList.length) return this.reply(this.trad('nowords') + textHelper);
 
 		uploadToHastebin(
@@ -712,12 +636,11 @@ export const commands: Record<string, string | Command> = {
 		if (targetObj && this.isExcepted) {
 			arg = targetObj.arg;
 			tarRoom = targetObj.room;
-			textHelper = ' (' + tarRoom + ')';
+			if (tarRoom !== 'global') textHelper = ' (' + tarRoom + ')';
 		}
-		if (tarRoom !== 'global' && (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat'))
-			return this.reply(this.trad('notchat') + textHelper);
+		if (tarRoom !== 'global' && Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 
-		if (Bot.rooms[tarRoom] && Bot.rooms[tarRoom].type === 'chat' && ['on', 'enable'].includes(toId(arg))) {
+		if (Bot.rooms[tarRoom]?.type === 'chat' && ['on', 'enable'].includes(toId(arg))) {
 			if (!this.isRanked(getGroup('roomowner'))) return false;
 			if (!Settings.settings.jpdisable) Settings.settings.jpdisable = {};
 			if (!Settings.settings.jpdisable[tarRoom]) return this.reply(this.trad('ae') + textHelper);
@@ -757,47 +680,35 @@ export const commands: Record<string, string | Command> = {
 			case 'add':
 			case 'change':
 				if (!arg?.length) return false;
-				if (args.length < 3) {
-					return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-				}
+				if (args.length < 3) return this.reply(`${this.trad('u1')}: ${this.cmdToken + cmd} ${this.trad('u2')}`);
+
 				if (!Settings.settings.joinphrases[tarRoom]) Settings.settings.joinphrases[tarRoom] = {};
 				Settings.settings.joinphrases[tarRoom][user] = stripCommands(arg);
 				Settings.save();
 				this.sclog();
 				this.reply(
-					this.trad('jpfor') +
-						' ' +
-						user +
-						' ' +
-						this.trad('modified') +
-						' ' +
-						(tarRoom === 'global' ? this.trad('globally') : this.trad('forthis') + textHelper)
+					`${this.trad('jpfor')} ${user} ${this.trad('modified')} ${
+						this.trad(tarRoom === 'global' ? 'globally' : 'forthis') + textHelper
+					}`
 				);
 				break;
 			case 'delete':
 				if (!Settings.settings.joinphrases[tarRoom]) Settings.settings.joinphrases[tarRoom] = {};
 				if (!Settings.settings.joinphrases[tarRoom][user]) {
-					return this.reply(
-						this.trad('jpfor') +
-							' ' +
-							user +
-							' ' +
-							this.trad('not') +
-							' ' +
-							(tarRoom === 'global' ? this.trad('globally') : this.trad('forthis') + textHelper)
+					this.reply(
+						`${this.trad('jpfor')} ${user} ${this.trad('not')} ${
+							this.trad(tarRoom === 'global' ? 'globally' : 'forthis') + textHelper
+						}`
 					);
 				}
+
 				delete Settings.settings.joinphrases[tarRoom][user];
 				Settings.save();
 				this.sclog();
 				this.reply(
-					this.trad('jpfor') +
-						' ' +
-						user +
-						' ' +
-						this.trad('del') +
-						' ' +
-						(tarRoom === 'global' ? this.trad('globally') : this.trad('forthis') + textHelper)
+					`${this.trad('jpfor')} ${user} ${this.trad('del')} ${
+						this.trad(tarRoom === 'global' ? 'globally' : 'forthis') + textHelper
+					}`
 				);
 				break;
 			default:
@@ -825,8 +736,7 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (tarRoom !== 'global' && (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat'))
-			return this.reply(this.trad('notchat') + textHelper);
+		if (tarRoom !== 'global' && Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 
 		arg = toId(arg);
 
@@ -840,21 +750,12 @@ export const commands: Record<string, string | Command> = {
 		const list = Object.entries(Settings.settings.joinphrases[tarRoom]).map(([i, joinPhrase]) => i + ' => ' + joinPhrase);
 		if (!list.length) return this.reply(this.trad('empty') + textHelper);
 		uploadToHastebin(
-			this.trad('jp') +
-				' ' +
-				(tarRoom === 'global' ? this.trad('globally') : this.trad('in') + ' ' + tarRoom) +
-				':\n\n' +
-				list.join('\n'),
+			`${this.trad('jp')} ${tarRoom === 'global' ? this.trad('globally') : this.trad('in') + ' ' + tarRoom}:\n\n${list.join('\n')}`,
 			function (this: Context, r: boolean, link: string): void {
-				if (r)
-					return this.pmReply(
-						this.trad('jp') +
-							' ' +
-							(tarRoom === 'global' ? this.trad('globally') : this.trad('in') + ' ' + tarRoom) +
-							': ' +
-							link
-					);
-				else this.pmReply(this.trad('err'));
+				if (!r) return this.pmReply(this.trad('err'));
+				this.pmReply(
+					`${this.trad('jp')}${tarRoom === 'global' ? this.trad('globally') : this.trad('in') + ' ' + tarRoom}: ${link}`
+				);
 			}.bind(this)
 		);
 	},
@@ -873,7 +774,7 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
+		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		if (!arg) {
 			const exceptionSettings = Settings.settings.modexception || {};
 			const ex = exceptionSettings[tarRoom] || Config.moderation.modException;
@@ -887,14 +788,12 @@ export const commands: Record<string, string | Command> = {
 			Settings.settings.modexception[tarRoom] = rank;
 			Settings.save();
 			this.sclog();
-			return this.reply(
-				this.trad('modex-set1') + ' ' + this.trad('rank') + ' **' + rank + '** ' + this.trad('modex-set2') + textHelper
-			);
+			return this.reply(`${this.trad('modex-set1')} ${this.trad('rank')} **${rank}** ${this.trad('modex-set2') + textHelper}`);
 		} else if (toId(rank) === 'all') {
 			Settings.settings.modexception[tarRoom] = ' ';
 			Settings.save();
 			this.sclog();
-			return this.reply(this.trad('modex-set1') + ' **' + this.trad('all') + '** ' + this.trad('modex-set2') + textHelper);
+			return this.reply(`${this.trad('modex-set1')} **${this.trad('all')}** ${this.trad('modex-set2') + textHelper}`);
 		} else {
 			return this.reply(this.trad('not1') + ' ' + rank + ' ' + this.trad('not2'));
 		}
@@ -911,17 +810,13 @@ export const commands: Record<string, string | Command> = {
 			if (!this.isRanked(getGroup('admin'))) return false;
 			tarRoom = toRoomid(args[0]);
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') {
-			return this.reply(this.trad('notchat') + ' (' + tarRoom + ')');
-		}
+		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(`${this.trad('notchat')} (${tarRoom})`);
 
 		if (args.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
 		const [modArg, set] = (args.length < 3 ? args.slice(0, 2) : args.slice(1, 3)).map(toId);
-		if (set !== 'on' && set !== 'off') {
-			return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-		}
+		if (set !== 'on' && set !== 'off') return this.reply(`${this.trad('u1')}: ${this.cmdToken + cmd} ${this.trad('u2')}`);
 		if (!(modArg in Config.moderation.modDefault)) {
-			return this.reply(this.trad('valid') + ': ' + Object.keys(Config.moderation.modDefault).sort().join(', '));
+			return this.reply(`${this.trad('valid')}: ${Object.keys(Config.moderation.modDefault).sort().join(', ')}`);
 		}
 
 		if (!Settings.settings.modding) Settings.settings.modding = {};
@@ -932,22 +827,22 @@ export const commands: Record<string, string | Command> = {
 		const mod = modArg as keyof ConfigType['moderation']['modDefault'];
 		if (set === 'on') {
 			if (Settings.settings.modding[tarRoom][mod] === 1) {
-				this.reply(this.trad('mod') + ' **' + mod + '** ' + this.trad('ae') + ' ' + tarRoom);
-			} else {
-				Settings.settings.modding[tarRoom][mod] = 1;
-				Settings.save();
-				this.sclog();
-				this.reply(this.trad('mod') + ' **' + mod + '** ' + this.trad('e') + ' ' + tarRoom);
+				return this.reply(`${this.trad('mod')} **${mod}** ${this.trad('ae')} ${tarRoom}`);
 			}
+
+			Settings.settings.modding[tarRoom][mod] = 1;
+			Settings.save();
+			this.sclog();
+			this.reply(this.trad('mod') + ' **' + mod + '** ' + this.trad('e') + ' ' + tarRoom);
 		} else {
 			if (Settings.settings.modding[tarRoom][mod] === 0) {
-				this.reply(this.trad('mod') + ' **' + mod + '** ' + this.trad('ad') + ' ' + tarRoom);
-			} else {
-				Settings.settings.modding[tarRoom][mod] = 0;
-				Settings.save();
-				this.sclog();
-				this.reply(this.trad('mod') + ' **' + mod + '** ' + this.trad('d') + ' ' + tarRoom);
+				return this.reply(`${this.trad('mod')} **${mod}** ${this.trad('ae')} ${tarRoom}`);
 			}
+
+			Settings.settings.modding[tarRoom][mod] = 0;
+			Settings.save();
+			this.sclog();
+			this.reply(this.trad('mod') + ' **' + mod + '** ' + this.trad('d') + ' ' + tarRoom);
 		}
 	},
 };
