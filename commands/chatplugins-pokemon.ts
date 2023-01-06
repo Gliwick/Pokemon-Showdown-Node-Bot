@@ -25,15 +25,12 @@ interface SearchResult {
 
 function searchInLanguage(lang: string, word: string, keys: string[]): SearchResult[] | null {
 	const dataLang = Languages.translations[lang]?.globals;
-	let maxLevenstein = 3;
+	if (!dataLang) return null;
 	if (word.length <= 1) {
 		return null;
-	} else if (word.length <= 4) {
-		maxLevenstein = 1;
-	} else if (word.length <= 6) {
-		maxLevenstein = 2;
 	}
-	if (!dataLang) return null;
+
+	const maxLevenstein = Math.min(Math.floor((word.length - 1) / 2), 3) || 1;
 	const results: SearchResult[] = keys
 		.flatMap((key) => Object.entries(dataLang[key]).map((entry) => [key].concat(entry)))
 		.filter(([, , title]) => !!title)
@@ -43,7 +40,6 @@ function searchInLanguage(lang: string, word: string, keys: string[]): SearchRes
 		})
 		.filter((result) => result.levenstein <= maxLevenstein);
 	const minLevenstein = Math.min(...results.map((result) => result.levenstein));
-	if (minLevenstein >= 10) return [];
 	return results.filter((result) => result.levenstein === minLevenstein);
 }
 
