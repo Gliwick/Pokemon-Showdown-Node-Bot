@@ -24,8 +24,9 @@ export const commands: Record<string, string | Command> = {
 				this.reply('Room auth from room __' + tarRoom + '__ has been reloaded');
 				break;
 			case 'getroomauth':
-				if (!autoInvite.roomAuth[tarRoom])
-					return this.reply('Room auth for room __' + tarRoom + '__ is empty. Try ' + this.cmdToken + 'reloadroomauth');
+				if (!autoInvite.roomAuth[tarRoom]) {
+					return this.reply(`Room auth for room __${tarRoom}__ is empty. Try ${this.cmdToken}reloadroomauth`);
+				}
 				uploadToHastebin(
 					'Room auth (' + tarRoom + ')\n\n' + JSON.stringify(autoInvite.roomAuth[tarRoom]),
 					function (this: Context, r: boolean, link: any): void {
@@ -35,15 +36,14 @@ export const commands: Record<string, string | Command> = {
 				);
 				break;
 			case 'useroomauth':
-				if (!autoInvite.roomAuth[tarRoom])
-					return this.reply('Room auth for room __' + tarRoom + '__ is empty. Try ' + this.cmdToken + 'reloadroomauth');
+				if (!autoInvite.roomAuth[tarRoom]) {
+					return this.reply(`Room auth for room __${tarRoom}__ is empty. Try ${this.cmdToken}reloadroomauth`);
+				}
 				Object.entries(autoInvite.roomAuth[tarRoom])
 					.filter(([i]) => !equalOrHigherRank(i, '&')) //Global auth and excepted users
 					.forEach(([i, auth]) => (Config.exceptions[i] = auth));
 				monitor('Auth exceptions changed temporarily\n' + JSON.stringify(Config.exceptions));
-				this.reply(
-					'Using room auth of room __' + tarRoom + '__ as global auth. Use ' + this.cmdToken + 'reload config to revert it.'
-				);
+				this.reply(`Using room auth of room __${tarRoom}__ as global auth. Use ${this.cmdToken}reload config to revert it.`);
 				break;
 		}
 	},

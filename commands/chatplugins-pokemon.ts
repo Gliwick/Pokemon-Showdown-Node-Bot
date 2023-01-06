@@ -36,10 +36,10 @@ function searchInLanguage(lang: string, word: string, keys: string[]): SearchRes
 	if (!dataLang) return null;
 	const results: SearchResult[] = keys
 		.flatMap((key) => Object.entries(dataLang[key]).map((entry) => [key].concat(entry)))
-		.filter(([, , translation]) => !!translation)
-		.map(([key, k, translation]) => {
-			const levenstein = levenshtein(word, normalize(translation), maxLevenstein);
-			return { type: key, id: k, title: translation, levenstein };
+		.filter(([, , title]) => !!title)
+		.map(([type, id, title]) => {
+			const levenstein = levenshtein(word, normalize(title), maxLevenstein);
+			return { type, id, title, levenstein };
 		})
 		.filter((result) => result.levenstein <= maxLevenstein);
 	const minLevenstein = Math.min(...results.map((result) => result.levenstein));
@@ -115,16 +115,17 @@ export const commands: Record<string, string | Command> = {
 		}
 		if (LangAliases[from]) from = LangAliases[from];
 		if (LangAliases[to]) to = LangAliases[to];
-		if (!from || !to || from === to || !word)
-			return this.restrictReply(this.trad('u1') + ': ' + this.cmdToken + this.cmd + ' ' + this.trad('u2'), 'pokemon');
+		if (!from || !to || from === to || !word) {
+			return this.restrictReply(`${this.trad('u1')}: ${this.cmdToken + this.cmd} ${this.trad('u2')}`, 'pokemon');
+		}
 		const validlangs = Object.keys(I18n.translations);
-		if (validlangs.indexOf(from) < 0)
-			return this.restrictReply(
-				this.trad('lnot1') + ' "' + from + '" ' + this.trad('lnot2') + ': ' + validlangs.join(', '),
-				'pokemon'
-			);
-		if (validlangs.indexOf(to) < 0)
-			return this.restrictReply(this.trad('lnot1') + ' "' + to + '" ' + this.trad('lnot2') + ': ' + validlangs.join(', '), 'pokemon');
+		if (!validlangs.includes(from)) {
+			return this.restrictReply(`${this.trad('lnot1')} "${from}" ${this.trad('lnot2')}: ${validlangs.join(', ')}`, 'pokemon');
+		}
+		if (!validlangs.includes(to)) {
+			return this.restrictReply(`${this.trad('lnot1')} "${to}" ${this.trad('lnot2')}: ${validlangs.join(', ')}`, 'pokemon');
+		}
+
 		if (from === 'english' || (to === 'english' && bidirectional)) {
 			try {
 				const aliases = DataDownloader.getAliases();
@@ -133,11 +134,11 @@ export const commands: Record<string, string | Command> = {
 				debug('Could not fetch aliases. Cmd: ' + this.cmd + ' ' + arg + ' | Room: ' + this.room + ' | By: ' + this.by);
 			}
 		}
-		//translation itself
+		// translation itself
 		let translations = getTranslations(from, to, word);
 		if (bidirectional) {
 			const translationsInv = getTranslations(to, from, word);
-			if (translationsInv && translationsInv.length) {
+			if (translationsInv?.length) {
 				if (!translations?.length || translationsInv[0].levenstein < translations[0].levenstein) {
 					translations = translationsInv;
 					const temp = to;
@@ -147,24 +148,17 @@ export const commands: Record<string, string | Command> = {
 			}
 		}
 		if (!translations?.length) {
-			return this.restrictReply(
-				this.trad('not1') + ' "' + word + '" ' + this.trad('not2') + ' (' + from + ' - ' + to + ')',
-				'pokemon'
-			);
+			return this.restrictReply(`${this.trad('not1')} "${word}" ${this.trad('not2')} (${from} - ${to})`, 'pokemon');
 		}
 
-		let text = '';
-		if (normalize(translations[0].from) !== normalize(word)) text += this.trad('not1') + ' "' + word + '" ' + this.trad('not3') + '. ';
-		text += this.trad('tra') + ' **' + toName(translations[0].from) + '** (' + from + ' - ' + to + '): ';
-		for (let i = 0; i < translations.length; i++) {
-			if (normalize(translations[0].from) !== normalize(translations[i].from)) continue;
-			if (typeof translations[i].to === 'string') {
-				text += '**' + toName(translations[i].to) + '** (' + (this.trad(translations[i].type) || translations[i].type) + ')';
-			} else {
-				text += '**' + toName(translations[i].to[0]) + '** (' + (this.trad(translations[i].type) || translations[i].type) + ')';
-			}
-			if (i < translations.length - 1) text += ', ';
-		}
+		const translationsFrom = translations[0].from;
+		const text =
+			(normalize(translationsFrom) !== normalize(word) ? `${this.trad('not1')} "${word}" ${this.trad('not3')}. ` : '') +
+			`${this.trad('tra')} **${toName(translationsFrom)}** (${from} - ${to}): ` +
+			translations
+				.filter((t) => normalize(translationsFrom) === normalize(t.from))
+				.map((t) => `**${toName(t.to)}** (${this.trad(t.type) || t.type})`)
+				.join(', ');
 		this.restrictReply(text, 'pokemon');
 	},
 

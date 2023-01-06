@@ -249,12 +249,10 @@ export const commands: Record<string, string | Command> = {
 
 		const { autoban, regexautoban } = Settings.settings;
 		const bans = { autoban: autoban || {}, regexautoban: regexautoban || {} };
-		const nBans = Object.values(bans)
-			.map((settings) => Object.keys(settings).length)
-			.reduce((acc, n) => acc + n, 0);
+		const nBans = Object.keys(bans.autoban).length + Object.keys(bans.regexautoban).length;
 		const text = Object.entries(bans)
 			.flatMap(([setting, settings]) => [
-				this.trad(setting) + ' ' + tarRoom + ':\n\n',
+				this.trad(setting) + ' ' + tarRoom + ':\n',
 				...Object.keys((settings as Record<string, Record<string, boolean>>)[tarRoom]),
 			])
 			.join('\n');

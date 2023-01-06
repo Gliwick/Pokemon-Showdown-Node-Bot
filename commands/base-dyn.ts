@@ -121,7 +121,7 @@ export const commands: Record<string, string | Command> = {
 			':\n\n' +
 			Object.values(CommandParser.dynCommands)
 				.map(([key, dynCommand]) => {
-					dynCommand.startsWith('/ref') ? `${key} ~ ${toId(dynCommand.substr('/ref'.length))}` : `${key} -> "${dynCommand}"`;
+					dynCommand.startsWith('/ref') ? `${key} ~ ${toId(dynCommand.substring('/ref'.length))}` : `${key} -> "${dynCommand}"`;
 				})
 				.join('\n');
 		uploadToHastebin(

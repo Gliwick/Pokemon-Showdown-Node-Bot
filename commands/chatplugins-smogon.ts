@@ -86,11 +86,9 @@ function getUsage(this: Context, arg: string, link?: string): void {
 	if (this.cmd === 'usagelink' || this.cmd === 'usagedatalink') {
 		const tFormat = parseAliases(arg);
 		return this.restrictReply(
-			this.trad('stats') +
-				': ' +
-				link +
+			`${this.trad('stats')}: ${link}` +
 				(this.cmd === 'usagedatalink' ? 'moveset/' : '') +
-				(tFormat && tFormat + '-' + (isTopTier(tFormat) ? '1695' : '1630') + '.txt'),
+				(tFormat && `${tFormat}-${isTopTier(tFormat) ? '1695' : '1630'}.txt`),
 			'usage'
 		);
 	}
@@ -111,23 +109,10 @@ function getUsage(this: Context, arg: string, link?: string): void {
 	}
 	if (parseInt(poke)) searchIndex = parseInt(poke);
 	if (this.cmd === 'usagedata') {
-		if (args.length < 2)
-			return this.restrictReply(
-				this.trad('usage') +
-					': ' +
-					this.cmdToken +
-					this.cmd +
-					' [pokemon], [moves / items / abilities / spreads / teammates], (tier)',
-				'usage'
-			);
 		dataType = toId(args[1]);
-		if (!['moves', 'items', 'abilities', 'teammates', 'spreads'].includes(dataType)) {
+		if (args.length < 2 || !['moves', 'items', 'abilities', 'teammates', 'spreads'].includes(dataType)) {
 			return this.restrictReply(
-				this.trad('usage') +
-					': ' +
-					this.cmdToken +
-					this.cmd +
-					' [pokemon], [moves / items / abilities / spreads / teammates], (tier)',
+				`${this.trad('usage')}: ${this.cmdToken + this.cmd} [pokemon], [moves / items / abilities / spreads / teammates], (tier)`,
 				'usage'
 			);
 		}
@@ -136,58 +121,37 @@ function getUsage(this: Context, arg: string, link?: string): void {
 			if (!Formats[tier] && !Formats[tier + 'suspecttest'])
 				return this.restrictReply(this.trad('tiererr1') + ' "' + tier + '" ' + this.trad('tiererr2'), 'usage');
 		}
-		if (isTopTier(tier)) ladderType = 1695; //OU representative usage stats
-		if (this.getModule(Downloader).getDownload(link + 'moveset/' + tier + '-' + ladderType + '.txt')) {
-			return this.restrictReply(this.trad('busy'), 'usage');
-		}
+		if (isTopTier(tier)) ladderType = 1695; // OU representative usage stats
+		const url = `${link}moveset/${tier}-${ladderType}.txt`;
+		if (this.getModule(Downloader).getDownload(url)) return this.restrictReply(this.trad('busy'), 'usage');
+
 		Settings.httpGetAndCache(
-			link + 'moveset/' + tier + '-' + ladderType + '.txt',
+			url,
 			function (this: Context, data: string | null, err: NodeJS.ErrnoException | null): void {
-				this.getModule(Downloader).markDownload(link + 'moveset/' + tier + '-' + ladderType + '.txt', false);
-				if (err || !data) {
-					return this.restrictReply(this.trad('err') + ' ' + link + 'moveset/' + tier + '-' + ladderType + '.txt', 'usage');
+				this.getModule(Downloader).markDownload(url, false);
+				if (err || !data) return this.restrictReply(this.trad('err') + ' ' + url, 'usage');
+				if (!data.includes('+----------------------------------------+')) {
+					return this.restrictReply(`${this.trad('tiererr1')} "${tierName(tier)}" ${this.trad('tiererr3')}`, 'usage');
 				}
-				if (data.indexOf('+----------------------------------------+') === -1)
-					return this.restrictReply(this.trad('tiererr1') + ' "' + tierName(tier) + '" ' + this.trad('tiererr3'), 'usage');
 				const pokes = data.split(' +----------------------------------------+ \n +----------------------------------------+ ');
 				const pokeData = pokes.map((p) => p.split('\n')).filter((p) => toId(p[1]) === poke)[0];
-				const chosen = !!pokeData;
-				if (!chosen)
+				if (!pokeData) {
 					return this.restrictReply(
-						this.trad('pokeerr1') +
-							' "' +
-							poke +
-							'" ' +
-							this.trad('pokeerr2') +
-							' ' +
-							tierName(tier) +
-							' ' +
-							this.trad('pokeerr3'),
+						`${this.trad('pokeerr1')} "${poke}" ${this.trad('pokeerr2')} ${tierName(tier)} ${this.trad('pokeerr3')}`,
 						'usage'
 					);
+				}
+
 				const result: string[] = [];
 				let resultName = '';
 				const pokeName = toName(pokeData[1].split('|')[1]);
 				for (let i = 0; i < pokeData.length; i++) {
 					if (pokeData[i + 1] && pokeData[i].trim() === '+----------------------------------------+') {
-						switch (toId(pokeData[i + 1])) {
-							case 'abilities':
-								if (dataType !== 'abilities') continue;
-								break;
-							case 'items':
-								if (dataType !== 'items') continue;
-								break;
-							case 'moves':
-								if (dataType !== 'moves') continue;
-								break;
-							case 'spreads':
-								if (dataType !== 'spreads') continue;
-								break;
-							case 'teammates':
-								if (dataType !== 'teammates') continue;
-								break;
-							default:
-								continue;
+						const pokeDataType = toId(pokeData[i + 1]);
+						if (['abilities', 'items', 'moves', 'spreads', 'teammates'].includes(pokeDataType)) {
+							if (dataType !== pokeDataType) continue;
+						} else {
+							continue;
 						}
 						resultName = this.trad(dataType);
 						i = i + 2;
@@ -204,60 +168,49 @@ function getUsage(this: Context, arg: string, link?: string): void {
 						break;
 					}
 				}
-				if (!result.length)
+				if (!result.length) {
 					return this.restrictReply(
-						this.trad('notfound') +
-							' ' +
-							this.trad('usagedata1').replace('#NAME', resultName) +
-							pokeName +
-							this.trad('usagedata2').replace('#NAME', resultName) +
-							' ' +
-							this.trad('in') +
-							' ' +
-							tierName(tier),
+						`${this.trad('notfound')} ${this.trad('usagedata1') + pokeName + this.trad('usagedata2')} ${this.trad(
+							'in'
+						)} ${tierName(tier)}`.replace('#NAME', resultName),
 						'usage'
 					);
+				}
 				const cmds = joinWithLengthLimit(
 					result,
-					'**' +
-						this.trad('usagedata1').replace('#NAME', resultName) +
-						pokeName +
-						this.trad('usagedata2').replace('#NAME', resultName) +
-						' ' +
-						this.trad('in') +
-						' ' +
-						tierName(tier) +
-						'**: '
+					`**${this.trad('usagedata1') + pokeName + this.trad('usagedata2')} ${this.trad('in')} ${tierName(tier)}**: `.replace(
+						'#NAME',
+						resultName
+					)
 				);
 				this.restrictReply(cmds, 'usage');
 			}.bind(this),
 			function (this: Context): void {
-				this.getModule(Downloader).markDownload(link + 'moveset/' + tier + '-' + ladderType + '.txt', true);
+				this.getModule(Downloader).markDownload(url, true);
 			}.bind(this)
 		);
 	} else {
-		if (args.length < 1)
-			return this.restrictReply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [pokemon], (tier)', 'usage');
+		if (args.length < 1) return this.restrictReply(`${this.trad('usage')}: ${this.cmdToken + this.cmd} [pokemon], (tier)`, 'usage');
 		if (args[1]) {
 			tier = parseAliases(args[1]);
-			if (!Formats[tier] && !Formats[tier + 'suspecttest'])
-				return this.restrictReply(this.trad('tiererr1') + ' "' + tier + '" ' + this.trad('tiererr2'), 'usage');
+			if (!Formats[tier] && !Formats[tier + 'suspecttest']) {
+				return this.restrictReply(`${this.trad('tiererr1')} "${tier}" ${this.trad('tiererr2')}`, 'usage');
+			}
 		}
-		if (isTopTier(tier)) ladderType = 1695; //OU representative usage stats
-		const url = link + tier + '-' + ladderType + '.txt';
-		if (this.getModule(Downloader).getDownload(url)) {
-			return this.restrictReply(this.trad('busy'), 'usage');
-		}
+		if (isTopTier(tier)) ladderType = 1695; // OU representative usage stats
+		const url = `${link + tier}-${ladderType}.txt`;
+		if (this.getModule(Downloader).getDownload(url)) return this.restrictReply(this.trad('busy'), 'usage');
+
 		Settings.httpGetAndCache(
 			url,
 			function (this: Context, data: string | null, err: NodeJS.ErrnoException | null): void {
 				this.getModule(Downloader).markDownload(url, false);
-				if (err || !data) {
-					return this.restrictReply(this.trad('err') + ' ' + link + tier + '-' + ladderType + '.txt', 'usage');
-				}
+				if (err || !data) return this.restrictReply(this.trad('err') + ' ' + url, 'usage');
 				const lines = data.split('\n');
-				if (lines[0].indexOf('Total battles:') === -1)
-					return this.restrictReply(this.trad('tiererr1') + ' "' + tierName(tier) + '" ' + this.trad('tiererr3'), 'usage');
+				if (!lines[0].includes('Total battles:')) {
+					return this.restrictReply(`${this.trad('tiererr1')} "${tierName(tier)}" ${this.trad('tiererr3')}`, 'usage');
+				}
+
 				const dataRes = { name: poke, pos: -1, usage: '', raw: '' };
 				let line;
 				for (let i = 5; i < lines.length; i++) {
@@ -271,41 +224,22 @@ function getUsage(this: Context, arg: string, link?: string): void {
 						break;
 					}
 				}
-				if (!dataRes.pos || dataRes.pos < 1)
+				if (!dataRes.pos || dataRes.pos < 1) {
 					return this.restrictReply(
-						this.trad('pokeerr1') +
-							' "' +
-							poke +
-							'" ' +
-							this.trad('pokeerr2') +
-							' ' +
-							tierName(tier) +
-							' ' +
-							this.trad('pokeerr4'),
+						`${this.trad('pokeerr1')} "${poke}" ${this.trad('pokeerr2')} ${tierName(tier)} ${this.trad('pokeerr4')}`,
 						'usage'
 					);
+				}
+				const { name, pos, usage, raw } = dataRes;
 				this.restrictReply(
-					'**' +
-						dataRes.name +
-						'**, #' +
-						dataRes.pos +
-						' ' +
-						this.trad('in') +
-						' **' +
-						tierName(tier) +
-						'**. ' +
-						this.trad('pokeusage') +
-						': ' +
-						dataRes.usage +
-						', ' +
-						this.trad('pokeraw') +
-						': ' +
-						dataRes.raw,
+					`**${name}**, #${pos} ${this.trad('in')} **${tierName(tier)}**. ${this.trad('pokeusage')}: ${usage}, ${this.trad(
+						'pokeraw'
+					)}: ${raw}`,
 					'usage'
 				);
 			}.bind(this),
 			function (this: Context): void {
-				this.getModule(Downloader).markDownload(link + tier + '-' + ladderType + '.txt', true);
+				this.getModule(Downloader).markDownload(url, true);
 			}.bind(this)
 		);
 	}
@@ -328,8 +262,10 @@ export const commands: Record<string, string | Command> = {
 		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		const tier = toId(arg);
 		if (!tier) return this.reply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [tier]');
-		if (!Formats[tier] && !Formats[tier + 'suspecttest'])
-			return this.restrictReply(this.trad('tiererr1') + ' "' + tier + '" ' + this.trad('tiererr2'), 'info');
+		if (!Formats[tier] && !Formats[tier + 'suspecttest']) {
+			return this.restrictReply(`${this.trad('tiererr1')} "${tier}" ${this.trad('tiererr2')}`, 'info');
+		}
+
 		if (!Settings.settings.deftier) Settings.settings.deftier = {};
 		Settings.settings.deftier[tarRoom] = tier;
 		Settings.save();
@@ -344,22 +280,20 @@ export const commands: Record<string, string | Command> = {
 		if (this.cmd === 'delsuspect') {
 			if (!arg) return this.reply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [tier]');
 			arg = parseAliases(arg);
-			if (!Settings.settings.suspect[arg]) {
-				return this.reply(this.trad('d1') + ' "' + arg + '" ' + this.trad('notfound'));
-			}
+			if (!Settings.settings.suspect[arg]) return this.reply(`${this.trad('d1')} "${arg}" ${this.trad('notfound')}`);
+
 			delete Settings.settings.suspect[arg];
 			Settings.save();
 			this.sclog();
 			this.reply(this.trad('d1') + ' "' + arg + ' ' + this.trad('d2'));
 		} else {
 			const args = arg.split(',');
-			if (args.length < 3) {
-				return this.reply(this.trad('usage') + ': ' + this.cmdToken + this.cmd + ' [tier], [pokemon], [link]');
-			}
+			if (args.length < 3) return this.reply(`${this.trad('usage')}: ${this.cmdToken + this.cmd} [tier], [pokemon], [link]`);
 			const tier = parseAliases(args.shift());
 			if (!Formats[tier] && !Formats[tier + 'suspecttest']) {
-				return this.reply(this.trad('tier') + ' "' + tier + '" ' + this.trad('notfound'));
+				return this.reply(`${this.trad('tier')} "${tier}" ${this.trad('notfound')}`);
 			}
+
 			let link = args.pop();
 			if (link) link = link.trim();
 			const poke = args.join(',');
@@ -372,30 +306,19 @@ export const commands: Record<string, string | Command> = {
 
 	suspecttest: 'suspect',
 	suspect: function (arg) {
-		let tier = getDefaultTier(this.room);
-		if (arg) {
-			tier = parseAliases(arg);
-		}
-		if (Settings.settings.suspect && Settings.settings.suspect[tier]) {
-			//Suspect
+		const tier = arg ? parseAliases(arg) : getDefaultTier(this.room);
+		const suspect = Settings.settings.suspect?.[tier];
+		if (suspect) {
+			// Suspect
 			this.restrictReply(
-				'Suspect test ' +
-					this.trad('in') +
-					' **' +
-					tierName(tier) +
-					'**: **' +
-					toName(Settings.settings.suspect[tier].poke) +
-					'**. ' +
-					Settings.settings.suspect[tier].link,
+				`Suspect test ${this.trad('in')} **${tierName(tier)}**: **${toName(suspect.poke)}**. ${suspect.link}`,
 				'info'
 			);
 		} else if (Formats[tier] || Formats[tier + 'suspecttest']) {
-			//No suspect
+			// No suspect
 			this.restrictReply(
-				this.trad('nosuspect') +
-					' ' +
-					tierName(tier) +
-					(this.isRanked('admin') ? '. ' + this.trad('aux1') + ' ``' + this.cmdToken + 'setsuspect`` ' + this.trad('aux2') : ''),
+				`${this.trad('nosuspect')} ${tierName(tier)}` +
+					(this.isRanked('admin') ? `. ${this.trad('aux1')} \`\`${this.cmdToken}setsuspect\`\` ${this.trad('aux2')}` : ''),
 				'info'
 			);
 		} else {
@@ -410,7 +333,7 @@ export const commands: Record<string, string | Command> = {
 	usage: function (arg) {
 		if (!arg) {
 			this.restrictReply(
-				this.trad(this.cmd.substring('usage'.length) || 'stats') + ': ' + (this.cmd === 'usagedata' ? 'moveset/' : ''),
+				`${this.trad(this.cmd.substring('usage'.length) || 'stats')}: ${this.cmd === 'usagedata' ? 'moveset/' : ''}`,
 				'usage'
 			);
 		}

@@ -71,27 +71,19 @@ export const commands: Record<string, string | Command> = {
 		if (cmd === 'addquote' || cmd === 'setquote') {
 			if (!this.isRanked('admin')) return false;
 			const args = arg.split(',');
-			if (args.length < 2) {
-				return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-			}
+			if (args.length < 2) return this.reply(`${this.trad('u1')}: ${this.cmdToken + cmd} ${this.trad('u2')}`);
 			const id = toId(args[0]);
 			if (!id) return this.reply(this.trad('noid'));
 			args.splice(0, 1);
 			const content = stripCommands(args.join(',').trim());
 			if (!content) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-			if (repo.quotes[id] && cmd !== 'setquote') {
-				return this.reply(this.trad('quote') + ' "' + id + '" ' + this.trad('already'));
-			}
-			let text;
-			if (repo.quotes[id]) {
-				text = this.trad('quote') + ' "' + id + '" ' + this.trad('modified');
-			} else {
-				text = this.trad('quote') + ' "' + id + '" ' + this.trad('created');
-			}
+			if (repo.quotes[id] && cmd !== 'setquote') return this.reply(`${this.trad('quote')} "${id}" ${this.trad('already')}`);
+
+			const created = !repo.quotes[id];
 			repo.quotes[id] = content;
 			repo.saveQuotes();
 			this.sclog();
-			this.reply(text);
+			this.reply(this.trad('quote') + ' "' + id + '" ' + this.trad(created ? 'created' : 'modified'));
 		} else if (cmd === 'delquote') {
 			if (!this.isRanked('admin')) return false;
 			const id = toId(arg);
@@ -105,11 +97,11 @@ export const commands: Record<string, string | Command> = {
 			const id = toId(arg);
 			if (!id) return this.reply(this.trad('noid'));
 			if (!repo.quotes[id]) return this.restrictReply(this.trad('quote') + ' "' + id + '" ' + this.trad('n'), 'quote');
-			return this.restrictReply(stripCommands(repo.quotes[id]), 'quote');
+			this.restrictReply(stripCommands(repo.quotes[id]), 'quote');
 		} else {
 			const quote = repo.randQuote();
 			if (quote === null) return this.restrictReply(this.trad('empty'), 'quote');
-			return this.restrictReply(stripCommands(quote), 'quote');
+			this.restrictReply(stripCommands(quote), 'quote');
 		}
 	},
 	listquotes: function () {
@@ -138,27 +130,19 @@ export const commands: Record<string, string | Command> = {
 		if (cmd === 'addjoke' || cmd === 'setjoke') {
 			if (!this.isRanked('admin')) return false;
 			const args = arg.split(',');
-			if (args.length < 2) {
-				return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-			}
+			if (args.length < 2) return this.reply(`${this.trad('u1')}: ${this.cmdToken + cmd} ${this.trad('u2')}`);
 			const id = toId(args[0]);
 			if (!id) return this.reply(this.trad('noid'));
 			args.splice(0, 1);
 			const content = stripCommands(args.join(',').trim());
 			if (!content) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-			if (repo.jokes[id] && cmd !== 'setjoke') {
-				return this.reply(this.trad('joke') + ' "' + id + '" ' + this.trad('already'));
-			}
-			let text;
-			if (repo.jokes[id]) {
-				text = this.trad('joke') + ' "' + id + '" ' + this.trad('modified');
-			} else {
-				text = this.trad('joke') + ' "' + id + '" ' + this.trad('created');
-			}
+			if (repo.jokes[id] && cmd !== 'setjoke') return this.reply(`${this.trad('joke')} "${id}" ${this.trad('already')}`);
+
+			const created = !repo.jokes[id];
 			repo.jokes[id] = content;
 			repo.saveJokes();
 			this.sclog();
-			this.reply(text);
+			this.reply(this.trad('joke') + ' "' + id + '" ' + this.trad(created ? 'created' : 'modified'));
 		} else if (cmd === 'deljoke') {
 			if (!this.isRanked('admin')) return false;
 			const id = toId(arg);

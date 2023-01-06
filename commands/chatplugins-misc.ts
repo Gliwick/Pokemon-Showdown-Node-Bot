@@ -61,11 +61,9 @@ export const commands: Record<string, string | Command> = {
 		const target = toId(arg) || toId(this.by);
 		if (!target || target.length > 18) return this.pmReply(this.trad('inv'));
 		const url = 'http://pokemonshowdown.com/users/' + target + '.json';
-		if (this.getModule<UserRepo>(UserRepo).getDownload(toId(this.by))) {
-			return this.pmReply(this.trad('busy'));
-		}
+		if (this.getModule(UserRepo).getDownload(toId(this.by))) this.pmReply(this.trad('busy'));
 		const callback = function (this: Context, dataString: string | null, err: Error | null, nocache?: boolean): void {
-			this.getModule<UserRepo>(UserRepo).markDownload(toId(this.by), false);
+			this.getModule(UserRepo).markDownload(toId(this.by), false);
 			if (err || !dataString) return this.pmReply(this.trad('err') + ' ' + url);
 			let data: User;
 			try {
@@ -78,44 +76,36 @@ export const commands: Record<string, string | Command> = {
 				error('Regdate | Corrupted data: ' + JSON.stringify(data));
 				return this.pmReply(this.trad('err') + ' ' + url);
 			}
+
 			if (data.registertime <= 0) return this.pmReply(this.trad('user') + ' ' + (data.username || target) + ' ' + this.trad('not'));
 			if (!nocache) {
-				const regdateCache = this.getModule<UserRepo>(UserRepo).regdateCache;
+				const regdateCache = this.getModule(UserRepo).regdateCache;
 				regdateCache.push(data);
 				if (regdateCache.length > 10) regdateCache.shift();
 			}
 			let regTimestamp = data.registertime * 1000;
 			if (this.cmd === 'regtime') {
 				regTimestamp -= 364000;
-				this.pmReply(
-					this.trad('user') +
-						' ' +
-						(data.username || target) +
-						' ' +
-						this.trad('regtime1') +
-						' __' +
-						getTimeAgo(regTimestamp, this.language).trim() +
-						'__ ' +
-						this.trad('regtime2')
-				);
-			} else {
-				regTimestamp += 1000 * 60 * 60 * getESTDiff(regTimestamp) + new Date().getTimezoneOffset() * 60 * 1000 - 364000;
-				this.pmReply(
-					this.trad('user') +
-						' ' +
-						(data.username || target) +
-						' ' +
-						this.trad('regdate') +
-						' __' +
-						new Date(regTimestamp).toString().substr(4, 20).trim() +
-						'__ (EST)'
+				return this.pmReply(
+					`${this.trad('user')} ${data.username || target} ${this.trad('regtime1')} __${getTimeAgo(
+						regTimestamp,
+						this.language
+					).trim()}__ ${this.trad('regtime2')}`
 				);
 			}
+
+			regTimestamp += 1000 * 60 * 60 * getESTDiff(regTimestamp) + new Date().getTimezoneOffset() * 60 * 1000 - 364000;
+			this.pmReply(
+				`${this.trad('user')} ${data.username || target} ${this.trad('regdate')} __${new Date(regTimestamp)
+					.toString()
+					.substr(4, 20)
+					.trim()}__ (EST)}`
+			);
 		}.bind(this);
-		this.getModule<UserRepo>(UserRepo)
+		this.getModule(UserRepo)
 			.regdateCache.filter((cache) => cache.username === target)
 			.forEach((cache) => callback(JSON.stringify(cache), null, true));
-		this.getModule<UserRepo>(UserRepo).markDownload(toId(this.by), true);
+		this.getModule(UserRepo).markDownload(toId(this.by), true);
 		httpGet(url, callback);
 	},
 };
