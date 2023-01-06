@@ -112,14 +112,14 @@ export const commands: Record<string, string | Command> = {
 							break;
 						default:
 							return this.reply(
-								this.trad('param') + ' ' + idArg + ' ' + this.trad('paramhelp') + ': tier, timer, dq, users, type, scout'
+								`${this.trad('param')} ${idArg} ${this.trad('paramhelp')}: tier, timer, dq, users, type, scout`
 							);
 					}
 				}
 			}
 			if (params.format) {
 				const format = parseAliases(params.format);
-				if (!Formats[format] || !Formats[format].chall) return this.reply(this.trad('e31') + ' ' + format + ' ' + this.trad('e32'));
+				if (!Formats[format]?.chall) return this.reply(this.trad('e31') + ' ' + format + ' ' + this.trad('e32'));
 				details.format = format;
 			}
 			if (params.timeToStart) {
@@ -207,61 +207,31 @@ export const commands: Record<string, string | Command> = {
 				tarRoom = room;
 				if (this.roomType !== 'chat') tarRoom = toRoomid(args.shift() || '');
 				if (args.length > 1) tarRoom = toRoomid(args.shift() || '');
-				if (!tarRoom) {
-					return this.restrictReply(this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room], [user]', 'rank');
-				}
-				if (!manager.leaderboards.isConfigured(tarRoom)) {
-					return this.restrictReply(this.trad('not') + ' ' + tarRoom, 'rank');
-				}
+				if (!tarRoom) return this.restrictReply(`${this.trad('usage')}: ${this.cmdToken + cmd} [room], [user]`, 'rank');
+				if (!manager.leaderboards.isConfigured(tarRoom)) return this.restrictReply(`${this.trad('not')} ${tarRoom}`, 'rank');
 				const target = toId(args[0] || by);
 				if (target.length > 18) return this.restrictReply(this.trad('invuser'));
-				const rank = manager.leaderboards.getPoints(tarRoom, target);
-				let txt =
-					this.trad('rank') +
-					' **' +
-					toName(rank.name) +
-					'** ' +
-					this.trad('in') +
-					' __' +
-					toName(tryGetRoomName(tarRoom)) +
-					'__ | ';
-				txt += this.trad('points') + ': ' + rank.points + ' | ';
-				txt +=
-					this.trad('w') +
-					': ' +
-					rank.wins +
-					' ' +
-					this.trad('times') +
-					', ' +
-					this.trad('f') +
-					': ' +
-					rank.finals +
-					' ' +
-					this.trad('times') +
-					', ' +
-					this.trad('sf') +
-					': ' +
-					rank.semis +
-					' ' +
-					this.trad('times') +
-					'. ';
-				txt +=
-					this.trad('total') + ': ' + rank.tours + ' ' + this.trad('tours') + ', ' + rank.battles + ' ' + this.trad('bwon') + '.';
+
+				const { name, points, wins, finals, semis, tours, battles } = manager.leaderboards.getPoints(tarRoom, target);
+				const txt =
+					`${this.trad('rank')} **${toName(name)}** ${this.trad('in')} __${toName(tryGetRoomName(tarRoom))}__ | ` +
+					`${this.trad('points')}: ${points} | ` +
+					Object.entries({ wins, finals, semis })
+						.map(([k, v]) => `${this.trad(k)}: ${v} ${this.trad('times')}`)
+						.join(', ') +
+					`. ${this.trad('total')}: ${tours} ${this.trad('tours')}, ${battles} ${this.trad('bwon')}.`;
 				this.restrictReply(txt, 'rank');
 				break;
 			case 'top':
 				if (args.length > 0) tarRoom = toRoomid(args[0]);
 				if (!tarRoom && this.roomType === 'chat') tarRoom = room;
-				if (!tarRoom) {
-					return this.restrictReply(this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room]', 'rank');
-				}
-				if (!manager.leaderboards.isConfigured(tarRoom)) {
-					return this.restrictReply(this.trad('not') + ' ' + tarRoom, 'rank');
-				}
+				if (!tarRoom) return this.restrictReply(`${this.trad('usage')}: ${this.cmdToken + cmd} [room], [user]`, 'rank');
+				if (!manager.leaderboards.isConfigured(tarRoom)) return this.restrictReply(`${this.trad('not')} ${tarRoom}`, 'rank');
 				const top = manager.leaderboards.getTop(tarRoom);
-				if (!top || !top.length) return this.restrictReply(this.trad('empty') + ' ' + tarRoom, 'rank');
-				const topResults = top.slice(0, 5).map((t, i) => '__#' + (i + 1) + '__ **' + toName(t[0]) + '** (' + t[6] + ')');
-				this.restrictReply('**' + toName(tryGetRoomName(tarRoom)) + '** | ' + topResults.join(', '), 'rank');
+				if (!top?.length) return this.restrictReply(this.trad('empty') + ' ' + tarRoom, 'rank');
+
+				const topResults = top.slice(0, 5).map((r, i) => `__#${i + 1}__ **${toName(r[0])}** (${r[6]})`);
+				this.restrictReply(`**${toName(tryGetRoomName(tarRoom))}** | ${topResults.join(', ')}`, 'rank');
 				break;
 			case 'table':
 				if (!this.isRanked('roomowner')) return false;
@@ -270,11 +240,10 @@ export const commands: Record<string, string | Command> = {
 				if (!tarRoom) return this.reply(this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room]');
 				if (!manager.leaderboards.isConfigured(tarRoom)) return this.reply(this.trad('not') + ' ' + tarRoom);
 				const size = args[1] ? parseInt(args[1]) : 100;
-				if (!size || size < 0) {
-					return this.reply(this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room], [size]');
-				}
+				if (!size || size < 0) return this.reply(`${this.trad('usage')}: ${this.cmdToken + cmd} [room], [size]`);
 				const table = manager.leaderboards.getTable(tarRoom, size);
 				if (!table) return this.reply(this.trad('empty') + ' ' + tarRoom);
+
 				uploadToHastebin(
 					table,
 					function (this: Context, r: boolean, link: any): void {
@@ -285,72 +254,43 @@ export const commands: Record<string, string | Command> = {
 				break;
 			case 'reset':
 				if (!this.isExcepted) return false;
-				if (args.length < 1 || !toId(args[0])) {
-					return this.reply(this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room]');
-				}
+				if (args.length < 1 || !toId(args[0])) return this.reply(`${this.trad('usage')}: ${this.cmdToken + cmd} [room]`);
+
 				tarRoom = toRoomid(args[0]);
 				const code = manager.leaderboards.getResetHashCode(tarRoom);
 				if (!code) return this.reply(this.trad('empty') + ' ' + tarRoom);
 				this.reply(
-					this.trad('use') +
-						' ``' +
-						this.cmdToken +
-						this.handler +
-						' confirmreset, ' +
-						code +
-						'`` ' +
-						this.trad('confirm') +
-						' ' +
-						room
+					`${this.trad('use')} \`\`${this.cmdToken + this.handler} confirmreset, ${code}\`\` ${this.trad('confirm')} ${room}`
 				);
 				break;
 			case 'confirmreset':
 				if (!this.isExcepted) return false;
-				if (args.length < 1 || !toId(args[0])) {
-					return this.reply(this.trad('usage') + ': ' + this.cmdToken + cmd + ' [hashcode]');
-				}
+				if (args.length < 1 || !toId(args[0])) return this.reply(`${this.trad('usage')}: ${this.cmdToken + cmd} [hashcode]`);
 				const _code = args[0].trim();
 				const resetCode = manager.leaderboards.execResetHashCode(_code);
 				if (!resetCode) return this.reply(this.trad('invhash'));
+
 				this.sclog();
 				this.reply(this.trad('data') + ' __' + resetCode + '__ ' + this.trad('del'));
 				break;
 			case 'viewconfig':
 				if (!this.isExcepted) return false;
-				if (args.length < 1 || !toId(args[0])) {
-					return this.reply(this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room]');
-				}
+				if (args.length < 1 || !toId(args[0])) return this.reply(`${this.trad('usage')}: ${this.cmdToken + cmd} [room]`);
+
 				tarRoom = toRoomid(args[0]);
-				const rConf = manager.leaderboards.getConfig(tarRoom);
-				if (Config.leaderboards && Config.leaderboards[tarRoom]) {
+				const { winnerPoints, finalistPoints, semiFinalistPoints, battlePoints, onlyOfficial } =
+					manager.leaderboards.getConfig(tarRoom);
+				if (Config.leaderboards[tarRoom]) {
 					this.reply(
-						'Room: ' +
-							tarRoom +
-							' | ``config.js`` - static | ' +
-							'W: ' +
-							rConf.winnerPoints +
-							', F: ' +
-							rConf.finalistPoints +
-							', SF: ' +
-							rConf.semiFinalistPoints +
-							', B: ' +
-							rConf.battlePoints +
-							(rConf.onlyOfficial ? ' | Only official tours' : '')
+						`Room: ${tarRoom} | \`\`config.js\`\` - static | W: ${winnerPoints}, F: ${finalistPoints}, SF: ${semiFinalistPoints}, B: ${
+							battlePoints + (onlyOfficial ? ' | Only official tours' : '')
+						}`
 					);
-				} else if (Settings.settings.leaderboards && Settings.settings.leaderboards[tarRoom]) {
+				} else if (Settings.settings.leaderboards?.[tarRoom]) {
 					this.reply(
-						'Room: ' +
-							tarRoom +
-							' | ' +
-							'W: ' +
-							rConf.winnerPoints +
-							', F: ' +
-							rConf.finalistPoints +
-							', SF: ' +
-							rConf.semiFinalistPoints +
-							', B: ' +
-							rConf.battlePoints +
-							(rConf.onlyOfficial ? ' | Only official tours' : '')
+						`Room: ${tarRoom} | W: ${winnerPoints}, F: ${finalistPoints}, SF: ${semiFinalistPoints}, B: ${
+							battlePoints + (onlyOfficial ? ' | Only official tours' : '')
+						}`
 					);
 				} else {
 					this.reply(this.trad('not') + ' ' + tarRoom);
@@ -359,14 +299,12 @@ export const commands: Record<string, string | Command> = {
 			case 'setconfig':
 				if (!this.isExcepted) return false;
 				if (!Settings.settings.leaderboards) Settings.settings.leaderboards = {};
-				if (args.length < 2 || !toId(args[0]))
+				if (args.length < 2 || !toId(args[0]) || (args[6] && toId(args[6]) !== 'official' && toId(args[6]) !== 'all')) {
 					return this.reply(
-						this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room], [on/off], [W], [F], [SF], [B], [official/all]'
+						`${this.trad('usage')}: ${this.cmdToken + cmd} [room], [on/off], [W], [F], [SF], [B], [official/all]`
 					);
-				if (args[6] && toId(args[6]) !== 'official' && toId(args[6]) !== 'all')
-					return this.reply(
-						this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room], [on/off], [W], [F], [SF], [B], [official/all]'
-					);
+				}
+
 				tarRoom = toRoomid(args[0]);
 				const enabled = toId(args[1]);
 				const rConfAux = manager.leaderboards.getConfig(tarRoom);
@@ -381,29 +319,23 @@ export const commands: Record<string, string | Command> = {
 					Settings.save();
 					this.reply(this.trad('wasset') + ' ' + tarRoom);
 				} else if (['enabled', 'disabled'].includes(enabled)) {
-					if (Settings.settings.leaderboards && Settings.settings.leaderboards[tarRoom]) {
-						this.sclog();
-						delete Settings.settings.leaderboards[tarRoom];
-						Settings.save();
-						this.reply(this.trad('wasdisabled') + ' ' + tarRoom);
-					} else {
-						this.reply(this.trad('alrdisabled') + ' ' + tarRoom);
-					}
+					if (!Settings.settings.leaderboards[tarRoom]) return this.reply(this.trad('alrdisabled') + ' ' + tarRoom);
+
+					this.sclog();
+					delete Settings.settings.leaderboards[tarRoom];
+					Settings.save();
+					this.reply(this.trad('wasdisabled') + ' ' + tarRoom);
 				} else {
 					return this.reply(
-						this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room], [on/off], [W], [F], [SF], [B], [official/all]'
+						`${this.trad('usage')}: ${this.cmdToken + cmd} [room], [on/off], [W], [F], [SF], [B], [official/all]`
 					);
 				}
 				break;
 			default:
 				this.restrictReply(
-					this.trad('unknown') +
-						'. ' +
-						this.trad('usage') +
-						': ' +
-						this.cmdToken +
-						this.handler +
-						' [rank/top/table/reset/setconfig/viewconfig]',
+					`${this.trad('unknown')}. ${this.trad('usage')}: ${
+						this.cmdToken + this.handler
+					} [rank/top/table/reset/setconfig/viewconfig]`,
 					'rank'
 				);
 		}

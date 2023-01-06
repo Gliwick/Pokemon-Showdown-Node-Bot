@@ -72,13 +72,10 @@ export const commands: Record<string, string | Command> = {
 			return;
 		}
 		if (!Settings.settings.autopromote[tarRoom].enabled) return this.reply(this.trad('dis') + textHelper);
+
 		if (['listautopromote', 'listautorank'].includes(cmd)) {
 			const txt =
-				'Automated promotion in ' +
-				tarRoom +
-				':\n\nGeneral promotion: ' +
-				(Settings.settings.autopromote[tarRoom].all || '(deauth)') +
-				'\n\n' +
+				`Automated promotion in ${tarRoom}:\n\nGeneral promotion: ${Settings.settings.autopromote[tarRoom].all || '(deauth)'}\n\n` +
 				Object.entries(Settings.settings.autopromote[tarRoom].users)
 					.map(([i, user]) => user + i)
 					.join(', ');
@@ -91,37 +88,23 @@ export const commands: Record<string, string | Command> = {
 			);
 			return;
 		}
-		if (!arg)
+
+		const cmdToken = this.cmdToken + cmd;
+		if (!arg) {
 			return this.reply(
-				this.trad('usage') +
-					': ' +
-					this.cmdToken +
-					cmd +
-					' [user], [rank] ' +
-					this.trad('or') +
-					' ' +
-					this.cmdToken +
-					cmd +
-					' [rank] ' +
-					this.trad('usage2')
+				`${this.trad('usage')}: ${cmdToken} [user], [rank] ${this.trad('or')} ${cmdToken} [rank] ${this.trad('usage2')}`
 			);
+		}
+
 		const args = arg.split(',');
 		if (args.length === 1) {
 			const rank = args[0].trim();
-			if (!rank)
+			if (!rank) {
 				return this.reply(
-					this.trad('usage') +
-						': ' +
-						this.cmdToken +
-						cmd +
-						' [user], [rank] ' +
-						this.trad('or') +
-						' ' +
-						this.cmdToken +
-						cmd +
-						' [rank] ' +
-						this.trad('usage2')
+					`${this.trad('usage')}: ${cmdToken} [user], [rank] ${this.trad('or')} ${cmdToken} [rank] ${this.trad('usage2')}`
 				);
+			}
+
 			if (['off', 'disable', 'deauth'].includes(rank)) {
 				Settings.settings.autopromote[tarRoom].all = null;
 				Settings.save();
@@ -129,34 +112,23 @@ export const commands: Record<string, string | Command> = {
 				this.reply(this.trad('general1') + textHelper);
 				return;
 			}
-			if (Config.ranks.indexOf(rank) >= 0) {
-				Settings.settings.autopromote[tarRoom].all = rank;
-				Settings.save();
-				this.sclog();
-				this.reply(this.trad('general2') + ' ' + rank + textHelper);
-			} else {
-				return this.reply(this.trad('rank') + ' ' + rank + ' ' + this.trad('notrank'));
-			}
+			if (!Config.ranks.includes(rank)) return this.reply(`${this.trad('rank')} ${rank} ${this.trad('notrank')}`);
+
+			Settings.settings.autopromote[tarRoom].all = rank;
+			Settings.save();
+			this.sclog();
+			this.reply(this.trad('general2') + ' ' + rank + textHelper);
 		} else if (args.length === 2) {
 			const userid = toId(args[0]);
 			const rank = args[1].trim();
-			if (!userid || !rank)
+			if (!userid || !rank) {
 				return this.reply(
-					this.trad('usage') +
-						': ' +
-						this.cmdToken +
-						cmd +
-						' [user], [rank] ' +
-						this.trad('or') +
-						' ' +
-						this.cmdToken +
-						cmd +
-						' [rank] ' +
-						this.trad('usage2')
+					`${this.trad('usage')}: ${cmdToken} [user], [rank] ${this.trad('or')} ${cmdToken} [rank] ${this.trad('usage2')}`
 				);
+			}
 			if (['off', 'disable', 'deauth'].includes(rank)) {
 				if (!Settings.settings.autopromote[tarRoom].users[userid]) {
-					return this.reply(this.trad('user') + ' ' + userid + ' ' + this.trad('notuser') + textHelper);
+					return this.reply(`${this.trad('user')} ${userid} ${this.trad('notuser') + textHelper}`);
 				}
 				delete Settings.settings.autopromote[tarRoom].users[userid];
 				Settings.save();
@@ -164,27 +136,15 @@ export const commands: Record<string, string | Command> = {
 				this.reply(this.trad('user') + ' ' + userid + ' ' + this.trad('del') + textHelper);
 				return;
 			}
-			if (Config.ranks.indexOf(rank) >= 0) {
-				Settings.settings.autopromote[tarRoom].users[userid] = rank;
-				Settings.save();
-				this.sclog();
-				this.reply(this.trad('auser') + ' ' + userid + ' ' + this.trad('set') + ' ' + rank + textHelper);
-			} else {
-				return this.reply(this.trad('rank') + ' ' + rank + ' ' + this.trad('notrank'));
-			}
+			if (!Config.ranks.includes(rank)) return this.reply(`${this.trad('rank')} ${rank} ${this.trad('notrank')}`);
+
+			Settings.settings.autopromote[tarRoom].users[userid] = rank;
+			Settings.save();
+			this.sclog();
+			this.reply(this.trad('auser') + ' ' + userid + ' ' + this.trad('set') + ' ' + rank + textHelper);
 		} else {
 			return this.reply(
-				this.trad('usage') +
-					': ' +
-					this.cmdToken +
-					cmd +
-					' [user], [rank] ' +
-					this.trad('or') +
-					' ' +
-					this.cmdToken +
-					cmd +
-					' [rank] ' +
-					this.trad('usage2')
+				`${this.trad('usage')}: ${cmdToken} [user], [rank] ${this.trad('or')} ${cmdToken} [rank] ${this.trad('usage2')}`
 			);
 		}
 	},
@@ -203,7 +163,7 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
+		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
 		if (!Settings.settings.pmwmsg) Settings.settings.pmwmsg = {};
 		switch (cmd) {
 			case 'wpm':

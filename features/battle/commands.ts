@@ -58,30 +58,6 @@ function getTeamCallback(this: Context, name: string, format: string, res: Incom
 }
 
 export const commands: Record<string, string | Command> = {
-	jsbattle: 'evalbattle',
-	eb: 'evalbattle',
-
-	evalbattle: function (arg, by, room) {
-		if (!this.isExcepted) return false;
-		this.sclog();
-		let tarRoom = room;
-		const tarObj = getTargetRoom(arg);
-		if (tarObj) {
-			arg = tarObj.arg;
-			tarRoom = tarObj.room;
-		}
-		const manager = Features.getFeature(BattleManager);
-		if (!manager.battleBot?.battles) return false;
-		if (!manager.battleBot.battles[tarRoom]) return this.reply('Battle "' + tarRoom + '" not found');
-		let result;
-		try {
-			result = manager.battleBot.battles[tarRoom].eval(arg);
-			this.say(room, '``' + JSON.stringify(result) + '``');
-		} catch (e: any) {
-			this.say(room, e.name + ': ' + e.message);
-		}
-	},
-
 	reloadteams: function () {
 		if (!this.isExcepted) return false;
 		this.sclog();
@@ -136,16 +112,16 @@ export const commands: Record<string, string | Command> = {
 			tarRoom = targetObj.room;
 			textHelper = ' (' + tarRoom + ')';
 		}
-		if (!Bot.rooms[tarRoom] || Bot.rooms[tarRoom].type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
-		if (!Settings.settings['jointours']) Settings.settings['jointours'] = {};
+		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(this.trad('notchat') + textHelper);
+		if (!Settings.settings.jointours) Settings.settings['jointours'] = {};
 		if (toId(arg) === 'off') {
-			if (!Settings.settings['jointours'][tarRoom]) return this.reply(this.trad('ad') + ' ' + tarRoom);
-			delete Settings.settings['jointours'][tarRoom];
+			if (!Settings.settings.jointours[tarRoom]) return this.reply(this.trad('ad') + ' ' + tarRoom);
+			delete Settings.settings.jointours[tarRoom];
 			Settings.save();
 			this.sclog();
 			this.reply(this.trad('d') + ' ' + tarRoom);
 		} else {
-			if (Settings.settings['jointours'][tarRoom]) return this.reply(this.trad('ae') + ' ' + tarRoom);
+			if (Settings.settings.jointours[tarRoom]) return this.reply(this.trad('ae') + ' ' + tarRoom);
 			Settings.settings.jointours[tarRoom] = true;
 			Settings.save();
 			this.sclog();
@@ -157,14 +133,12 @@ export const commands: Record<string, string | Command> = {
 	searchbattle: function (arg, by, room) {
 		if (!this.can('searchbattle')) return false;
 		if (Settings.lockdown) return;
-		if (!arg || !arg.length) return this.reply(this.trad('e1'));
+		if (!arg?.length) return this.reply(this.trad('e1'));
 		const format = parseAliases(arg);
 		if (!Formats[format]?.ladder) return this.reply(this.trad('e21') + ' ' + format + ' ' + this.trad('e22'));
-
 		const { ladderManager, teamBuilder } = Features.getFeature(BattleManager);
-		if (Formats[format].team && !teamBuilder.hasTeam(format)) {
-			return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
-		}
+		if (Formats[format].team && !teamBuilder.hasTeam(format)) return this.reply(`${this.trad('e31')} ${format}. ${this.trad('e32')}`);
+
 		ladderManager.reportsRoom = room;
 		const cmds = [];
 		const team = teamBuilder.getTeam(format);
@@ -183,11 +157,9 @@ export const commands: Record<string, string | Command> = {
 		}
 		const format = parseAliases(arg);
 		if (!Formats[format]?.ladder) return this.reply(this.trad('e21') + ' ' + format + ' ' + this.trad('e22'));
-
 		const { ladderManager, teamBuilder } = Features.getFeature(BattleManager);
-		if (Formats[format].team && !teamBuilder.hasTeam(format)) {
-			return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
-		}
+		if (Formats[format].team && !teamBuilder.hasTeam(format)) return this.reply(`${this.trad('e31')} ${format}. ${this.trad('e32')}`);
+
 		if (ladderManager.start(format)) {
 			this.reply(this.trad('start') + ' ' + format);
 			this.sclog();
@@ -203,14 +175,10 @@ export const commands: Record<string, string | Command> = {
 		const args = ['challme', 'challengeme'].includes(cmd) ? [by, arg] : arg.split(',');
 		if (args.length < 2) return this.reply(this.trad('e11') + ': ' + this.cmdToken + cmd + ' ' + this.trad('e12'));
 		const format = parseAliases(args[1]);
-		if (!format || !Formats[format]?.chall) {
-			return this.reply(this.trad('e21') + ' "' + format + '" ' + this.trad('e22'));
-		}
-
+		if (!format || !Formats[format]?.chall) this.reply(`${this.trad('e21')} "${format}" ${this.trad('e22')}`);
 		const { teamBuilder } = Features.getFeature(BattleManager);
-		if (Formats[format].team && !teamBuilder.hasTeam(format)) {
-			return this.reply(this.trad('e31') + ' ' + format + '. ' + this.trad('e32'));
-		}
+		if (Formats[format].team && !teamBuilder.hasTeam(format)) return this.reply(`${this.trad('e31')} ${format}. ${this.trad('e32')}`);
+
 		const cmds = [];
 		const team = teamBuilder.getTeam(format);
 		if (team) cmds.push('|/useteam ' + team);
@@ -224,28 +192,22 @@ export const commands: Record<string, string | Command> = {
 	jointour: function (arg, by, room, cmd) {
 		if (!this.can('jointour')) return false;
 		if (Settings.lockdown) return;
-		if (this.roomType !== 'chat') return this.reply(this.trad('notchat'));
 
+		if (this.roomType !== 'chat') return this.reply(this.trad('notchat'));
 		const { teamBuilder, tourManager } = Features.getFeature(BattleManager);
 		if (!tourManager.tourData[room]?.format) return this.reply(this.trad('e1'));
 		if (cmd === 'checktour') return this.say(room, '/tour getupdate');
 		if (tourManager.tourData[room].isJoined) return this.reply(this.trad('e2'));
 		if (tourManager.tourData[room].isStarted) return this.reply(this.trad('e3'));
 		const format = toId(tourManager.tourData[room].format);
-		if (Formats[format] && Formats[format].team && !teamBuilder.hasTeam(format)) {
-			return this.reply(this.trad('e41') + ' ' + format + '. ' + this.trad('e42'));
-		}
+		if (Formats[format]?.team && !teamBuilder.hasTeam(format)) return this.reply(`${this.trad('e41')} ${format}. ${this.trad('e42')}`);
 		this.reply('/tour join');
 	},
 
 	leavetour: function (arg, by, room) {
 		if (!this.can('jointour')) return false;
 		if (this.roomType !== 'chat') return this.reply(this.trad('notchat'));
-		if (
-			!Features.getFeature(BattleManager).tourManager.tourData[room] ||
-			!Features.getFeature(BattleManager).tourManager.tourData[room].format
-		)
-			return this.reply(this.trad('e1'));
+		if (!Features.getFeature(BattleManager).tourManager.tourData[room]?.format) return this.reply(this.trad('e1'));
 		if (!Features.getFeature(BattleManager).tourManager.tourData[room].isJoined) return this.reply(this.trad('e2'));
 		this.reply('/tour leave');
 	},
@@ -263,17 +225,19 @@ export const commands: Record<string, string | Command> = {
 		switch (opt) {
 			case 'add':
 			case 'new':
-				if (argArray.length < 4) {
-					return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u3'));
-				}
+				if (argArray.length < 4) return this.reply(`${this.trad('u1')}: ${this.cmdToken + cmd} ${this.trad('u3')}`);
 				name = toId(argArray[1]);
 				const format = parseAliases(argArray[2]);
 				let link = argArray[3].trim();
 				if (!link) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-				if (link.endsWith('/')) link = link.substr(0, link.length - 1);
-				const splitedLink = link.split('/');
-				link = 'http://hastebin.com/raw/' + splitedLink[splitedLink.length - 1];
+				link =
+					'http://hastebin.com/raw/' +
+					link
+						.split('/')
+						.filter((path) => !!path)
+						.slice(-1)[0];
 				if (!Formats[format]) return this.reply(this.trad('format') + ' __' + format + '__ ' + this.trad('notexists'));
+
 				this.reply(this.trad('download') + '... (' + link + ')');
 				const getTeamCallbackFn = getTeamCallback.bind(this);
 				get(link, ((res: IncomingMessage): void => getTeamCallbackFn(name, format, res)).bind(this)).on(
@@ -286,9 +250,8 @@ export const commands: Record<string, string | Command> = {
 			case 'get':
 				if (argArray.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u5'));
 				id = toId(argArray[1]);
-				if (!teamBuilder.dynTeams[id]) {
-					return this.reply(this.trad('team') + ' __' + id + '__ ' + this.trad('notexists'));
-				}
+				if (!teamBuilder.dynTeams[id]) return this.reply(`${this.trad('team')} __${id}__ ${this.trad('notexists')}`);
+
 				try {
 					const data = teamBuilder.exportTeam(teamBuilder.dynTeams[id].packed);
 					uploadToHastebin(
@@ -306,9 +269,8 @@ export const commands: Record<string, string | Command> = {
 			case 'check':
 				if (argArray.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u6'));
 				id = toId(argArray[1]);
-				if (!teamBuilder.dynTeams[id]) {
-					return this.reply(this.trad('team') + ' __' + id + '__ ' + this.trad('notexists'));
-				}
+				if (!teamBuilder.dynTeams[id]) return this.reply(`${this.trad('team')} __${id}__ ${this.trad('notexists')}`);
+
 				const cmds: string[] = [];
 				const team = teamBuilder.dynTeams[id].packed;
 				if (team) cmds.push('|/useteam ' + team);
@@ -320,12 +282,9 @@ export const commands: Record<string, string | Command> = {
 			case 'remove':
 				if (argArray.length < 2) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u4'));
 				name = toId(argArray[1]);
-				if (teamBuilder.removeTeam(name)) {
-					this.sclog();
-					this.reply(this.trad('team') + ' __' + name + '__ ' + this.trad('removed'));
-				} else {
-					this.reply(this.trad('team') + ' __' + name + '__ ' + this.trad('notexists'));
-				}
+				const removed = teamBuilder.removeTeam(name);
+				if (removed) this.sclog();
+				this.reply(this.trad('team') + ' __' + name + '__ ' + this.trad(removed ? 'removed' : 'notexists'));
 				break;
 			default:
 				return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));

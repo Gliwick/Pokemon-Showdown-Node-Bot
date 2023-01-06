@@ -153,7 +153,6 @@ Commands for battle feature
 
 **Developing**
 
--   `evalbattle` - Execute arbitrary JavaScript in a battle context
 -   `reloadteams` - Hotpatch teams
 -   `reloadbattle` - Hotpatch battle modules
 -   `move` - Force a custom move
