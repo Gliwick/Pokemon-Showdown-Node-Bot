@@ -176,7 +176,7 @@ export class Context {
 	}
 
 	trad(data: string): string {
-		return I18n.translateCmd(this.handler, data, this.language);
+		return Languages.translateCmd(this.handler, data, this.language);
 	}
 
 	parse(data: string): void {

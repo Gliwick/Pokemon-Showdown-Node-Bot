@@ -169,7 +169,7 @@ export const commands: Record<string, string | Command> = {
 					uncacheTree('./tools.ts');
 					this.reply('tools.ts reloaded');
 					info('tools.ts reloaded');
-					I18n.loadTranslations(true);
+					Languages.loadTranslations(true);
 				} catch (e: any) {
 					errlog(e.stack);
 					this.reply('Error: tools.ts has errors');
@@ -201,7 +201,7 @@ export const commands: Record<string, string | Command> = {
 			case 'lang':
 			case 'languages':
 				this.sclog();
-				const _errs = I18n.loadTranslations(true) || [];
+				const _errs = Languages.loadTranslations(true) || [];
 				if (!_errs.length) return this.reply('Languages hotpatched');
 				this.reply('Some languages crashed: ' + _errs.join(', '));
 				break;

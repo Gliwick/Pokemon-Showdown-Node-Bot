@@ -169,7 +169,7 @@ export function getTimeAgo(time: number, lang?: string): string {
 	let times = [];
 	const trans = (data: string): string => {
 		if (!lang) lang = Config.language || 'english';
-		return I18n.translateGlobal('time', data, lang);
+		return Languages.translateGlobal('time', data, lang);
 	};
 	if (seconds) times.push(String(seconds) + ' ' + trans(seconds === 1 ? 'second' : 'seconds'));
 	let minutes, hours, days;

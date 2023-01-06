@@ -24,7 +24,7 @@ interface SearchResult {
 }
 
 function searchInLanguage(lang: string, word: string, keys: string[]): SearchResult[] | null {
-	const dataLang = I18n.translations[lang]?.globals;
+	const dataLang = Languages.translations[lang]?.globals;
 	let maxLevenstein = 3;
 	if (word.length <= 1) {
 		return null;
@@ -56,7 +56,7 @@ interface Translation {
 
 function getTranslations(from: string, to: string, word: string): Translation[] | null {
 	word = normalize(word);
-	const toLangData = I18n.translations[to]?.globals;
+	const toLangData = Languages.translations[to]?.globals;
 	if (!toLangData) return null;
 	const ids = searchInLanguage(from, word, ['abilities', 'items', 'moves', 'natures', 'pokemon']);
 	if (!ids?.length) return null;
@@ -118,7 +118,7 @@ export const commands: Record<string, string | Command> = {
 		if (!from || !to || from === to || !word) {
 			return this.restrictReply(`${this.trad('u1')}: ${this.cmdToken + this.cmd} ${this.trad('u2')}`, 'pokemon');
 		}
-		const validlangs = Object.keys(I18n.translations);
+		const validlangs = Object.keys(Languages.translations);
 		if (!validlangs.includes(from)) {
 			return this.restrictReply(`${this.trad('lnot1')} "${from}" ${this.trad('lnot2')}: ${validlangs.join(', ')}`, 'pokemon');
 		}

@@ -5,7 +5,7 @@ import { DataDownloader as DataDownloaderClass } from './data-downloader';
 import { FeatureManager } from './features';
 import { GlobalMonitor as GlobalMonitorClass } from './global-monitor';
 import { AppOptionsType } from './global-types';
-import { Intl } from './intl';
+import { LanguagesRepo } from './languages';
 import { SecurityLogger } from './security-log';
 import { SettingsManager } from './settings';
 import { Client } from './showdown-client';
@@ -21,7 +21,7 @@ export declare global {
 			Features: FeatureManager;
 			Formats: Record<string, FormatData>;
 			GlobalMonitor: GlobalMonitorClass;
-			I18n: Intl;
+			Languages: LanguagesRepo;
 			SecurityLog: SecurityLogger;
 			Settings: SettingsManager;
 		}
@@ -34,7 +34,7 @@ export declare global {
 	const Features: FeatureManager;
 	const Formats: Record<string, FormatData>;
 	const GlobalMonitor: GlobalMonitorClass;
-	const I18n: Intl;
+	const Languages: LanguagesRepo;
 	const SecurityLog: SecurityLogger;
 	const Settings: SettingsManager;
 }

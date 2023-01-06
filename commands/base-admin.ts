@@ -109,8 +109,8 @@ export const commands: Record<string, string | Command> = {
 		}
 		if (Bot.rooms[tarRoom]?.type !== 'chat') this.reply(this.trad('notchat') + textHelper);
 		const lang = toId(arg);
-		if (!lang.length) return this.reply(`${this.trad('nolang')}. ${this.trad('v')}: ${Object.keys(I18n.translations).join(', ')}`);
-		if (!I18n.translations[lang]) return this.reply(`${this.trad('v')}: ${Object.keys(I18n.translations).join(', ')}`);
+		if (!lang.length) return this.reply(`${this.trad('nolang')}. ${this.trad('v')}: ${Object.keys(Languages.translations).join(', ')}`);
+		if (!Languages.translations[lang]) return this.reply(`${this.trad('v')}: ${Object.keys(Languages.translations).join(', ')}`);
 
 		if (!Settings.settings['language']) Settings.settings['language'] = {};
 		Settings.settings['language'][tarRoom] = lang;

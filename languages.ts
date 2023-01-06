@@ -7,7 +7,7 @@ import { inspect } from 'util';
 import { errlog, error, info, ok } from './log';
 import { uncacheTree } from './tools';
 
-export class Intl {
+export class LanguagesRepo {
 	translations: Record<
 		string,
 		{
@@ -18,7 +18,7 @@ export class Intl {
 
 	/* Languages */
 
-	loadLang(lang: string, reloading?: boolean): Intl['translations'][string] {
+	loadLang(lang: string, reloading?: boolean): LanguagesRepo['translations'][string] {
 		const langToGlobals: Record<string, Record<string, string>> = {};
 		const langToCommands: Record<string, Record<string, string>> = {};
 		readdirSync('./languages/' + lang)

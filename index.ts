@@ -13,7 +13,7 @@ import { DataDownloader as DataDownloaderClass } from './data-downloader';
 import { FeatureManager } from './features';
 import { GlobalMonitor as GlobalMonitorClass } from './global-monitor';
 import { AppOptionsType } from './global-types';
-import { Intl } from './intl';
+import { LanguagesRepo } from './languages';
 import { errlog, error, info, ok } from './log';
 import { SecurityLogger } from './security-log';
 import { SettingsManager } from './settings';
@@ -138,7 +138,7 @@ global.DataDownloader = new DataDownloaderClass();
 
 global.Formats = {};
 
-global.I18n = new Intl();
+global.Languages = new LanguagesRepo();
 
 global.SecurityLog = new SecurityLogger();
 
@@ -150,7 +150,7 @@ if (!AppOptions.testmode) CommandParser.loadCommands();
 
 /* Languages (translations) */
 
-if (!AppOptions.testmode) I18n.loadTranslations();
+if (!AppOptions.testmode) Languages.loadTranslations();
 
 /* Features */
 
