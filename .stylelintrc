@@ -1,24 +1,24 @@
 {
 	"extends": "stylelint-config-sass-guidelines",
 	"rules": {
-		"selector-max-id": 1,
+		"color-named": null,
+		"declaration-block-semicolon-newline-after": null,
+		"declaration-block-single-line-max-declarations": null,
+		"declaration-block-trailing-semicolon": null,
+		"declaration-property-value-disallowed-list": null,
+		"indentation": "tab",
+		"max-line-length": 140,
 		"max-nesting-depth": 2,
+		"scss/selector-no-redundant-nesting-selector": null,
+		"selector-class-pattern": null,
+		"selector-max-compound-selectors": null,
+		"selector-max-id": 1,
 		"selector-no-qualifying-type": [
 			true,
 			{
 				"ignore": ["attribute", "class"]
 			}
 		],
-		"selector-class-pattern": null,
-		"color-named": null,
-		"indentation": "tab",
-		"selector-max-compound-selectors": null,
-		"declaration-property-value-disallowed-list": null,
-		"declaration-block-single-line-max-declarations": null,
-		"declaration-block-semicolon-newline-after": null,
-		"declaration-block-trailing-semicolon": null,
-		"scss/selector-no-redundant-nesting-selector": null,
-		"no-missing-end-of-source-newline": null,
-		"max-line-length": 140
+		"tabWidth": 4
 	}
 }
