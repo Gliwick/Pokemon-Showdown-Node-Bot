@@ -270,7 +270,7 @@ export const commands: Record<string, string | Command> = {
 				const format = parseAliases(argArray[2]);
 				let link = argArray[3].trim();
 				if (!link) return this.reply(this.trad('u1') + ': ' + this.cmdToken + cmd + ' ' + this.trad('u2'));
-				if (link.substr(-1) === '/') link = link.substr(0, link.length - 1);
+				if (link.endsWith('/')) link = link.substr(0, link.length - 1);
 				const splitedLink = link.split('/');
 				link = 'http://hastebin.com/raw/' + splitedLink[splitedLink.length - 1];
 				if (!Formats[format]) return this.reply(this.trad('format') + ' __' + format + '__ ' + this.trad('notexists'));
@@ -360,7 +360,7 @@ export const commands: Record<string, string | Command> = {
 		if (!this.isRanked(getGroup('admin'))) return false;
 		const teams = Features.getFeature(BattleManager).teamBuilder.staticTeams;
 		const genToFormats = Object.keys(teams).reduce((acc, format) => {
-			const gen = format.substr(3, 1);
+			const gen = format.charAt(3);
 			if (!acc[gen]) acc[gen] = [];
 			acc[gen].push(format);
 			return acc;
