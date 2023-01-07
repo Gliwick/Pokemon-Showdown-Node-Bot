@@ -18,10 +18,10 @@ logs
 data/*.js
 data/*.json
 data/_temp
-!data/*-example.js
 features/battle/battle-ai/temp
 features/battle/teams.js
-features/battle/data/mods
+features/battle/data/mods/*
+!features/battle/data/mods/gen*
 
 # Runtime data
 pids

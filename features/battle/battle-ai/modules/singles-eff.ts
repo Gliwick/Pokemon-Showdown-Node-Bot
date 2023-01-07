@@ -383,8 +383,8 @@ export class SinglesEffective implements BattleModule {
 			if (moveData.id === 'hiddenpower') {
 				let randomBattleMovesHaveHP = false;
 				if (!battle.id.includes('hackmonscup')) {
-					const formatsData = getFormatsData(foePoke.template.species, battle.gen, battle.id);
-					if (formatsData && formatsData.randomBattleMoves) {
+					const formatsData = getFormatsData(foePoke.template.name, battle.gen, battle.id);
+					if (formatsData?.randomBattleMoves) {
 						for (const randomBattleMove of formatsData.randomBattleMoves) {
 							if (randomBattleMove.startsWith('hiddenpower')) movesB.push(getMove(randomBattleMove, battle.gen, battle.id));
 							randomBattleMovesHaveHP = true;
@@ -821,7 +821,7 @@ export class SinglesEffective implements BattleModule {
 			side: battle.foe.side,
 			pokemon: battle.foe.pokemon,
 		});
-		const movesB = battle.foe.active[0].moves;
+		const foeMoves = battle.foe.active[0].moves;
 
 		const selfSpe = selfPoke.getFullSpe(battle, selfConditions, false);
 		const foeSpe = foePoke.getFullSpe(battle, foeConditions, false);
@@ -829,9 +829,9 @@ export class SinglesEffective implements BattleModule {
 		let hasPhysical = false,
 			hasSpecial = false,
 			hasStatus = false;
-		for (let i = 0; i < movesB.length; i++) {
-			if (movesB[i].id === 'struggle') continue;
-			const move = getMove(movesB[i].id, battle.gen, battle.id);
+		for (let i = 0; i < foeMoves.length; i++) {
+			if (foeMoves[i].id === 'struggle') continue;
+			const move = getMove(foeMoves[i].id, battle.gen, battle.id);
 			if (
 				foeConditions.volatiles['torment'] &&
 				battle.foe.active[0].helpers.lastMove &&
@@ -857,15 +857,20 @@ export class SinglesEffective implements BattleModule {
 		if (hasPhysical) pokeCategory = 'Physical';
 		if (hasSpecial) pokeCategory = 'Special';
 		if (hasPhysical && hasSpecial) pokeCategory = 'Mixed';
-		if (!pokeCategory && movesB.length >= 4) pokeCategory = 'Status';
-		if (!pokeCategory) {
-			if (foeConditions.boosts && foeConditions.boosts.atk > 0 && foeConditions.boosts.spa <= 0) pokeCategory = 'Physical';
-			if (foeConditions.boosts && foeConditions.boosts.atk <= 0 && foeConditions.boosts.spa < 0) pokeCategory = 'Special';
-			if (foeConditions.boosts && foeConditions.boosts.atk > 0 && foePoke.template.species === 'Magearna') pokeCategory = 'Special';
+		if (!pokeCategory && foeMoves.length >= 4) pokeCategory = 'Status';
+		if (!pokeCategory && foeConditions.boosts) {
+			if (
+				(foeConditions.boosts.atk || 0) > 0 &&
+				(foeConditions.boosts.spa || 0) <= 0 &&
+				!foeMoves.some((m) => m.id === 'shiftgear')
+			) {
+				pokeCategory = 'Physical';
+			}
+			if ((foeConditions.boosts.atk || 0) <= 0 && (foeConditions.boosts.spa || 0) > 0) pokeCategory = 'Special';
 		}
 		if (!pokeCategory) {
-			if (foePoke.template.baseStats['atk'] > foePoke.template.baseStats['spa']) pokeCategory = 'Physical';
-			if (foePoke.template.baseStats['atk'] < foePoke.template.baseStats['spa']) pokeCategory = 'Special';
+			if (foePoke.template.baseStats.atk > foePoke.template.baseStats.spa) pokeCategory = 'Physical';
+			if (foePoke.template.baseStats.atk < foePoke.template.baseStats.spa) pokeCategory = 'Special';
 		}
 		foePoke.category = pokeCategory || foePoke.category;
 
@@ -1536,8 +1541,7 @@ export class SinglesEffective implements BattleModule {
 					foePoke.status ||
 					foeConditions.volatiles?.yawn ||
 					foePoke.hasAbility({ comatose: 1, purifyingsalt: 1 }) ||
-					foePoke.template.species === 'Minior' ||
-					foePoke.hasAbility('shieldsdown')
+					(foePoke.template.name === 'Minior-Meteor' && foePoke.hasAbility('shieldsdown'))
 				) {
 					res.unviable.push(des);
 					continue;
@@ -1586,25 +1590,11 @@ export class SinglesEffective implements BattleModule {
 							res.unviable.push(des);
 							continue;
 						} else if (battle.gen > 2) {
-							let obligatory = false;
-							for (let j = 0; j < movesB.length; j++) {
-								if (
-									(movesB[j].heal && movesB[j].heal[0] / movesB[j].heal[1] >= 0.33) ||
-									movesB[j].id in
-										{
-											leechseed: 1,
-											moonlight: 1,
-											morningsun: 1,
-											rest: 1,
-											sappyseed: 1,
-											shoreup: 1,
-											strengthsap: 1,
-											synthesis: 1,
-											wish: 1,
-										}
-								)
-									obligatory = true;
-							}
+							const obligatory = foeMoves.some(
+								(m) =>
+									(m.template.heal && m.template.heal[0] / m.template.heal[1] >= 0.33) ||
+									['moonlight', 'morningsun', 'rest', 'shoreup', 'strengthsap', 'synthesis', 'wish'].includes(m.id)
+							);
 							if (obligatory) {
 								res.obligatory.push(des);
 								continue;
@@ -1617,7 +1607,7 @@ export class SinglesEffective implements BattleModule {
 					case 'slp':
 						if (
 							foePoke.hasAbility({ insomnia: 1, sweetveil: 1, vitalspirit: 1 }) ||
-							(move.id === 'darkvoid' && selfPoke.template.species !== 'Darkrai') ||
+							(move.id === 'darkvoid' && selfPoke.template.name !== 'Darkrai') ||
 							(battle.rules.includes('Sleep Clause Mod') && this.alreadyOppSleeping(battle))
 						) {
 							res.unviable.push(des);
@@ -1886,7 +1876,7 @@ export class SinglesEffective implements BattleModule {
 			let foeRecoveryHP = 0;
 			if (foeConditions.volatiles.dynamax) {
 				hp *= 2;
-				if (selfSpe < foeSpe && move.priority <= 0 && foePoke.template.species.startsWith('Alcremie')) foeRecoveryHP = 33.3;
+				if (selfSpe < foeSpe && move.priority <= 0 && foePoke.template.name.startsWith('Alcremie')) foeRecoveryHP = 33.3;
 			} else if (!foeConditions.volatiles['healblock'] && !foeConditions.volatiles['taunt']) {
 				const movesB = battle.foe.active[0].moves;
 				for (let j = 0; j < movesB.length; j++) {
@@ -2162,8 +2152,8 @@ export class SinglesEffective implements BattleModule {
 			const bypasssub = move?.flags?.bypasssub || selfPoke.hasAbility('infiltrator');
 			let sub = foeConditions.volatiles['substitute'] && !bypasssub ? (25 * 100) / hp : 0;
 			if (sub === 0 && !selfPoke.hasAbility({ moldbreaker: 1, teravolt: 1, turboblaze: 1, neutralizinggas: 1 })) {
-				if (foePoke.template.species === 'Mimikyu' && foePoke.hasAbility('disguise')) sub = 0.1;
-				if (foePoke.template.species === 'Eiscue' && foePoke.hasAbility('iceface') && move.category === 'Physical') sub = 0.1;
+				if (foePoke.template.name === 'Mimikyu' && foePoke.hasAbility('disguise')) sub = 0.1;
+				if (foePoke.template.name === 'Eiscue' && foePoke.hasAbility('iceface') && move.category === 'Physical') sub = 0.1;
 			}
 
 			const multihit =
@@ -2523,8 +2513,8 @@ export class SinglesEffective implements BattleModule {
 		// multihit if sub/disguise/ice face
 		if (
 			(foeConditions.volatiles['substitute'] ||
-				(foePoke.template.species === 'Mimikyu' && foePoke.hasAbility('disguise')) ||
-				(foePoke.template.species === 'Eiscue' && foePoke.hasAbility('iceface'))) &&
+				(foePoke.template.name === 'Mimikyu' && foePoke.hasAbility('disguise')) ||
+				(foePoke.template.name === 'Eiscue' && foePoke.hasAbility('iceface'))) &&
 			!selfPoke.hasAbility({ infiltrator: 1, parentalbond: 1 })
 		) {
 			filteredMoves = [];

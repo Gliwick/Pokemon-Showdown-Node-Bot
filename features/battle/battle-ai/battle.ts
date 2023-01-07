@@ -6,11 +6,12 @@
 import { createWriteStream, PathLike, writeFileSync, WriteStream } from 'fs';
 import { inspect } from 'util';
 
+import { StatsExceptHPTable } from '../../../data/types-dex';
 import { colors } from '../../../index';
 import { errlog, error } from '../../../log';
 import { toId, toName } from '../../../tools';
 import { BattleBot } from '.';
-import { CurrentGen, getAbility, getItem, getPokemon, Player, Pokemon, PokemonDetails, StatsTable, Type } from './battle-data';
+import { CurrentGen, getAbility, getItem, getPokemon, Player, Pokemon, PokemonDetails, Type } from './battle-data';
 import { majors } from './battle-majors';
 import { Minor, minors } from './battle-minors';
 import { Pokemon as CalcPokemon } from './calc';
@@ -19,7 +20,6 @@ import { Decision, getDecisions, MoveDecision } from './decision';
 const MAX_RECURSIVE = 5;
 const MIN_TIME_LOCK = 3 * 1000; // 3 secods to avoid send spam
 
-export type PlayerId = 'p1' | 'p2';
 export type BattleType = 'singles' | 'doubles' | 'triples' | 'rotation';
 export const BattleTypeActiveSlots: Record<BattleType, number> = {
 	singles: 1,
@@ -53,11 +53,11 @@ interface RequestActivePokemon {
 }
 
 interface RequestPokemon {
-	ident: `${PlayerId}: ${string}`;
+	ident: `${keyof Battle['players']}: ${string}`;
 	details: string;
 	condition: string;
 	active: boolean;
-	stats: Omit<Required<StatsTable>, 'hp'>;
+	stats: StatsExceptHPTable;
 	moves: string[];
 	baseAbility: string;
 	item: string;
@@ -79,6 +79,7 @@ export interface Request {
 	forceSwitch?: boolean[];
 	side: RequestSide;
 	rqid: number;
+	wait?: boolean;
 }
 
 interface Status {
@@ -97,7 +98,7 @@ export class Battle {
 
 	id: string;
 	title: number | null = null;
-	players: Record<PlayerId, Player> = {
+	players = {
 		p1: new Player('p1'),
 		p2: new Player('p2'),
 	};
@@ -145,23 +146,20 @@ export class Battle {
 		this.id = id;
 	}
 
-	createLogStream(file: PathLike) {
+	createLogStream(file: PathLike): void {
 		writeFileSync(file, ''); // Clear File
 		this.stream = createWriteStream(file, { flags: 'a+' });
 		this.file = file;
 	}
 
-	send(data: string | string[]) {
+	send(data: string | string[]): void {
 		Bot.sendRoom(this.id, data, 2000);
 	}
 
-	eval(str: string) {
-		return eval(str);
-	}
-
-	sendDecision(decision: Decision[]) {
+	sendDecision(decision: Decision[]): void {
 		if (!decision?.length) return;
 
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const { moveData, ...toLog } = decision[0] as MoveDecision;
 		this.debug(colors.cyan('Send Decision: ') + JSON.stringify(toLog));
 		let str = '/choose ';
@@ -177,7 +175,7 @@ export class Battle {
 		this.send(str + '|' + this.rqid);
 	}
 
-	checkTimer() {
+	checkTimer(): void {
 		if (!this.self || !this.request) return; // Not playing
 		if (!this.timer) {
 			if (this.sentTimerReq && Date.now() - this.sentTimerReq < MIN_TIME_LOCK) return; // Do not spam timer commands
@@ -186,19 +184,14 @@ export class Battle {
 		}
 	}
 
-	leave() {
+	leave(): void {
 		if (!this.leaveInterval) {
-			this.leaveInterval = setInterval(
-				(() => {
-					this.send('/leave');
-				}).bind(this),
-				5000
-			);
+			this.leaveInterval = setInterval(((): void => this.send('/leave')).bind(this), 5000);
 		}
 		this.send('/leave');
 	}
 
-	start() {
+	start(): void {
 		if (!this.self || !this.request) return; // Not playing
 		const wmsg = Config.initBattleMsg;
 		if (wmsg?.length) {
@@ -209,7 +202,7 @@ export class Battle {
 		}
 	}
 
-	win(winner: string) {
+	win(winner: string): void {
 		if (!this.self) return; // Not playing
 		const win = toId(winner) === toId(Bot.status.nickName);
 		if (win) {
@@ -231,7 +224,7 @@ export class Battle {
 		}
 	}
 
-	message(type: string, player?: string, poke?: string) {
+	message(type: string, player?: string, poke?: string): void {
 		if (!this.self) return; // Not playing
 		if (!Config.battleMessages || !Config.battleMessages[type]) return;
 		const messages = Config.battleMessages[type];
@@ -257,7 +250,7 @@ export class Battle {
 		}
 	}
 
-	makeDecision(forced?: boolean) {
+	makeDecision(forced?: boolean): void {
 		if (!this.self) return; // Not playing
 		this.debug(this.id + '->MakeDecision');
 		if (!forced && this.lastSent.rqid >= 0 && this.lastSent.rqid === this.rqid) {
@@ -306,20 +299,20 @@ export class Battle {
 		this.sendDecision(decisions[Math.floor(Math.random() * decisions.length)]);
 	}
 
-	log(line: string) {
+	log(line: string): void {
 		if (this.stream) this.stream.write(line + '\n');
 	}
 
-	debug(line: string) {
+	debug(line: string): void {
 		if (Config.debug.battle) this.log(line);
 	}
 
-	add(line: string, isIntro?: boolean) {
+	add(line: string, isIntro?: boolean): void {
 		this.run(line, isIntro);
 		this.log(line);
 	}
 
-	run(str?: string, isIntro?: boolean) {
+	run(str?: string, isIntro?: boolean): void {
 		if (!str) return;
 		if (str.charAt(0) !== '|' || str.substr(0, 2) === '||') {
 			return;
@@ -345,7 +338,7 @@ export class Battle {
 		}
 	}
 
-	runMinor(event: Minor, args: string[], kwargs: Record<string, string>, isIntro?: boolean) {
+	runMinor(event: Minor, args: string[], kwargs: Record<string, string>, isIntro?: boolean): void {
 		if (args) {
 			if (args[2] === 'Sturdy' && args[0] === '-activate') args[2] = 'ability: Sturdy';
 		}
@@ -382,7 +375,7 @@ export class Battle {
 		}
 	}
 
-	runMajor(args: string[], kwargs: Record<string, string>, isIntro?: boolean) {
+	runMajor(args: string[], kwargs: Record<string, string>, isIntro?: boolean): void {
 		if (majors[args[0]]) {
 			let major = majors[args[0]];
 			const r = 0;
@@ -470,7 +463,7 @@ export class Battle {
 		return status;
 	}
 
-	parseHealth(str: string) {
+	parseHealth(str: string): number {
 		let hp = 100;
 		let sp = str.split(' ');
 		sp = sp[0].split('/');
@@ -485,14 +478,14 @@ export class Battle {
 		return hp;
 	}
 
-	getSide(str?: string) {
+	getSide(str?: string): Player | null {
 		if (!str) return null;
 		str = str.split(':')[0];
 		if (!(str in this.players)) {
 			error('Unknown side: ' + str);
-			return;
+			return null;
 		}
-		return this.players[str as PlayerId];
+		return this.players[str as keyof Battle['players']];
 	}
 
 	getActive(str?: string): Pokemon | null {
@@ -507,7 +500,7 @@ export class Battle {
 			error('Unknown side: ' + side);
 			return null;
 		}
-		const player = this.players[side as PlayerId];
+		const player = this.players[side as keyof Battle['players']];
 		const active = player.active?.[slot];
 		if (active) {
 			active.name = name;
@@ -560,14 +553,15 @@ export class Battle {
 		if (forceMega && this.request.active?.[0]?.canMegaEvo) {
 			if (poke.item.megaStone) {
 				poke.template = getPokemon(poke.item.megaStone, this.gen, this.id);
-				poke.species = poke.template.species;
+				poke.name = poke.template.name;
+				poke.species = poke.template.name;
 				poke.ability = getAbility(poke.template.abilities[0]);
 			}
 		}
 		return poke;
 	}
 
-	destroy() {
+	destroy(): void {
 		if (this.stream) {
 			this.stream.close();
 			this.stream = null;

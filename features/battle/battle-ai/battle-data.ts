@@ -4,8 +4,20 @@
 
 import { String as Sugar } from 'sugar';
 
-import { GenderName, SparseBoostsTable } from '../../../data/types-dex';
-import { deepcopy, toId } from '../../../tools';
+import { AbilityData } from '../../../data/types-abilities';
+import { ConditionData } from '../../../data/types-conditions';
+import { BasicEffect, BoostID, EffectType, GenderName, SparseBoostsTable } from '../../../data/types-dex';
+import { ItemData } from '../../../data/types-items';
+import { MoveData } from '../../../data/types-moves';
+import { SpeciesData, SpeciesFormatsData } from '../../../data/types-species';
+import { ID, toId } from '../../../tools';
+import {
+	getAbility as getModdedAbility,
+	getFormatsData as getModdedFormatsData,
+	getItem as getModdedItem,
+	getMove as getModdedMove,
+	getPokemon as getModdedPokemon,
+} from '../data';
 import { Conditions } from '../data/conditions';
 
 export const BATTLE_DATA_DIR = './../data/';
@@ -34,206 +46,81 @@ export type Type =
 	| 'Water'
 	| '???';
 
-export function getEffect(effect, gen: number = CurrentGen) {
-	if (!effect || typeof effect === 'string') {
-		const name = (effect || '').trim();
-		if (name.substr(0, 5) === 'item:') {
-			return getItem(name.substr(5), gen);
-		} else if (name.substr(0, 8) === 'ability:') {
-			return getAbility(name.substr(8), gen);
-		} else if (name.substr(0, 5) === 'move:') {
-			return getMove(name.substr(5), gen);
-		}
-
-		const id = toId(name);
-		effect = {};
-
-		const pMove = getMove(id, gen);
-		const pAbility = getAbility(id, gen);
-		const pItem = getItem(id, gen);
-		const statuses = Conditions;
-
-		if (id && statuses && statuses[id]) {
-			effect = statuses[id];
-			effect.exists = true;
-		} else if (id && pMove.effect) {
-			effect = pMove.effect;
-			effect.exists = true;
-		} else if (id && pAbility.effect) {
-			effect = pAbility.effect;
-			effect.exists = true;
-		} else if (id && pItem.effect) {
-			effect = pItem.effect;
-			effect.exists = true;
-		} else if (id === 'recoil') {
-			effect = {
-				effectType: 'Recoil',
-			};
-			effect.exists = true;
-		} else if (id === 'drain') {
-			effect = {
-				effectType: 'Drain',
-			};
-			effect.exists = true;
-		}
-		if (!effect.id) effect.id = id;
-		if (!effect.name) effect.name = Sugar.escapeHTML(name || '');
-		if (!effect.category) effect.category = 'Effect';
-		if (!effect.effectType) effect.effectType = 'Effect';
-	}
-	return effect;
+function getMods(gen: number, battleId?: string): string[] {
+	const mods = [...Array(CurrentGen - 1).keys()]
+		.filter((i) => i >= gen)
+		.map((i) => 'gen' + i)
+		.reverse();
+	const formatId = battleId && battleId.split('-')[1];
+	const formatMod = formatId && Config.battleFormatMods[formatId];
+	if (formatMod) mods.push(formatMod);
+	return mods;
 }
 
-export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: string) {
+export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: string): SpeciesData {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
-	poke = toId(poke);
-	const pokemon = { id: poke };
-	let temp;
-	try {
-		temp = DataDownloader.getPokedex()[poke];
-		for (const attr in temp) pokemon[attr] = temp[attr];
-	} catch (e: any) {}
-	for (let i = CurrentGen - 1; i >= gen; i--) {
-		try {
-			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + i + '/pokedex.js').BattlePokedex[poke];
-			if (!temp) continue;
-		} catch (e: any) {
-			continue;
-		}
-		if (!temp.inherit) {
-			for (const i in pokemon) delete pokemon[i];
-		}
-		for (const attr in temp) pokemon[attr] = temp[attr];
-	}
+	const pokeId = toId(poke);
+	let pokemon = getModdedPokemon(pokeId);
 
-	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.battleFormatMods[formatId];
-	if (formatMod) {
-		temp = null;
-		try {
-			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/pokedex.js').BattlePokedex[poke];
-		} catch (e: any) {}
-		if (temp) {
-			if (!temp.inherit) {
-				for (const i in pokemon) delete pokemon[i];
-			}
-			for (const attr in temp) pokemon[attr] = temp[attr];
+	for (const mod of getMods(gen, battleId)) {
+		const temp = getModdedPokemon(pokeId, mod);
+		if (!temp) continue;
+		if (!pokemon || !temp.inherit) {
+			pokemon = { ...temp };
+		} else {
+			Object.assign(pokemon, temp);
 		}
 	}
 
-	if (!pokemon.name && !pokemon.species) {
+	if (!pokemon) {
 		return {
-			id: poke,
+			id: pokeId,
 			num: 0,
 			name: poke,
-			species: poke,
-			types: ['Normal'],
+			types: ['???'],
 			baseStats: { hp: 90, atk: 90, def: 90, spa: 90, spd: 90, spe: 90 },
 			abilities: { 0: 'No Ability' },
 			heightm: 0,
 			weightkg: 0,
-			unknown: true,
+			eggGroups: [],
 		};
 	}
 
-	if (!pokemon.name) pokemon.name = pokemon.species;
-	if (!pokemon.species) pokemon.species = pokemon.name;
 	return pokemon;
 }
 
-export function getMove(move: string, gen: number = CurrentGen, battleId?: string): Record<string, any> {
-	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
-	move = toId(move);
-	let moveData = {};
-	let temp;
-	try {
-		temp = DataDownloader.getMovedex()[move];
-		for (const i in temp) moveData[i] = temp[i];
-		moveData.id = move;
-	} catch (e: any) {}
-	for (let i = CurrentGen - 1; i >= gen; i--) {
-		try {
-			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + i + '/moves.js').BattleMovedex[move];
-			if (!temp) continue;
-		} catch (e: any) {
-			continue;
-		}
-		if (!temp.inherit) {
-			for (const i in moveData) delete moveData[i];
-		}
-		for (const i in temp) moveData[i] = temp[i];
-	}
-
-	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.battleFormatMods[formatId];
-	if (formatMod) {
-		temp = null;
-		try {
-			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/moves.js').BattleMovedex[move];
-		} catch (e: any) {}
-		if (temp) {
-			if (!temp.inherit) {
-				for (const i in moveData) delete moveData[i];
-			}
-			for (const attr in temp) moveData[attr] = temp[attr];
-		}
-	}
-
-	if (!moveData.name) {
-		moveData = {
-			num: 0,
-			accuracy: 100,
-			basePower: 90,
-			category: 'Physical',
-			id: move,
-			name: move,
-			pp: 10,
-			priority: 0,
-			flags: { protect: 1 },
-			effectType: 'Move',
-			type: evaluateMoveType(move),
-		};
-
-		const specialTypes = ['Fire', 'Water', 'Grass', 'Ice', 'Electric', 'Dark', 'Psychic', 'Dragon'];
-		if (specialTypes.includes(moveData.type)) moveData.category = 'Special';
-		if (moveData.category === 'Physical' && !['Ground', 'Rock'].includes(moveData.type)) moveData.flags.contact = 1;
-	}
-
-	if (!moveData.effectType) moveData.effectType = 'Move';
-	return moveData;
-}
-
-const TypeAliases: Partial<Record<Type, string[]>> = {
-	Bug: ['bug'],
-	Dark: ['dark'],
-	Dragon: ['dragon'],
-	Electric: ['electr', 'thunder'],
-	Fairy: ['fairy'],
+const TypeAliases: Record<Type, string[]> = {
+	Bug: [],
+	Dark: [],
+	Dragon: ['draco'],
+	Electric: ['electro', 'thunder'],
+	Fairy: [],
 	Fighting: ['fight'],
-	Fire: ['fire', 'flame', 'flare', 'heat'],
+	Fire: ['flame', 'flare', 'heat'],
 	Flying: ['fly', 'sky', 'wing'],
-	Ghost: ['ghost', 'shadow'],
-	Grass: ['grass', 'leaf', 'petal', 'seed'],
-	Ground: ['ground', 'earth', 'mud'],
-	Ice: ['ice', 'freeze'],
-	Normal: ['normal'],
-	Poison: ['poison', 'sludge', 'toxic', 'veno'],
+	Ghost: ['shadow'],
+	Grass: ['leaf', 'petal', 'seed'],
+	Ground: ['earth', 'mud'],
+	Ice: ['freez'],
+	Normal: [],
+	Poison: ['sludge', 'toxic', 'veno'],
 	Psychic: ['psy'],
-	Rock: ['rock', 'stone'],
-	Steel: ['steel', 'iron', 'metal'],
-	Water: ['water', 'aqua', 'bubble', 'hydro'],
+	Rock: ['stone'],
+	Steel: ['iron', 'metal'],
+	Water: ['aqua', 'bubble', 'hydro'],
+	'???': [],
 };
 
 function evaluateMoveType(name: string): Type {
-	let moveType: Type;
-	for (moveType in TypeAliases) {
-		if (name.includes(moveType)) {
-			return moveType;
+	for (const moveType in TypeAliases) {
+		if (name.includes(toId(moveType))) {
+			return moveType as Type;
 		}
 	}
 
-	for (moveType in TypeAliases) {
-		for (const typeAlias of TypeAliases[moveType] || []) {
+	for (const key in TypeAliases) {
+		const moveType = key as Type;
+		for (const typeAlias of TypeAliases[moveType]) {
 			if (name.includes(typeAlias)) {
 				return moveType;
 			}
@@ -243,130 +130,185 @@ function evaluateMoveType(name: string): Type {
 	return 'Normal';
 }
 
-export function getItem(item: string, gen: number = CurrentGen, battleId?: string) {
+export function getMove(move: string, gen: number = CurrentGen, battleId?: string): MoveData {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
-	item = toId(item);
-	const itemData = {};
-	let temp;
-	try {
-		temp = DataDownloader.getItems()[item];
-		for (const i in temp) itemData[i] = temp[i];
-		itemData.id = item;
-	} catch (e: any) {}
-	for (let i = CurrentGen - 1; i >= gen; i--) {
-		try {
-			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + i + '/items.js').BattleItems[item];
-			if (!temp) continue;
-		} catch (e: any) {
-			continue;
-		}
-		if (!temp.inherit) {
-			for (const i in itemData) delete itemData[i];
-		}
-		for (const i in temp) itemData[i] = temp[i];
-	}
+	const moveId = toId(move);
+	let moveData = getModdedMove(moveId);
 
-	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.battleFormatMods[formatId];
-	if (formatMod) {
-		temp = null;
-		try {
-			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/items.js').BattleItems[item];
-		} catch (e: any) {}
-		if (temp) {
-			if (!temp.inherit) {
-				for (const i in itemData) delete itemData[i];
-			}
-			for (const attr in temp) itemData[attr] = temp[attr];
+	for (const mod of getMods(gen, battleId)) {
+		const temp = getModdedMove(moveId, mod);
+		if (!temp) continue;
+		if (!moveData || !temp.inherit) {
+			moveData = { ...temp };
+		} else {
+			Object.assign(moveData, temp);
 		}
 	}
 
-	if (!itemData.id) {
+	if (!moveData) {
+		const type = evaluateMoveType(move);
+		const category = ['Dragon', 'Electric', 'Fairy', 'Fire', 'Ghost', 'Grass', 'Ice', 'Psychic', 'Water'].includes(type)
+			? 'Special'
+			: 'Physical';
 		return {
-			id: item,
+			num: 0,
+			accuracy: 100,
+			basePower: 90,
+			category,
+			name: move,
+			pp: 10,
+			priority: 0,
+			flags: { protect: 1, ...(category === 'Physical' && !['Ground', 'Rock'].includes(type) ? { contact: 1 } : {}) },
+			effectType: 'Move',
+			type,
+			target: 'adjacentFoe',
+		};
+	}
+
+	return { effectType: 'Move', ...moveData };
+}
+
+export function getItem(item: string, gen: number = CurrentGen, battleId?: string): ItemData {
+	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
+	const itemId = toId(item);
+	let itemData = getModdedItem(itemId);
+
+	for (const mod of getMods(gen, battleId)) {
+		const temp = getModdedItem(itemId, mod);
+		if (!temp) continue;
+		if (!itemData || !temp.inherit) {
+			itemData = { ...temp };
+		} else {
+			Object.assign(itemData, temp);
+		}
+	}
+
+	if (!itemData) {
+		return {
 			name: item,
 			spritenum: 0,
 			num: 0,
 			gen: CurrentGen,
-			category: 'Effect',
 			effectType: 'Item',
 		};
 	}
-	if (!itemData.category) itemData.category = 'Effect';
-	if (!itemData.effectType) itemData.effectType = 'Item';
-	return itemData;
+
+	return { effectType: 'Item', ...itemData };
 }
 
-export function getAbility(abilityId: string, gen: number = CurrentGen, battleId?: string) {
+export function getAbility(ability: string, gen: number = CurrentGen, battleId?: string): AbilityData {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
-	abilityId = toId(abilityId);
-	const ability = {};
-	let temp;
-	try {
-		temp = DataDownloader.getAbilities()[abilityId];
-		for (const i in temp) ability[i] = temp[i];
-		ability.id = abilityId;
-	} catch (e: any) {}
-	for (let i = CurrentGen - 1; i >= gen; i--) {
-		try {
-			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + i + '/abilities.js').BattleAbilities[abilityId];
-			if (!temp) continue;
-		} catch (e: any) {
-			continue;
-		}
-		if (!temp.inherit) {
-			for (const i in ability) delete ability[i];
-		}
-		for (const i in temp) ability[i] = temp[i];
-	}
+	const abilityId = toId(ability);
+	let abilityData = getModdedAbility(abilityId);
 
-	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.battleFormatMods[formatId];
-	if (formatMod) {
-		temp = null;
-		try {
-			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/abilities.js').BattleAbilities[abilityId];
-		} catch (e: any) {}
-		if (temp) {
-			if (!temp.inherit) {
-				for (const i in ability) delete ability[i];
-			}
-			for (const attr in temp) ability[attr] = temp[attr];
+	for (const mod of getMods(gen, battleId)) {
+		const temp = getModdedAbility(abilityId, mod);
+		if (!temp) continue;
+		if (!abilityData || !temp.inherit) {
+			abilityData = { ...temp };
+		} else {
+			Object.assign(abilityData, temp);
 		}
 	}
 
-	if (!ability.id) {
+	if (!abilityData) {
 		return {
 			id: abilityId,
-			name: abilityId,
+			name: ability,
 			rating: 0,
 			num: 0,
-			category: 'Effect',
 			effectType: 'Ability',
 		};
 	}
-	if (!ability.category) ability.category = 'Effect';
-	if (!ability.effectType) ability.effectType = 'Ability';
-	return ability;
+
+	return { effectType: 'Ability', ...abilityData };
+}
+
+type BasicEffectData = Omit<Partial<BasicEffect>, 'effectType'>;
+
+type EffectData = (ItemData | AbilityData | MoveData | ConditionData | BasicEffectData) & {
+	id: ID;
+	effectType: EffectType | 'Recoil' | 'Drain';
+};
+
+export function getEffect(effect: string | EffectData, gen: number = CurrentGen): EffectData {
+	if (effect && typeof effect !== 'string') {
+		return effect;
+	}
+
+	effect = (effect || '').trim();
+	const [type, name] = effect.includes(':') ? effect.split(':') : ['', effect];
+	const id = toId(name);
+
+	if (!id) return { id, name: Sugar.escapeHTML(name || ''), effectType: 'Condition' };
+
+	if (type === 'item') {
+		return { id, ...getItem(id, gen), effectType: 'Item' };
+	} else if (type === 'ability') {
+		return { id, ...getAbility(id, gen), effectType: 'Ability' };
+	} else if (type === 'move') {
+		return { id, ...getMove(id, gen), effectType: 'Move' };
+	}
+
+	const pMove = getMove(id, gen);
+	const pAbility = getAbility(id, gen);
+	const pItem = getItem(id, gen);
+
+	if (Conditions[id]) return { id, effectType: 'Condition', ...Conditions[id] };
+	if (pMove.condition) return { id, effectType: 'Condition', ...pMove.condition };
+	if (pAbility.condition) return { id, effectType: 'Condition', ...pAbility.condition };
+	if (pItem.condition) return { id, effectType: 'Condition', ...pItem.condition };
+
+	const effectData: EffectData = { id, name: Sugar.escapeHTML(name || ''), effectType: 'Condition' };
+
+	if (id === 'recoil') {
+		effectData.effectType = 'Recoil';
+	} else if (id === 'drain') {
+		effectData.effectType = 'Drain';
+	}
+
+	return effectData;
+}
+
+export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?: string): SpeciesFormatsData {
+	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
+	const pokeId = toId(poke);
+	let formatsData = getModdedFormatsData(pokeId);
+	if (!formatsData) {
+		return { randomBattleMoves: [] };
+	}
+
+	for (const mod of getMods(gen, battleId)) {
+		const temp = getModdedFormatsData(pokeId, mod);
+		if (!temp) continue;
+		if (!formatsData || !temp.inherit) {
+			formatsData = { ...temp };
+		} else {
+			Object.assign(formatsData, temp);
+		}
+	}
+
+	return formatsData;
 }
 
 export class Move {
-	template;
+	template: MoveData;
 	name: string;
-	id: string;
+	id: ID;
 	pp: number;
 	disabled = false;
 	helpers = {};
 
-	constructor(template) {
+	constructor(template: MoveData, move?: Partial<Move>) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid move template');
 		this.template = template;
 		this.name = this.template.name;
-		this.id = this.template.id;
+		this.id = toId(template.name);
 		this.pp = Math.floor(this.template.pp * 1.6);
+		if (move) Object.assign(this, move);
 	}
 
-	restorePP(pp?: number) {
+	restorePP(pp?: number): void {
 		if (pp) {
 			this.pp += pp;
 		} else {
@@ -386,8 +328,8 @@ export interface PokemonDetails {
 }
 
 export class Pokemon implements PokemonDetails {
-	template;
-	name;
+	template: SpeciesData;
+	name: string;
 
 	// PokemonDetails properties
 	species;
@@ -397,16 +339,16 @@ export class Pokemon implements PokemonDetails {
 	terastallize: Type | null = null;
 
 	transformed = false;
-	transformPrev: Partial<Pokemon> | null = null;
+	transformPrev: Pick<Pokemon, 'template' | 'species' | 'shiny' | 'moves' | 'ability' | 'baseAbility' | 'abilityStack'> | null = null;
 
-	item: Record<string, any> | Unknown = '&unknown';
+	item: ItemData | Unknown = '&unknown';
 	itemEffect = '';
 	prevItem = null;
 	prevItemEffect = '';
 
-	ability: Record<string, any> | Unknown = '&unknown';
+	ability: AbilityData | Unknown = '&unknown';
 	supressedAbility = false;
-	baseAbility: Record<string, any> | Unknown = '&unknown';
+	baseAbility: AbilityData | Unknown = '&unknown';
 	abilityStack: string[] = [];
 
 	moves: Move[] = [];
@@ -428,58 +370,54 @@ export class Pokemon implements PokemonDetails {
 
 	helpers: Record<string, any> = {};
 
-	constructor(template, properties: Partial<Pokemon>) {
+	constructor(template: SpeciesData, properties: Partial<Pokemon>) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
 
 		this.template = template;
-		this.species = this.template.species;
-		this.name = this.template.species;
+		this.species = this.template.name;
+		this.name = this.template.name;
 
-		for (const i in properties) {
-			if (typeof this[i] === 'undefined' || typeof this[i] === 'function') continue;
-			if (i === 'template') continue;
-			this[i] = deepcopy(properties[i]);
-		}
+		Object.assign(this, properties);
 	}
 
-	addVolatile(volatile: string) {
+	addVolatile(volatile: string): void {
 		volatile = toId(volatile);
 		this.volatiles[volatile] = true;
 	}
 
-	removeVolatile(volatile: string) {
+	removeVolatile(volatile: string): void {
 		volatile = toId(volatile);
 		if (this.volatiles[volatile]) delete this.volatiles[volatile];
 	}
 
-	removeAllVolatiles() {
+	removeAllVolatiles(): void {
 		for (const i in this.volatiles) delete this.volatiles[i];
 	}
 
-	addBoost(stat: BoostedStat, n: number) {
-		if (!this.boosts[stat]) this.boosts[stat] = 0;
-		this.boosts[stat] += n;
+	addBoost(stat: BoostID, n: number): void {
+		this.boosts[stat] = (this.boosts[stat] || 0) + n;
 	}
 
-	setBoost(stat: BoostedStat, n: number) {
+	setBoost(stat: BoostID, n: number): void {
 		this.boosts[stat] = n;
 	}
 
-	invertAllBoosts() {
+	invertAllBoosts(): void {
 		for (const i in this.boosts) {
-			this.boosts[i] = this.boosts[i] * -1;
+			const stat = i as BoostID;
+			this.boosts[stat] = -1 * (this.boosts[stat] || 0);
 		}
 	}
 
-	removeAllBoosts() {
-		for (const i in this.boosts) delete this.boosts[i];
+	removeAllBoosts(): void {
+		this.boosts = {};
 	}
 
-	markAbility(id: string, isNotBase = false) {
+	markAbility(id: string, isNotBase = false): void {
 		this.ability = getAbility(id);
 		if ((!this.baseAbility || this.baseAbility === '&unknown') && !isNotBase) {
 			this.baseAbility = this.ability;
-			this.abilityStack.push(this.ability.id);
+			this.abilityStack.push(toId(this.ability.name));
 		} else if (isNotBase && this.baseAbility && this.baseAbility !== '&unknown') {
 			if (this.ability.id === this.baseAbility.id) {
 				if (this.abilityStack[this.abilityStack.length - 1] === this.ability.id) {
@@ -494,65 +432,41 @@ export class Pokemon implements PokemonDetails {
 		}
 	}
 
-	prepareMove(move: string, target: number) {
+	prepareMove(move: string, target: number): void {
 		this.prepared = { move, target };
 	}
 
-	markMove(id: string, deduct?: number) {
+	markMove(id: string, deduct?: number): Move | null {
 		id = toId(id);
-		let move = null;
-		for (let i = 0; i < this.moves.length; i++) {
-			if (this.moves[i].id === id) {
-				move = this.moves[i];
-			}
-		}
+		const move = this.moves.filter((m) => m.id === id)[0] || null;
 		if (move && deduct) {
 			move.pp += deduct;
 		}
 		return move;
 	}
 
-	transformInto(pokemon: Pokemon) {
-		this.transformPrev = {
-			template: this.template,
-			species: this.species,
-			shiny: this.shiny,
-			moves: this.moves,
-			ability: this.ability,
-			baseAbility: this.baseAbility,
-			abilityStack: this.abilityStack,
-		};
+	transformInto(pokemon: Pokemon): void {
+		const { template, species, shiny, moves, ability, baseAbility, abilityStack } = this;
+		this.transformPrev = { template, species, shiny, moves, ability, baseAbility, abilityStack };
 		this.species = pokemon.species;
-		this.template = pokemon.template;
+		this.template = { ...pokemon.template };
 		this.shiny = pokemon.shiny;
 		this.ability = pokemon.ability;
 		this.baseAbility = pokemon.baseAbility;
 		this.abilityStack = [...pokemon.abilityStack];
-		this.moves = [];
-		let mv;
-		for (let i = 0; i < pokemon.moves.length; i++) {
-			mv = new Move(pokemon.moves[i].template);
-			mv.pp = 5;
-			this.moves.push(mv);
-		}
+		this.moves = pokemon.moves.map((mv) => new Move(mv.template, { pp: 5 }));
 		this.transformed = true;
 		this.removeAllBoosts();
 		this.boosts = { ...pokemon.boosts };
 		this.addVolatile('transform');
 		this.addVolatile('formechange');
-		this.volatiles.formechange = pokemon.volatiles.formechange ? pokemon.volatiles.formechange : pokemon.species;
+		this.volatiles.formechange = pokemon.volatiles.formechange || pokemon.species;
 	}
 
-	unTransform() {
+	unTransform(): void {
 		this.transformed = false;
 		if (this.transformPrev) {
-			this.template = this.transformPrev.template;
-			this.species = this.transformPrev.species;
-			this.shiny = !!this.transformPrev.shiny;
-			this.moves = this.transformPrev.moves || [];
-			this.ability = this.transformPrev.ability || '&unknown';
-			this.baseAbility = this.transformPrev.baseAbility || '&unknown';
-			this.abilityStack = this.transformPrev.abilityStack || [];
+			Object.assign(this.transformPrev);
 		}
 		this.transformPrev = null;
 	}
@@ -562,72 +476,30 @@ export class Player {
 	id: string;
 	name: string;
 	userid: string;
-	avatar;
 	active: (Pokemon | null)[] = [];
 	side: Record<string, any> = {};
 	pokemon: Pokemon[] = [];
 	teamPv: (PokemonDetails | null)[] = [];
 
-	constructor(id: string, name?: string, avatar?: any) {
+	constructor(id: string, name?: string) {
 		this.id = id || 'p0';
 		this.name = name || '';
 		this.userid = toId(name);
-		this.avatar = avatar || 0;
 	}
 
-	setName(name: string) {
+	setName(name: string): void {
 		this.name = name;
 		this.userid = toId(name);
 	}
 
-	removeSideCondition(condition: string) {
+	removeSideCondition(condition: string): void {
 		condition = toId(condition);
 		if (this.side[condition]) delete this.side[condition];
 	}
 
-	addSideCondition(condition: string) {
+	addSideCondition(condition: string): void {
 		condition = toId(condition);
 		if (!this.side[condition]) this.side[condition] = 0;
 		this.side[condition]++;
 	}
-}
-
-export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?: string) {
-	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
-	poke = toId(poke);
-	const formatsData = {};
-	let temp;
-	try {
-		temp = DataDownloader.getFormatsData()[poke];
-		for (const attr in temp) formatsData[attr] = temp[attr];
-	} catch (e: any) {}
-	for (let gen = CurrentGen - 1; gen >= gen; gen--) {
-		try {
-			temp = require((Config.battleModsDir || BATTLE_DATA_DIR) + 'gen' + gen + '/formats-data.js').BattleFormatsData[poke];
-			if (!temp) continue;
-		} catch (e: any) {
-			continue;
-		}
-		if (!temp.inherit) {
-			for (const attr in formatsData) delete formatsData[attr];
-		}
-		for (const attr in temp) formatsData[attr] = temp[attr];
-	}
-
-	const formatId = battleId ? battleId.split('-')[1] : '';
-	const formatMod = Config.battleFormatMods[formatId];
-	if (formatMod) {
-		temp = null;
-		try {
-			temp = require((Config.battleModsDir || MODS_DATA_DIR) + formatMod + '/formats-data.js').BattleFormatsData[poke];
-		} catch (e: any) {}
-		if (temp) {
-			if (!temp.inherit) {
-				for (const attr in formatsData) delete formatsData[attr];
-			}
-			for (const attr in temp) formatsData[attr] = temp[attr];
-		}
-	}
-
-	return formatsData;
 }

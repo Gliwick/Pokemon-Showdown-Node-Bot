@@ -24,10 +24,10 @@
 		"sort-imports": 0
 	},
 	"ignorePatterns": [
-		"features/battle/battle-ai/battle*",
 		"features/battle/battle-ai/calc.ts",
-		"features/battle/battle-ai/modules",
-		"features/battle/data",
+		"features/battle/battle-ai/modules/",
+		"features/battle/data/conditions.ts",
+		"features/battle/data/mods/",
 		"test/",
 		"*.js"
 	]

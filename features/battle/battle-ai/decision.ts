@@ -182,7 +182,7 @@ function validateDecision(des: Decision[]): boolean {
 
 function cartesianProduct(tables: Decision[][]): Decision[][] {
 	return tables
-		.reduce((a, b) => a.flatMap((d) => b.map((e) => d.concat([e]))), [[]] as Decision[][])
+		.reduce((a, b) => a.flatMap((d) => b.map((e) => [...d, e])), [[]] as Decision[][])
 		.filter((decisions) => validateDecision(decisions));
 }
 

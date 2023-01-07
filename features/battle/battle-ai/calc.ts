@@ -3,6 +3,7 @@
  */
 
 import { GenderName, SparseBoostsTable, SparseStatsTable, StatID, StatIDExceptHP, StatsTable } from '../../../data/types-dex';
+import { SpeciesData } from '../../../data/types-species';
 import { deepcopy, toId } from '../../../tools';
 import { Battle } from './battle';
 import { CurrentGen, Pokemon as BattlePokemon, PokemonDetails, Type } from './battle-data';
@@ -37,7 +38,7 @@ export class Pokemon implements PokemonDetails {
 
 	category: Category | 'Status' | 'Mixed' = 'Mixed';
 
-	constructor(template, properties: Partial<Pokemon> & { helpers?: Record<string, any> }, battle?: Battle) {
+	constructor(template: SpeciesData, properties: Partial<Pokemon> & { helpers?: Record<string, any> }, battle?: Battle) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
 		this.template = { ...template };
 		if (properties.helpers?.template) {
@@ -48,8 +49,8 @@ export class Pokemon implements PokemonDetails {
 
 		this.gen = battle?.gen || CurrentGen;
 
-		this.name = this.template.species;
-		this.species = this.template.species;
+		this.name = this.template.name;
+		this.species = this.template.name;
 
 		for (const attr in properties) {
 			if (typeof this[attr] === 'undefined' || typeof this[attr] === 'function') continue;
@@ -72,7 +73,7 @@ export class Pokemon implements PokemonDetails {
 
 	getBaseStat(stat: StatID): number {
 		if (this.template && this.template.baseStats) {
-			if (this.template.species === 'Aegislash' && this.hasAbility('stancechange') && ['atk', 'spa'].includes(stat)) return 140;
+			if (this.template.name === 'Aegislash' && this.hasAbility('stancechange') && ['atk', 'spa'].includes(stat)) return 140;
 			else return this.template.baseStats[stat] || 0;
 		} else {
 			return 90;
@@ -133,7 +134,7 @@ export class Pokemon implements PokemonDetails {
 	getTypes(conditions: Conditions, preterastallized = false): Type[] {
 		if (!preterastallized && this.terastallize) return [this.terastallize];
 
-		let types = [...(this.template.types || [])];
+		let types: Type[] = [...(this.template.types || [])];
 		if (conditions && conditions.volatiles) {
 			if (conditions.volatiles.typechange?.length) types = [...conditions.volatiles.typechange];
 			if (conditions.volatiles.typeadd) {
@@ -184,7 +185,7 @@ export class Pokemon implements PokemonDetails {
 		if (this.hasAbility('slowstart')) spe = Math.floor(spe * 0.5);
 		if (this.hasItem({ ironball: 1, machobrace: 1 })) spe = Math.floor(spe * 0.5);
 		if (this.hasItem('choicescarf')) spe = Math.floor(spe * 1.5);
-		if (this.hasItem('quickpowder') && this.item && this.item.itemUser.includes(this.template.species)) {
+		if (this.hasItem('quickpowder') && this.item && this.item.itemUser.includes(this.template.name)) {
 			spe = Math.floor(spe * 2);
 		}
 		if (conditions.volatiles.unburden) spe *= 2;
@@ -296,7 +297,7 @@ export function getHazardsDamage(
 	if (poke.hasAbility('magicguard') || poke.hasItem('heavydutyboots')) return 0;
 
 	const side = conditions.side;
-	if (poke.template.species === 'Shedinja' && (side.stealthrock || side.spikes || side.gmaxsteelsurge)) return 100;
+	if (poke.template.name === 'Shedinja' && (side.stealthrock || side.spikes || side.gmaxsteelsurge)) return 100;
 
 	const inverse = !!globalConditions.inversebattle;
 	let dmg = 0;
@@ -323,11 +324,11 @@ export function getMoveType(
 ): Type {
 	switch (move.id) {
 		case 'aurawheel':
-			if (poke.template.species === 'Morpeko-Hangry') return 'Dark';
+			if (poke.template.name === 'Morpeko-Hangry') return 'Dark';
 			return move.type;
 		case 'ragingbull':
-			if (poke.template.species === 'Tauros-Paldea-Fire') return 'Fire';
-			if (poke.template.species === 'Tauros-Paldea-Water') return 'Water';
+			if (poke.template.name === 'Tauros-Paldea-Fire') return 'Fire';
+			if (poke.template.name === 'Tauros-Paldea-Water') return 'Water';
 			return move.type;
 		case 'judgment':
 			return poke.item?.onPlate || move.type;
@@ -934,10 +935,10 @@ export function calculate(
 				bp = Math.floor(bp * 0.5);
 			break;
 		case 'hyperspacefury':
-			if (atkPoke.template.species !== 'Hoopa-Unbound') bp = 0;
+			if (atkPoke.template.name !== 'Hoopa-Unbound') bp = 0;
 			break;
 		case 'aurawheel':
-			if (!atkPoke.template.species.startsWith('Morpeko')) bp = 0;
+			if (!atkPoke.template.name.startsWith('Morpeko')) bp = 0;
 			break;
 		case 'waterspout':
 		case 'eruption':
@@ -1112,7 +1113,7 @@ export function calculate(
 		}
 	}
 
-	if (atkPoke.item && (!atkPoke.item.itemUser || atkPoke.item.itemUser.includes(atkPoke.template.species))) {
+	if (atkPoke.item && (!atkPoke.item.itemUser || atkPoke.item.itemUser.includes(atkPoke.template.name))) {
 		switch (atkPoke.item.id) {
 			case 'lightball':
 				atk = Math.floor(atk * 2);
@@ -1155,7 +1156,7 @@ export function calculate(
 		if (atkPoke.item.onPlate === moveType) bp = Math.floor(bp * 1.2);
 	}
 
-	if (defPoke.item && (!defPoke.item.itemUser || defPoke.item.itemUser.includes(defPoke.template.species))) {
+	if (defPoke.item && (!defPoke.item.itemUser || defPoke.item.itemUser.includes(defPoke.template.name))) {
 		if (
 			defPoke.item.onSourceModifyDamage &&
 			defPoke.item.naturalGift?.type === move.type &&
@@ -1193,19 +1194,19 @@ export function calculate(
 
 	/* STAB */
 	let stab = 1;
-	if (atkPoke.terastallize) {
-		const originalStab = atkPoke.getTypes(atkConditions, true).includes(moveType);
-		const teraStab = move.type === atkPoke.terastallize;
-		if (originalStab && teraStab && !['firepledge', 'grasspledge', 'waterpledge'].includes(move.id)) {
-			if (battle) battle.debug('applying double ' + move.type + ' stab from terastallization');
-			stab = atkPoke.hasAbility('adaptability') ? 2.25 : 2;
-		} else if (teraStab) {
-			stab = atkPoke.hasAbility('adaptability') ? 2 : 1.5;
-		} else if (originalStab) {
-			stab = 1.5;
-		}
-	} else {
-		if (atkPoke.hasType(moveType, atkConditions) || atkPoke.hasAbility({ libero: 1, protean: 1 })) {
+	if (moveType !== '???') {
+		if (atkPoke.terastallize) {
+			const originalStab = atkPoke.getTypes(atkConditions, true).includes(moveType);
+			const teraStab = move.type === atkPoke.terastallize;
+			if (originalStab && teraStab && !['firepledge', 'grasspledge', 'waterpledge'].includes(move.id)) {
+				if (battle) battle.debug('applying double ' + move.type + ' stab from terastallization');
+				stab = atkPoke.hasAbility('adaptability') ? 2.25 : 2;
+			} else if (teraStab) {
+				stab = atkPoke.hasAbility('adaptability') ? 2 : 1.5;
+			} else if (originalStab) {
+				stab = 1.5;
+			}
+		} else if (atkPoke.hasType(moveType, atkConditions) || atkPoke.hasAbility({ libero: 1, protean: 1 })) {
 			stab = atkPoke.hasAbility('adaptability') ? 2 : 1.5;
 		}
 	}
@@ -1291,7 +1292,7 @@ export function calculate(
 	const willCrit =
 		atkConditions.immediate.crit ||
 		move.willCrit ||
-		(atkPoke.hasItem({ leek: 1, luckypunch: 1, stick: 1 }) && atkPoke.item && atkPoke.item.itemUser.includes(atkPoke.template.species));
+		(atkPoke.hasItem({ leek: 1, luckypunch: 1, stick: 1 }) && atkPoke.item && atkPoke.item.itemUser.includes(atkPoke.template.name));
 
 	if (defConditions.boosts[defStat]) {
 		if (!willCrit && !move.ignoreDefensive && !atkPoke.hasAbility('unaware')) {

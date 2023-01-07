@@ -5,15 +5,15 @@
 import { BoostID } from '../../../data/types-dex';
 import { error } from '../../../log';
 import { toId, toName } from '../../../tools';
-import { Battle, BattleType, BattleTypeActiveSlots, PlayerId, Request } from './battle';
+import { Battle, BattleType, BattleTypeActiveSlots, Request } from './battle';
 import { getEffect, getMove, getPokemon, Move, Pokemon } from './battle-data';
 
 export const majors: Record<string, string | ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void)> = {
-	rated: function (this: Battle, args, kwargs) {
+	rated: function (this: Battle) {
 		this.rated = true;
 	},
 
-	request: function (this: Battle, args, kwargs) {
+	request: function (this: Battle, args) {
 		args.shift();
 		this.request = null;
 		const arg = args.join('|');
@@ -21,18 +21,18 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		this.rqid = this.request?.rqid || -1;
 	},
 
-	start: function (this: Battle, args, kwargs) {
+	start: function (this: Battle) {
 		this.started = true;
 		this.checkTimer();
 	},
 
-	turn: function (this: Battle, args, kwargs) {
+	turn: function (this: Battle, args) {
 		this.turn = parseInt(args[1]) || 0;
 		this.checkTimer();
 		this.makeDecision();
 	},
 
-	upkeep: function (this: Battle, args, kwargs) {
+	upkeep: function (this: Battle) {
 		this.checkTimer();
 		this.makeDecision();
 	},
@@ -45,7 +45,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		this.start();
 	},
 
-	gametype: function (this: Battle, args, kwargs) {
+	gametype: function (this: Battle, args) {
 		if (!(args[1] in BattleTypeActiveSlots)) {
 			error('Unknown battle type: ' + args[1]);
 			return;
@@ -57,15 +57,15 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		this.players.p2.active = Array(BattleTypeActiveSlots[this.gametype]).fill(null);
 	},
 
-	variation: function (this: Battle, args, kwargs) {
+	variation: function (this: Battle, args) {
 		this.variations.push(args[1]);
 	},
 
-	rule: function (this: Battle, args, kwargs) {
+	rule: function (this: Battle, args) {
 		this.rules.push(args[1].split(':')[0]);
 	},
 
-	inactive: function (this: Battle, args, kwargs) {
+	inactive: function (this: Battle, args) {
 		this.timer = true;
 
 		if (args[1] && this.foe) {
@@ -73,21 +73,21 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		}
 	},
 
-	inactiveoff: function (this: Battle, args, kwargs) {
+	inactiveoff: function (this: Battle) {
 		this.timer = false;
 	},
 
 	j: 'join',
-	join: function (this: Battle, args, kwargs) {
+	join: function (this: Battle, args) {
 		this.users[toId(args[1])] = args[1];
 	},
 
 	l: 'leave',
-	leave: function (this: Battle, args, kwargs) {
+	leave: function (this: Battle, args) {
 		if (this.users[toId(args[1])]) delete this.users[toId(args[1])];
 	},
 
-	player: function (this: Battle, args, kwargs) {
+	player: function (this: Battle, args) {
 		const id = args[1];
 		if (!(id in this.players)) {
 			error('Unknown side: ' + id);
@@ -95,11 +95,9 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		}
 
 		const name = args[2];
-		const avatar = args[3];
-		const player = this.players[id as PlayerId];
+		const player = this.players[id as keyof Battle['players']];
 		if (player) {
 			player.setName(name || '');
-			player.avatar = avatar || 0;
 			if (player.userid) {
 				if (player.userid === toId(Bot.status.nickName)) {
 					this.self = player;
@@ -122,12 +120,12 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		this.leave();
 	},
 
-	prematureend: function (this: Battle, args, kwargs) {
+	prematureend: function (this: Battle) {
 		this.ended = true;
 		this.leave();
 	},
 
-	clearpoke: function (this: Battle, args, kwargs) {
+	clearpoke: function (this: Battle) {
 		this.players.p1.teamPv = [];
 		this.players.p2.teamPv = [];
 		for (let i = 0; i < this.players.p1.active.length; i++) {
@@ -136,17 +134,17 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		}
 	},
 
-	poke: function (this: Battle, args, kwargs) {
+	poke: function (this: Battle, args) {
 		const p = args[1];
 		if (!(p in this.players)) {
 			error('Unknown side: ' + p);
 			return;
 		}
 
-		this.players[p as PlayerId].teamPv.push(this.parseDetails(args[2]));
+		this.players[p as keyof Battle['players']].teamPv.push(this.parseDetails(args[2]));
 	},
 
-	detailschange: function (this: Battle, args, kwargs) {
+	detailschange: function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
 		if (!poke) return;
 
@@ -161,7 +159,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		poke.template = getPokemon(details.species, this.gen, this.id);
 	},
 
-	teampreview: function (this: Battle, args, kwargs) {
+	teampreview: function (this: Battle, args) {
 		if (args[1]) this.teamPreview = parseInt(args[1]) || 1;
 		this.makeDecision();
 		this.checkTimer();
@@ -169,7 +167,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 
 	drag: 'switch',
 	replace: 'switch',
-	switch: function (this: Battle, args, kwargs) {
+	switch: function (this: Battle, args) {
 		const spl = args[1].split(': ');
 		const p = spl[0].substr(0, 2);
 		if (!(p in this.players)) {
@@ -181,14 +179,14 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		const name = toName(spl[1]);
 		const details = this.parseDetails(args[2]);
 		const health = this.parseStatus(args[3]);
-		const player = this.players[p as PlayerId];
+		const player = this.players[p as keyof Battle['players']];
 		/* Get the pokemon or create a new one */
 		let poke: Pokemon | null = null;
 		for (let i = 0; i < player.pokemon.length; i++) {
 			if (player.pokemon[i].name === name) poke = player.pokemon[i];
 		}
 		if (!poke) {
-			poke = new Pokemon(getPokemon(details?.species || '', this.gen, this.id), { name: name });
+			poke = new Pokemon(getPokemon(details?.species || '', this.gen, this.id), { name });
 			player.pokemon.push(poke);
 		}
 		poke.active = true;
@@ -253,7 +251,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		if (!isIntro) this.message('faint', det?.side, poke.name);
 	},
 
-	swap: function (this: Battle, args, kwargs) {
+	swap: function (this: Battle, args) {
 		const poke = this.parsePokemonIdent(args[1]);
 		if (!poke) return;
 
@@ -263,7 +261,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 			return;
 		}
 
-		const player = this.players[poke.side as PlayerId];
+		const player = this.players[poke.side as keyof Battle['players']];
 		const temp = player.active[poke.slot];
 		player.active[poke.slot] = player.active[to];
 		player.active[to] = temp;
@@ -292,13 +290,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 					break;
 			}
 		}
-		let move: Move | null = null;
-		for (let i = 0; i < poke.moves.length; i++) {
-			if (poke.moves[i].id === moveTemplate.id) {
-				move = poke.moves[i];
-				break;
-			}
-		}
+		let move: Move | undefined = poke.moves.filter((m) => m.id === toId(moveTemplate.name))[0];
 		if (!move) {
 			move = new Move(moveTemplate);
 			if (poke.transformed) move.pp = 5;
@@ -309,7 +301,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 			if (!det || !(det.side in this.players)) {
 				error('Unknown side: ' + det?.side);
 			} else {
-				this.players[det.side as PlayerId].side.wish = {
+				this.players[det.side as keyof Battle['players']].side.wish = {
 					move: move.id,
 					turn: this.turn,
 					poke: poke,
@@ -337,9 +329,10 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		if (!poke) return;
 
 		const effect = getEffect(args[2], this.gen);
+		const effectId = effect.id;
 		const moveTemplate = getMove(args[3] || '', this.gen, this.id);
 		const det = this.parsePokemonIdent(args[1]);
-		switch (effect.id) {
+		switch (effectId) {
 			case 'taunt':
 			case 'gravity':
 			case 'healblock':
@@ -352,22 +345,16 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 			case 'slp':
 				if (!poke.helpers.sleepCounter) poke.helpers.sleepCounter = 0;
 				poke.helpers.sleepCounter++;
-				if (!isIntro) this.message(effect.id, det?.side, poke.name); // hax
+				if (!isIntro) this.message(effectId, det?.side, poke.name); // hax
 				return;
 			case 'par':
 			case 'frz':
 			case 'flinch':
 			case 'attract':
-				if (!isIntro) this.message(effect.id, det?.side, poke.name); // hax
+				if (!isIntro) this.message(effectId, det?.side, poke.name); // hax
 				return; // No move
 		}
-		let move: Move | null = null;
-		for (let i = 0; i < poke.moves.length; i++) {
-			if (poke.moves[i].id === moveTemplate.id) {
-				move = poke.moves[i];
-				break;
-			}
-		}
+		let move: Move | undefined = poke.moves.filter((m) => m.id === toId(moveTemplate.name))[0];
 		if (!move) {
 			move = new Move(moveTemplate);
 			if (poke.transformed) move.pp = 5;
@@ -375,15 +362,15 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		}
 	},
 
-	gen: function (this: Battle, args, kwargs) {
+	gen: function (this: Battle, args) {
 		this.gen = parseInt(args[1], 10);
 	},
 
-	title: function (this: Battle, args, kwargs) {
+	title: function (this: Battle, args) {
 		this.title = parseInt(args[1], 10);
 	},
 
-	callback: function (this: Battle, args, kwargs) {
+	callback: function (this: Battle, args) {
 		if (!this.request?.active) {
 			error('No request received yet');
 			return;

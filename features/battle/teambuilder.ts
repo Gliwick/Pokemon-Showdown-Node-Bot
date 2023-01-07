@@ -2,7 +2,8 @@ import { existsSync, readFileSync, rename, writeFile } from 'fs';
 import { Array as Sugar } from 'sugar';
 import { inspect } from 'util';
 
-import { Stat, typechart } from '../../data/typechart';
+import { typechart } from '../../data/typechart';
+import { StatID } from '../../data/types-dex';
 import { SpeciesData } from '../../data/types-species';
 import { debug, errlog, error } from '../../log';
 import { isUndefinedOrEquals, toId, uncacheTree } from '../../tools';
@@ -18,9 +19,9 @@ interface RandomTeam {
 
 type Team = string | PokeSet[] | RandomTeam;
 
-const Stats: Stat[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
+const Stats: StatID[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 
-const BattleStatIDs: Record<string, Stat> = {
+const BattleStatIDs: Record<string, StatID> = {
 	HP: 'hp',
 	hp: 'hp',
 	Atk: 'atk',
@@ -40,7 +41,7 @@ const BattleStatIDs: Record<string, Stat> = {
 	spe: 'spe',
 };
 
-const BattleStatNames: Record<Stat, string> = {
+const BattleStatNames: Record<StatID, string> = {
 	hp: 'HP',
 	atk: 'Atk',
 	def: 'Def',
@@ -56,9 +57,9 @@ interface PokeSet {
 	ability: string;
 	moves: string[];
 	nature: string;
-	evs?: Record<Stat, number>;
+	evs?: Record<StatID, number>;
 	gender?: string;
-	ivs?: Partial<Record<Stat, number>>;
+	ivs?: Partial<Record<StatID, number>>;
 	shiny?: boolean;
 	level?: number;
 	happiness?: number;
@@ -164,7 +165,7 @@ export class TeamBuilder {
 				teamStr = this.packTeam(teamChosen);
 			} else if (typeof teamChosen === 'object' && teamChosen.maxPokemon && teamChosen.pokemon) {
 				// generate random team
-				const team = [];
+				const team: PokeSet[] = [];
 				const hasSpecies: Record<string, boolean> = {};
 				if (teamChosen.essentialPokemon) {
 					for (const poke of teamChosen.essentialPokemon) {
@@ -469,9 +470,9 @@ export class TeamBuilder {
 
 			// ability
 			j = buf.indexOf('|', i);
-			const ability = buf.substring(i, j) || '0';
+			const ability: string = buf.substring(i, j) || '0';
 			const template = getPokemon(set.species);
-			set.ability = template.abilities[ability] || ability;
+			set.ability = { ...(template?.abilities || {}) }[ability] || ability;
 			i = j + 1;
 
 			// moves
@@ -553,14 +554,14 @@ export class TeamBuilder {
 		for (let i = 0; i < team.length; i++) {
 			const curSet = team[i];
 			if (curSet.name !== curSet.species) {
-				text += '' + curSet.name + ' (' + (getPokemon(curSet.species).name || curSet.species) + ')';
+				text += '' + curSet.name + ' (' + (getPokemon(curSet.species)?.name || curSet.species) + ')';
 			} else {
-				text += '' + (getPokemon(curSet.species).name || curSet.species);
+				text += '' + (getPokemon(curSet.species)?.name || curSet.species);
 			}
 			if (curSet.gender === 'M') text += ' (M)';
 			if (curSet.gender === 'F') text += ' (F)';
 			if (curSet.item) {
-				curSet.item = getItem(curSet.item).name || curSet.item;
+				curSet.item = getItem(curSet.item)?.name || curSet.item;
 				text += ' @ ' + curSet.item;
 			}
 			text += '\n';
@@ -640,7 +641,7 @@ export class TeamBuilder {
 				if (move.substr(0, 13) === 'Hidden Power ') {
 					move = move.substr(0, 13) + '[' + move.substr(13) + ']';
 				}
-				text += '- ' + (getMove(move).name || move) + '\n';
+				text += '- ' + (getMove(move)?.name || move) + '\n';
 			}
 			text += '\n';
 		}

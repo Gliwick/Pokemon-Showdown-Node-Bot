@@ -72,7 +72,7 @@ export interface EffectData {
 	shortDesc?: string;
 }
 
-type EffectType =
+export type EffectType =
 	| 'Condition'
 	| 'Pokemon'
 	| 'Move'
