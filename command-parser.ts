@@ -6,7 +6,7 @@ import { inspect } from 'util';
 
 import { cmdr, errlog, error, info, monitor, ok } from './log';
 import { FlatFileManager } from './settings';
-import { equalOrHigherRank, highestRank, stripCommands, toId, toRoomid, uncacheTree } from './tools';
+import { equalOrHigherRank, highestRank, stripCommands, toId, uncacheTree } from './tools';
 
 const MAX_COMMAND_RECURSION = 10;
 const MAX_CMD_FLOOD = 30;
@@ -145,7 +145,7 @@ export class Context {
 		const room = Bot.rooms[targetRoom];
 		if (!room) return null;
 		return {
-			id: toRoomid(targetRoom),
+			id: toId(targetRoom),
 			type: room.type,
 			title: room.title,
 			users: Object.values(room.users),

@@ -5,6 +5,10 @@ import { writeFile } from 'fs';
 import { IncomingMessage } from 'http';
 import { get } from 'https';
 
+import { AbilityData } from './data/dex-abilities';
+import { ItemData } from './data/dex-items';
+import { MoveData } from './data/dex-moves';
+import { LearnsetData, SpeciesData, SpeciesFormatsData } from './data/dex-species';
 import { debug, errlog, error } from './log';
 import { uncacheTree } from './tools';
 
@@ -12,10 +16,6 @@ export class DataDownloader {
 	initDate = Date.now();
 	lastDownload?: number;
 	data: { url: string; file: string }[] = [
-		{
-			url: 'https://raw.githubusercontent.com/Zarel/Pokemon-Showdown/master/config/formats.js',
-			file: 'formats.js',
-		},
 		{
 			url: 'https://play.pokemonshowdown.com/data/formats-data.js?' + this.initDate,
 			file: 'formats-data.js',
@@ -100,35 +100,31 @@ export class DataDownloader {
 		}
 	}
 
-	getPokedex() {
+	getPokedex(): Record<string, SpeciesData> {
 		return require('./data/pokedex.js').BattlePokedex;
 	}
 
-	getMovedex() {
+	getMovedex(): Record<string, MoveData> {
 		return require('./data/moves.js').BattleMovedex;
 	}
 
-	getAbilities() {
+	getAbilities(): Record<string, AbilityData> {
 		return require('./data/abilities.js').BattleAbilities;
 	}
 
-	getItems() {
+	getItems(): Record<string, ItemData> {
 		return require('./data/items.js').BattleItems;
 	}
 
-	getAliases() {
+	getAliases(): Record<string, string> {
 		return require('./data/aliases.js').BattleAliases;
 	}
 
-	getFormats() {
-		return require('./data/formats.js').Formats;
-	}
-
-	getFormatsData() {
+	getFormatsData(): Record<string, SpeciesFormatsData> {
 		return require('./data/formats-data.js').BattleFormatsData;
 	}
 
-	getLearnsets() {
+	getLearnsets(): Record<string, LearnsetData> {
 		return require('./data/learnsets.js').BattleLearnsets;
 	}
 }

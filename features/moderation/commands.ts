@@ -4,7 +4,7 @@
 
 import { Command, CommandModuleManager, Context } from '../../command-parser';
 import { ConfigType } from '../../config-tools';
-import { getGroup, getTargetRoom, stripCommands, toId, toRoomid, uploadToHastebin } from '../../tools';
+import { getGroup, getTargetRoom, stripCommands, toId, uploadToHastebin } from '../../tools';
 import { ModerationManager } from '.';
 
 class ModerationModule implements CommandModuleManager {
@@ -307,7 +307,7 @@ export const commands: Record<string, string | Command> = {
 					for (let i = 1; i < args.length; i++) {
 						const splArg = args[i].split(':');
 						const user = toId(splArg[0]);
-						let level = toId(splArg[1] || defaultLevel);
+						let level: string = toId(splArg[1] || defaultLevel);
 						if (aliases[level]) level = aliases[level];
 						if (!user.length || user.length > 18) {
 							illegal.push(user);
@@ -808,7 +808,7 @@ export const commands: Record<string, string | Command> = {
 		const args = arg.split(',');
 		if (args.length > 2) {
 			if (!this.isRanked(getGroup('admin'))) return false;
-			tarRoom = toRoomid(args[0]);
+			tarRoom = toId(args[0]);
 		}
 		if (Bot.rooms[tarRoom]?.type !== 'chat') return this.reply(`${this.trad('notchat')} (${tarRoom})`);
 

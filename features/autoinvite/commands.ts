@@ -4,7 +4,7 @@
 
 import { Command, Context } from '../../command-parser';
 import { monitor } from '../../log';
-import { equalOrHigherRank, toRoomid, uploadToHastebin } from '../../tools';
+import { equalOrHigherRank, toId, uploadToHastebin } from '../../tools';
 import { AutoInviteManager } from '.';
 
 export const commands: Record<string, string | Command> = {
@@ -12,7 +12,7 @@ export const commands: Record<string, string | Command> = {
 	useroomauth: 'getroomauth',
 	getroomauth: function (arg, user, room, cmd) {
 		if (!this.isExcepted) return false;
-		const tarRoom = toRoomid(arg) || room;
+		const tarRoom = toId(arg) || room;
 		const autoInvite = Features.getFeature(AutoInviteManager);
 		if (!autoInvite) return false;
 		if (!Bot.rooms || !Bot.rooms[tarRoom]) return false;

@@ -3,7 +3,7 @@
 */
 
 import { Command, Context } from '../../command-parser';
-import { getTargetRoom, stripCommands, toId, toRoomid, uploadToHastebin } from '../../tools';
+import { getTargetRoom, stripCommands, toId, uploadToHastebin } from '../../tools';
 import { GroupChatsManager } from '.';
 
 function wpmEnabled(room: string): boolean {
@@ -14,7 +14,7 @@ export const commands: Record<string, string | Command> = {
 	igc: 'ignoregroupchat',
 	ignoregroupchat: function (arg, user, room) {
 		if (!this.isExcepted) return false;
-		const tarRoom = toRoomid(arg) || room;
+		const tarRoom = toId(arg) || room;
 		const manager = Features.getFeature(GroupChatsManager);
 		if (manager.ignored[tarRoom]) return this.reply('Group Chat __' + tarRoom + '__ already ignored');
 		manager.ignored[tarRoom] = true;
@@ -25,7 +25,7 @@ export const commands: Record<string, string | Command> = {
 	unigc: 'unignoregroupchat',
 	unignoregroupchat: function (arg, user, room) {
 		if (!this.isExcepted) return false;
-		const tarRoom = toRoomid(arg) || room;
+		const tarRoom = toId(arg) || room;
 		const manager = Features.getFeature(GroupChatsManager);
 		if (!manager.ignored[tarRoom]) return this.reply('Group Chat __' + tarRoom + '__ is not being ignored');
 		delete manager.ignored[tarRoom];

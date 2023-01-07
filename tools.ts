@@ -7,13 +7,11 @@ import { request, RequestOptions } from 'https';
 
 /* String utils */
 
-export function toId(text?: string): string {
-	if (!text) return '';
-	return text.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
+export type ID = '' | (string & { __isID: true });
 
-export function toRoomid(roomid: string): string {
-	return roomid.replace(/[^a-zA-Z0-9-]+/g, '').toLowerCase();
+export function toId(text?: string): ID {
+	if (!text) return '';
+	return text.toLowerCase().replace(/[^a-z0-9]/g, '') as ID;
 }
 
 export function toName(text?: string): string {
@@ -119,7 +117,7 @@ export function getTargetRoom(arg?: string): { arg: string; room: string } | nul
 	if (!arg) return null;
 	if (arg.indexOf('[') !== 0) return null;
 	if (arg.indexOf(']') < 0) return null;
-	const newArg = toRoomid(arg.substr(arg.indexOf('[') + 1, arg.indexOf(']') - arg.indexOf('[') - 1));
+	const newArg = toId(arg.substr(arg.indexOf('[') + 1, arg.indexOf(']') - arg.indexOf('[') - 1));
 	const room = arg.substr(arg.indexOf(']') + 1);
 	return { arg: newArg, room };
 }

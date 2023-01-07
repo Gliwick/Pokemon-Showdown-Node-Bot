@@ -8,7 +8,7 @@ import { inspect } from 'util';
 import { Command, Context } from '../command-parser';
 import { checkConfig } from '../config-tools';
 import { errlog, error, info } from '../log';
-import { joinWithLengthLimit, toId, toRoomid, uncacheTree } from '../tools';
+import { joinWithLengthLimit, toId, uncacheTree } from '../tools';
 
 export const commands: Record<string, string | Command> = {
 	send: function (arg) {
@@ -41,7 +41,7 @@ export const commands: Record<string, string | Command> = {
 
 	sleep: function (arg, by, room) {
 		if (!this.isExcepted) return false;
-		const roomObj = this.getRoom(toRoomid(arg) || room);
+		const roomObj = this.getRoom(toId(arg) || room);
 		if (!roomObj) {
 			if (!arg) return this.pmReply('Usage: ' + this.cmdToken + this.cmd + ' [room]');
 			return this.pmReply('Room "' + arg + '" not found');
@@ -57,7 +57,7 @@ export const commands: Record<string, string | Command> = {
 	wake: 'unsleep',
 	unsleep: function (arg, by, room) {
 		if (!this.isExcepted) return false;
-		const roomObj = this.getRoom(toRoomid(arg) || room);
+		const roomObj = this.getRoom(toId(arg) || room);
 		if (!roomObj) {
 			if (!arg) return this.pmReply('Usage: ' + this.cmdToken + this.cmd + ' [room]');
 			return this.pmReply('Room "' + arg + '" not found');
@@ -95,7 +95,7 @@ export const commands: Record<string, string | Command> = {
 			return this.pmReply(cmds);
 		}
 
-		const tarRoom = toRoomid(arg);
+		const tarRoom = toId(arg);
 		const roomObj = this.getRoom(tarRoom);
 		if (!roomObj) return this.pmReply('Room "' + tarRoom + '" not found');
 

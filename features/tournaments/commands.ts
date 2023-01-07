@@ -4,7 +4,7 @@
 
 import { Command, CommandModuleManager, Context } from '../../command-parser';
 import { ConfigType, validateConfigObject } from '../../config-tools';
-import { parseAliases, toId, toName, toRoomid, uploadToHastebin } from '../../tools';
+import { parseAliases, toId, toName, uploadToHastebin } from '../../tools';
 import { TournamentsManager } from '.';
 
 class TournamentsModule implements CommandModuleManager {
@@ -150,7 +150,7 @@ export const commands: Record<string, string | Command> = {
 				}
 			}
 			if (params.type) {
-				const type = toId(params.type);
+				const type: string = toId(params.type);
 				if (type !== 'elimination' && type !== 'roundrobin') return this.reply(this.trad('e7'));
 				details.type = type;
 			}
@@ -205,8 +205,8 @@ export const commands: Record<string, string | Command> = {
 			case 'rank':
 			case 'ranking':
 				tarRoom = room;
-				if (this.roomType !== 'chat') tarRoom = toRoomid(args.shift() || '');
-				if (args.length > 1) tarRoom = toRoomid(args.shift() || '');
+				if (this.roomType !== 'chat') tarRoom = toId(args.shift() || '');
+				if (args.length > 1) tarRoom = toId(args.shift() || '');
 				if (!tarRoom) return this.restrictReply(`${this.trad('usage')}: ${this.cmdToken + cmd} [room], [user]`, 'rank');
 				if (!manager.leaderboards.isConfigured(tarRoom)) return this.restrictReply(`${this.trad('not')} ${tarRoom}`, 'rank');
 				const target = toId(args[0] || by);
@@ -223,7 +223,7 @@ export const commands: Record<string, string | Command> = {
 				this.restrictReply(txt, 'rank');
 				break;
 			case 'top':
-				if (args.length > 0) tarRoom = toRoomid(args[0]);
+				if (args.length > 0) tarRoom = toId(args[0]);
 				if (!tarRoom && this.roomType === 'chat') tarRoom = room;
 				if (!tarRoom) return this.restrictReply(`${this.trad('usage')}: ${this.cmdToken + cmd} [room], [user]`, 'rank');
 				if (!manager.leaderboards.isConfigured(tarRoom)) return this.restrictReply(`${this.trad('not')} ${tarRoom}`, 'rank');
@@ -235,7 +235,7 @@ export const commands: Record<string, string | Command> = {
 				break;
 			case 'table':
 				if (!this.isRanked('roomowner')) return false;
-				if (args.length > 0) tarRoom = toRoomid(args[0]);
+				if (args.length > 0) tarRoom = toId(args[0]);
 				if (!tarRoom && this.roomType === 'chat') tarRoom = room;
 				if (!tarRoom) return this.reply(this.trad('usage') + ': ' + this.cmdToken + cmd + ' [room]');
 				if (!manager.leaderboards.isConfigured(tarRoom)) return this.reply(this.trad('not') + ' ' + tarRoom);
@@ -256,7 +256,7 @@ export const commands: Record<string, string | Command> = {
 				if (!this.isExcepted) return false;
 				if (args.length < 1 || !toId(args[0])) return this.reply(`${this.trad('usage')}: ${this.cmdToken + cmd} [room]`);
 
-				tarRoom = toRoomid(args[0]);
+				tarRoom = toId(args[0]);
 				const code = manager.leaderboards.getResetHashCode(tarRoom);
 				if (!code) return this.reply(this.trad('empty') + ' ' + tarRoom);
 				this.reply(
@@ -277,7 +277,7 @@ export const commands: Record<string, string | Command> = {
 				if (!this.isExcepted) return false;
 				if (args.length < 1 || !toId(args[0])) return this.reply(`${this.trad('usage')}: ${this.cmdToken + cmd} [room]`);
 
-				tarRoom = toRoomid(args[0]);
+				tarRoom = toId(args[0]);
 				const { winnerPoints, finalistPoints, semiFinalistPoints, battlePoints, onlyOfficial } =
 					manager.leaderboards.getConfig(tarRoom);
 				if (Config.leaderboards[tarRoom]) {
@@ -305,7 +305,7 @@ export const commands: Record<string, string | Command> = {
 					);
 				}
 
-				tarRoom = toRoomid(args[0]);
+				tarRoom = toId(args[0]);
 				const enabled = toId(args[1]);
 				const rConfAux = manager.leaderboards.getConfig(tarRoom);
 				if (['on', 'enabled'].includes(enabled)) {
