@@ -2,6 +2,7 @@ import { existsSync, readFileSync, rename, writeFile } from 'fs';
 import { Array as Sugar } from 'sugar';
 import { inspect } from 'util';
 
+import { SpeciesData } from '../../data/dex-species';
 import { Stat, typechart } from '../../data/typechart';
 import { debug, errlog, error } from '../../log';
 import { isUndefinedOrEquals, toId, uncacheTree } from '../../tools';
@@ -225,7 +226,7 @@ export class TeamBuilder {
 			// item
 			buf += '|' + toId(set.item);
 			// ability
-			let template: Record<string, any> | null = null;
+			let template: SpeciesData | null = null;
 			try {
 				template = DataDownloader.getPokedex()[toId(set.species || set.name)];
 			} catch (e: any) {

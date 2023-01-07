@@ -3,6 +3,10 @@
  */
 
 import { Command, CommandModuleManager } from '../command-parser';
+import { AbilityData } from '../data/dex-abilities';
+import { ItemData } from '../data/dex-items';
+import { MoveData } from '../data/dex-moves';
+import { LearnsetData, SpeciesData, SpeciesFormatsData } from '../data/dex-species';
 import { debug } from '../log';
 import { getGroup, levenshtein, normalize, toId, toName } from '../tools';
 
@@ -63,17 +67,33 @@ function getTranslations(from: string, to: string, word: string): Translation[] 
 		});
 }
 
-function getPokemonMoves(pokemon: string, filter: (move: any) => boolean): string[] | null {
-	let pokedex: Record<string, any>;
-	let movedex: Record<string, any>;
-	let learnsets: Record<string, { learnset: Record<string, string> }>;
+function getData(): {
+	pokedex?: Record<string, SpeciesData>;
+	movedex?: Record<string, MoveData>;
+	abilities?: Record<string, AbilityData>;
+	items?: Record<string, ItemData>;
+	aliases?: Record<string, string>;
+	formatsData?: Record<string, SpeciesFormatsData>;
+	learnsets?: Record<string, LearnsetData>;
+} {
 	try {
-		pokedex = DataDownloader.getPokedex();
-		movedex = DataDownloader.getMovedex();
-		learnsets = DataDownloader.getLearnsets();
+		return {
+			pokedex: DataDownloader.getPokedex(),
+			movedex: DataDownloader.getMovedex(),
+			abilities: DataDownloader.getAbilities(),
+			items: DataDownloader.getItems(),
+			aliases: DataDownloader.getAliases(),
+			formatsData: DataDownloader.getFormatsData(),
+			learnsets: DataDownloader.getLearnsets(),
+		};
 	} catch (e: any) {
-		return null;
+		return {};
 	}
+}
+
+function getPokemonMoves(pokemon: string, filter: (move: any) => boolean): string[] | null {
+	const { pokedex, movedex, learnsets } = getData();
+	if (!pokedex || !movedex || !learnsets) return null;
 	const pokemonToCheck: string[] = [];
 	while (pokemon) {
 		pokemonToCheck.push(pokemon);
@@ -83,7 +103,7 @@ function getPokemonMoves(pokemon: string, filter: (move: any) => boolean): strin
 		new Set<string>(
 			pokemonToCheck
 				.filter((pokemon) => !!learnsets[pokemon])
-				.flatMap((pokemon) => Object.keys(learnsets[pokemon].learnset))
+				.flatMap((pokemon) => Object.keys(learnsets[pokemon].learnset || {}))
 				.map((move) => movedex[move])
 				.filter((move) => move && filter(move))
 				.map((move) => move.name as string)
@@ -98,8 +118,8 @@ export const commands: Record<string, string | Command> = {
 		if (!arg) return this.restrictReply(this.trad('u1') + ': ' + this.cmdToken + this.cmd + ' ' + this.trad('u2'), 'pokemon');
 		const args = arg.split(',');
 		let word = args[0];
-		let from = toId(args[1] || '');
-		let to = toId(args[2] || '');
+		let from: string = toId(args[1] || '');
+		let to: string = toId(args[2] || '');
 		let bidirectional = false;
 		if (this.language !== 'english' && !from && !to) {
 			from = this.language;
@@ -162,29 +182,20 @@ export const commands: Record<string, string | Command> = {
 	randompoke: 'randompokemon',
 	rpoke: 'randompokemon',
 	randompokemon: function (arg, by, room, cmd) {
-		let pokedex;
-		try {
-			pokedex = DataDownloader.getPokedex();
-		} catch (e: any) {
+		const { pokedex } = getData();
+		if (!pokedex) {
 			return this.pmReply(this.trad('err'));
 		}
-		const pokeList = Object.keys(pokedex);
-		let rpoke = pokeList[Math.floor(Math.random() * pokeList.length)];
-		rpoke = pokedex[rpoke].species;
+		const pokeList = Object.values(pokedex);
+		const rpoke = pokeList[Math.floor(Math.random() * pokeList.length)].name;
 		if (!this.can('pokemon')) return this.pmReply(rpoke);
 		if (cmd === 'poke' && this.botRanked(getGroup('voice'))) return this.reply('!dt ' + rpoke);
 		this.reply(rpoke);
 	},
 
 	gen: function (arg) {
-		let pokedex, aliases, movedex, abilities, items;
-		try {
-			pokedex = DataDownloader.getPokedex();
-			aliases = DataDownloader.getAliases();
-			movedex = DataDownloader.getMovedex();
-			abilities = DataDownloader.getAbilities();
-			items = DataDownloader.getItems();
-		} catch (e: any) {
+		const { pokedex, aliases, movedex, abilities, items } = getData();
+		if (!pokedex || !aliases || !movedex || !abilities || !items) {
 			return this.pmReply(this.trad('err'));
 		}
 		let id = toId(arg);
@@ -202,18 +213,21 @@ export const commands: Record<string, string | Command> = {
 			else if (pokedex[id].num <= 649) text += 'Gen 5';
 			else text += 'Gen 6';
 		} else if (movedex[id]) {
-			if (movedex[id].num <= 165) text += 'Gen 1';
-			else if (movedex[id].num <= 251) text += 'Gen 2';
-			else if (movedex[id].num <= 354) text += 'Gen 3';
-			else if (movedex[id].num <= 467) text += 'Gen 4';
-			else if (movedex[id].num <= 559) text += 'Gen 5';
-			else if (movedex[id].num <= 617) text += 'Gen 6';
+			const num = movedex[id].num;
+			if (!num) text += 'CAP';
+			else if (num <= 165) text += 'Gen 1';
+			else if (num <= 251) text += 'Gen 2';
+			else if (num <= 354) text += 'Gen 3';
+			else if (num <= 467) text += 'Gen 4';
+			else if (num <= 559) text += 'Gen 5';
+			else if (num <= 617) text += 'Gen 6';
 			else text += 'CAP';
 		} else if (abilities[id]) {
-			if (abilities[id].num <= 0) text += 'CAP';
-			else if (abilities[id].num <= 76) text += 'Gen 3';
-			else if (abilities[id].num <= 123) text += 'Gen 4';
-			else if (abilities[id].num <= 164) text += 'Gen 5';
+			const num = abilities[id].num;
+			if (!num || num <= 0) text += 'CAP';
+			else if (num <= 76) text += 'Gen 3';
+			else if (num <= 123) text += 'Gen 4';
+			else if (num <= 164) text += 'Gen 5';
 			else text += 'Gen 6';
 		} else if (items[id]) {
 			text += 'Gen ' + items[id].gen;
@@ -225,17 +239,13 @@ export const commands: Record<string, string | Command> = {
 
 	viablemoves: 'randommoves',
 	randommoves: function (arg) {
-		let aliases, formatsdata, movedex;
-		try {
-			aliases = DataDownloader.getAliases();
-			formatsdata = DataDownloader.getFormatsData();
-			movedex = DataDownloader.getMovedex();
-		} catch (e: any) {
+		const { aliases, formatsData, movedex } = getData();
+		if (!aliases || !formatsData || !movedex) {
 			return this.pmReply(this.trad('err'));
 		}
 		const args = arg.split(',');
 		let text = '__' + this.trad('r') + '__: ';
-		let whichRandom = 'randomBattleMoves';
+		let whichRandom: keyof SpeciesFormatsData = 'randomBattleMoves';
 		const gameType = toId(args[1]);
 		if (gameType && (gameType.startsWith('double') || gameType.startsWith('triple') || ['2', '3'].includes(gameType))) {
 			whichRandom = 'randomDoubleBattleMoves';
@@ -244,11 +254,8 @@ export const commands: Record<string, string | Command> = {
 		let pokemon = toId(args[0]);
 		if (!pokemon.length) return this.restrictReply(this.trad('err2'), 'pokemon');
 		if (aliases[pokemon]) pokemon = toId(aliases[pokemon]);
-		if (formatsdata[pokemon]) {
-			let moves = '';
-			for (const i in formatsdata[pokemon][whichRandom]) {
-				moves += ', ' + movedex[formatsdata[pokemon][whichRandom][i]].name;
-			}
+		if (formatsData[pokemon]) {
+			const moves = (formatsData[pokemon][whichRandom] || []).map((i) => movedex[i].name).join(', ');
 			if (moves === '') text += 'none';
 			else text += moves.substring(2);
 			this.restrictReply(text, 'pokemon');
@@ -259,11 +266,8 @@ export const commands: Record<string, string | Command> = {
 
 	heatcrash: 'heavyslam',
 	heavyslam: function (arg) {
-		let pokedex, aliases;
-		try {
-			aliases = DataDownloader.getAliases();
-			pokedex = DataDownloader.getPokedex();
-		} catch (e: any) {
+		const { pokedex, aliases } = getData();
+		if (!pokedex || !aliases) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';
@@ -289,11 +293,8 @@ export const commands: Record<string, string | Command> = {
 
 	preevo: 'prevo',
 	prevo: function (arg) {
-		let pokedex, aliases;
-		try {
-			aliases = DataDownloader.getAliases();
-			pokedex = DataDownloader.getPokedex();
-		} catch (e: any) {
+		const { pokedex, aliases } = getData();
+		if (!pokedex || !aliases) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';
@@ -310,11 +311,8 @@ export const commands: Record<string, string | Command> = {
 	},
 
 	priority: function (arg) {
-		let pokedex, aliases;
-		try {
-			aliases = DataDownloader.getAliases();
-			pokedex = DataDownloader.getPokedex();
-		} catch (e: any) {
+		const { pokedex, aliases } = getData();
+		if (!pokedex || !aliases) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';
@@ -334,11 +332,8 @@ export const commands: Record<string, string | Command> = {
 	},
 
 	boosting: function (arg) {
-		let pokedex, aliases;
-		try {
-			pokedex = DataDownloader.getPokedex();
-			aliases = DataDownloader.getAliases();
-		} catch (e: any) {
+		const { pokedex, aliases } = getData();
+		if (!pokedex || !aliases) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';
@@ -364,11 +359,8 @@ export const commands: Record<string, string | Command> = {
 	},
 
 	recovery: function (arg) {
-		let pokedex, aliases;
-		try {
-			pokedex = DataDownloader.getPokedex();
-			aliases = DataDownloader.getAliases();
-		} catch (e: any) {
+		const { pokedex, aliases } = getData();
+		if (!pokedex || !aliases) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';
@@ -395,11 +387,8 @@ export const commands: Record<string, string | Command> = {
 
 	hazards: 'hazard',
 	hazard: function (arg) {
-		let pokedex, aliases;
-		try {
-			pokedex = DataDownloader.getPokedex();
-			aliases = DataDownloader.getAliases();
-		} catch (e: any) {
+		const { pokedex, aliases } = getData();
+		if (!pokedex || !aliases) {
 			return this.pmReply(this.trad('err'));
 		}
 		let text = '';

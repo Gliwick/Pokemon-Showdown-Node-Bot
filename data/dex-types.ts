@@ -92,6 +92,14 @@ export interface BasicEffect extends EffectData {
 	effectType: EffectType;
 	exists: boolean;
 	fullname: string;
+	/**
+	 * Dex number? For a Pokemon, this is the National Dex number. For
+	 * other effects, this is often an internal ID (e.g. a move
+	 * number). Not all effects have numbers, this will be 0 if it
+	 * doesn't. Nonstandard effects (e.g. CAP effects) will have
+	 * negative numbers.
+	 */
+	num: number;
 	gen: number;
 	/** Whether or not the condition is ignored by Baton Pass - only for pure conditions. */
 	noCopy: boolean;

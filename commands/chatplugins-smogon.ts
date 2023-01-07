@@ -100,7 +100,7 @@ function getUsage(this: Context, arg: string, link?: string): void {
 	for (let i = 0; i < args.length; i++) {
 		args[i] = toId(args[i]);
 	}
-	let poke = toId(args[0]);
+	let poke: string = toId(args[0]);
 	try {
 		const aliases = DataDownloader.getAliases();
 		if (aliases[poke]) poke = toId(aliases[poke]);
