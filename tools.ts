@@ -146,17 +146,8 @@ export function equalOrHigherRank(userIdentity: string, rank: string): boolean {
 export function getDateString(): string {
 	const date = new Date();
 	return (
-		pad(date.getDate(), 2) +
-		'/' +
-		pad(date.getMonth() + 1, 2) +
-		'/' +
-		pad(date.getFullYear(), 4) +
-		' ' +
-		pad(date.getHours(), 2) +
-		':' +
-		pad(date.getMinutes(), 2) +
-		':' +
-		pad(date.getSeconds(), 2)
+		`${pad(date.getDate(), 2)}/${pad(date.getMonth() + 1, 2)}/${pad(date.getFullYear(), 4)} ` +
+		`${pad(date.getHours(), 2)}:${pad(date.getMinutes(), 2)}:${pad(date.getSeconds(), 2)}`
 	);
 }
 
