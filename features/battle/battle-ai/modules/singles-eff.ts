@@ -3,11 +3,12 @@
  *
  */
 
+import { SparseBoostsTable } from '../../../../data/dex-types';
 import { toId } from '../../../../tools';
 import { Battle } from '../battle';
 import { Decision, MoveDecision, SwitchDecision, TeamDecision } from '../decision';
 import { BattleModule } from '../modules';
-import { BoostsTable, getAbility, getFormatsData, getItem, getMove, Move, Type } from './../battle-data';
+import { getAbility, getFormatsData, getItem, getMove, Type } from './../battle-data';
 import { calculate, Conditions, getHazardsDamage, getMoveType, Pokemon } from './../calc';
 import { getMultipleEff } from './../typechart';
 
@@ -1456,7 +1457,7 @@ export class SinglesEffective implements BattleModule {
 					let clearedStats = ['atk', 'def', 'spa', 'spd', 'spe'];
 					if (move.id === 'guardswap') clearedStats = ['def', 'spd'];
 					if (move.id === 'powerswap') clearedStats = ['atk', 'spa'];
-					const clearedBoosts: BoostsTable & { total: number } = { total: 0 };
+					const clearedBoosts: SparseBoostsTable & { total: number } = { total: 0 };
 					for (const stat of clearedStats) {
 						if (foeConditions.boosts[stat] > 0) {
 							clearedBoosts[stat] = 1;

@@ -1,6 +1,6 @@
-export type Stat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
+import { StatID } from './dex-types';
 
-export const typechart: Record<string, { damageTaken: Record<string, 0 | 1 | 2 | 3>; HPivs?: Partial<Record<Stat, number>> }> = {
+export const typechart: Record<string, { damageTaken: Record<string, 0 | 1 | 2 | 3>; HPivs?: Partial<Record<StatID, number>> }> = {
 	Bug: {
 		damageTaken: {
 			Bug: 0,

@@ -4,6 +4,7 @@
 
 import { String as Sugar } from 'sugar';
 
+import { GenderName, SparseBoostsTable } from '../../../data/dex-types';
 import { deepcopy, toId } from '../../../tools';
 import { Conditions } from '../data/conditions';
 
@@ -374,21 +375,13 @@ export class Move {
 	}
 }
 
-export type Gender = 'M' | 'F' | 'N';
-
 export type Unknown = '&unknown';
-
-export type BoostedStat = 'atk' | 'def' | 'spa' | 'spd' | 'spe' | 'accuracy' | 'evasion';
-export type BoostsTable = Partial<Record<BoostedStat, number>>;
-
-export type BaseStat = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
-export type StatsTable = Partial<Record<BaseStat, number>>;
 
 export interface PokemonDetails {
 	species: string;
 	level: number;
 	shiny: boolean;
-	gender: Gender | null;
+	gender: GenderName | null;
 	terastallize: Type | null;
 }
 
@@ -398,7 +391,7 @@ export class Pokemon implements PokemonDetails {
 
 	// PokemonDetails properties
 	species;
-	gender: Gender | null = null;
+	gender: GenderName | null = null;
 	level = 100;
 	shiny = false;
 	terastallize: Type | null = null;
@@ -425,7 +418,7 @@ export class Pokemon implements PokemonDetails {
 	fainted = false;
 	status: string | null = null;
 	volatiles: Record<string, any> = {};
-	boosts: BoostsTable = {};
+	boosts: SparseBoostsTable = {};
 
 	passing: number | null = null;
 	prepared: {

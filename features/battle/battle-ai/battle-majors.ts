@@ -2,10 +2,11 @@
 	Majors
 */
 
+import { BoostID } from '../../../data/dex-types';
 import { error } from '../../../log';
 import { toId, toName } from '../../../tools';
 import { Battle, BattleType, BattleTypeActiveSlots, PlayerId, Request } from './battle';
-import { BoostedStat, getEffect, getMove, getPokemon, Move, Pokemon } from './battle-data';
+import { getEffect, getMove, getPokemon, Move, Pokemon } from './battle-data';
 
 export const majors: Record<string, string | ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void)> = {
 	rated: function (this: Battle, args, kwargs) {
@@ -223,7 +224,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 				for (const vol in active.volatiles) {
 					poke.addVolatile(vol);
 				}
-				let stat: BoostedStat;
+				let stat: BoostID;
 				for (stat in active.boosts) {
 					poke.boosts[stat] = active.boosts[stat];
 				}

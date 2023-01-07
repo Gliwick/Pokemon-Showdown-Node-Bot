@@ -2,23 +2,14 @@
  * Pokemon Showdown Bot - Damage calculator
  */
 
+import { GenderName, SparseBoostsTable, SparseStatsTable, StatID, StatIDExceptHP, StatsTable } from '../../../data/dex-types';
 import { deepcopy, toId } from '../../../tools';
 import { Battle } from './battle';
-import {
-	BaseStat,
-	BoostedStat,
-	BoostsTable,
-	CurrentGen,
-	Gender,
-	Pokemon as BattlePokemon,
-	PokemonDetails,
-	StatsTable,
-	Type,
-} from './battle-data';
-import { getEffectiveness, getMultipleEff } from './typechart';
+import { CurrentGen, Pokemon as BattlePokemon, PokemonDetails, Type } from './battle-data';
+import { getMultipleEff } from './typechart';
 
-const BaseStats: BaseStat[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
-const BoostedStats: (BaseStat & BoostedStat)[] = ['atk', 'def', 'spa', 'spd', 'spe'];
+const BaseStats: StatID[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
+const BoostedStats: StatIDExceptHP[] = ['atk', 'def', 'spa', 'spd', 'spe'];
 
 export class Pokemon implements PokemonDetails {
 	template;
@@ -28,16 +19,16 @@ export class Pokemon implements PokemonDetails {
 	species: string;
 	level = 100;
 	shiny = false;
-	gender: Gender | null = null;
+	gender: GenderName | null = null;
 	terastallize: Type | null = null;
 
 	name: string;
 	item: Record<string, any> | null = null;
-	stats: StatsTable = {};
-	evs: StatsTable = {};
-	ivs: StatsTable = {};
-	dvs: StatsTable = {};
-	nature: StatsTable = {};
+	stats: SparseStatsTable = {};
+	evs: SparseStatsTable = {};
+	ivs: SparseStatsTable = {};
+	dvs: SparseStatsTable = {};
+	nature: SparseStatsTable = {};
 	ability: Record<string, any> | null = null;
 	supressedAbility = false;
 	happiness: number | null = null;
@@ -67,33 +58,28 @@ export class Pokemon implements PokemonDetails {
 		}
 	}
 
-	getEV(ev: BaseStat, gen: number = CurrentGen): number {
+	getEV(ev: StatID, gen: number = CurrentGen): number {
 		return this.evs[ev] || (gen <= 2 ? 252 : 84);
 	}
 
-	getIV(iv: BaseStat): number {
+	getIV(iv: StatID): number {
 		return this.ivs[iv] || 31;
 	}
 
-	getDV(dv: BaseStat): number {
+	getDV(dv: StatID): number {
 		return this.dvs[dv] || 15;
 	}
 
-	getBaseStat(stat: BaseStat): number {
+	getBaseStat(stat: StatID): number {
 		if (this.template && this.template.baseStats) {
-			if (
-				this.template.species === 'Aegislash' &&
-				this.hasAbility('stancechange') &&
-				['atk', 'spa'].includes(stat)
-			)
-				return 140;
+			if (this.template.species === 'Aegislash' && this.hasAbility('stancechange') && ['atk', 'spa'].includes(stat)) return 140;
 			else return this.template.baseStats[stat] || 0;
 		} else {
 			return 90;
 		}
 	}
 
-	getStat(stat: BaseStat): number {
+	getStat(stat: StatID): number {
 		const knownStat = this.stats[stat];
 		if (knownStat) return knownStat;
 		if (stat === 'hp' && this.getBaseStat(stat) === 1) return 1;
@@ -102,9 +88,7 @@ export class Pokemon implements PokemonDetails {
 			if (stat === 'hp') {
 				return (
 					Math.floor(
-						(((this.getBaseStat(stat) + this.getDV(stat)) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) *
-							this.level) /
-							100
+						(((this.getBaseStat(stat) + this.getDV(stat)) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level) / 100
 					) +
 					10 +
 					this.level
@@ -112,41 +96,32 @@ export class Pokemon implements PokemonDetails {
 			} else {
 				return (
 					Math.floor(
-						(((this.getBaseStat(stat) + this.getDV(stat)) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) *
-							this.level) /
-							100
+						(((this.getBaseStat(stat) + this.getDV(stat)) * 2 + Math.floor((Math.sqrt(65024) + 1) / 4)) * this.level) / 100
 					) + 5
 				);
 			}
 		} else {
 			if (stat === 'hp') {
 				return Math.floor(
-					((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, this.gen) / 4) * this.level) /
-						100 +
-						this.level +
-						10
+					((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, this.gen) / 4) * this.level) / 100 + this.level + 10
 				);
 			} else {
 				return Math.floor(
-					Math.floor(
-						((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, this.gen) / 4) *
-							this.level) /
-							100 +
-							5
-					) * (this.nature[stat] || 1)
+					Math.floor(((2 * this.getBaseStat(stat) + this.getIV(stat) + this.getEV(stat, this.gen) / 4) * this.level) / 100 + 5) *
+						(this.nature[stat] || 1)
 				);
 			}
 		}
 	}
 
-	getStats(): Required<StatsTable> {
-		return BaseStats.reduce((acc: StatsTable, stat) => {
+	getStats(): StatsTable {
+		return BaseStats.reduce((acc: SparseStatsTable, stat) => {
 			acc[stat] = this.getStat(stat);
 			return acc;
-		}, {}) as Required<StatsTable>;
+		}, {}) as StatsTable;
 	}
 
-	getBoostedStat(stat: BaseStat & BoostedStat, statValue: number, boosts: BoostsTable): number {
+	getBoostedStat(stat: StatIDExceptHP, statValue: number, boosts: SparseBoostsTable): number {
 		if (boosts[stat]) {
 			let muxOff = 1 + 0.5 * Math.abs(boosts[stat] || 0);
 			if ((boosts[stat] || 0) < 0) muxOff = 1 / muxOff;
@@ -188,11 +163,7 @@ export class Pokemon implements PokemonDetails {
 	}
 
 	hasItem(item: string | Record<string, any>): boolean {
-		return !!(
-			this.item &&
-			(this.item.id === item || (typeof item !== 'string' && this.item.id in item)) &&
-			!this.hasAbility('klutz')
-		);
+		return !!(this.item && (this.item.id === item || (typeof item !== 'string' && this.item.id in item)) && !this.hasAbility('klutz'));
 	}
 
 	isGrounded(conditions: Conditions): boolean {
@@ -242,7 +213,7 @@ export class Pokemon implements PokemonDetails {
 
 export class Conditions {
 	volatiles: Record<string, any> = {};
-	boosts: BoostsTable = {};
+	boosts: SparseBoostsTable = {};
 	side: Record<string, any> = {};
 	pokemon: BattlePokemon[] = [];
 	immediate: Record<string, any> = {};
@@ -331,33 +302,13 @@ export function getHazardsDamage(
 	let dmg = 0;
 
 	if (side.stealthrock) {
-		dmg +=
-			(100 *
-				getMultipleEff(
-					'Rock',
-					poke.getTypes(conditions),
-					gen,
-					false,
-					!!globalConditions.inversebattle,
-					battleId
-				)) /
-			8.0;
+		dmg += (100 * getMultipleEff('Rock', poke.getTypes(conditions), gen, false, !!globalConditions.inversebattle, battleId)) / 8.0;
 	}
 	if (side.spikes) {
 		if (globalConditions.gravity || !poke.isGrounded(conditions)) dmg += (100 * side.spikes) / 24.0;
 	}
 	if (side.gmaxsteelsurge) {
-		dmg +=
-			(100 *
-				getMultipleEff(
-					'Steel',
-					poke.getTypes(conditions),
-					gen,
-					false,
-					!!globalConditions.inversebattle,
-					battleId
-				)) /
-			8.0;
+		dmg += (100 * getMultipleEff('Steel', poke.getTypes(conditions), gen, false, !!globalConditions.inversebattle, battleId)) / 8.0;
 	}
 
 	return dmg;
@@ -431,20 +382,11 @@ export function getMoveType(
 	return move.type;
 }
 
-function getDamage(
-	level: number,
-	bp: number,
-	atk: number,
-	def: number,
-	modifier: number,
-	typeEffectiveness: number
-): number {
+function getDamage(level: number, bp: number, atk: number, def: number, modifier: number, typeEffectiveness: number): number {
 	if (bp === 0) return 0;
 	return (
 		Math.floor(
-			(Math.floor(Math.floor(((Math.floor((2 * level) / 5.0) + 2) * bp * atk) / def) / 50.0) + 2) *
-				modifier *
-				typeEffectiveness
+			(Math.floor(Math.floor(((Math.floor((2 * level) / 5.0) + 2) * bp * atk) / def) / 50.0) + 2) * modifier * typeEffectiveness
 		) || 1
 	);
 }
@@ -499,7 +441,7 @@ export function calculate(
 	const atkSpe = atkPoke.getFullSpe({ conditions: globalConditions, gen }, atkConditions, false);
 	const defSpe = defPoke.getFullSpe({ conditions: globalConditions, gen }, defConditions, false);
 
-	let atk, def, atkStat: BaseStat, defStat: BaseStat;
+	let atk, def, atkStat: StatIDExceptHP, defStat: StatIDExceptHP;
 	let category: Category, defCategory: Category;
 
 	/******************************
@@ -715,10 +657,7 @@ export function calculate(
 
 	let notImmune = false;
 	if (move.id === 'struggle') notImmune = true;
-	if (
-		['Fighting', 'Normal'].includes(moveType) &&
-		(defConditions.volatiles.foresight || atkPoke.hasAbility('scrappy'))
-	) {
+	if (['Fighting', 'Normal'].includes(moveType) && (defConditions.volatiles.foresight || atkPoke.hasAbility('scrappy'))) {
 		notImmune = true;
 	}
 	if (moveType === 'Ground' && (move.id === 'thousandarrows' || globalConditions.gravity)) notImmune = true;
@@ -829,8 +768,7 @@ export function calculate(
 			else bp = 0;
 			break;
 		case 'naturalgift':
-			if (atkPoke.item && atkPoke.item.naturalGift && atkPoke.item.naturalGift.basePower)
-				bp = atkPoke.item.naturalGift.basePower;
+			if (atkPoke.item && atkPoke.item.naturalGift && atkPoke.item.naturalGift.basePower) bp = atkPoke.item.naturalGift.basePower;
 			else bp = 0;
 			break;
 		case 'grassknot':
@@ -972,8 +910,7 @@ export function calculate(
 			break;
 		case 'payback':
 		case 'ragefist':
-			if ((!globalConditions.trickroom && atkSpe < defSpe) || (globalConditions.trickroom && atkSpe > defSpe))
-				bp *= 2;
+			if ((!globalConditions.trickroom && atkSpe < defSpe) || (globalConditions.trickroom && atkSpe > defSpe)) bp *= 2;
 			break;
 		case 'avalanche':
 		case 'revenge':
@@ -981,8 +918,7 @@ export function calculate(
 			break;
 		case 'boltbeak':
 		case 'fishiousrend':
-			if ((!globalConditions.trickroom && atkSpe > defSpe) || (globalConditions.trickroom && atkSpe < defSpe))
-				bp *= 2;
+			if ((!globalConditions.trickroom && atkSpe > defSpe) || (globalConditions.trickroom && atkSpe < defSpe)) bp *= 2;
 			break;
 		case 'behemothblade':
 		case 'behemothbash':
@@ -1056,9 +992,7 @@ export function calculate(
 		if (move.damage === 'level') return new Damage(defStats.hp, [atkPoke.level]);
 		if (typeof move.damage === 'number') return new Damage(defStats.hp, [move.damage]);
 		if (move.id === 'endeavor')
-			new Damage(defStats.hp, [
-				Math.max(0, defStats.hp * (defPoke.hp / 100.0) - atkStats.hp * (atkPoke.hp / 100.0)),
-			]);
+			new Damage(defStats.hp, [Math.max(0, defStats.hp * (defPoke.hp / 100.0) - atkStats.hp * (atkPoke.hp / 100.0))]);
 		if (move.id === 'psywave') new Damage(defStats.hp, getRolls(atkPoke.level, 0.5, 1.5));
 		return new Damage(defStats.hp);
 	}
@@ -1120,11 +1054,7 @@ export function calculate(
 				}
 				break;
 			case 'sandforce':
-				if (
-					!supressedWeather &&
-					globalConditions.weather === 'sandstorm' &&
-					['Rock', 'Ground', 'Steel'].includes(moveType)
-				)
+				if (!supressedWeather && globalConditions.weather === 'sandstorm' && ['Rock', 'Ground', 'Steel'].includes(moveType))
 					bp = Math.floor(bp * 1.3);
 				break;
 			case 'sheerforce':
@@ -1144,10 +1074,7 @@ export function calculate(
 				if (move.flags?.slicing) bp = Math.floor(bp * 1.5);
 				break;
 			case 'supremeoverlord':
-				bp = Math.floor(
-					bp *
-						(1 + 0.1 * atkConditions.pokemon.filter((poke) => poke.fainted || poke.status === 'fnt').length)
-				);
+				bp = Math.floor(bp * (1 + 0.1 * atkConditions.pokemon.filter((poke) => poke.fainted || poke.status === 'fnt').length));
 				break;
 		}
 	}
@@ -1364,9 +1291,7 @@ export function calculate(
 	const willCrit =
 		atkConditions.immediate.crit ||
 		move.willCrit ||
-		(atkPoke.hasItem({ leek: 1, luckypunch: 1, stick: 1 }) &&
-			atkPoke.item &&
-			atkPoke.item.itemUser.includes(atkPoke.template.species));
+		(atkPoke.hasItem({ leek: 1, luckypunch: 1, stick: 1 }) && atkPoke.item && atkPoke.item.itemUser.includes(atkPoke.template.species));
 
 	if (defConditions.boosts[defStat]) {
 		if (!willCrit && !move.ignoreDefensive && !atkPoke.hasAbility('unaware')) {
@@ -1398,10 +1323,8 @@ export function calculate(
 	const screenModifier = ['doubles', 'triples'].includes(globalConditions.gametype) ? 0.66 : 0.5;
 	if (!['brickbreak', 'psychicfangs', 'ragingbull'].includes(move.id) && !atkPoke.hasAbility('infiltrator')) {
 		if (defConditions.volatiles.reflect && category === 'Physical') modifier *= 0.5; // Gen 1
-		if ((defConditions.side.reflect || defConditions.side.auroraveil) && category === 'Physical')
-			modifier *= screenModifier;
-		if ((defConditions.side.lightscreen || defConditions.side.auroraveil) && category === 'Special')
-			modifier *= screenModifier;
+		if ((defConditions.side.reflect || defConditions.side.auroraveil) && category === 'Physical') modifier *= screenModifier;
+		if ((defConditions.side.lightscreen || defConditions.side.auroraveil) && category === 'Special') modifier *= screenModifier;
 	}
 
 	/* Field */
