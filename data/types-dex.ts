@@ -1,8 +1,8 @@
 import { ID } from '../tools';
-import { Ability } from './dex-abilities';
-import { Condition } from './dex-conditions';
-import { Item } from './dex-items';
-import { Species } from './dex-species';
+import { Ability } from './types-abilities';
+import { Condition } from './types-conditions';
+import { Item } from './types-items';
+import { Species } from './types-species';
 
 export type GenderName = 'M' | 'F' | 'N' | '';
 export type StatIDExceptHP = 'atk' | 'def' | 'spa' | 'spd' | 'spe';
@@ -15,7 +15,7 @@ export type BoostsTable = { [boost in BoostID]: number };
 export type SparseBoostsTable = Partial<BoostsTable>;
 export type Nonstandard = 'Past' | 'Future' | 'Unobtainable' | 'CAP' | 'LGPE' | 'Custom' | 'Gigantamax';
 
-export type MoveSource = `${number}${'M' | 'L' | 'T' | 'R' | 'E' | 'D' | 'S' | 'V' | 'C'}${number}`;
+export type MoveSource = `${number}${'M' | 'L' | 'T' | 'R' | 'E' | 'D' | 'S' | 'V' | 'C'}${number | ''}`;
 
 export type TierTypes = {
 	Singles:

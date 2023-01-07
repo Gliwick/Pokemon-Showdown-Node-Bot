@@ -1,4 +1,4 @@
-import { StatID } from './dex-types';
+import { StatID } from './types-dex';
 
 export const typechart: Record<string, { damageTaken: Record<string, 0 | 1 | 2 | 3>; HPivs?: Partial<Record<StatID, number>> }> = {
 	Bug: {

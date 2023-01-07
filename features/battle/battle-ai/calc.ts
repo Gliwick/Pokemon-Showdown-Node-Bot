@@ -2,7 +2,7 @@
  * Pokemon Showdown Bot - Damage calculator
  */
 
-import { GenderName, SparseBoostsTable, SparseStatsTable, StatID, StatIDExceptHP, StatsTable } from '../../../data/dex-types';
+import { GenderName, SparseBoostsTable, SparseStatsTable, StatID, StatIDExceptHP, StatsTable } from '../../../data/types-dex';
 import { deepcopy, toId } from '../../../tools';
 import { Battle } from './battle';
 import { CurrentGen, Pokemon as BattlePokemon, PokemonDetails, Type } from './battle-data';

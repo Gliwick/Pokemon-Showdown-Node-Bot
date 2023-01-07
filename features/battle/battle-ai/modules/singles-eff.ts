@@ -3,7 +3,7 @@
  *
  */
 
-import { SparseBoostsTable } from '../../../../data/dex-types';
+import { SparseBoostsTable } from '../../../../data/types-dex';
 import { toId } from '../../../../tools';
 import { Battle } from '../battle';
 import { Decision, MoveDecision, SwitchDecision, TeamDecision } from '../decision';

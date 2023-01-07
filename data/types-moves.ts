@@ -1,6 +1,6 @@
-import { Ability } from './dex-abilities';
-import { ConditionData } from './dex-conditions';
-import { EffectData, SparseBoostsTable, StatIDExceptHP } from './dex-types';
+import { Ability } from './types-abilities';
+import { ConditionData } from './types-conditions';
+import { EffectData, SparseBoostsTable, StatIDExceptHP } from './types-dex';
 
 type MoveTarget =
 	| 'adjacentAlly'

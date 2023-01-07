@@ -1,5 +1,5 @@
-import { ConditionData } from './dex-conditions';
-import { BasicEffect } from './dex-types';
+import { ConditionData } from './types-conditions';
+import { BasicEffect } from './types-dex';
 
 export interface AbilityData extends Partial<Ability> {
 	name: string;

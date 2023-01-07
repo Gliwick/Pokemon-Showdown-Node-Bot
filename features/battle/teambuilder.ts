@@ -2,8 +2,8 @@ import { existsSync, readFileSync, rename, writeFile } from 'fs';
 import { Array as Sugar } from 'sugar';
 import { inspect } from 'util';
 
-import { SpeciesData } from '../../data/dex-species';
 import { Stat, typechart } from '../../data/typechart';
+import { SpeciesData } from '../../data/types-species';
 import { debug, errlog, error } from '../../log';
 import { isUndefinedOrEquals, toId, uncacheTree } from '../../tools';
 import { getItem, getMove, getPokemon } from './data';

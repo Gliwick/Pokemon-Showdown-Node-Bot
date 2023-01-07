@@ -1,6 +1,6 @@
 // copied from https://github.com/smogon/pokemon-showdown/blob/master/data/conditions.ts
 
-import { Condition, ConditionData } from '../../../data/dex-conditions';
+import { Condition, ConditionData } from '../../../data/types-conditions';
 
 export const Conditions: { [k: string]: ConditionData } = {
 	brn: {

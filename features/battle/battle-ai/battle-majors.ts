@@ -2,7 +2,7 @@
 	Majors
 */
 
-import { BoostID } from '../../../data/dex-types';
+import { BoostID } from '../../../data/types-dex';
 import { error } from '../../../log';
 import { toId, toName } from '../../../tools';
 import { Battle, BattleType, BattleTypeActiveSlots, PlayerId, Request } from './battle';

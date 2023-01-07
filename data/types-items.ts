@@ -1,5 +1,5 @@
-import { ConditionData } from './dex-conditions';
-import { BasicEffect, SparseBoostsTable } from './dex-types';
+import { ConditionData } from './types-conditions';
+import { BasicEffect, SparseBoostsTable } from './types-dex';
 
 interface FlingData {
 	basePower: number;

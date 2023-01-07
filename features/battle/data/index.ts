@@ -1,7 +1,7 @@
-import { AbilityData } from '../../../data/dex-abilities';
-import { ItemData } from '../../../data/dex-items';
-import { MoveData } from '../../../data/dex-moves';
-import { SpeciesData } from '../../../data/dex-species';
+import { AbilityData } from '../../../data/types-abilities';
+import { ItemData } from '../../../data/types-items';
+import { MoveData } from '../../../data/types-moves';
+import { SpeciesData } from '../../../data/types-species';
 import { toId } from '../../../tools';
 
 export function getPokemon(name?: string): SpeciesData | {} {

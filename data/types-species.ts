@@ -1,5 +1,5 @@
 import { ID } from '../tools';
-import { BasicEffect, EventInfo, GenderName, MoveSource, Nonstandard, StatsTable, TierTypes } from './dex-types';
+import { BasicEffect, EventInfo, GenderName, MoveSource, Nonstandard, StatsTable, TierTypes } from './types-dex';
 
 interface SpeciesAbility {
 	0: string;

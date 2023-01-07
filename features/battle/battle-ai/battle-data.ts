@@ -4,7 +4,7 @@
 
 import { String as Sugar } from 'sugar';
 
-import { GenderName, SparseBoostsTable } from '../../../data/dex-types';
+import { GenderName, SparseBoostsTable } from '../../../data/types-dex';
 import { deepcopy, toId } from '../../../tools';
 import { Conditions } from '../data/conditions';
 

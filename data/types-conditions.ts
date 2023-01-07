@@ -1,4 +1,4 @@
-import { BasicEffect, Effect } from './dex-types';
+import { BasicEffect, Effect } from './types-dex';
 
 // type stabs to emulate missing types
 type EventListener = `on${string}`;

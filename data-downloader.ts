@@ -5,10 +5,10 @@ import { writeFile } from 'fs';
 import { IncomingMessage } from 'http';
 import { get } from 'https';
 
-import { AbilityData } from './data/dex-abilities';
-import { ItemData } from './data/dex-items';
-import { MoveData } from './data/dex-moves';
-import { LearnsetData, SpeciesData, SpeciesFormatsData } from './data/dex-species';
+import { AbilityData } from './data/types-abilities';
+import { ItemData } from './data/types-items';
+import { MoveData } from './data/types-moves';
+import { LearnsetData, SpeciesData, SpeciesFormatsData } from './data/types-species';
 import { debug, errlog, error } from './log';
 import { uncacheTree } from './tools';
 
