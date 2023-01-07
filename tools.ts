@@ -154,24 +154,22 @@ export function getDateString(): string {
 export function getTimeAgo(time: number, lang?: string): string {
 	time = Date.now() - time;
 	time = Math.round(time / 1000); // rounds to nearest second
-	const seconds = time % 60;
-	let times = [];
 	const trans = (data: string): string => {
-		if (!lang) lang = Config.language || 'english';
-		return Languages.translateGlobal('time', data, lang);
+		return Languages.translateGlobal('time', data, lang || Config.language || 'english');
 	};
+	let times = [];
+	const seconds = time % 60;
 	if (seconds) times.push(String(seconds) + ' ' + trans(seconds === 1 ? 'second' : 'seconds'));
-	let minutes, hours, days;
 	if (time >= 60) {
 		time = (time - seconds) / 60; // converts to minutes
-		minutes = time % 60;
+		const minutes = time % 60;
 		if (minutes) times = [String(minutes) + ' ' + trans(minutes === 1 ? 'minute' : 'minutes')].concat(times);
 		if (time >= 60) {
 			time = (time - minutes) / 60; // converts to hours
-			hours = time % 24;
+			const hours = time % 24;
 			if (hours) times = [String(hours) + ' ' + trans(hours === 1 ? 'hour' : 'hours')].concat(times);
 			if (time >= 24) {
-				days = (time - hours) / 24; // you can probably guess this one
+				const days = (time - hours) / 24; // you can probably guess this one
 				if (days) times = [String(days) + ' ' + trans(days === 1 ? 'day' : 'days')].concat(times);
 			}
 		}
