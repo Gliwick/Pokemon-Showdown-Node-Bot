@@ -115,10 +115,10 @@ export function stripCommands(text: string): string {
 
 export function getTargetRoom(arg?: string): { arg: string; room: string } | null {
 	if (!arg) return null;
-	if (arg.indexOf('[') !== 0) return null;
-	if (arg.indexOf(']') < 0) return null;
-	const newArg = toId(arg.substr(arg.indexOf('[') + 1, arg.indexOf(']') - arg.indexOf('[') - 1));
-	const room = arg.substr(arg.indexOf(']') + 1);
+	if (!arg.startsWith('[')) return null;
+	if (!arg.includes(']')) return null;
+	const newArg = toId(arg.split('[')[1].split(']')[0]);
+	const room = arg.substring(arg.indexOf(']') + 1);
 	return { arg: newArg, room };
 }
 
