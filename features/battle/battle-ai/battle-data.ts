@@ -381,7 +381,7 @@ export interface PokemonDetails {
 	species: string;
 	level: number;
 	shiny: boolean;
-	gender: GenderName | null;
+	gender: GenderName;
 	terastallize: Type | null;
 }
 
@@ -391,7 +391,7 @@ export class Pokemon implements PokemonDetails {
 
 	// PokemonDetails properties
 	species;
-	gender: GenderName | null = null;
+	gender: GenderName = '';
 	level = 100;
 	shiny = false;
 	terastallize: Type | null = null;

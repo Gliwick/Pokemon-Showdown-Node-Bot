@@ -423,7 +423,7 @@ export class Battle {
 			species: '',
 			level: 100,
 			shiny: false,
-			gender: null,
+			gender: '',
 			terastallize: null,
 		};
 		if (details[0]) {
@@ -436,7 +436,7 @@ export class Battle {
 			if (d === 'shiny') {
 				poke.shiny = true;
 			}
-			if (d === 'M' || d === 'F') {
+			if (d === 'M' || d === 'F' || d === 'N') {
 				poke.gender = d;
 			}
 			if (d.startsWith('tera:')) {

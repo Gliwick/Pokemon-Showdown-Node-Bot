@@ -19,7 +19,7 @@ export class Pokemon implements PokemonDetails {
 	species: string;
 	level = 100;
 	shiny = false;
-	gender: GenderName | null = null;
+	gender: GenderName = '';
 	terastallize: Type | null = null;
 
 	name: string;
