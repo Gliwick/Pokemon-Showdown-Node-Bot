@@ -23,11 +23,11 @@ export function pad(num: number, numOfZeros: number): string {
 	return num.toString().padStart(numOfZeros, '0');
 }
 
+const ID_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 export function generateRandomNick(numChars: number): string {
-	const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
 	let str = '';
-	for (let i = 0, l = chars.length; i < numChars; i++) {
-		str += chars.charAt(~~(Math.random() * l));
+	for (let i = 0; i < numChars; i++) {
+		str += ID_CHARACTERS.charAt(~~(Math.random() * ID_CHARACTERS.length));
 	}
 	return str;
 }
