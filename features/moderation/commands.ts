@@ -784,7 +784,7 @@ export const commands: Record<string, string | Command> = {
 		if (!this.isRanked(getGroup('roomowner'))) return false;
 		if (!Settings.settings.modexception) Settings.settings.modexception = {};
 		const rank = arg.trim();
-		if (Config.ranks.indexOf(rank) >= 0) {
+		if (Config.ranks.includes(rank)) {
 			Settings.settings.modexception[tarRoom] = rank;
 			Settings.save();
 			this.sclog();

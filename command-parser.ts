@@ -6,7 +6,7 @@ import { inspect } from 'util';
 
 import { cmdr, errlog, error, info, monitor, ok } from './log';
 import { FlatFileManager } from './settings';
-import { equalOrHigherRank, highestRank, stripCommands, toId, uncacheTree } from './tools';
+import { equalOrHigherRank, highestRank, splitFirst, stripCommands, toId, uncacheTree } from './tools';
 
 const MAX_COMMAND_RECURSION = 10;
 const MAX_CMD_FLOOD = 30;
@@ -358,20 +358,10 @@ export class CommandParser {
 		}
 
 		const toParse = msg.substr(cmdToken.length);
-		const spaceIndex = toParse.indexOf(' ');
-
-		let cmd, args;
-		if (spaceIndex === -1) {
-			cmd = toParse;
-			args = '';
-		} else {
-			cmd = toParse.substr(0, spaceIndex);
-			args = toParse.substr(spaceIndex + 1);
-		}
-
+		let [cmd, args] = splitFirst(toParse, ' ');
 		cmd = cmd.toLowerCase();
 
-		if (room.charAt(0) !== ',' && ['unsleep', 'wake'].indexOf(cmd) < 0 && Settings.isSleeping(room)) return;
+		if (!room.startsWith(',') && !['unsleep', 'wake'].includes(cmd) && Settings.isSleeping(room)) return;
 
 		if (!this.commands[cmd] && this.dynCommands[toId(cmd)]) {
 			args = cmd;
@@ -387,14 +377,7 @@ export class CommandParser {
 			}
 			const command = this.commands[handler];
 			if (typeof command === 'function') {
-				const opts = {
-					arg: args,
-					by: by,
-					room: room,
-					cmd: cmd,
-					handler: handler,
-					cmdToken: cmdToken,
-				};
+				const opts = { arg: args, by, room, cmd, handler, cmdToken };
 				const context = new Context(opts, this);
 				try {
 					if (!equalOrHigherRank(by, highestRank())) {

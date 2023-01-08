@@ -329,11 +329,11 @@ export class Battle {
 				args = str.substr(1).split('|');
 			}
 			while (args.length > 0 && args[args.length - 1].startsWith('[')) {
-				const bracketPos = args[args.length - 1].indexOf(']');
-				if (bracketPos <= 0) break;
 				const argstr = args.pop() as string;
+				const [key, value] = argstr.substring(1).split(']', 2);
+				if (!value) break;
 				// default to '.' so it evaluates to boolean true
-				kwargs[argstr.substr(1, bracketPos - 1)] = argstr.substr(bracketPos + 1).trim() || '.';
+				kwargs[key] = value.trim() || '.';
 			}
 			const event = args[0];
 			if (event.startsWith('-')) {

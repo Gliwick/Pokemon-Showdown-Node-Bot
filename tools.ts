@@ -107,6 +107,12 @@ export function normalize(str: string): string {
 	return normalizer.normalize(str);
 }
 
+export function splitFirst(s: string, separator: string): [string, string] {
+	const i = s.indexOf(separator);
+	if (i < 0) return [s, ''];
+	return [s.substring(0, i), s.substring(i + separator.length)];
+}
+
 export function splitLast(s: string, separator: string): [string, string] {
 	const i = s.lastIndexOf(separator);
 	if (i < 0) return [s, ''];
@@ -123,9 +129,8 @@ export function getTargetRoom(arg?: string): { arg: string; room: string } | nul
 	if (!arg) return null;
 	if (!arg.startsWith('[')) return null;
 	if (!arg.includes(']')) return null;
-	const newArg = toId(arg.split('[')[1].split(']')[0]);
-	const room = arg.substring(arg.indexOf(']') + 1);
-	return { arg: newArg, room };
+	const [newArg, room] = splitFirst(arg.substring(1), ']');
+	return { arg: toId(newArg), room };
 }
 
 export function highestRank(): string {
@@ -142,7 +147,7 @@ export function equalOrHigherRank(userIdentity: string, rank: string): boolean {
 	if (rank === ' ') return true;
 	const userId = toId(userIdentity);
 	const userRank = Config.exceptions[userId] || userIdentity.charAt(0);
-	if (Config.ranks.indexOf(userRank) === -1) return false;
+	if (!Config.ranks.includes(userRank)) return false;
 	if (Config.ranks.indexOf(userRank) >= Config.ranks.indexOf(rank)) return true;
 	return false;
 }

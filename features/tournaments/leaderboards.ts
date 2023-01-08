@@ -55,7 +55,7 @@ export class LeaderboardsManager {
 			return tier === toId(filter);
 		} else if (filter !== null && typeof filter === 'object') {
 			if (Array.isArray(filter)) {
-				if (filter.indexOf(tier) >= 0) return true;
+				if (filter.includes(tier)) return true;
 				return false;
 			} else if (filter instanceof RegExp) {
 				return filter.test(tier);
@@ -107,22 +107,21 @@ export class LeaderboardsManager {
 			const parsedTree = this.parseTourTree(data.bracketData.rootNode);
 			const players = Object.keys(parsedTree);
 			const general = { ...parsedTree };
-			//winners
+			// winners
 			const winner = toId(data.results[0][0]);
 			let finalist = '';
 			const semiFinalists: string[] = [];
-			let aux, aux2;
 			if (data.bracketData.rootNode.children) {
 				for (let f = 0; f < data.bracketData.rootNode.children.length; f++) {
-					aux = toId(data.bracketData.rootNode.children[f].team || '');
+					const aux = toId(data.bracketData.rootNode.children[f].team || '');
 					if (aux && aux !== winner) {
 						finalist = aux;
 					}
 					const children = data.bracketData.rootNode.children[f].children;
 					if (children) {
 						for (let j = 0; j < children.length; j++) {
-							aux2 = toId(children[j].team || '');
-							if (aux2 && aux2 !== winner && aux2 !== finalist && semiFinalists.indexOf(aux2) < 0) {
+							const aux2 = toId(children[j].team || '');
+							if (aux2 && aux2 !== winner && aux2 !== finalist && !semiFinalists.includes(aux2)) {
 								semiFinalists.push(aux2);
 							}
 						}
@@ -132,7 +131,7 @@ export class LeaderboardsManager {
 			return { players, general, winner, finalist, semiFinalists };
 		} else {
 			debug('Incompatible generator: ' + data.generator);
-			return null; //Not compatible generator
+			return null; // Not compatible generator
 		}
 	}
 

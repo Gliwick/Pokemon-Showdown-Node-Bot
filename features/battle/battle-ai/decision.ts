@@ -81,19 +81,16 @@ export class TeamDecision extends Decision {
 	}
 
 	protected getArgsStr(battle?: Battle): string {
-		const team: number[] = [];
-		for (let j = 0; j < this.team.length; j++) {
-			team.push(this.team[j] + 1);
-		}
+		const team = this.team.map((n) => n + 1);
 		const first = team[0] || 1;
 		for (let j = first - 1; j > 0; j--) {
-			if (team.indexOf(j) === -1) {
+			if (!team.includes(j)) {
 				team.push(j);
 			}
 		}
 		if (battle?.request?.side?.pokemon) {
 			for (let j = 1; j <= battle.request.side.pokemon.length; j++) {
-				if (team.indexOf(j) === -1) {
+				if (!team.includes(j)) {
 					team.push(j);
 				}
 			}

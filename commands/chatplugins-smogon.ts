@@ -57,7 +57,7 @@ function getUsageLink(callback: (link?: string) => void): void {
 	const currLink = Settings.settings.usagelink;
 	if (currLink !== realLink) {
 		httpGet(realLink, (data: string | null, err: Error | null): void => {
-			if (!err && data && data.indexOf('<title>404 Not Found</title>') < 0) {
+			if (!err && data && !data.includes('<title>404 Not Found</title>')) {
 				Settings.settings.usagelink = realLink;
 				Settings.save();
 				if (currLink) Settings.unCacheUrl(new RegExp(currLink));

@@ -90,21 +90,20 @@ export class AutoInviteManager implements Feature {
 			return;
 		}
 		const popupParser = function (this: AutoInviteManager, popup: string): void {
-			if (toId(popup.substr(0, 4)) === 'room') {
+			if (toId(popup).startsWith('room')) {
 				const auth: Record<string, string> = {};
 				const _message = popup.replace('Moderators', ':').replace('Drivers', ':').replace('Voices', ':');
 				const parts = _message.split(':');
 				let rank = ' ';
 				for (let i = 0; i < parts.length; i += 2) {
 					const usersList = parts[i + 1].split(',');
-					if (parts[i].includes('(')) rank = parts[i].substr(parts[i].indexOf('(') + 1, 1);
+					if (parts[i].includes('(')) rank = parts[i].split('(', 2)[1].charAt(0);
 					for (let f = 0; f < usersList.length; f++) {
 						auth[toId(usersList[f])] = rank;
 					}
 				}
 				this.roomAuth[this.parserArray[this.parserIndex]] = auth;
-				if (Config.debug && Config.debug.debug)
-					debug('Roomauth from ' + this.parserArray[this.parserIndex] + ' = ' + JSON.stringify(auth));
+				if (Config.debug?.debug) debug('Roomauth from ' + this.parserArray[this.parserIndex] + ' = ' + JSON.stringify(auth));
 				Bot.removeListener('popup', popupParser);
 				setTimeout(this.getNextRoom, 1500);
 			}

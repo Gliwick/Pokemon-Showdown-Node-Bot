@@ -170,19 +170,17 @@ export class ModerationManager implements Feature {
 	}
 
 	getServersAds(text: string): string[] {
-		let aux = text.toLowerCase();
+		const aux = text.toLowerCase();
+		if (!aux.includes('.psim.us')) return [];
+
 		const serversAds: string[] = [];
-		let spamindex;
-		let actualAd = '';
-		while (aux.indexOf('.psim.us') > -1) {
-			spamindex = aux.indexOf('.psim.us');
-			actualAd = '';
-			for (let i = spamindex - 1; i >= 0; i--) {
-				if (aux.charAt(i).replace(/[^a-z0-9]/g, '') === '') break;
-				actualAd = aux.charAt(i) + actualAd;
+		for (const ad of aux.split('.psim.us')) {
+			let actualAd = '';
+			for (let i = ad.length - 1; i >= 0; i--) {
+				if (ad.charAt(i).replace(/[^a-z0-9]/g, '') === '') break;
+				actualAd = ad.charAt(i) + actualAd;
 			}
 			if (actualAd.length) serversAds.push(toId(actualAd));
-			aux = aux.substr(spamindex + '.psim.us'.length);
 		}
 		return serversAds;
 	}

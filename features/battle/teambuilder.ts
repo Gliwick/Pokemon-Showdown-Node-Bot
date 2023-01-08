@@ -534,7 +534,7 @@ export class TeamBuilder {
 	exportTeam(team?: string | PokeSet[]): string {
 		if (!team) return '';
 		if (typeof team === 'string') {
-			if (team.indexOf('\n') >= 0) return team;
+			if (team.includes('\n')) return team;
 			team = this.fastUnpackTeam(team);
 		}
 		let text = '';

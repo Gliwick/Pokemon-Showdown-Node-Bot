@@ -3,7 +3,7 @@
 */
 
 import { Command } from '../command-parser';
-import { getTargetRoom, highestRank, toId } from '../tools';
+import { getTargetRoom, highestRank, splitFirst, toId } from '../tools';
 
 interface Room {
 	title?: string;
@@ -18,13 +18,9 @@ export const commands: Record<string, string | Command> = {
 	c: 'custom',
 	custom: function (arg, by, room) {
 		if (!this.isRanked('admin')) return false;
-		let tarRoom;
-		if (arg.indexOf('[') === 0 && arg.indexOf(']') > -1) {
-			tarRoom = toId(arg.slice(1, arg.indexOf(']')));
-			arg = arg.substr(arg.indexOf(']') + 1).trim();
-		}
+		const [tarRoom, data] = arg.startsWith('[') && arg.includes(']') ? splitFirst(arg.substring(1), ']') : [room, arg];
 		this.sclog();
-		this.say(tarRoom || room, arg);
+		this.say(tarRoom, data);
 	},
 
 	sendpm: 'pm',

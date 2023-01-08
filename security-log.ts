@@ -32,11 +32,9 @@ export function sweep(dir: PathLike, config?: LogConfig): void {
 	const f = new Date();
 	try {
 		const logs = readdirSync(dir);
-		let aux;
 		for (let i = 0; i < logs.length; i++) {
-			if (logs[i].substr(-4) !== '.log') continue;
-			aux = logs[i].substr(0, logs[i].indexOf('.'));
-			aux = aux.split('_');
+			if (!logs[i].endsWith('.log')) continue;
+			const aux = logs[i].split('.log')[0].split('_');
 			if (aux.length < 4) continue;
 			if (
 				dateDifference(

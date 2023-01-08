@@ -3,7 +3,7 @@ import { inspect } from 'util';
 import { GlobalMonitor } from './global-monitor';
 import { colors } from './index';
 import { debug, errlog, error, info, monitor, ok, recv, sent } from './log';
-import { generateRandomNick, getDateString, toId } from './tools';
+import { generateRandomNick, getDateString, splitFirst, splitLast, toId } from './tools';
 
 function getFeatureInitCmds(): string[] {
 	return Object.values(Features).flatMap((f) => {
@@ -95,38 +95,37 @@ export function setupBot(globalMonitor: GlobalMonitor): void {
 	Bot.on('formats', (formats: string): void => {
 		global.Formats = {};
 		const formatsArr = formats.split('|');
-		let commaIndex, code, name;
 		for (let i = 0; i < formatsArr.length; i++) {
-			commaIndex = formatsArr[i].indexOf(',');
-			if (commaIndex === -1) {
+			if (!formatsArr[i].includes(',')) {
 				Formats[toId(formatsArr[i])] = { name: formatsArr[i], team: true, ladder: true, chall: true };
-			} else if (commaIndex === 0) {
+			} else if (formatsArr[i].startsWith(',')) {
 				i++;
 				continue;
 			} else {
-				name = formatsArr[i];
-				const formatData: FormatData = { name: name, team: true, ladder: true, chall: true };
-				code = commaIndex >= 0 ? parseInt(name.substr(commaIndex + 1), 16) : NaN;
+				let name = formatsArr[i];
+				const formatData: FormatData = { name, team: true, ladder: true, chall: true };
+				const [newName, codeStr] = splitFirst(name, ',');
+				const code = codeStr ? parseInt(codeStr, 16) : NaN;
 				if (!isNaN(code)) {
-					name = name.substr(0, commaIndex);
+					name = newName;
 					if (code & 1) formatData.team = false;
 					if (!(code & 2)) formatData.ladder = false;
 					if (!(code & 4)) formatData.chall = false;
 					if (!(code & 8)) formatData.disableTournaments = true;
 				} else {
-					if (name.substr(name.length - 2) === ',#') {
+					if (name.endsWith(',#')) {
 						// preset teams
 						formatData.team = false;
-						name = name.substr(0, name.length - 2);
+						name = splitLast(name, ',#')[0];
 					}
-					if (name.substr(name.length - 2) === ',,') {
+					if (name.endsWith(',,')) {
 						// search-only
 						formatData.chall = false;
-						name = name.substr(0, name.length - 2);
-					} else if (name.substr(name.length - 1) === ',') {
+						name = splitLast(name, ',,')[0];
+					} else if (name.endsWith(',')) {
 						// challenge-only
 						formatData.ladder = false;
-						name = name.substr(0, name.length - 1);
+						name = name.substring(0, name.length - 1);
 					}
 				}
 				formatData.name = name;

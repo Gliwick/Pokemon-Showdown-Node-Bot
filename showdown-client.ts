@@ -249,7 +249,7 @@ export class Client {
 			this.events.emit('renamefailure', -2);
 			return;
 		}
-		if (data.data.indexOf('heavy load') !== -1) {
+		if (data.data.includes('heavy load')) {
 			this.error('the login server is under heavy load');
 			if (this.opts.retryLogin) {
 				this.debug('Retrying log in process in ' + this.opts.retryLogin / 1000 + ' seconds...');
@@ -433,25 +433,25 @@ export class Client {
 
 	receiveMsg(message?: string): void {
 		if (!message) return;
-		if (message.indexOf('\n') > -1) {
-			const spl = message.split('\n');
-			let room = 'lobby';
-			if (spl[0].charAt(0) === '>') {
-				room = spl[0].substr(1);
-				if (room === '') room = 'lobby';
-			}
-			for (let i = 0, len = spl.length; i < len; i++) {
-				if (spl[i].split('|')[1] && spl[i].split('|')[1] === 'init') {
-					for (let j = i; j < len; j++) {
-						this.receiveLine(room, spl[j], true);
-					}
-					break;
-				} else {
-					this.receiveLine(room, spl[i]);
-				}
-			}
-		} else {
+		if (!message.includes('\n')) {
 			this.receiveLine('lobby', message);
+			return;
+		}
+
+		const spl = message.split('\n');
+		let room = 'lobby';
+		if (spl[0].startsWith('>')) {
+			room = spl[0].substring(1) || 'lobby';
+		}
+		for (let i = 0, len = spl.length; i < len; i++) {
+			if (spl[i].split('|')[1] && spl[i].split('|')[1] === 'init') {
+				for (let j = i; j < len; j++) {
+					this.receiveLine(room, spl[j], true);
+				}
+				break;
+			} else {
+				this.receiveLine(room, spl[i]);
+			}
 		}
 	}
 
