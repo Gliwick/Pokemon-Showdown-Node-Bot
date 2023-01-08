@@ -4,9 +4,8 @@ import { inspect } from 'util';
 
 import { typechart } from '../../data/typechart';
 import { SparseStatsTable, StatID, StatsTable } from '../../data/types-dex';
-import { SpeciesData } from '../../data/types-species';
-import { debug, errlog, error } from '../../log';
-import { isUndefinedOrEquals, splitLast, toId, uncacheTree } from '../../tools';
+import { debug, error } from '../../log';
+import { emptyIfDefault, isUndefinedOrEquals, splitLast, toId, uncacheTree } from '../../tools';
 import { getItem, getMove, getPokemon } from './data';
 
 const TEAMS_DATA_FILE = AppOptions.data + 'teams.json';
@@ -215,100 +214,47 @@ export class TeamBuilder {
 
 	packTeam(team?: PokeSet[]): string {
 		if (!team) return '';
-		let buf = '';
+		const buf: string[] = [];
 		for (let i = 0; i < team.length; i++) {
 			const set = team[i];
-			if (buf) buf += ']';
-			// name
-			buf += set.name || set.species;
-			// species
-			let id = toId(set.species || set.name);
-			buf += '|' + (toId(set.name || set.species) === id ? '' : id);
-			// item
-			buf += '|' + toId(set.item);
-			// ability
-			let template: SpeciesData | null = null;
-			try {
-				template = DataDownloader.getPokedex()[toId(set.species || set.name)];
-			} catch (e: any) {
-				errlog(e.stack);
-			}
-			if (!template) return '';
-			const abilities = template.abilities;
-			id = toId(set.ability);
-			if (abilities) {
-				if (abilities['0'] && id === toId(abilities['0'])) {
-					buf += '|';
-				} else if (abilities['1'] && id === toId(abilities['1'])) {
-					buf += '|1';
-				} else if (abilities['H'] && id === toId(abilities['H'])) {
-					buf += '|H';
-				} else {
-					buf += '|' + id;
-				}
-			} else {
-				buf += '|' + id;
-			}
-			// moves
-			buf += '|' + set.moves.map(toId).join(',');
-			// nature
-			buf += '|' + set.nature;
-			// evs
-			const setEvs = set.evs;
-			const evs = '|' + (setEvs ? Stats.map((stat) => setEvs[stat] || '').join(',') : '');
-			if (evs === '|,,,,,') {
-				buf += '|';
-			} else {
-				buf += evs;
-			}
-			// gender
-			if (set.gender && set.gender !== template.gender) {
-				buf += '|' + set.gender;
-			} else {
-				buf += '|';
-			}
-			// ivs
-			const setIvs = set.ivs;
-			const ivs =
-				'|' +
-				(setIvs
-					? Stats.map((stat) => setIvs[stat])
-							.map((v) => (isUndefinedOrEquals(v, 31) ? '' : v))
-							.join(',')
-					: '');
-			if (ivs === '|,,,,,') {
-				buf += '|';
-			} else {
-				buf += ivs;
-			}
-			// shiny
-			if (set.shiny) {
-				buf += '|S';
-			} else {
-				buf += '|';
-			}
-			// level
-			if (set.level && set.level !== 100) {
-				buf += '|' + set.level;
-			} else {
-				buf += '|';
-			}
-			// happiness
-			if (!isUndefinedOrEquals(set.happiness, 255)) {
-				buf += '|' + set.happiness;
-			} else {
-				buf += '|';
-			}
 
-			if (set.pokeball || set.hpType || set.gigantamax || !isUndefinedOrEquals(set.dynamaxLevel, 10) || set.teraType) {
-				buf += ',' + (set.hpType || '');
-				buf += ',' + toId(set.pokeball);
-				buf += ',' + (set.gigantamax ? 'G' : '');
-				buf += ',' + (!isUndefinedOrEquals(set.dynamaxLevel, 10) ? set.dynamaxLevel : '');
-				buf += ',' + (set.teraType || '');
-			}
+			const name = set.name || set.species;
+			const species = toId(set.species || set.name);
+			const template = getPokemon(species || name);
+			const ability =
+				Object.entries(template?.abilities || {})
+					.filter(([, ab]) => toId(set.ability) === toId(ab))
+					.map(([key]) => key)[0] || toId(set.ability);
+			const evs = Stats.map((stat) => (set.evs || {})[stat] || '').join(',');
+			const ivs = Stats.map((stat) => (set.ivs || {})[stat])
+				.map((v) => emptyIfDefault(v, 31))
+				.join(',');
+			const misc: string[] = [
+				set.hpType || '',
+				toId(set.pokeball),
+				set.gigantamax ? 'G' : '',
+				emptyIfDefault(set.dynamaxLevel, 10),
+				set.teraType || '',
+			];
+			const detailsStr = emptyIfDefault(misc.join(','), misc.map(() => '').join(','));
+
+			const bufSet: string[] = [
+				name,
+				emptyIfDefault(species, name),
+				toId(set.item),
+				emptyIfDefault(ability, '0'),
+				set.moves.map(toId).join(','),
+				set.nature,
+				emptyIfDefault(evs, ',,,,,'),
+				emptyIfDefault(set.gender, template?.gender),
+				emptyIfDefault(ivs, ',,,,,'),
+				set.shiny ? 'S' : '',
+				emptyIfDefault(set.level, 100),
+				emptyIfDefault(set.happiness, 255) + (detailsStr ? ',' + detailsStr : ''),
+			];
+			buf.push(bufSet.join('|'));
 		}
-		return buf;
+		return buf.join(']');
 	}
 
 	teamToJSON(text: string): any[] {

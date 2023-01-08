@@ -283,3 +283,7 @@ export function parseAliases(format?: string): string {
 export function isUndefinedOrEquals<T>(v: T | undefined, other: T): boolean {
 	return (v ?? other) === other;
 }
+
+export function emptyIfDefault<T>(v: T | undefined, defaultValue: T): string {
+	return isUndefinedOrEquals(v, defaultValue) ? '' : '' + v;
+}

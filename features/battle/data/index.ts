@@ -2,6 +2,7 @@ import { AbilityData } from '../../../data/types-abilities';
 import { ItemData } from '../../../data/types-items';
 import { MoveData } from '../../../data/types-moves';
 import { SpeciesData, SpeciesFormatsData } from '../../../data/types-species';
+import { errlog } from '../../../log';
 import { toId } from '../../../tools';
 import { MODS_DATA_DIR } from '../battle-ai/battle-data';
 
@@ -13,7 +14,9 @@ export function getPokemon(name: string, mod?: string): Modded<SpeciesData> | nu
 			? require((Config.battleModsDir || MODS_DATA_DIR) + mod + '/pokedex.js').BattlePokedex
 			: DataDownloader.getPokedex();
 		return { ...pokedex[toId(name)] } || null;
-	} catch (e: any) {}
+	} catch (e: any) {
+		errlog(e.stack);
+	}
 	return null;
 }
 
