@@ -339,7 +339,7 @@ export function getMoveType(
 		case 'revelationdance':
 			return poke.getTypes(conditions)[0];
 		case 'struggle':
-			return move.type;
+			return '???';
 		case 'technoblast':
 			return poke.item?.onDrive || move.type;
 		case 'weatherball':
