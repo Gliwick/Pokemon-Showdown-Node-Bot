@@ -295,7 +295,7 @@ export function getFormatsData(poke: string, gen: number = CurrentGen, battleId?
 }
 
 export class Move {
-	template: MoveData;
+	template: Readonly<MoveData>;
 	name: string;
 	id: ID;
 	pp: number;
@@ -331,7 +331,7 @@ export interface PokemonDetails {
 }
 
 export class Pokemon implements PokemonDetails {
-	template: SpeciesData;
+	template: Readonly<SpeciesData>;
 	name: string;
 
 	// PokemonDetails properties
@@ -344,14 +344,14 @@ export class Pokemon implements PokemonDetails {
 	transformed = false;
 	transformPrev: Pick<Pokemon, 'template' | 'species' | 'shiny' | 'moves' | 'ability' | 'baseAbility' | 'abilityStack'> | null = null;
 
-	item: WithID<ItemData> | Unknown | null = '&unknown';
+	item: Readonly<WithID<ItemData>> | Unknown | null = '&unknown';
 	itemEffect = '';
-	prevItem: WithID<ItemData> | null = null;
+	prevItem: Readonly<WithID<ItemData>> | null = null;
 	prevItemEffect = '';
 
-	ability: WithID<AbilityData> | Unknown = '&unknown';
+	ability: Readonly<WithID<AbilityData>> | Unknown = '&unknown';
 	supressedAbility = false;
-	baseAbility: WithID<AbilityData> | Unknown = '&unknown';
+	baseAbility: Readonly<WithID<AbilityData>> | Unknown = '&unknown';
 	abilityStack: string[] = [];
 
 	moves: Move[] = [];
