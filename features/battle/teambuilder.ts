@@ -6,7 +6,7 @@ import { typechart } from '../../data/typechart';
 import { StatID } from '../../data/types-dex';
 import { SpeciesData } from '../../data/types-species';
 import { debug, errlog, error } from '../../log';
-import { isUndefinedOrEquals, toId, uncacheTree } from '../../tools';
+import { isUndefinedOrEquals, splitLast, toId, uncacheTree } from '../../tools';
 import { getItem, getMove, getPokemon } from './data';
 
 const TEAMS_DATA_FILE = AppOptions.data + 'teams.json';
@@ -340,84 +340,71 @@ export class TeamBuilder {
 			} else if (!curSet) {
 				curSet = { name: '', species: '', gender: '', item: '', ability: '', nature: '', moves: [] };
 				team.push(curSet);
-				const atIndex = line.lastIndexOf(' @ ');
-				if (atIndex !== -1) {
-					curSet.item = line.substr(atIndex + 3);
-					if (toId(curSet.item) === 'noitem') curSet.item = '';
-					line = line.substr(0, atIndex);
+				const [newLine, item] = splitLast(line, ' @ ');
+				if (item) {
+					curSet.item = toId(item) === 'noitem' ? '' : item;
+					line = newLine;
 				}
-				if (line.substr(line.length - 4) === ' (M)') {
-					curSet.gender = 'M';
-					line = line.substr(0, line.length - 4);
+				if (line.endsWith(' (M)') || line.endsWith(' (F)')) {
+					const [newLine, gender] = splitLast(line, ' (');
+					curSet.gender = gender.split(')')[0];
+					line = newLine;
 				}
-				if (line.substr(line.length - 4) === ' (F)') {
-					curSet.gender = 'F';
-					line = line.substr(0, line.length - 4);
-				}
-				const parenIndex = line.lastIndexOf(' (');
-				if (line.substr(line.length - 1) === ')' && parenIndex !== -1) {
-					line = line.substr(0, line.length - 1);
-					curSet.species = line.substr(parenIndex + 2);
-					line = line.substr(0, parenIndex);
-					curSet.name = line;
+				if (line.endsWith(')') && line.includes(' (')) {
+					const [name, species] = splitLast(line, ' (');
+					curSet.species = species.split(')')[0];
+					curSet.name = name;
 				} else {
 					curSet.species = line;
-					curSet.name = curSet.species;
+					curSet.name = line;
 				}
-			} else if (line.substr(0, 7) === 'Trait: ') {
-				line = line.substr(7);
+			} else if (line.startsWith('Trait: ')) {
+				line = line.substring('Trait: '.length);
 				curSet.ability = line;
-			} else if (line.substr(0, 9) === 'Ability: ') {
-				line = line.substr(9);
+			} else if (line.startsWith('Ability: ')) {
+				line = line.substring('Ability: '.length);
 				curSet.ability = line;
 			} else if (line === 'Shiny: Yes') {
 				curSet.shiny = true;
-			} else if (line.substr(0, 7) === 'Level: ') {
-				line = line.substr(7);
+			} else if (line.startsWith('Level: ')) {
+				line = line.substring('Level: '.length);
 				curSet.level = parseInt(line);
-			} else if (line.substr(0, 11) === 'Happiness: ') {
-				line = line.substr(11);
+			} else if (line.startsWith('Happiness: ')) {
+				line = line.substring('Happiness: '.length);
 				curSet.happiness = parseInt(line);
-			} else if (line.substr(0, 9) === 'Ability: ') {
-				line = line.substr(9);
-				curSet.ability = line;
-			} else if (line.substr(0, 5) === 'EVs: ') {
-				line = line.substr(5);
+			} else if (line.startsWith('EVs: ')) {
+				line = line.substring('EVs: '.length);
 				const evLines = line.split('/');
 				curSet.evs = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 				for (let j = 0; j < evLines.length; j++) {
 					const evLine = evLines[j].trim();
-					const spaceIndex = evLine.indexOf(' ');
-					if (spaceIndex === -1) continue;
-					const statid = BattleStatIDs[evLine.substr(spaceIndex + 1)];
-					const statval = parseInt(evLine.substr(0, spaceIndex));
+					const [statvalStr, statidStr] = evLine.split(' ', 2);
+					if (!statidStr) continue;
+					const statid = BattleStatIDs[statidStr];
+					const statval = parseInt(statvalStr);
 					if (!statid) continue;
 					curSet.evs[statid] = statval;
 				}
-			} else if (line.substr(0, 5) === 'IVs: ') {
-				line = line.substr(5);
+			} else if (line.startsWith('IVs: ')) {
+				line = line.substring('IVs: '.length);
 				const ivLines = line.split(' / ');
 				curSet.ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 				for (let j = 0; j < ivLines.length; j++) {
 					const ivLine = ivLines[j];
-					const spaceIndex = ivLine.indexOf(' ');
-					if (spaceIndex === -1) continue;
-					const statid = BattleStatIDs[ivLine.substr(spaceIndex + 1)];
-					const statval = parseInt(ivLine.substr(0, spaceIndex));
+					const [statvalStr, statidStr] = ivLine.split(' ', 2);
+					if (!statidStr) continue;
+					const statid = BattleStatIDs[statidStr];
+					const statval = parseInt(statvalStr);
 					if (!statid) continue;
 					curSet.ivs[statid] = statval;
 				}
 			} else if (line.match(/^[A-Za-z]+ (N|n)ature/)) {
-				let natureIndex = line.indexOf(' Nature');
-				if (natureIndex === -1) natureIndex = line.indexOf(' nature');
-				if (natureIndex === -1) continue;
-				line = line.substr(0, natureIndex);
+				line = line.replace(' Nature', ' nature').split(' nature')[0];
 				curSet.nature = line;
-			} else if (line.substr(0, 1) === '-' || line.substr(0, 1) === '~') {
-				line = line.substr(1);
-				if (line.substr(0, 1) === ' ') line = line.substr(1);
-				if (line.substr(0, 14) === 'Hidden Power [') {
-					const hptype = line.substr(14, line.length - 15);
+			} else if (line.startsWith('-') || line.startsWith('~')) {
+				line = line.substring(1).trimStart();
+				if (line.startsWith('Hidden Power [')) {
+					const hptype = line.split('[')[1].split(']')[0];
 					line = 'Hidden Power ' + hptype;
 					if (!curSet.ivs) {
 						curSet.ivs = { ...typechart[hptype].HPivs };

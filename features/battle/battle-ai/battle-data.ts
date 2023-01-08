@@ -51,7 +51,7 @@ function getMods(gen: number, battleId?: string): string[] {
 		.filter((i) => i >= gen)
 		.map((i) => 'gen' + i)
 		.reverse();
-	const formatId = battleId && battleId.split('-')[1];
+	const formatId = battleId && battleId.split('-', 2)[1];
 	const formatMod = formatId && Config.battleFormatMods[formatId];
 	if (formatMod) mods.push(formatMod);
 	return mods;

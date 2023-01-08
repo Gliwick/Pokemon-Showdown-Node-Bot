@@ -107,6 +107,12 @@ export function normalize(str: string): string {
 	return normalizer.normalize(str);
 }
 
+export function splitLast(s: string, separator: string): [string, string] {
+	const i = s.lastIndexOf(separator);
+	if (i < 0) return [s, ''];
+	return [s.substring(0, i), s.substring(i + separator.length)];
+}
+
 /* Commands and Permissions */
 
 export function stripCommands(text: string): string {
