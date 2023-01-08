@@ -6,10 +6,9 @@
 import { SparseBoostsTable } from '../../../../data/types-dex';
 import { MoveData } from '../../../../data/types-moves';
 import { toId } from '../../../../tools';
-import { Battle } from '../battle';
 import { Decision, MoveDecision, SwitchDecision, TeamDecision } from '../decision';
-import { BattleModule } from '../modules';
-import { getAbility, getFormatsData, getItem, getMove, Type } from './../battle-data';
+import { ActiveBattle, BattleModule } from '../modules';
+import { getAbility, getFormatsData, getItem, getMove, Type, WithID } from './../battle-data';
 import { calculate, Conditions, getHazardsDamage, getMoveType, Pokemon } from './../calc';
 import { Gen, getMultipleEff, typechart } from './../typechart';
 
@@ -60,7 +59,7 @@ export class SinglesEffective implements BattleModule {
 
 	constructor() {}
 
-	supposeActiveFoe(battle: Battle): Pokemon {
+	supposeActiveFoe(battle: ActiveBattle): Pokemon {
 		const target = battle.foe.active[0];
 		const pokeId = target.name + '|' + target.species;
 		const foePoke = new Pokemon(
@@ -216,7 +215,7 @@ export class SinglesEffective implements BattleModule {
 	}
 
 	getConditionsAfterSwitchIn(
-		battle: Battle,
+		battle: ActiveBattle,
 		selfPoke: Pokemon,
 		foePoke: Pokemon,
 		foeConditions: Conditions,
@@ -317,7 +316,7 @@ export class SinglesEffective implements BattleModule {
 		return { selfPoke, selfConditions, foeConditions, gconditions };
 	}
 
-	evaluatePokemon(battle: Battle, sideId: number): Matchup {
+	evaluatePokemon(battle: ActiveBattle, sideId: number): Matchup {
 		if (!battle.foe.active[0] || battle.foe.active[0].fainted) return { received: 0, receivedPercentage: 0, inflicted: 0 };
 
 		const isActive = sideId === 0 && !!battle.request.active;
@@ -370,7 +369,7 @@ export class SinglesEffective implements BattleModule {
 
 		/* Calculate r - received damage in percentage of current HP */
 
-		let foeMoves: MoveData[] = [];
+		let foeMoves: WithID<MoveData>[] = [];
 		const supposedMoveTypes: Type[] = [];
 		for (const move of battle.foe.active[0].moves) {
 			if (move.disabled || move.pp <= 0) continue;
@@ -409,7 +408,7 @@ export class SinglesEffective implements BattleModule {
 			const hasType: Partial<Record<Type, boolean>> = {};
 			for (const move of foeMoves) {
 				if (move.category !== 'Status' && (move.basePower <= 1 || move.basePower >= 55 || move.multihit) && move.priority === 0)
-					hasType[getMoveType(foePoke, move, foeConditions, gconditions, battle.gen)] = true;
+					hasType[getMoveType(foePoke, move, foeConditions, gconditions)] = true;
 			}
 
 			const supposedMoves = [];
@@ -726,7 +725,7 @@ export class SinglesEffective implements BattleModule {
 	 * Moves
 	 */
 
-	foeCanSwitch(battle: Battle): boolean {
+	foeCanSwitch(battle: ActiveBattle): boolean {
 		const totalPokes = battle.foe?.teamPv?.length || 6;
 		if (battle.foe?.pokemon?.length === totalPokes) {
 			for (let i = 0; i < battle.foe.pokemon.length; i++) {
@@ -739,7 +738,7 @@ export class SinglesEffective implements BattleModule {
 		return true;
 	}
 
-	selfLastPokemon(battle: Battle): boolean {
+	selfLastPokemon(battle: ActiveBattle): boolean {
 		return (battle.request?.side?.pokemon || [])
 			.filter((poke) => !poke.active)
 			.every((poke) => battle.parseStatus(poke.condition).status === 'fnt');
@@ -754,14 +753,14 @@ export class SinglesEffective implements BattleModule {
 		return decisions.some((des) => des.type === 'switch');
 	}
 
-	selfHasStatus(battle: Battle): boolean {
+	selfHasStatus(battle: ActiveBattle): boolean {
 		return battle.request.side.pokemon
 			.filter((p) => !!p.condition)
 			.map((p) => battle.parseStatus(p.condition)?.status)
-			.some((status) => ['slp', 'brn', 'psn', 'tox', 'par', 'frz'].includes(status));
+			.some((status) => ['slp', 'brn', 'psn', 'tox', 'par', 'frz'].includes(status || ''));
 	}
 
-	alreadyOppSleeping(battle: Battle): boolean {
+	alreadyOppSleeping(battle: ActiveBattle): boolean {
 		return battle.foe.pokemon.some((p) => p.status === 'slp');
 	}
 
@@ -778,7 +777,7 @@ export class SinglesEffective implements BattleModule {
 		);
 	}
 
-	getViableSupportMoves(battle: Battle, decisions: Decision[]): SupportViabilityCategoties {
+	getViableSupportMoves(battle: ActiveBattle, decisions: Decision[]): SupportViabilityCategoties {
 		const res: SupportViabilityCategoties = {
 			obligatory: [],
 			viable: [],
@@ -877,7 +876,7 @@ export class SinglesEffective implements BattleModule {
 			)
 				continue;
 
-			const move = des.moveData as Record<string, any>;
+			const move = des.moveData as WithID<MoveData>;
 			const viableZMove =
 				move.id in
 					{
@@ -890,12 +889,12 @@ export class SinglesEffective implements BattleModule {
 						splash: 1,
 						sunnyday: 1,
 					} ||
-				(move.zMoveBoost &&
-					move.zMoveBoost.atk &&
-					move.zMoveBoost.def &&
-					move.zMoveBoost.spa &&
-					move.zMoveBoost.spd &&
-					move.zMoveBoost.spe);
+				(move?.zMove?.boost &&
+					move.zMove.boost.atk &&
+					move.zMove.boost.def &&
+					move.zMove.boost.spa &&
+					move.zMove.boost.spd &&
+					move.zMove.boost.spe);
 			if (battle.request.active[0].canZMove) {
 				if (des.transformation !== 'zmove' && viableZMove && selfPoke.item) {
 					if (selfPoke.item.zMoveType && selfPoke.item.zMoveType === move.type) continue;
@@ -1745,7 +1744,7 @@ export class SinglesEffective implements BattleModule {
 		return res;
 	}
 
-	getViableDamageMoves(battle: Battle, decisions: Decision[]): DamageViabilityCategories {
+	getViableDamageMoves(battle: ActiveBattle, decisions: Decision[]): DamageViabilityCategories {
 		const res: DamageViabilityCategories = {
 			ohko: [], // +99% -> replace status moves
 			thko: [], // +50% -> no switch, might use status moves if not priority
@@ -1781,7 +1780,7 @@ export class SinglesEffective implements BattleModule {
 			const des = decisions[i] as MoveDecision;
 			if (des.type !== 'move') continue; // not a move
 
-			if (battle.request.active[0].canMegaEvo || battle.request.side.pokemon[0].canMegaEvo) {
+			if (battle.request.active[0].canMegaEvo) {
 				if (selfPoke.hasAbility('speedboost') && !(selfConditions.boosts.spe > 0)) {
 					if (des.transformation === 'mega') continue; // don't mega immediately with speed boost
 				} else {
@@ -1811,7 +1810,7 @@ export class SinglesEffective implements BattleModule {
 					continue;
 			}
 
-			let move = des.moveData as Record<string, any>;
+			let move = des.moveData as WithID<MoveData>;
 			if (move.id === 'naturepower') {
 				move = getMove('triattack', battle.gen, battle.id);
 				if (battle.conditions['electricterrain']) move = getMove('thunderbolt', battle.gen, battle.id);
@@ -1862,7 +1861,9 @@ export class SinglesEffective implements BattleModule {
 			} else if (!foeConditions.volatiles['healblock'] && !foeConditions.volatiles['taunt']) {
 				const movesB = battle.foe.active[0].moves;
 				for (let j = 0; j < movesB.length; j++) {
-					if (movesB[j].heal) foeRecoveryHP = Math.max(foeRecoveryHP, (movesB[j].heal[0] / movesB[j].heal[1]) * 100);
+					if (movesB[j].template.heal) {
+						foeRecoveryHP = Math.max(foeRecoveryHP, (movesB[j].template.heal[0] / movesB[j].template.heal[1]) * 100);
+					}
 					if (movesB[j].id === 'purify' && selfPoke.status) foeRecoveryHP = Math.max(foeRecoveryHP, 50);
 					if (['moonlight', 'morningsun', 'synthesis'].includes(move.id)) {
 						if (supressedWeather || !battle.conditions.weather) {
@@ -1917,7 +1918,7 @@ export class SinglesEffective implements BattleModule {
 			}
 
 			if (pc <= 0) {
-				battle.debug('Immune to move ' + move.namel);
+				battle.debug('Immune to move ' + move.name);
 				res.immune.push(des);
 				continue;
 			}
@@ -2167,7 +2168,7 @@ export class SinglesEffective implements BattleModule {
 				const movesB = battle.foe.active[0].moves;
 				if (foeConditions.volatiles.dynamax) {
 					for (let j = 0; j < movesB.length; j++) {
-						if (movesB[j].category === 'Status') foeCanProtect = true;
+						if (movesB[j].template.category === 'Status') foeCanProtect = true;
 					}
 				} else if (move?.flags?.protect && (!move.flags['contact'] || !selfPoke.hasAbility('unseenfist'))) {
 					for (let j = 0; j < movesB.length; j++) {
@@ -2205,7 +2206,7 @@ export class SinglesEffective implements BattleModule {
 		return res;
 	}
 
-	getMovesData(battle: Battle, decisions: Decision[], selfPoke: Pokemon): Decision[] {
+	getMovesData(battle: ActiveBattle, decisions: Decision[], selfPoke: Pokemon): Decision[] {
 		const moveDecisions: Decision[] = [];
 
 		for (let i = 0; i < decisions.length; i++) {
@@ -2223,8 +2224,8 @@ export class SinglesEffective implements BattleModule {
 					const baseMove = getMove(baseMoveName, battle.gen, battle.id);
 					if (selfPoke.item && selfPoke.item.zMoveType && selfPoke.item.zMoveType === baseMove.type) {
 						des.moveData.category = baseMove.category;
-						if (baseMove.zMovePower) {
-							des.moveData.basePower = baseMove.zMovePower;
+						if (baseMove.zMove?.basePower) {
+							des.moveData.basePower = baseMove.zMove.basePower;
 						} else if (baseMove.basePower >= 140) {
 							des.moveData.basePower = 200;
 						} else if (baseMove.basePower >= 130) {
@@ -2252,8 +2253,8 @@ export class SinglesEffective implements BattleModule {
 				if (des.moveData.isMax) {
 					const baseMove = getMove(baseMoveName, battle.gen, battle.id);
 					des.moveData = { ...des.moveData, category: baseMove.category };
-					if (baseMove.gmaxPower) {
-						des.moveData.basePower = baseMove.gmaxPower;
+					if (baseMove.maxMove?.basePower) {
+						des.moveData.basePower = baseMove.maxMove.basePower;
 					} else if (baseMove.isMax) {
 						des.moveData.basePower = 1;
 					} else if (!baseMove.basePower) {
@@ -2337,7 +2338,7 @@ export class SinglesEffective implements BattleModule {
 	}
 
 	private debugDecisions(
-		battle: Battle,
+		battle: ActiveBattle,
 		selfPoke: Pokemon,
 		foePoke: Pokemon,
 		bestSw: SwitchDecision | null,
@@ -2369,7 +2370,7 @@ export class SinglesEffective implements BattleModule {
 		return arr[Math.floor(Math.random() * arr.length)];
 	}
 
-	getBestMove(battle: Battle, decisions: Decision[]): Decision {
+	getBestMove(battle: ActiveBattle, decisions: Decision[]): Decision {
 		const selfPoke = battle.parseRequestPokemon(0, true);
 		const foePoke = this.supposeActiveFoe(battle);
 		decisions = this.filterRedundantMaxMoves(this.getMovesData(battle, decisions, selfPoke));
@@ -2393,7 +2394,7 @@ export class SinglesEffective implements BattleModule {
 			volatiles: battle.foe.active[0].volatiles,
 			boosts: battle.foe.active[0].boosts,
 		});
-		const movesB = battle.foe.active[0].moves;
+		const foeMoves = battle.foe.active[0].moves;
 
 		let selfSpe = selfPoke.getFullSpe(battle, selfConditions, false);
 		let selfSpeNoBoost = selfPoke.getFullSpe(battle, selfConditions, true);
@@ -2606,7 +2607,7 @@ export class SinglesEffective implements BattleModule {
 			let maxAccuracy = 0;
 			for (let i = 0; i < finalDamageMoves.length; i++) {
 				const move = finalDamageMoves[i].moveData;
-				let accuracy = move.finalDamageMoves;
+				let accuracy = move?.accuracy;
 				if (move.id in { tripleaxel: 1, triplekick: 1 } && !selfPoke.hasAbility('skilllink')) accuracy = 73;
 				if (!supressedWeather) {
 					if (move.id in { hurricane: 1, thunder: 1 }) {
@@ -2771,14 +2772,20 @@ export class SinglesEffective implements BattleModule {
 		battle.debug('Final damage moves: ' + JSON.stringify(finalDamageMoves.map((d) => d.move)));
 
 		let foeHasSwitch = false;
-		for (let i = 0; i < movesB.length; i++) {
-			if (movesB[i].selfSwitch) {
-				if (movesB[i].id === 'partingshot' && selfPoke.hasAbility({ contrary: 1, magicbounce: 1 })) continue;
-				if (movesB[i].category !== 'Status') {
-					if ((movesB[i].type === 'Electric' && selfPoke.hasType('Ground', selfConditions)) || selfPoke.hasAbility('wonderguard'))
+		for (let i = 0; i < foeMoves.length; i++) {
+			if (foeMoves[i].template.selfSwitch) {
+				if (foeMoves[i].id === 'partingshot' && selfPoke.hasAbility({ contrary: 1, magicbounce: 1 })) continue;
+				if (foeMoves[i].template.category !== 'Status') {
+					if (
+						(foeMoves[i].template.type === 'Electric' && selfPoke.hasType('Ground', selfConditions)) ||
+						selfPoke.hasAbility('wonderguard')
+					)
 						continue;
 				}
-				if (movesB[i].flags?.contact && (selfPoke.hasAbility({ ironbarbs: 1, roughskin: 1 }) || selfPoke.hasItem('rockyhelmet')))
+				if (
+					foeMoves[i].template.flags?.contact &&
+					(selfPoke.hasAbility({ ironbarbs: 1, roughskin: 1 }) || selfPoke.hasItem('rockyhelmet'))
+				)
 					continue;
 				foeHasSwitch = true;
 			}
@@ -2851,7 +2858,7 @@ export class SinglesEffective implements BattleModule {
 	 * Switches
 	 */
 
-	getBestSwitch(battle: Battle, decisions: Decision[]): SwitchDecision | null {
+	getBestSwitch(battle: ActiveBattle, decisions: Decision[]): SwitchDecision | null {
 		battle.debug('Switch options | Foe: ' + battle.foe.active[0].name);
 		let switches: { decision: SwitchDecision; ev: Matchup }[] = [];
 		for (let i = 0; i < decisions.length; i++) {
@@ -2887,7 +2894,7 @@ export class SinglesEffective implements BattleModule {
 		return switches[0].decision;
 	}
 
-	getBestLead(battle: Battle, decisions: TeamDecision[]): TeamDecision {
+	getBestLead(battle: ActiveBattle, decisions: TeamDecision[]): TeamDecision {
 		const sideIdToPokemon = decisions
 			.map((decision) => decision.team[0])
 			.reduce((acc: Record<number, Pokemon>, v) => {
@@ -3024,9 +3031,11 @@ export class SinglesEffective implements BattleModule {
 	 * Swapper
 	 */
 
-	decide(battle: Battle, decisions: Decision[][]): Decision[] | null {
-		if (battle.gametype !== 'singles' || decisions.some((d) => d.length > 1))
+	decide(battle: ActiveBattle, decisions: Decision[][]): Decision[] | null {
+		if (battle.gametype !== 'singles' || decisions.some((d) => d.length > 1)) {
 			throw new Error('This module only works for singles gametype');
+		}
+
 		const singleDecisions = decisions.flat(1);
 		if (battle.request?.forceSwitch) {
 			const decision = this.getBestSwitch(battle, singleDecisions);

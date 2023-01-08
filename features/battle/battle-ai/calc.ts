@@ -12,6 +12,7 @@ import { toId } from '../../../tools';
 import { Battle } from './battle';
 import { CurrentGen, Pokemon as BattlePokemon, PokemonDetails, Type, WithID } from './battle-data';
 import { Transformation } from './decision';
+import { ActiveBattle } from './modules';
 import { getMultipleEff } from './typechart';
 
 const BaseStats: StatID[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
@@ -43,7 +44,7 @@ export class Pokemon implements PokemonDetails {
 
 	category: Category | 'Status' | 'Mixed' = 'Mixed';
 
-	constructor(template: SpeciesData, properties: Partial<Pokemon> & { helpers?: Record<string, any> }, battle?: Battle) {
+	constructor(template: SpeciesData, properties: Partial<Pokemon> & { helpers?: Record<string, any> }, battle?: ActiveBattle) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
 		const { helpers, ...rest } = properties;
 		this.template = { ...template, ...(helpers?.template || {}) };
@@ -411,8 +412,8 @@ export function calculate(
 	defender: PokemonWithConditions,
 	move: WithID<MoveData>,
 	globalConditions: Record<string, any> = {},
-	battle?: Battle,
-	transformation?: Transformation
+	battle?: ActiveBattle,
+	transformation?: Transformation | null
 ): Damage {
 	const atkPoke = new Pokemon(attacker.poke.template, attacker.poke, battle);
 	const atkConditions = new Conditions(attacker.conditions || {});

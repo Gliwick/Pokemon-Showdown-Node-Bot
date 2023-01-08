@@ -4,7 +4,8 @@
 
 import { debug } from '../../../log';
 import { toId } from '../../../tools';
-import { Battle } from './battle';
+import { Battle, Request } from './battle';
+import { Player } from './battle-data';
 import { Decision } from './decision';
 import { IngameNoStatus } from './modules/ingame-nostatus';
 import { Random } from './modules/random';
@@ -15,10 +16,16 @@ export interface BattleModuleClass {
 	new (): BattleModule;
 }
 
+export interface ActiveBattle extends Battle {
+	request: Request;
+	self: Player;
+	foe: Player;
+}
+
 export interface BattleModule {
 	readonly name: string;
 	readonly desc?: string;
-	decide: (battle: Battle, decisions: Decision[][]) => Decision[] | null;
+	decide: (battle: ActiveBattle, decisions: Decision[][]) => Decision[] | null;
 }
 
 export class ModuleManager {

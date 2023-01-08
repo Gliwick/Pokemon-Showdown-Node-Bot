@@ -16,9 +16,8 @@
  */
 
 import { toId } from '../../../../tools';
-import { Battle } from '../battle';
 import { Decision, MoveDecision, SwitchDecision, TeamDecision } from '../decision';
-import { BattleModule } from '../modules';
+import { ActiveBattle, BattleModule } from '../modules';
 import { getAbility, getMove, getPokemon } from './../battle-data';
 import { calculate, Conditions, Pokemon } from './../calc';
 
@@ -40,7 +39,7 @@ export class IngameNoStatus implements BattleModule {
 	static readonly ID = 'ingame-nostatus';
 	readonly name = 'ingame-nostatus';
 
-	getPokemonAverage(battle: Battle, s: number): number {
+	getPokemonAverage(battle: ActiveBattle, s: number): number {
 		if (!battle.foe.teamPv.length) return 0;
 
 		const p = battle.request.side.pokemon[s];
@@ -84,7 +83,7 @@ export class IngameNoStatus implements BattleModule {
 		return 0 + final;
 	}
 
-	evaluateTeamDecision(battle: Battle, des: TeamDecision): number {
+	evaluateTeamDecision(battle: ActiveBattle, des: TeamDecision): number {
 		let final = 0;
 		for (let i = 0; i < des.team.length; i++) {
 			final += this.getPokemonAverage(battle, des.team[i]);
@@ -96,7 +95,7 @@ export class IngameNoStatus implements BattleModule {
 	 * Switch Decisions
 	 */
 
-	getSwitchAverage(battle: Battle, pokeId: number): number {
+	getSwitchAverage(battle: ActiveBattle, pokeId: number): number {
 		let final = 0;
 		const p = battle.request.side.pokemon[pokeId];
 		const pokeA = battle.parseRequestPokemon(pokeId, true);
@@ -158,7 +157,7 @@ export class IngameNoStatus implements BattleModule {
 		return final / p.moves.length;
 	}
 
-	evaluateSwitchDecision(battle: Battle, des: SwitchDecision): number {
+	evaluateSwitchDecision(battle: ActiveBattle, des: SwitchDecision): number {
 		let final = -1000;
 		final += this.getSwitchAverage(battle, des.pokeId);
 		return final;
@@ -168,7 +167,7 @@ export class IngameNoStatus implements BattleModule {
 	 * Move Decisions
 	 */
 
-	evaluateMoveDecision(battle: Battle, desEnv: Decision[], des: MoveDecision, act: number): number {
+	evaluateMoveDecision(battle: ActiveBattle, desEnv: Decision[], des: MoveDecision, act: number): number {
 		let final = 0;
 		const p = battle.request.side.pokemon[act];
 		const a = battle.request.active[act];
@@ -249,7 +248,7 @@ export class IngameNoStatus implements BattleModule {
 	 * Swapper
 	 */
 
-	getDecisionValue(battle: Battle, decisions: Decision[][], desEnv: Decision[], des: Decision, act: number): number {
+	getDecisionValue(battle: ActiveBattle, decisions: Decision[][], desEnv: Decision[], des: Decision, act: number): number {
 		if (des.type === 'team') {
 			return this.evaluateTeamDecision(battle, des as TeamDecision);
 		} else if (des.type === 'move') {
@@ -261,7 +260,7 @@ export class IngameNoStatus implements BattleModule {
 		}
 	}
 
-	decide(battle: Battle, decisions: Decision[][]): Decision[] {
+	decide(battle: ActiveBattle, decisions: Decision[][]): Decision[] {
 		const dTable: { des: number; val: number }[] = [];
 		let p = 0,
 			maxP: number | null = null;

@@ -4,7 +4,7 @@
 
 import { MoveData } from '../../../data/types-moves';
 import { Battle, RequestMove } from './battle';
-import { Type } from './battle-data';
+import { Type, WithID } from './battle-data';
 
 type DecisionType = 'move' | 'switch' | 'team' | 'pass' | 'shift';
 
@@ -30,8 +30,8 @@ export class MoveDecision extends Decision {
 	target: number | null;
 	move: string;
 	movePP: number;
-	transformation: Transformation | null;
-	moveData: MoveData | null = null;
+	transformation: Transformation | null = null;
+	moveData: WithID<MoveData> | null = null;
 
 	constructor(moveId: number, target: number | null, transformation: Transformation | null, move: string, movePP: number) {
 		super('move');

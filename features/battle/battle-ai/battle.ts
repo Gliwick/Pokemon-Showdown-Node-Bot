@@ -16,6 +16,7 @@ import { majors } from './battle-majors';
 import { Minor, minors } from './battle-minors';
 import { Pokemon as CalcPokemon } from './calc';
 import { Decision, getDecisions, MoveDecision } from './decision';
+import { ActiveBattle } from './modules';
 
 const MAX_RECURSIVE = 5;
 const MIN_TIME_LOCK = 3 * 1000; // 3 secods to avoid send spam
@@ -282,7 +283,7 @@ export class Battle {
 		try {
 			mod = this.bot.moduleManager.choose(this);
 			if (mod) {
-				const decision = mod.decide(this, decisions);
+				const decision = mod.decide(this as ActiveBattle, decisions);
 				if (decision) {
 					this.lock = false;
 					this.sendDecision(decision);
