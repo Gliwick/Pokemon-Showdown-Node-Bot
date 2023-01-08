@@ -426,6 +426,9 @@ export class TeamBuilder {
 			if (curSet.shiny) {
 				text += 'Shiny: Yes\n';
 			}
+			if (curSet.teraType) {
+				text += 'Tera Type: ' + curSet.teraType + '\n';
+			}
 			if (typeof curSet.happiness === 'number' && curSet.happiness !== 255) {
 				text += 'Happiness: ' + curSet.happiness + '\n';
 			}
