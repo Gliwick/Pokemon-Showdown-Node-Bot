@@ -3,7 +3,7 @@ import { Array as Sugar } from 'sugar';
 import { inspect } from 'util';
 
 import { typechart } from '../../data/typechart';
-import { StatID } from '../../data/types-dex';
+import { SparseStatsTable, StatID, StatsTable } from '../../data/types-dex';
 import { SpeciesData } from '../../data/types-species';
 import { debug, errlog, error } from '../../log';
 import { isUndefinedOrEquals, splitLast, toId, uncacheTree } from '../../tools';
@@ -57,9 +57,9 @@ interface PokeSet {
 	ability: string;
 	moves: string[];
 	nature: string;
-	evs?: Record<StatID, number>;
+	evs?: StatsTable;
 	gender?: string;
-	ivs?: Partial<Record<StatID, number>>;
+	ivs?: SparseStatsTable;
 	shiny?: boolean;
 	level?: number;
 	happiness?: number;
@@ -254,22 +254,8 @@ export class TeamBuilder {
 			// nature
 			buf += '|' + set.nature;
 			// evs
-			let evs = '|';
-			if (set.evs) {
-				evs =
-					'|' +
-					(set.evs['hp'] || '') +
-					',' +
-					(set.evs['atk'] || '') +
-					',' +
-					(set.evs['def'] || '') +
-					',' +
-					(set.evs['spa'] || '') +
-					',' +
-					(set.evs['spd'] || '') +
-					',' +
-					(set.evs['spe'] || '');
-			}
+			const setEvs = set.evs;
+			const evs = '|' + (setEvs ? Stats.map((stat) => setEvs[stat] || '').join(',') : '');
 			if (evs === '|,,,,,') {
 				buf += '|';
 			} else {
@@ -282,18 +268,14 @@ export class TeamBuilder {
 				buf += '|';
 			}
 			// ivs
-			let ivs = '|';
 			const setIvs = set.ivs;
-			if (setIvs) {
-				Stats.map((stat) => setIvs[stat])
-					.map((v) => (isUndefinedOrEquals(v, 31) ? '' : v))
-					.join(',');
-				ivs =
-					'|' +
-					Stats.map((stat) => setIvs[stat])
-						.map((v) => (isUndefinedOrEquals(v, 31) ? '' : v))
-						.join(',');
-			}
+			const ivs =
+				'|' +
+				(setIvs
+					? Stats.map((stat) => setIvs[stat])
+							.map((v) => (isUndefinedOrEquals(v, 31) ? '' : v))
+							.join(',')
+					: '');
 			if (ivs === '|,,,,,') {
 				buf += '|';
 			} else {
@@ -419,114 +401,40 @@ export class TeamBuilder {
 		return team;
 	}
 
+	private unpackStats(buf: string, defaultValue: number): StatsTable {
+		const stats = buf.split(',');
+		return {
+			hp: stats[0] ? Number(stats[0]) : defaultValue,
+			atk: stats[1] ? Number(stats[1]) : defaultValue,
+			def: stats[2] ? Number(stats[2]) : defaultValue,
+			spa: stats[3] ? Number(stats[3]) : defaultValue,
+			spd: stats[4] ? Number(stats[4]) : defaultValue,
+			spe: stats[5] ? Number(stats[5]) : defaultValue,
+		};
+	}
+
 	fastUnpackTeam(buf?: string): PokeSet[] {
 		if (!buf) return [];
 
 		const team: PokeSet[] = [];
-		let i = 0,
-			j = 0;
-
-		while (true) {
+		for (const bufSet of buf.split(']')) {
+			const [name, species, item, ability, moves, nature, evs, gender, ivs, shiny, level, happiness] = bufSet.split('|');
+			const template = getPokemon(species || name);
 			const set: PokeSet = {
-				name: '',
-				species: '',
-				item: '',
-				ability: '',
-				moves: [],
-				nature: '',
-				gender: '',
-				level: 100,
-				happiness: 0,
+				name,
+				species: species || name,
+				item,
+				ability: { ...(template?.abilities || {}) }[ability || '0'] || ability,
+				moves: moves.split(','),
+				nature,
+				evs: this.unpackStats(evs, 0),
+				gender,
+				ivs: this.unpackStats(ivs, 31),
+				shiny: !!shiny,
+				level: level ? parseInt(level, 10) : 100,
+				happiness: happiness ? Number(happiness) : 255,
 			};
 			team.push(set);
-
-			// name
-			j = buf.indexOf('|', i);
-			set.name = buf.substring(i, j);
-			i = j + 1;
-
-			// species
-			j = buf.indexOf('|', i);
-			set.species = buf.substring(i, j) || set.name;
-			i = j + 1;
-
-			// item
-			j = buf.indexOf('|', i);
-			set.item = buf.substring(i, j);
-			i = j + 1;
-
-			// ability
-			j = buf.indexOf('|', i);
-			const ability: string = buf.substring(i, j) || '0';
-			const template = getPokemon(set.species);
-			set.ability = { ...(template?.abilities || {}) }[ability] || ability;
-			i = j + 1;
-
-			// moves
-			j = buf.indexOf('|', i);
-			set.moves = buf.substring(i, j).split(',');
-			i = j + 1;
-
-			// nature
-			j = buf.indexOf('|', i);
-			set.nature = buf.substring(i, j);
-			i = j + 1;
-
-			// evs
-			j = buf.indexOf('|', i);
-			if (j !== i) {
-				const evs = buf.substring(i, j).split(',');
-				set.evs = {
-					hp: Number(evs[0]) || 0,
-					atk: Number(evs[1]) || 0,
-					def: Number(evs[2]) || 0,
-					spa: Number(evs[3]) || 0,
-					spd: Number(evs[4]) || 0,
-					spe: Number(evs[5]) || 0,
-				};
-			}
-			i = j + 1;
-
-			// gender
-			j = buf.indexOf('|', i);
-			if (i !== j) set.gender = buf.substring(i, j);
-			i = j + 1;
-
-			// ivs
-			j = buf.indexOf('|', i);
-			if (j !== i) {
-				const ivs = buf.substring(i, j).split(',');
-				set.ivs = {
-					hp: ivs[0] === '' ? 31 : Number(ivs[0]),
-					atk: ivs[1] === '' ? 31 : Number(ivs[1]),
-					def: ivs[2] === '' ? 31 : Number(ivs[2]),
-					spa: ivs[3] === '' ? 31 : Number(ivs[3]),
-					spd: ivs[4] === '' ? 31 : Number(ivs[4]),
-					spe: ivs[5] === '' ? 31 : Number(ivs[5]),
-				};
-			}
-			i = j + 1;
-
-			// shiny
-			j = buf.indexOf('|', i);
-			if (i !== j) set.shiny = true;
-			i = j + 1;
-
-			// level
-			j = buf.indexOf('|', i);
-			if (i !== j) set.level = parseInt(buf.substring(i, j), 10);
-			i = j + 1;
-
-			// happiness
-			j = buf.indexOf(']', i);
-			if (j < 0) {
-				if (buf.substring(i)) {
-					set.happiness = Number(buf.substring(i));
-				}
-				break;
-			}
-			if (i !== j) set.happiness = Number(buf.substring(i, j));
-			i = j + 1;
 		}
 		return team;
 	}
