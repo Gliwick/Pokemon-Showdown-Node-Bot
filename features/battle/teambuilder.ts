@@ -625,8 +625,8 @@ export class TeamBuilder {
 			}
 			for (let j = 0; j < curSet.moves.length; j++) {
 				let move = curSet.moves[j];
-				if (move.substr(0, 13) === 'Hidden Power ') {
-					move = move.substr(0, 13) + '[' + move.substr(13) + ']';
+				if (move.startsWith('Hidden Power ')) {
+					move = move.substring(0, 'Hidden Power '.length) + '[' + move.substring('Hidden Power '.length) + ']';
 				}
 				text += '- ' + (getMove(move)?.name || move) + '\n';
 			}

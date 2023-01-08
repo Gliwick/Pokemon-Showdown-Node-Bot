@@ -220,7 +220,7 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 		// Not real information - message minors
 		if (isIntro) return;
 		const ident = this.parsePokemonIdent(args[1]);
-		this.message(args[0].substr(1), ident.side, ident.name);
+		this.message(args[0].substring(1), ident.side, ident.name);
 	},
 
 	'-immune': function (this: Battle, args, kwargs) {
@@ -500,7 +500,7 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 				}
 
 				if (!fromeffect?.id) {
-					const side = args[1].substr(0, 2);
+					const side = args[1].substring(0, 2);
 					const helpers = toId(this.players[side].name) === toId(Bot.status.nickName) ? this.helpers.self : this.helpers.foe;
 					const pokeId = poke.name + '|' + poke.species;
 					if (!helpers[pokeId]) helpers[pokeId] = {};
