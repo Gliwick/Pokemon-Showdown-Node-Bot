@@ -22,8 +22,8 @@ describe('Commands', function () {
 	});
 	it('Should come from files with #commands attribute as object type', function () {
 		for (let file in separatedCommands) {
-			assert.strictEqual(typeof separatedCommands[file], 'object', 'commands file "' + file + '" has not a valid commands attribute');
-			assert.notStrictEqual(separatedCommands[file], null, 'commands file "' + file + '" has not a valid commands attribute');
+			assert.strictEqual(typeof separatedCommands[file], 'object', `commands file "${file}" has not a valid commands attribute`);
+			assert.notStrictEqual(separatedCommands[file], null, `commands file "${file}" has not a valid commands attribute`);
 		}
 	});
 	it('Should not be repeated in more than one file', function () {
@@ -32,7 +32,7 @@ describe('Commands', function () {
 				assert.strictEqual(
 					commands[command],
 					undefined,
-					'command "' + command + '" from file "' + file + '" is repeated (' + getFile(command) + ')'
+					`command "${command}" from file "${file}" is repeated (${getFile(command)})`
 				);
 				commands[command] = separatedCommands[file][command];
 			}
@@ -50,7 +50,7 @@ describe('Commands', function () {
 			assert.strictEqual(
 				typeof commands[handler],
 				'function',
-				'command "' + command + '" from file "' + getFile(command) + '" is not a valid function or reference'
+				`command "${command}" from file "${getFile(command)}" is not a valid function or reference`
 			);
 		}
 	});
@@ -59,7 +59,7 @@ describe('Commands', function () {
 			assert.strictEqual(
 				command,
 				command.toLowerCase().replace(/[ ]/, ''),
-				'command "' + command + '" from file "' + getFile(command) + '" contains uppercase or spaces in the name'
+				`command "${command}" from file "${getFile(command)}" contains uppercase or spaces in the name`
 			);
 		}
 	});

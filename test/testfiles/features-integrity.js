@@ -23,23 +23,14 @@ describe('Features', function () {
 	it('Should not crash on load', function () {
 		let featureList = fs.readdirSync(FEATURES_PATH);
 		featureList.forEach((feature) => {
-			if (fs.existsSync(FEATURES_PATH + '/' + feature + '/index.ts')) {
-				separatedFeatures[feature] = new (require('../../' +
-					FEATURES_PATH +
-					'/' +
-					feature +
-					'/index.ts').feature)();
-			}
+			const path = FEATURES_PATH + '/' + feature + '/index.ts';
+			if (fs.existsSync(path)) separatedFeatures[feature] = new (require('../../' + path).feature)();
 		});
 	});
 	it('Should have an unique id', function () {
 		for (let i in separatedFeatures) {
-			assert.strictEqual(typeof separatedFeatures[i].id, 'string', 'feature "' + i + '" does not have an id');
-			assert.strictEqual(
-				Features.features[separatedFeatures[i].id],
-				undefined,
-				'feature "' + i + '" has a repeated id'
-			);
+			assert.strictEqual(typeof separatedFeatures[i].id, 'string', `feature "${i}" does not have an id`);
+			assert.strictEqual(Features.features[separatedFeatures[i].id], undefined, `feature "${i}" has a repeated id`);
 			Features[separatedFeatures[i].id] = separatedFeatures[i];
 		}
 	});
@@ -57,11 +48,7 @@ describe('Features', function () {
 			} else {
 				delete Features.features[feature];
 			}
-			assert.strictEqual(
-				Features.features[feature],
-				undefined,
-				'feature "' + feature + '" does not have a proper destroy method'
-			);
+			assert.strictEqual(Features.features[feature], undefined, `feature "${feature}" does not have a proper destroy method`);
 		}
 	});
 });
