@@ -278,10 +278,3 @@ export function parseAliases(format?: string): string {
 export function isUndefinedOrEquals<T>(v: T | undefined, other: T): boolean {
 	return (v ?? other) === other;
 }
-
-export function deepcopy<T>(prop: T): T {
-	if (prop === null) return null as T;
-	if (Array.isArray(prop)) return [...prop] as T;
-	if (typeof prop === 'object') return { ...prop };
-	return prop;
-}
