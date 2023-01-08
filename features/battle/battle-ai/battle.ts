@@ -268,8 +268,8 @@ export class Battle {
 		try {
 			decisions = getDecisions(this);
 		} catch (e: any) {
-			this.debug(e.stack);
-			this.debug('Decision maker crashed: ' + inspect(e));
+			errlog(e.stack);
+			error('Decision maker crashed: ' + inspect(e));
 			SecurityLog.log('BATTLE D.M. CRASH: ' + e.message + '\n' + e.stack);
 			this.lock = false;
 			return;
@@ -301,7 +301,12 @@ export class Battle {
 	}
 
 	log(line: string): void {
-		if (this.stream) this.stream.write(line + '\n');
+		try {
+			if (this.stream) this.stream.write(line + '\n');
+		} catch (e: any) {
+			errlog(e.message);
+			errlog(e.stack);
+		}
 	}
 
 	debug(line: string): void {
@@ -309,8 +314,8 @@ export class Battle {
 	}
 
 	add(line: string, isIntro?: boolean): void {
-		this.run(line, isIntro);
 		this.log(line);
+		this.run(line, isIntro);
 	}
 
 	run(str?: string, isIntro?: boolean): void {
@@ -352,7 +357,6 @@ export class Battle {
 			if (typeof minor !== 'function') {
 				error('Unknown minor type: ' + args[0] + ' - ' + inspect(minor) + '');
 			} else {
-				this.debug('running minor ' + args[0] + '([' + args + '], ' + JSON.stringify(kwargs) + ')');
 				try {
 					minor.call(this, args, kwargs, isIntro);
 				} catch (e: any) {
@@ -386,7 +390,6 @@ export class Battle {
 			if (typeof major !== 'function') {
 				error('Unknown major type: ' + args[0] + ' - ' + inspect(major) + '');
 			} else {
-				this.debug('running major ' + args[0] + '([' + args + '], ' + JSON.stringify(kwargs) + ')');
 				try {
 					major.call(this, args, kwargs, isIntro);
 				} catch (e: any) {
