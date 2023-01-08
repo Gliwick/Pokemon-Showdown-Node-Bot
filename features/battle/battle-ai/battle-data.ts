@@ -341,9 +341,9 @@ export class Pokemon implements PokemonDetails {
 	transformed = false;
 	transformPrev: Pick<Pokemon, 'template' | 'species' | 'shiny' | 'moves' | 'ability' | 'baseAbility' | 'abilityStack'> | null = null;
 
-	item: ItemData | Unknown = '&unknown';
+	item: ItemData | Unknown | null = '&unknown';
 	itemEffect = '';
-	prevItem = null;
+	prevItem: ItemData | null = null;
 	prevItemEffect = '';
 
 	ability: AbilityData | Unknown = '&unknown';

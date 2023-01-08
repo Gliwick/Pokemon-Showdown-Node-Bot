@@ -361,7 +361,7 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 		const poke = this.getActive(args[1]);
 		const item = getItem(args[2], this.gen, this.id);
 		const effect = getEffect(kwargs.from, this.gen);
-		poke.item = '';
+		poke.item = null;
 		poke.itemEffect = '';
 		poke.prevItem = item;
 		poke.prevItemEffect = '';
