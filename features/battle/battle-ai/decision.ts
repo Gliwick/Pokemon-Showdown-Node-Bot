@@ -2,6 +2,7 @@
  * Decision maker
  */
 
+import { MoveData } from '../../../data/types-moves';
 import { Battle, RequestMove } from './battle';
 import { Type } from './battle-data';
 
@@ -30,7 +31,7 @@ export class MoveDecision extends Decision {
 	move: string;
 	movePP: number;
 	transformation: Transformation | null;
-	moveData: Record<string, any> | null = null;
+	moveData: MoveData | null = null;
 
 	constructor(moveId: number, target: number | null, transformation: Transformation | null, move: string, movePP: number) {
 		super('move');
