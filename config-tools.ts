@@ -1,5 +1,6 @@
 /* Process arguments */
 
+import { KeyOfValueType } from './global-types';
 import { colors } from './index';
 import { issue } from './log';
 
@@ -149,8 +150,6 @@ export interface ConfigType {
 	disableSeen?: boolean;
 	disableAlts?: boolean;
 }
-
-type KeyOfValueType<T, V> = { [K in keyof T]-?: V extends T[K] ? K : never }[keyof T];
 
 export function validateConfigArray(key: KeyOfValueType<ConfigType, any[]>): void {
 	if (!Config[key] || !Array.isArray(Config[key])) {

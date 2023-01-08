@@ -4,13 +4,14 @@
  */
 
 import { SparseBoostsTable } from '../../../../data/types-dex';
+import { MoveData } from '../../../../data/types-moves';
 import { toId } from '../../../../tools';
 import { Battle } from '../battle';
 import { Decision, MoveDecision, SwitchDecision, TeamDecision } from '../decision';
 import { BattleModule } from '../modules';
 import { getAbility, getFormatsData, getItem, getMove, Type } from './../battle-data';
 import { calculate, Conditions, getHazardsDamage, getMoveType, Pokemon } from './../calc';
-import { getMultipleEff } from './../typechart';
+import { Gen, getMultipleEff, typechart } from './../typechart';
 
 const ProtectionMoves = [
 	'protect',
@@ -369,69 +370,50 @@ export class SinglesEffective implements BattleModule {
 
 		/* Calculate r - received damage in percentage of current HP */
 
-		let movesB = [];
+		let foeMoves: MoveData[] = [];
 		const supposedMoveTypes: Type[] = [];
 		for (const move of battle.foe.active[0].moves) {
 			if (move.disabled || move.pp <= 0) continue;
 
 			const moveData = getMove(move.id, battle.gen, battle.id);
 			if (moveData.isMax) {
-				supposedMoveTypes.push(moveData.type);
+				supposedMoveTypes.push(moveData.type as Type);
 				continue;
 			}
 
-			if (moveData.id === 'hiddenpower') {
-				let randomBattleMovesHaveHP = false;
+			if (move.id === 'hiddenpower') {
+				let randomBattleHP: string[] = [];
 				if (!battle.id.includes('hackmonscup')) {
-					const formatsData = getFormatsData(foePoke.template.name, battle.gen, battle.id);
-					if (formatsData?.randomBattleMoves) {
-						for (const randomBattleMove of formatsData.randomBattleMoves) {
-							if (randomBattleMove.startsWith('hiddenpower')) movesB.push(getMove(randomBattleMove, battle.gen, battle.id));
-							randomBattleMovesHaveHP = true;
-						}
-					}
+					randomBattleHP = (getFormatsData(foePoke.template.name, battle.gen, battle.id)?.randomBattleMoves || []).filter((m) =>
+						m.startsWith('hiddenpower')
+					);
+					foeMoves = foeMoves.concat(randomBattleHP.map((m) => getMove(m, battle.gen, battle.id)));
 				}
-				if (!randomBattleMovesHaveHP) {
-					const hpTypes = [
-						'bug',
-						'dark',
-						'dragon',
-						'electric',
-						'fighting',
-						'fire',
-						'flying',
-						'ghost',
-						'grass',
-						'ground',
-						'ice',
-						'poison',
-						'psychic',
-						'rock',
-						'steel',
-						'water',
-					];
-					for (const hpType of hpTypes) {
-						movesB.push(getMove('hiddenpower' + hpType, battle.gen, battle.id));
-					}
+				if (!randomBattleHP.length) {
+					foeMoves = foeMoves.concat(
+						Object.keys(typechart[('gen' + battle.gen) as Gen] || {})
+							.filter((t) => t !== 'Normal' && t !== 'Fairy')
+							.map((t) => getMove('hiddenpower' + t, battle.gen, battle.id))
+					);
 				}
 			} else {
-				movesB.push(moveData);
+				foeMoves.push(moveData);
 			}
 		}
 
 		if (foePoke.template.requiredMove && !battle.id.includes('hackmon')) {
-			movesB.push(getMove(foePoke.template.requiredMove, battle.gen, battle.id));
+			foeMoves.push(getMove(foePoke.template.requiredMove, battle.gen, battle.id));
 		}
 
 		if (!battle.id.includes('hackmonscup')) {
 			const hasType: Partial<Record<Type, boolean>> = {};
-			for (const move of movesB) {
+			for (const move of foeMoves) {
 				if (move.category !== 'Status' && (move.basePower <= 1 || move.basePower >= 55 || move.multihit) && move.priority === 0)
 					hasType[getMoveType(foePoke, move, foeConditions, gconditions, battle.gen)] = true;
 			}
 
 			const supposedMoves = [];
-			if (movesB.length < 4 && supposedMoveTypes.length < 4) {
+			if (foeMoves.length < 4 && supposedMoveTypes.length < 4) {
 				if (foePoke.ability) {
 					switch (foePoke.ability.id) {
 						case 'aerilate':
@@ -465,7 +447,7 @@ export class SinglesEffective implements BattleModule {
 			}
 
 			for (const move of supposedMoves) {
-				movesB.push(getMove(move, battle.gen, battle.id));
+				foeMoves.push(getMove(move, battle.gen, battle.id));
 			}
 			const typeCommonPhysicalMove: Partial<Record<Type, any>> = {
 				Bug: 'xscissor',
@@ -510,9 +492,9 @@ export class SinglesEffective implements BattleModule {
 			for (const type of supposedMoveTypes) {
 				if (hasType[type]) continue;
 				if (foePoke.template.baseStats.atk >= foePoke.template.baseStats.spa)
-					movesB.push(getMove(typeCommonPhysicalMove[type], battle.gen, battle.id));
+					foeMoves.push(getMove(typeCommonPhysicalMove[type], battle.gen, battle.id));
 				if (foePoke.template.baseStats.atk <= foePoke.template.baseStats.spa)
-					movesB.push(getMove(typeCommonSpecialMove[type], battle.gen, battle.id));
+					foeMoves.push(getMove(typeCommonSpecialMove[type], battle.gen, battle.id));
 			}
 		}
 
@@ -538,16 +520,16 @@ export class SinglesEffective implements BattleModule {
 				Water: 'maxgeyser',
 			};
 			const maxMovesB = [];
-			for (const move of movesB) {
+			for (const move of foeMoves) {
 				maxMovesB.push(getMove(typeMaxMove[move.type], battle.gen, battle.id));
 			}
-			movesB = maxMovesB;
+			foeMoves = maxMovesB;
 		}
 
 		let r = 0;
 
 		let foeCanBurn = false;
-		for (let move of movesB) {
+		for (let move of foeMoves) {
 			if (foeConditions.volatiles['torment'] && battle.foe.active[0].helpers.lastMove === move.id) continue;
 			if (
 				((foePoke.item && foePoke.item.id.startsWith('choice')) || foeConditions.volatiles['encore']) &&
@@ -646,7 +628,7 @@ export class SinglesEffective implements BattleModule {
 		let movesA = battle.request.side.pokemon[sideId].moves;
 		if (!isActive && selfPoke.hasAbility('imposter') && !foeConditions.volatiles['substitute']) {
 			movesA = [];
-			for (const move of movesB) {
+			for (const move of foeMoves) {
 				movesA.push(move.id);
 			}
 		}

@@ -2,18 +2,23 @@
  * Pokemon Showdown Bot - Damage calculator
  */
 
+import { AbilityData } from '../../../data/types-abilities';
 import { GenderName, SparseBoostsTable, SparseStatsTable, StatID, StatIDExceptHP, StatsTable } from '../../../data/types-dex';
+import { ItemData } from '../../../data/types-items';
+import { MoveData } from '../../../data/types-moves';
 import { SpeciesData } from '../../../data/types-species';
-import { deepcopy, toId } from '../../../tools';
+import { KeyOfValueType } from '../../../global-types';
+import { toId } from '../../../tools';
 import { Battle } from './battle';
-import { CurrentGen, Pokemon as BattlePokemon, PokemonDetails, Type } from './battle-data';
+import { CurrentGen, Pokemon as BattlePokemon, PokemonDetails, Type, WithID } from './battle-data';
+import { Transformation } from './decision';
 import { getMultipleEff } from './typechart';
 
 const BaseStats: StatID[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 const BoostedStats: StatIDExceptHP[] = ['atk', 'def', 'spa', 'spd', 'spe'];
 
 export class Pokemon implements PokemonDetails {
-	template;
+	readonly template: Readonly<WithID<SpeciesData>>;
 	gen: number;
 
 	// PokemonDetails properties
@@ -24,39 +29,35 @@ export class Pokemon implements PokemonDetails {
 	terastallize: Type | null = null;
 
 	name: string;
-	item: Record<string, any> | null = null;
+	item: Readonly<WithID<ItemData>> | null = null;
 	stats: SparseStatsTable = {};
 	evs: SparseStatsTable = {};
 	ivs: SparseStatsTable = {};
 	dvs: SparseStatsTable = {};
 	nature: SparseStatsTable = {};
-	ability: Record<string, any> | null = null;
+	ability: Readonly<WithID<AbilityData>> | null = null;
 	supressedAbility = false;
-	happiness: number | null = null;
-	status: string | null = null;
+	happiness?: number;
+	status?: string;
 	hp = 100;
 
 	category: Category | 'Status' | 'Mixed' = 'Mixed';
 
 	constructor(template: SpeciesData, properties: Partial<Pokemon> & { helpers?: Record<string, any> }, battle?: Battle) {
 		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
-		this.template = { ...template };
-		if (properties.helpers?.template) {
-			for (const attr in properties.helpers.template) {
-				this.template[attr] = deepcopy(properties.helpers.template[attr]);
-			}
-		}
+		const { helpers, ...rest } = properties;
+		this.template = { ...template, ...(helpers?.template || {}) };
 
 		this.gen = battle?.gen || CurrentGen;
-
 		this.name = this.template.name;
 		this.species = this.template.name;
 
-		for (const attr in properties) {
-			if (typeof this[attr] === 'undefined' || typeof this[attr] === 'function') continue;
-			if (['helpers', 'template'].includes(attr)) continue;
-			this[attr] = deepcopy(properties[attr]);
-		}
+		Object.assign(this, rest);
+		(
+			(Object.keys(rest) as (keyof Pokemon)[]).filter(
+				(k) => k !== 'template' && rest[k] && typeof rest[k] === 'object'
+			) as KeyOfValueType<Pokemon, Record<string, any>>[]
+		).forEach((k) => Object.assign(this[k], rest[k]));
 	}
 
 	getEV(ev: StatID, gen: number = CurrentGen): number {
@@ -134,7 +135,7 @@ export class Pokemon implements PokemonDetails {
 	getTypes(conditions: Conditions, preterastallized = false): Type[] {
 		if (!preterastallized && this.terastallize) return [this.terastallize];
 
-		let types: Type[] = [...(this.template.types || [])];
+		let types: Type[] = [...(this.template.types || [])] as Type[];
 		if (conditions && conditions.volatiles) {
 			if (conditions.volatiles.typechange?.length) types = [...conditions.volatiles.typechange];
 			if (conditions.volatiles.typeadd) {
@@ -185,7 +186,7 @@ export class Pokemon implements PokemonDetails {
 		if (this.hasAbility('slowstart')) spe = Math.floor(spe * 0.5);
 		if (this.hasItem({ ironball: 1, machobrace: 1 })) spe = Math.floor(spe * 0.5);
 		if (this.hasItem('choicescarf')) spe = Math.floor(spe * 1.5);
-		if (this.hasItem('quickpowder') && this.item && this.item.itemUser.includes(this.template.name)) {
+		if (this.hasItem('quickpowder') && this.item?.itemUser && this.item.itemUser.includes(this.template.name)) {
 			spe = Math.floor(spe * 2);
 		}
 		if (conditions.volatiles.unburden) spe *= 2;
@@ -221,15 +222,12 @@ export class Conditions {
 
 	constructor(data: Partial<Conditions>) {
 		if (typeof data !== 'object') throw new Error('Invalid conditions data');
-		this.volatiles = {};
-		this.boosts = {};
-		this.side = {};
-		this.pokemon = [];
-		this.immediate = {};
-		for (const attr in data) {
-			if (typeof this[attr] === 'undefined' || typeof this[attr] === 'function') continue;
-			this[attr] = deepcopy(data[attr]);
-		}
+		(
+			(Object.keys(data) as (keyof Conditions)[]).filter((k) => data[k] && typeof data[k] === 'object') as KeyOfValueType<
+				Conditions,
+				Record<string, any>
+			>[]
+		).forEach((k) => Object.assign(this[k], data[k]));
 	}
 }
 
@@ -300,62 +298,57 @@ export function getHazardsDamage(
 	if (poke.template.name === 'Shedinja' && (side.stealthrock || side.spikes || side.gmaxsteelsurge)) return 100;
 
 	const inverse = !!globalConditions.inversebattle;
-	let dmg = 0;
 
+	let dmg = 0;
 	if (side.stealthrock) {
-		dmg += (100 * getMultipleEff('Rock', poke.getTypes(conditions), gen, false, !!globalConditions.inversebattle, battleId)) / 8.0;
+		dmg += (100 * getMultipleEff('Rock', poke.getTypes(conditions), gen, false, inverse, battleId)) / 8.0;
 	}
 	if (side.spikes) {
 		if (globalConditions.gravity || !poke.isGrounded(conditions)) dmg += (100 * side.spikes) / 24.0;
 	}
 	if (side.gmaxsteelsurge) {
-		dmg += (100 * getMultipleEff('Steel', poke.getTypes(conditions), gen, false, !!globalConditions.inversebattle, battleId)) / 8.0;
+		dmg += (100 * getMultipleEff('Steel', poke.getTypes(conditions), gen, false, inverse, battleId)) / 8.0;
 	}
 
 	return dmg;
 }
 
-export function getMoveType(
-	poke: Pokemon,
-	move,
-	conditions: Conditions,
-	globalConditions: Record<string, any>,
-	gen: number = CurrentGen
-): Type {
+export function getMoveType(poke: Pokemon, move: WithID<MoveData>, conditions: Conditions, globalConditions: Record<string, any>): Type {
+	const moveType = move.type as Type;
 	switch (move.id) {
 		case 'aurawheel':
 			if (poke.template.name === 'Morpeko-Hangry') return 'Dark';
-			return move.type;
+			return moveType;
 		case 'ragingbull':
 			if (poke.template.name === 'Tauros-Paldea-Fire') return 'Fire';
 			if (poke.template.name === 'Tauros-Paldea-Water') return 'Water';
-			return move.type;
+			return moveType;
 		case 'judgment':
-			return poke.item?.onPlate || move.type;
+			return (poke.item?.onPlate as Type) || moveType;
 		case 'multiattack':
-			return poke.item?.onMemory || move.type;
+			return (poke.item?.onMemory as Type) || moveType;
 		case 'naturalgift':
-			return poke.item?.naturalGift?.type || move.type;
+			return (poke.item?.naturalGift?.type as Type) || moveType;
 		case 'revelationdance':
 			return poke.getTypes(conditions)[0];
 		case 'struggle':
 			return '???';
 		case 'technoblast':
-			return poke.item?.onDrive || move.type;
+			return (poke.item?.onDrive as Type) || moveType;
 		case 'weatherball':
 			if (['primordialsea', 'raindance'].includes(globalConditions.weather)) return 'Water';
 			if (['desolateland', 'sunnyday'].includes(globalConditions.weather)) return 'Fire';
 			if (globalConditions.weather === 'sandstorm') return 'Rock';
 			if (['hail', 'snow'].includes(toId(globalConditions.weather))) return 'Ice';
-			return move.type;
+			return moveType;
 		case 'terrainpulse':
 			if (globalConditions.electricterrain) return 'Electric';
 			if (globalConditions.grassyterrain) return 'Grass';
 			if (globalConditions.mistyterrain) return 'Fairy';
 			if (globalConditions.psychicterrain) return 'Psychic';
-			return move.type;
+			return moveType;
 		case 'terablast':
-			return poke.terastallize || move.type;
+			return poke.terastallize || moveType;
 	}
 
 	if (poke.ability && !poke.supressedAbility) {
@@ -380,7 +373,7 @@ export function getMoveType(
 		}
 	}
 
-	return move.type;
+	return moveType;
 }
 
 function getDamage(level: number, bp: number, atk: number, def: number, modifier: number, typeEffectiveness: number): number {
@@ -416,10 +409,10 @@ type Category = 'Physical' | 'Special';
 export function calculate(
 	attacker: PokemonWithConditions,
 	defender: PokemonWithConditions,
-	move,
+	move: WithID<MoveData>,
 	globalConditions: Record<string, any> = {},
 	battle?: Battle,
-	transformation?: any
+	transformation?: Transformation
 ): Damage {
 	const atkPoke = new Pokemon(attacker.poke.template, attacker.poke, battle);
 	const atkConditions = new Conditions(attacker.conditions || {});
@@ -433,27 +426,32 @@ export function calculate(
 	const gen = battle?.gen || CurrentGen;
 	const battleId = battle?.id;
 
-	globalConditions.supressedWeather =
-		atkPoke.hasAbility({ airlock: 1, cloudnine: 1 }) || defPoke.hasAbility({ airlock: 1, cloudnine: 1 });
-	const supressedWeather = globalConditions.supressedWeather;
-
 	const atkStats = atkPoke.getStats();
 	const defStats = defPoke.getStats();
 	const atkSpe = atkPoke.getFullSpe({ conditions: globalConditions, gen }, atkConditions, false);
 	const defSpe = defPoke.getFullSpe({ conditions: globalConditions, gen }, defConditions, false);
 
-	let atk, def, atkStat: StatIDExceptHP, defStat: StatIDExceptHP;
-	let category: Category, defCategory: Category;
+	globalConditions.supressedWeather =
+		atkPoke.hasAbility({ airlock: 1, cloudnine: 1 }) || defPoke.hasAbility({ airlock: 1, cloudnine: 1 });
+	const supressedWeather = globalConditions.supressedWeather;
 
 	/******************************
 	 * Attack and Defense Stats
 	 *******************************/
 
-	if (move.isMax && move.basePower <= 10 && atkPoke.template.baseStats.spa > atkPoke.template.baseStats.atk) {
+	if (
+		move.isMax &&
+		move.basePower <= 10 &&
+		move.category !== 'Status' &&
+		atkPoke.template.baseStats.spa > atkPoke.template.baseStats.atk
+	) {
 		move = { ...move };
 		move.category = 'Special';
 	}
 
+	if (move.category === 'Status') return new Damage(defStats.hp);
+
+	let category: Category;
 	if (gen > 3) {
 		category = move.category;
 	} else {
@@ -461,25 +459,10 @@ export function calculate(
 		category = specialTypes.includes(move.type) ? 'Special' : 'Physical';
 	}
 
-	if (category === 'Special') {
-		atkStat = 'spa';
-	} else if (category === 'Physical') {
-		atkStat = 'atk';
-	} else {
-		return new Damage(defStats.hp);
-	}
-
-	defCategory = move.defensiveCategory || category;
-	if (defCategory === 'Special') {
-		defStat = 'spd';
-	} else if (defCategory === 'Physical') {
-		defStat = 'def';
-	} else {
-		return new Damage(defStats.hp);
-	}
+	let atkStat = move.overrideOffensiveStat || (category === 'Special' ? 'spa' : 'atk');
+	let defStat = move.overrideDefensiveStat || (category === 'Special' ? 'spa' : 'atk');
 
 	// custom attacking stat
-	if (move.id === 'bodypress') atkStat = 'def';
 	if (
 		(['photongeyser', 'lightthatburststhesky'].includes(move.id) && atkStats.atk > atkStats.spa) ||
 		(move.id === 'shellsidearm' && atkStats.atk / defStats.def > atkStats.spa / defStats.spd) ||
@@ -489,17 +472,16 @@ export function calculate(
 		defStat = 'def';
 		if (move.id === 'shellsidearm') {
 			move = { ...move };
-			move.flags = { ...move.flags, contact: true };
+			move.flags = { ...move.flags, contact: 1 };
 		}
 	}
 
-	atk = atkStats[atkStat];
-	def = defStats[defStat];
-	if (move.id === 'foulplay') atk = defStats[atkStat];
+	let atk = move.overrideOffensivePokemon ? defStats[atkStat] : atkStats[atkStat];
+	let def = defStats[defStat];
 
-	const moveType = getMoveType(atkPoke, move, atkConditions, globalConditions, gen) || 'Normal';
+	const moveType = getMoveType(atkPoke, move, atkConditions, globalConditions) || 'Normal';
+
 	let movePriority = move.priority;
-
 	if (move.id === 'grassyglide' && globalConditions.grassyterrain && atkPoke.isGrounded(atkConditions)) {
 		movePriority++;
 	}
@@ -992,8 +974,9 @@ export function calculate(
 	if (!bp) {
 		if (move.damage === 'level') return new Damage(defStats.hp, [atkPoke.level]);
 		if (typeof move.damage === 'number') return new Damage(defStats.hp, [move.damage]);
-		if (move.id === 'endeavor')
+		if (move.id === 'endeavor') {
 			new Damage(defStats.hp, [Math.max(0, defStats.hp * (defPoke.hp / 100.0) - atkStats.hp * (atkPoke.hp / 100.0))]);
+		}
 		if (move.id === 'psywave') new Damage(defStats.hp, getRolls(atkPoke.level, 0.5, 1.5));
 		return new Damage(defStats.hp);
 	}
@@ -1043,7 +1026,7 @@ export function calculate(
 				if (move.flags?.pulse) bp = Math.floor(bp * 1.5);
 				break;
 			case 'reckless':
-				if (move.recoil || move.hasCustomRecoil) bp = Math.floor(bp * 1.2);
+				if (move.recoil || move.hasCrashDamage) bp = Math.floor(bp * 1.2);
 				break;
 			case 'rivalry':
 				if (!(atkPoke.gender === 'N' || defPoke.gender === 'N')) {
@@ -1292,7 +1275,9 @@ export function calculate(
 	const willCrit =
 		atkConditions.immediate.crit ||
 		move.willCrit ||
-		(atkPoke.hasItem({ leek: 1, luckypunch: 1, stick: 1 }) && atkPoke.item && atkPoke.item.itemUser.includes(atkPoke.template.name));
+		(atkPoke.hasItem({ leek: 1, luckypunch: 1, stick: 1 }) &&
+			atkPoke.item?.itemUser &&
+			atkPoke.item.itemUser.includes(atkPoke.template.name));
 
 	if (defConditions.boosts[defStat]) {
 		if (!willCrit && !move.ignoreDefensive && !atkPoke.hasAbility('unaware')) {
@@ -1352,7 +1337,7 @@ export function calculate(
 		move.type === atkPoke.terastallize &&
 		move.priority <= 0 &&
 		!move.multihit &&
-		move.bp &&
+		move.basePower &&
 		!(move.basePower === 0 && move.basePowerCallback) &&
 		!['dragonenergy', 'eruption', 'waterspout'].includes(move.id)
 	) {
@@ -1382,7 +1367,7 @@ export function calculate(
 			!move.selfdestruct &&
 			!move.multihit &&
 			!move.flags?.charge &&
-			!(move.spreadHit && ['doubles', 'triples'].includes(globalConditions.gametype)) &&
+			!(move.target.startsWith('allAdjacent') && ['doubles', 'triples'].includes(globalConditions.gametype)) &&
 			!move.isZ &&
 			!move.isMax
 		) {

@@ -84,7 +84,7 @@ export interface Request {
 
 interface Status {
 	hp: number;
-	status: string | null;
+	status?: string;
 }
 
 interface Ident {
@@ -445,10 +445,7 @@ export class Battle {
 	}
 
 	parseStatus(str: string): Status {
-		const status: Status = {
-			hp: 100,
-			status: null,
-		};
+		const status: Status = { hp: 100 };
 		let sp = str.split(' ');
 		if (sp[1]) status.status = toId(sp[1]);
 		sp = sp[0].split('/');
@@ -537,27 +534,21 @@ export class Battle {
 		const side: keyof Battle['helpers'] = toId(this.request.side.name) === toId(Bot.status.nickName) ? 'self' : 'foe';
 		const pokeId = p.ident.split(': ')[1] + '|' + details.species;
 
+		const item = p.item ? getItem(p.item, this.gen) : null;
+		const species = (forceMega && this.request.active?.[0]?.canMegaEvo && item?.megaStone) || details.species;
+		const template = getPokemon(species, this.gen, this.id);
 		const poke = new CalcPokemon(
-			getPokemon(details.species, this.gen, this.id),
+			template,
 			{
-				helpers: this.helpers[side][pokeId] || {},
+				helpers: this.helpers[side][pokeId],
 				...details,
+				item,
+				ability: getAbility(p.baseAbility || template.abilities[0], this.gen),
+				...condition,
+				stats: p.stats,
 			},
 			this
 		);
-		poke.item = getItem(p.item, this.gen);
-		poke.ability = getAbility(p.baseAbility, this.gen);
-		poke.status = condition.status;
-		poke.hp = condition.hp;
-		poke.stats = p.stats;
-		if (forceMega && this.request.active?.[0]?.canMegaEvo) {
-			if (poke.item.megaStone) {
-				poke.template = getPokemon(poke.item.megaStone, this.gen, this.id);
-				poke.name = poke.template.name;
-				poke.species = poke.template.name;
-				poke.ability = getAbility(poke.template.abilities[0]);
-			}
-		}
 		return poke;
 	}
 

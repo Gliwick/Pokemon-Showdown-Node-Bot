@@ -79,7 +79,11 @@ interface SecondaryEffect extends HitEffect {
 	self?: HitEffect;
 }
 
-export interface MoveData extends EffectData, HitEffect {
+export interface MoveEventMethods {
+	basePowerCallback?: (this: any, pokemon: any, target: any, move: any) => number | false | null;
+}
+
+export interface MoveData extends EffectData, MoveEventMethods, HitEffect {
 	name: string;
 	/** move index number, used for Metronome rolls */
 	num?: number;

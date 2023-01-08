@@ -24,8 +24,7 @@
 		"sort-imports": 0
 	},
 	"ignorePatterns": [
-		"features/battle/battle-ai/calc.ts",
-		"features/battle/battle-ai/modules/",
+		"features/battle/battle-ai/modules/singles-eff.ts",
 		"features/battle/data/conditions.ts",
 		"features/battle/data/mods/",
 		"test/",

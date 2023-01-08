@@ -23,7 +23,7 @@ export abstract class Decision {
 	protected abstract getArgsStr(battle?: Battle): string;
 }
 
-type Transformation = { terastallize: Type } | string;
+export type Transformation = { terastallize: Type } | string;
 
 export class MoveDecision extends Decision {
 	moveId: number;

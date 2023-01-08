@@ -57,7 +57,9 @@ function getMods(gen: number, battleId?: string): string[] {
 	return mods;
 }
 
-export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: string): SpeciesData {
+export type WithID<T> = T & { id: ID };
+
+export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: string): WithID<SpeciesData> {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	const pokeId = toId(poke);
 	let pokemon = getModdedPokemon(pokeId);
@@ -86,7 +88,7 @@ export function getPokemon(poke: string, gen: number = CurrentGen, battleId?: st
 		};
 	}
 
-	return pokemon;
+	return { id: pokeId, ...pokemon };
 }
 
 const TypeAliases: Record<Type, string[]> = {
@@ -130,7 +132,7 @@ function evaluateMoveType(name: string): Type {
 	return 'Normal';
 }
 
-export function getMove(move: string, gen: number = CurrentGen, battleId?: string): MoveData {
+export function getMove(move: string, gen: number = CurrentGen, battleId?: string): WithID<MoveData> {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	const moveId = toId(move);
 	let moveData = getModdedMove(moveId);
@@ -151,6 +153,7 @@ export function getMove(move: string, gen: number = CurrentGen, battleId?: strin
 			? 'Special'
 			: 'Physical';
 		return {
+			id: moveId,
 			num: 0,
 			accuracy: 100,
 			basePower: 90,
@@ -165,10 +168,10 @@ export function getMove(move: string, gen: number = CurrentGen, battleId?: strin
 		};
 	}
 
-	return { effectType: 'Move', ...moveData };
+	return { id: moveId, effectType: 'Move', ...moveData };
 }
 
-export function getItem(item: string, gen: number = CurrentGen, battleId?: string): ItemData {
+export function getItem(item: string, gen: number = CurrentGen, battleId?: string): WithID<ItemData> {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	const itemId = toId(item);
 	let itemData = getModdedItem(itemId);
@@ -185,6 +188,7 @@ export function getItem(item: string, gen: number = CurrentGen, battleId?: strin
 
 	if (!itemData) {
 		return {
+			id: itemId,
 			name: item,
 			spritenum: 0,
 			num: 0,
@@ -193,10 +197,10 @@ export function getItem(item: string, gen: number = CurrentGen, battleId?: strin
 		};
 	}
 
-	return { effectType: 'Item', ...itemData };
+	return { id: itemId, effectType: 'Item', ...itemData };
 }
 
-export function getAbility(ability: string, gen: number = CurrentGen, battleId?: string): AbilityData {
+export function getAbility(ability: string, gen: number = CurrentGen, battleId?: string): WithID<AbilityData> {
 	if (gen > CurrentGen || gen < 1) gen = CurrentGen;
 	const abilityId = toId(ability);
 	let abilityData = getModdedAbility(abilityId);
@@ -221,13 +225,12 @@ export function getAbility(ability: string, gen: number = CurrentGen, battleId?:
 		};
 	}
 
-	return { effectType: 'Ability', ...abilityData };
+	return { id: abilityId, effectType: 'Ability', ...abilityData };
 }
 
 type BasicEffectData = Omit<Partial<BasicEffect>, 'effectType'>;
 
-type EffectData = (ItemData | AbilityData | MoveData | ConditionData | BasicEffectData) & {
-	id: ID;
+type EffectData = WithID<ItemData | AbilityData | MoveData | ConditionData | BasicEffectData> & {
 	effectType: EffectType | 'Recoil' | 'Drain';
 };
 
@@ -243,11 +246,11 @@ export function getEffect(effect: string | EffectData, gen: number = CurrentGen)
 	if (!id) return { id, name: Sugar.escapeHTML(name || ''), effectType: 'Condition' };
 
 	if (type === 'item') {
-		return { id, ...getItem(id, gen), effectType: 'Item' };
+		return { ...getItem(id, gen), effectType: 'Item' };
 	} else if (type === 'ability') {
-		return { id, ...getAbility(id, gen), effectType: 'Ability' };
+		return { ...getAbility(id, gen), effectType: 'Ability' };
 	} else if (type === 'move') {
-		return { id, ...getMove(id, gen), effectType: 'Move' };
+		return { ...getMove(id, gen), effectType: 'Move' };
 	}
 
 	const pMove = getMove(id, gen);
@@ -341,14 +344,14 @@ export class Pokemon implements PokemonDetails {
 	transformed = false;
 	transformPrev: Pick<Pokemon, 'template' | 'species' | 'shiny' | 'moves' | 'ability' | 'baseAbility' | 'abilityStack'> | null = null;
 
-	item: ItemData | Unknown | null = '&unknown';
+	item: WithID<ItemData> | Unknown | null = '&unknown';
 	itemEffect = '';
-	prevItem: ItemData | null = null;
+	prevItem: WithID<ItemData> | null = null;
 	prevItemEffect = '';
 
-	ability: AbilityData | Unknown = '&unknown';
+	ability: WithID<AbilityData> | Unknown = '&unknown';
 	supressedAbility = false;
-	baseAbility: AbilityData | Unknown = '&unknown';
+	baseAbility: WithID<AbilityData> | Unknown = '&unknown';
 	abilityStack: string[] = [];
 
 	moves: Move[] = [];
@@ -358,7 +361,7 @@ export class Pokemon implements PokemonDetails {
 
 	hp = 100;
 	fainted = false;
-	status: string | null = null;
+	status?: string;
 	volatiles: Record<string, any> = {};
 	boosts: SparseBoostsTable = {};
 

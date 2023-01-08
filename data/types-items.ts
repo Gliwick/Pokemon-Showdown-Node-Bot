@@ -1,4 +1,4 @@
-import { ConditionData } from './types-conditions';
+import { ConditionData, EventMethod } from './types-conditions';
 import { BasicEffect, SparseBoostsTable } from './types-dex';
 
 interface FlingData {
@@ -7,7 +7,7 @@ interface FlingData {
 	volatileStatus?: string;
 }
 
-export interface ItemData extends Partial<Item> {
+export interface ItemData extends Partial<Item & Record<EventMethod, any>> {
 	name: string;
 }
 

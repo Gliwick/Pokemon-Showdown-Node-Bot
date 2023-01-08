@@ -4,7 +4,7 @@
 
 import { CurrentGen, MODS_DATA_DIR, Type } from './battle-data';
 
-type Gen = `gen${number}`;
+export type Gen = `gen${number}`;
 
 type TypeChart = Partial<Record<Type, Partial<Record<Type, 0 | 1 | 2 | 3>>>>;
 

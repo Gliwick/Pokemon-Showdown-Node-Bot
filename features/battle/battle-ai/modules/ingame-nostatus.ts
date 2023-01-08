@@ -40,8 +40,6 @@ export class IngameNoStatus implements BattleModule {
 	static readonly ID = 'ingame-nostatus';
 	readonly name = 'ingame-nostatus';
 
-	constructor() {}
-
 	getPokemonAverage(battle: Battle, s: number): number {
 		if (!battle.foe.teamPv.length) return 0;
 
