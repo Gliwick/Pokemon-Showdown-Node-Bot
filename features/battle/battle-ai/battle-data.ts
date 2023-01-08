@@ -10,7 +10,7 @@ import { BasicEffect, BoostID, EffectType, GenderName, SparseBoostsTable } from 
 import { ItemData } from '../../../data/types-items';
 import { MoveData } from '../../../data/types-moves';
 import { SpeciesData, SpeciesFormatsData } from '../../../data/types-species';
-import { ID, toId } from '../../../tools';
+import { ID, splitFirst, toId } from '../../../tools';
 import {
 	getAbility as getModdedAbility,
 	getFormatsData as getModdedFormatsData,
@@ -240,7 +240,7 @@ export function getEffect(effect: string | EffectData, gen: number = CurrentGen)
 	}
 
 	effect = (effect || '').trim();
-	const [type, name] = effect.includes(':') ? effect.split(':') : ['', effect];
+	const [type, name] = effect.includes(':') ? splitFirst(effect, ':') : ['', effect];
 	const id = toId(name);
 
 	if (!id) return { id, name: Sugar.escapeHTML(name), effectType: 'Condition' };

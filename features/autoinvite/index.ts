@@ -139,7 +139,7 @@ export class AutoInviteManager implements Feature {
 				this.parseRename(room, spl[1], spl[2]);
 				break;
 		}
-		if (message.substr(0) !== '|') this.parseRaw(room, message);
+		if (!message.startsWith('|')) this.parseRaw(room, message);
 	}
 
 	destroy(): void {

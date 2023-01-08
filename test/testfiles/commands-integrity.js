@@ -15,23 +15,15 @@ function getFile(cmd) {
 describe('Commands', function () {
 	it('Should not crash when loading files', function () {
 		fs.readdirSync(COMMAND_PATH).forEach((file) => {
-			if (file.substr(-3) === '.ts') {
+			if (file.endsWith('.ts')) {
 				separatedCommands[file] = require('../../' + COMMAND_PATH + '/' + file).commands;
 			}
 		});
 	});
 	it('Should come from files with #commands attribute as object type', function () {
 		for (let file in separatedCommands) {
-			assert.strictEqual(
-				typeof separatedCommands[file],
-				'object',
-				'commands file "' + file + '" has not a valid commands attribute'
-			);
-			assert.notStrictEqual(
-				separatedCommands[file],
-				null,
-				'commands file "' + file + '" has not a valid commands attribute'
-			);
+			assert.strictEqual(typeof separatedCommands[file], 'object', 'commands file "' + file + '" has not a valid commands attribute');
+			assert.notStrictEqual(separatedCommands[file], null, 'commands file "' + file + '" has not a valid commands attribute');
 		}
 	});
 	it('Should not be repeated in more than one file', function () {
@@ -67,11 +59,7 @@ describe('Commands', function () {
 			assert.strictEqual(
 				command,
 				command.toLowerCase().replace(/[ ]/, ''),
-				'command "' +
-					command +
-					'" from file "' +
-					getFile(command) +
-					'" contains uppercase or spaces in the name'
+				'command "' + command + '" from file "' + getFile(command) + '" contains uppercase or spaces in the name'
 			);
 		}
 	});

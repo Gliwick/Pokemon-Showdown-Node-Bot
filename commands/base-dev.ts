@@ -20,7 +20,7 @@ export const commands: Record<string, string | Command> = {
 	unignore: 'ignore',
 	ignore: function (arg, by, room, cmd) {
 		if (!this.isExcepted || !arg) return false;
-		if (cmd.substr(0, 2) === 'un') {
+		if (cmd.startsWith('un')) {
 			if (CommandParser.resourceMonitor.isLocked(arg)) {
 				CommandParser.resourceMonitor.unlock(arg);
 				this.sclog();

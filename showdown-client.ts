@@ -259,7 +259,7 @@ export class Client {
 			return;
 		}
 		try {
-			const jsonData = JSON.parse(data.data.substr(1));
+			const jsonData = JSON.parse(data.data.substring(1));
 			if (jsonData.actionsuccess) {
 				data.data = jsonData.assertion;
 			} else {
@@ -389,7 +389,7 @@ export class Client {
 
 	say(room: string, msg: string): NodeJS.Timeout | void {
 		if (room.charAt(0) === ',') {
-			return this.pm(room.substr(1), msg);
+			return this.pm(room.substring(1), msg);
 		}
 		return this.send(room + '|' + msg);
 	}
@@ -415,11 +415,11 @@ export class Client {
 
 	receive(message: string): void {
 		this.lastMessage = Date.now();
-		const flag = message.substr(0, 1);
+		const flag = message.charAt(0);
 		let data;
 		switch (flag) {
 			case 'a':
-				data = JSON.parse(message.substr(1));
+				data = JSON.parse(message.substring(1));
 				if (Array.isArray(data)) {
 					for (let i = 0; i < data.length; i++) {
 						this.receiveMsg(data[i]);
@@ -456,11 +456,11 @@ export class Client {
 	}
 
 	receiveLine(room: string, message: string, isIntro?: boolean): void {
-		const spl = message.substr(1).split('|');
+		const spl = message.substring(1).split('|');
 		this.events.emit('line', room, message, isIntro, spl);
 		if (spl[1]) {
 			const thisEvent = spl[0].charAt(0) !== '-' ? 'major' : 'minor';
-			this.events.emit(thisEvent, room, spl[0], message.substr(spl[0].length + 2), isIntro);
+			this.events.emit(thisEvent, room, spl[0], message.substring(spl[0].length + 2), isIntro);
 		} else {
 			this.events.emit('major', room, '', message, isIntro);
 		}
@@ -468,7 +468,7 @@ export class Client {
 		let timeOff: number;
 		switch (spl[0]) {
 			case 'formats':
-				this.events.emit('formats', message.substr(spl[0].length + 2));
+				this.events.emit('formats', message.substring(spl[0].length + 2));
 				break;
 			case 'challstr':
 				const id = spl[1];
@@ -511,7 +511,7 @@ export class Client {
 				break;
 			case 'users':
 				if (!this.rooms[room]) break;
-				const userArr = message.substr(7).split(',');
+				const userArr = message.substring(7).split(',');
 				this.rooms[room].userCount = parseInt(userArr[0]);
 				for (let k = 1; k < userArr.length; k++) {
 					this.rooms[room].users[toId(userArr[k])] = userArr[k];
@@ -524,7 +524,7 @@ export class Client {
 				if (isIntro) {
 					break;
 				}
-				if (by.substr(1) === this.status.nickName) {
+				if (by.substring(1) === this.status.nickName) {
 					this.events.emit('chatsucess', room, timeOff, spl.join('|'));
 				} else {
 					this.events.emit('chat', room, timeOff, by, spl.join('|'));
@@ -537,7 +537,7 @@ export class Client {
 				if (isIntro) {
 					break;
 				}
-				if (by.substr(1) === this.status.nickName) {
+				if (by.substring(1) === this.status.nickName) {
 					this.events.emit('chatsucess', room, timeOff, spl.join('|'));
 				} else {
 					this.events.emit('chat', room, timeOff, by, spl.join('|'));
@@ -547,7 +547,7 @@ export class Client {
 				by = spl[1];
 				const dest = spl[2];
 				spl.splice(0, 3);
-				if (by.substr(1) === this.status.nickName) {
+				if (by.substring(1) === this.status.nickName) {
 					this.events.emit('pmsucess', dest, spl.join('|'));
 				} else {
 					this.events.emit('pm', by, spl.join('|'));
@@ -582,17 +582,17 @@ export class Client {
 				this.events.emit('userleave', room, by);
 				break;
 			case 'queryresponse':
-				this.events.emit('queryresponse', message.substr(15));
+				this.events.emit('queryresponse', message.substring(15));
 				break;
 			case 'popup':
-				this.events.emit('popup', message.substr(7));
+				this.events.emit('popup', message.substring(7));
 				break;
 			case 'raw':
 			case 'html':
 				if (isIntro) {
 					break;
 				}
-				this.events.emit('raw', room, message.substr(2 + spl[0].length));
+				this.events.emit('raw', room, message.substring(2 + spl[0].length));
 				break;
 			default:
 				if (!spl[1]) {

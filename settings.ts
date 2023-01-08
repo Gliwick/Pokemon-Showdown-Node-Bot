@@ -166,7 +166,7 @@ class UserManager {
 		if (Config.disableSeen) return;
 		const userid = toId(user);
 		if (!this.users[userid]) {
-			this.users[userid] = new User(user.substr(1));
+			this.users[userid] = new User(user.substring(1));
 		}
 		const userObj = this.users[userid];
 		userObj.setOnline();
@@ -178,7 +178,7 @@ class UserManager {
 		if (Config.disableSeen) return;
 		const userid = toId(user);
 		if (!this.users[userid]) {
-			this.users[userid] = new User(user.substr(1));
+			this.users[userid] = new User(user.substring(1));
 		}
 		const userObj = this.users[userid];
 		userObj.setOnline();
@@ -189,7 +189,7 @@ class UserManager {
 		if (Config.disableSeen) return;
 		const userid = toId(user);
 		if (!this.users[userid]) {
-			this.users[userid] = new User(user.substr(1));
+			this.users[userid] = new User(user.substring(1));
 		}
 		const userObj = this.users[userid];
 		if (userObj.rooms[room]) delete userObj.rooms[room];
@@ -205,20 +205,20 @@ class UserManager {
 		if (Config.disableSeen) return;
 		const userid = toId(user);
 		if (!this.users[userid]) {
-			this.users[userid] = new User(user.substr(1));
+			this.users[userid] = new User(user.substring(1));
 		}
 		const userObj = this.users[userid];
 		if (toId(user) === toId(newName)) {
 			// Just a name change
-			userObj.name = newName.substr(1);
+			userObj.name = newName.substring(1);
 			userObj.rooms[room] = { group: newName.charAt(0) };
 		} else {
 			// User change
 			const newUserid = toId(newName);
 			userObj.setOffline();
-			userObj.reportSeen(room, 'n', [newName.substr(1)]);
+			userObj.reportSeen(room, 'n', [newName.substring(1)]);
 			if (!this.users[newUserid]) {
-				this.users[newUserid] = new User(newName.substr(1));
+				this.users[newUserid] = new User(newName.substring(1));
 			}
 			if (!Config.disableAlts) userObj.markAlt(this.users[newUserid]);
 			const newUserObj = this.users[newUserid];

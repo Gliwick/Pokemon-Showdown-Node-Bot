@@ -169,13 +169,13 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 	replace: 'switch',
 	switch: function (this: Battle, args) {
 		const spl = args[1].split(': ');
-		const p = spl[0].substr(0, 2);
+		const p = spl[0].substring(0, 2);
 		if (!(p in this.players)) {
 			error('Unknown side: ' + p);
 			return;
 		}
 
-		const slot = this.parseSlot(spl[0].substr(2, 1));
+		const slot = this.parseSlot(spl[0].charAt(2));
 		const name = toName(spl[1]);
 		const details = this.parseDetails(args[2]);
 		const health = this.parseStatus(args[3]);

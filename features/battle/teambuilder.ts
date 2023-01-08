@@ -591,8 +591,8 @@ export class TeamBuilder {
 				let hpType: string | null = null;
 				for (let j = 0; j < curSet.moves.length; j++) {
 					const move = curSet.moves[j];
-					if (move.substr(0, 13) === 'Hidden Power ' && move.substr(0, 14) !== 'Hidden Power [') {
-						hpType = move.substr(13);
+					if (move.startsWith('Hidden Power ') && !move.startsWith('Hidden Power [')) {
+						hpType = move.substring('Hidden Power '.length);
 						if (!hpType || !typechart[hpType]?.HPivs) {
 							continue;
 						}

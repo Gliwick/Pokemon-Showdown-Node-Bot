@@ -116,7 +116,7 @@ export class ModerationManager implements Feature {
 		if (!noregexp && Settings.settings.regexautoban?.[room]) {
 			for (const i in Settings.settings.regexautoban[room]) {
 				try {
-					const regexObj = new RegExp(i.substr(1, i.length - 3), 'i');
+					const regexObj = new RegExp(i.substring(1, i.length - 2), 'i');
 					if (regexObj.test(user)) return '#range';
 				} catch (e: any) {}
 			}
@@ -569,13 +569,13 @@ export class ModerationManager implements Feature {
 			case 'c':
 				by = spl[1];
 				timeOff = Date.now();
-				this.parseChat(room, timeOff, by, message.substr(('|' + spl[0] + '|' + spl[1] + '|').length));
+				this.parseChat(room, timeOff, by, message.substring(spl.slice(0, 2).join('|').length));
 				break;
 
 			case 'c:':
 				by = spl[2];
 				timeOff = parseInt(spl[1]) * 1000;
-				this.parseChat(room, timeOff, by, message.substr(('|' + spl[0] + '|' + spl[1] + '|' + spl[2] + '|').length));
+				this.parseChat(room, timeOff, by, message.substring(spl.slice(0, 3).join('|').length));
 				break;
 
 			case 'J':

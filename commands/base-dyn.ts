@@ -30,7 +30,7 @@ export const commands: Record<string, string | Command> = {
 	dyn: function (arg, by, room, cmd) {
 		const dcmd = toId(arg);
 		if (dcmd && CommandParser.dynCommands[dcmd] && CommandParser.dynCommands[dcmd].startsWith('/ref')) {
-			const basicCmd = toId(CommandParser.dynCommands[dcmd].substr(5));
+			const basicCmd = toId(CommandParser.dynCommands[dcmd].substring(5));
 			if (CommandParser.dynCommands[basicCmd] && !CommandParser.dynCommands[basicCmd].startsWith('/ref')) {
 				this.parse(this.cmdToken + cmd + ' ' + basicCmd);
 			} else {

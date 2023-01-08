@@ -67,7 +67,7 @@ export class BattleBot {
 
 	receive(room: string, data: string, isIntro?: boolean): void {
 		if (data.charAt(0) === '>') return;
-		const spl = data.substr(1).split('|');
+		const spl = data.substring(1).split('|');
 		if (spl[0] === 'init') {
 			if (this.battles[room]) {
 				try {

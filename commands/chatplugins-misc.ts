@@ -98,7 +98,7 @@ export const commands: Record<string, string | Command> = {
 			this.pmReply(
 				`${this.trad('user')} ${data.username || target} ${this.trad('regdate')} __${new Date(regTimestamp)
 					.toString()
-					.substr(4, 20)
+					.substring(4, 24)
 					.trim()}__ (EST)}`
 			);
 		}.bind(this);

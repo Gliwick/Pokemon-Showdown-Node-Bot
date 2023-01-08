@@ -94,6 +94,8 @@ interface Ident {
 	name: string;
 }
 
+const SLOTS: Record<string, number> = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5 };
+
 export class Battle {
 	bot: BattleBot;
 
@@ -320,13 +322,13 @@ export class Battle {
 
 	run(str?: string, isIntro?: boolean): void {
 		if (!str) return;
-		if (str.charAt(0) !== '|' || str.substr(0, 2) === '||') {
+		if (!str.startsWith('|') || str.startsWith('||')) {
 			return;
 		} else {
 			let args = ['done'];
 			const kwargs: Record<string, string> = {};
 			if (str !== '|') {
-				args = str.substr(1).split('|');
+				args = str.substring(1).split('|');
 			}
 			while (args.length > 0 && args[args.length - 1].startsWith('[')) {
 				const argstr = args.pop() as string;
@@ -427,7 +429,7 @@ export class Battle {
 			poke.species = details[0];
 		}
 		if (details[1]) {
-			poke.level = parseInt(details[1].substr(1), 10) || 100;
+			poke.level = parseInt(details[1].substring(1), 10) || 100;
 		}
 		details.slice(2).forEach((d) => {
 			if (d === 'shiny') {
@@ -444,8 +446,7 @@ export class Battle {
 	}
 
 	parseSlot(id: string): number {
-		const slots: Record<string, number> = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5 };
-		return slots[id] || 0;
+		return SLOTS[id] || 0;
 	}
 
 	parseStatus(str: string): Status {
@@ -491,12 +492,12 @@ export class Battle {
 
 	getActive(str?: string): Pokemon | null {
 		if (!str) return null;
-		const side = str.substr(0, 2);
-		str = str.substr(2);
-		const pokeId = str.substr(0, 1);
+		const side = str.substring(0, 2);
+		str = str.substring(side.length);
+		const pokeId = str.substring(0, 1);
 		const slot = this.parseSlot(pokeId);
-		str = str.substr(1);
-		const name = toName(str.substr(1));
+		str = str.substring(pokeId.length);
+		const name = toName(str.substring(1));
 		if (!(side in this.players)) {
 			error('Unknown side: ' + side);
 			return null;
@@ -512,12 +513,12 @@ export class Battle {
 
 	parsePokemonIdent(str?: string): Ident | null {
 		if (!str) return null;
-		const side = str.substr(0, 2);
-		str = str.substr(2);
-		const pokeId = str.substr(0, 1);
+		const side = str.substring(0, 2);
+		str = str.substring(side.length);
+		const pokeId = str.substring(0, 1);
 		const slot = this.parseSlot(pokeId);
-		str = str.substr(1);
-		const name = toName(str.substr(1));
+		str = str.substring(pokeId.length);
+		const name = toName(str.substring(1));
 		return {
 			side: side,
 			slot: slot,

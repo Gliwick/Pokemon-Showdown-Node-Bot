@@ -70,7 +70,7 @@ export class Context {
 			} else {
 				const args2Array = Array.isArray(arg2) ? arg2 : [arg2];
 				Bot.send(
-					args2Array.map((arg) => '|/pm ' + arg1.substr(1) + ',' + arg),
+					args2Array.map((arg) => '|/pm ' + arg1.substring(1) + ',' + arg),
 					interval
 				);
 			}
@@ -160,7 +160,7 @@ export class Context {
 			room: targetRoom,
 			ident: Bot.rooms[targetRoom].users[user],
 			id: toId(Bot.rooms[targetRoom].users[user]),
-			name: Bot.rooms[targetRoom].users[user].substr(1),
+			name: Bot.rooms[targetRoom].users[user].substring(1),
 			rank: Bot.rooms[targetRoom].users[user].charAt(0),
 		};
 	}
@@ -168,8 +168,8 @@ export class Context {
 	splitReply(str: string, maxMessageLength = 300): string[] {
 		const msgs = [];
 		while (str.length > maxMessageLength) {
-			msgs.push(str.substr(0, maxMessageLength));
-			str = str.substr(maxMessageLength);
+			msgs.push(str.substring(0, maxMessageLength));
+			str = str.substring(maxMessageLength);
 		}
 		msgs.push(str);
 		return msgs;
@@ -333,9 +333,9 @@ export class CommandParser {
 		if (!equalOrHigherRank(by, highestRank())) {
 			if (this.resourceMonitor.isLocked(by)) return;
 		}
-		if (msg.substr(0, 8) === '/invite ' && equalOrHigherRank(by, '%')) {
-			Bot.say('', '/join ' + msg.substr(8));
-			SecurityLog.log('User ' + by + ' used /invite ' + msg.substr(8));
+		if (msg.startsWith('/invite ') && equalOrHigherRank(by, '%')) {
+			Bot.say('', '/join ' + msg.substring('/invite '.length));
+			SecurityLog.log('User ' + by + ' used ' + msg);
 			return;
 		}
 
@@ -344,7 +344,7 @@ export class CommandParser {
 		let cmdToken = null;
 
 		for (let i = 0; i < this.commandTokens.length; i++) {
-			if (typeof this.commandTokens[i] === 'string' && msg.substr(0, this.commandTokens[i].length) === this.commandTokens[i]) {
+			if (typeof this.commandTokens[i] === 'string' && msg.startsWith(this.commandTokens[i])) {
 				cmdToken = this.commandTokens[i];
 				break;
 			}
@@ -352,12 +352,12 @@ export class CommandParser {
 
 		if (!cmdToken) {
 			if (room.charAt(0) === ',' && msg.charAt(0) !== '/' && Config.pmhelp && this.resourceMonitor.counthelp(by)) {
-				Bot.pm(by, stripCommands(Config.pmhelp.replace(/#USER/g, by.substr(1))));
+				Bot.pm(by, stripCommands(Config.pmhelp.replace(/#USER/g, by.substring(1))));
 			}
 			return;
 		}
 
-		const toParse = msg.substr(cmdToken.length);
+		const toParse = msg.substring(cmdToken.length);
 		let [cmd, args] = splitFirst(toParse, ' ');
 		cmd = cmd.toLowerCase();
 

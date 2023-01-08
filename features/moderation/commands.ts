@@ -666,11 +666,9 @@ export const commands: Record<string, string | Command> = {
 		if (Settings.settings.jpdisable?.[tarRoom]) return this.reply(this.trad('dis') + textHelper);
 
 		if (toId(args[0]) !== 'delete' && args.length === 2) {
-			arg = 'set,' + toId(args[0]) + ',' + arg.substr(args[0].length + 1);
-			args = arg.split(',');
+			args = ['set', toId(args[0]), ...args.slice(1)];
 		}
-
-		arg = arg.substr(args[0].length + args[1].length + 2).trim();
+		arg = args.slice(2).join(',').trim();
 
 		const user = toId(args[1]);
 		if (!user) return false;

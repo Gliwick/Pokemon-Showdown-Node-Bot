@@ -170,7 +170,7 @@ export function validateConfigObject<T extends keyof ConfigType>(
 }
 
 export function checkConfig(): void {
-	if (Config.server && Config.server.substr(-8) === '.psim.us') {
+	if (Config.server && Config.server.endsWith('.psim.us')) {
 		issue(
 			'WARNING: YOUR SERVER URL ' +
 				colors.red(Config.server) +
