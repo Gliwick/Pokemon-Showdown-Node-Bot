@@ -66,7 +66,7 @@ interface PokeSet {
 	hpType?: string;
 	gigantamax?: boolean;
 	dynamaxLevel?: number;
-	teraType?: string;
+	teraType: string;
 }
 
 export class TeamBuilder {
@@ -236,7 +236,7 @@ export class TeamBuilder {
 				emptyIfDefault(set.dynamaxLevel, 10),
 				set.teraType || '',
 			];
-			const detailsStr = emptyIfDefault(misc.join(','), misc.map(() => '').join(','));
+			const miscStr = emptyIfDefault(misc.join(','), misc.map(() => '').join(','));
 
 			const bufSet: string[] = [
 				name,
@@ -250,7 +250,7 @@ export class TeamBuilder {
 				emptyIfDefault(ivs, ',,,,,'),
 				set.shiny ? 'S' : '',
 				emptyIfDefault(set.level, 100),
-				emptyIfDefault(set.happiness, 255) + (detailsStr ? ',' + detailsStr : ''),
+				emptyIfDefault(set.happiness, 255) + (miscStr ? ',' + miscStr : ''),
 			];
 			buf.push(bufSet.join('|'));
 		}
@@ -266,7 +266,7 @@ export class TeamBuilder {
 			if (line === '' || line === '---') {
 				curSet = null;
 			} else if (!curSet) {
-				curSet = { name: '', species: '', gender: '', item: '', ability: '', nature: '', moves: [] };
+				curSet = { name: '', species: '', gender: '', item: '', ability: '', nature: '', moves: [], teraType: 'Normal' };
 				team.push(curSet);
 				const [newLine, item] = splitLast(line, ' @ ');
 				if (item) {
@@ -286,6 +286,8 @@ export class TeamBuilder {
 					curSet.species = line;
 					curSet.name = line;
 				}
+				const template = getPokemon(curSet.species);
+				if (template) curSet.teraType = template.types[0];
 			} else if (line.startsWith('Trait: ')) {
 				line = line.substring('Trait: '.length);
 				curSet.ability = line;
@@ -300,6 +302,9 @@ export class TeamBuilder {
 			} else if (line.startsWith('Happiness: ')) {
 				line = line.substring('Happiness: '.length);
 				curSet.happiness = parseInt(line);
+			} else if (line.startsWith('Tera Type: ')) {
+				line = line.substring('Tera Type: '.length);
+				curSet.teraType = line;
 			} else if (line.startsWith('EVs: ')) {
 				line = line.substring('EVs: '.length);
 				const evLines = line.split('/');
@@ -364,7 +369,8 @@ export class TeamBuilder {
 
 		const team: PokeSet[] = [];
 		for (const bufSet of buf.split(']')) {
-			const [name, species, item, ability, moves, nature, evs, gender, ivs, shiny, level, happiness] = bufSet.split('|');
+			const [name, species, item, ability, moves, nature, evs, gender, ivs, shiny, level, misc] = bufSet.split('|');
+			const [happiness, hpType, pokeball, gigantamax, dynamaxLevel, teraType] = misc.split(',', 6);
 			const template = getPokemon(species || name);
 			const set: PokeSet = {
 				name,
@@ -379,6 +385,11 @@ export class TeamBuilder {
 				shiny: !!shiny,
 				level: level ? parseInt(level, 10) : 100,
 				happiness: happiness ? Number(happiness) : 255,
+				hpType,
+				pokeball,
+				gigantamax: !!gigantamax,
+				dynamaxLevel: dynamaxLevel ? Number(happiness) : 10,
+				teraType: teraType || template?.types[0] || 'Normal',
 			};
 			team.push(set);
 		}
