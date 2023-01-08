@@ -551,7 +551,7 @@ export class Battle {
 				...condition,
 				stats: p.stats,
 			},
-			this
+			this as ActiveBattle
 		);
 		return poke;
 	}
