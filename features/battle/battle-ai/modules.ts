@@ -64,9 +64,9 @@ export class ModuleManager {
 	choose(battle: Battle): BattleModule | null {
 		const module = this.chooseInt(battle);
 		if (module) {
-			debug('Battle module [' + battle.id + '] - Using ' + module.name);
+			battle.debug('Battle module [' + battle.id + '] - Using ' + module.name);
 		} else {
-			debug('Battle module [' + battle.id + '] - Not found, using random');
+			battle.debug('Battle module [' + battle.id + '] - Not found, using random');
 		}
 		return module;
 	}
