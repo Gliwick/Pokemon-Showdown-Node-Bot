@@ -243,7 +243,7 @@ export function getEffect(effect: string | EffectData, gen: number = CurrentGen)
 	const [type, name] = effect.includes(':') ? effect.split(':') : ['', effect];
 	const id = toId(name);
 
-	if (!id) return { id, name: Sugar.escapeHTML(name || ''), effectType: 'Condition' };
+	if (!id) return { id, name: Sugar.escapeHTML(name), effectType: 'Condition' };
 
 	if (type === 'item') {
 		return { ...getItem(id, gen), effectType: 'Item' };
@@ -262,7 +262,7 @@ export function getEffect(effect: string | EffectData, gen: number = CurrentGen)
 	if (pAbility.condition) return { id, effectType: 'Condition', ...pAbility.condition };
 	if (pItem.condition) return { id, effectType: 'Condition', ...pItem.condition };
 
-	const effectData: EffectData = { id, name: Sugar.escapeHTML(name || ''), effectType: 'Condition' };
+	const effectData: EffectData = { id, name: Sugar.escapeHTML(name), effectType: 'Condition' };
 
 	if (id === 'recoil') {
 		effectData.effectType = 'Recoil';
