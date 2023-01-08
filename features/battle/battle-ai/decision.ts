@@ -248,7 +248,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 			} else {
 				canSw = 0;
 				for (let k = 0; k < req.side.pokemon.length; k++) {
-					if (req.side.pokemon[k].condition === '0 fnt') continue; // Fainted
+					if (battle.parseStatus(req.side.pokemon[k].condition).status === 'fnt') continue; // Fainted
 					if (req.side.pokemon[k].active) continue; // Active
 					canSw++;
 					tables[i].push(new SwitchDecision(k, req.side.pokemon[k].ident));

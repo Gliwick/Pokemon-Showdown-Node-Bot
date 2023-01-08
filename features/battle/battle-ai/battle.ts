@@ -77,10 +77,10 @@ interface RequestSide {
 export interface Request {
 	teamPreview?: boolean;
 	active?: RequestActivePokemon[];
+	wait?: boolean;
 	forceSwitch?: boolean[];
 	side: RequestSide;
 	rqid: number;
-	wait?: boolean;
 }
 
 interface Status {
