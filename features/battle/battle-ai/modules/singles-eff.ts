@@ -2948,11 +2948,16 @@ export class SinglesEffective implements BattleModule {
 		if (leads.length === 0) {
 			for (let i = 0; i < decisions.length; i++) {
 				const sideId = decisions[i].team[0];
-				const moves = battle.request.side.pokemon[sideId].moves;
-				for (const move of moves) {
-					if (['spikes', 'ceaselessedge', 'stealthrock', 'stoneaxe', 'stickyweb', 'toxicspikes'].includes(move)) {
-						leads.push(decisions[i]);
-						break;
+				const poke = sideIdToPokemon[sideId];
+				if (poke.hasAbility('toxicdebris')) {
+					leads.push(decisions[i]);
+				} else {
+					const moves = battle.request.side.pokemon[sideId].moves;
+					for (const move of moves) {
+						if (['spikes', 'ceaselessedge', 'stealthrock', 'stoneaxe', 'stickyweb', 'toxicspikes'].includes(move)) {
+							leads.push(decisions[i]);
+							break;
+						}
 					}
 				}
 			}
@@ -2979,12 +2984,12 @@ export class SinglesEffective implements BattleModule {
 				const poke = sideIdToPokemon[sideId];
 				if (poke.hasAbility('magicbounce')) {
 					leads.push(decisions[i]);
-					continue;
-				}
-				for (const move of battle.request.side.pokemon[sideId].moves) {
-					if (['defog', 'magiccoat', 'mortalspin', 'rapidspin', 'tidyup'].includes(move)) {
-						leads.push(decisions[i]);
-						break;
+				} else {
+					for (const move of battle.request.side.pokemon[sideId].moves) {
+						if (['defog', 'magiccoat', 'mortalspin', 'rapidspin', 'tidyup'].includes(move)) {
+							leads.push(decisions[i]);
+							break;
+						}
 					}
 				}
 			}
