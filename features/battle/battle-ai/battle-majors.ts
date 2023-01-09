@@ -136,12 +136,12 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 
 	poke: function (this: Battle, args) {
 		const p = args[1];
-		if (!(p in this.players)) {
+		if (p !== 'p1' && p !== 'p2') {
 			error('Unknown side: ' + p);
 			return;
 		}
-
-		this.players[p as keyof Battle['players']].teamPv.push(this.parseDetails(args[2]));
+		const poke = this.parseDetails(args[2]);
+		if (poke) this.players[p].teamPv.push(poke);
 	},
 
 	detailschange: function (this: Battle, args) {

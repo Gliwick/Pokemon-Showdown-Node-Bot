@@ -482,7 +482,7 @@ export class Player {
 	active: (Pokemon | null)[] = [];
 	side: Record<string, any> = {};
 	pokemon: Pokemon[] = [];
-	teamPv: (PokemonDetails | null)[] = [];
+	teamPv: PokemonDetails[] = [];
 
 	constructor(id: string, name?: string) {
 		this.id = id || 'p0';

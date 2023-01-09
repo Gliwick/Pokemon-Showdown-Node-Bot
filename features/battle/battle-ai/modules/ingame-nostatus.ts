@@ -108,37 +108,37 @@ export class IngameNoStatus implements BattleModule {
 		});
 		for (let i = 0; i < p.moves.length; i++) {
 			const move = getMove(p.moves[i], battle.gen);
-			const targets = battle.foe.active;
-			for (let j = 0; j < targets.length; j++) {
-				if (!targets[j]) continue;
+			for (const target of battle.foe.active) {
+				if (!target) continue;
 				const conditionsB = new Conditions({
 					side: battle.foe.side,
 					pokemon: battle.foe.pokemon,
-					volatiles: targets[j].volatiles,
-					boosts: targets[j].boosts,
+					volatiles: target.volatiles,
+					boosts: target.boosts,
 				});
 				const pokeB = new Pokemon(
-					targets[j].template,
+					target.template,
 					{
-						level: targets[j].level,
-						gender: targets[j].gender,
-						shiny: targets[j].shiny,
+						level: target.level,
+						gender: target.gender,
+						shiny: target.shiny,
+						terastallize: target.terastallize,
 						evs: { hp: 192, def: 124, spd: 124 },
 					},
 					battle
 				);
-				pokeB.hp = targets[j].hp;
-				pokeB.status = targets[j].status;
-				if (targets[j].item === '&unknown') {
+				pokeB.hp = target.hp;
+				pokeB.status = target.status;
+				if (target.item === '&unknown') {
 					pokeB.item = null;
 				} else {
-					pokeB.item = targets[j].item;
+					pokeB.item = target.item;
 				}
-				if (!targets[j].supressedAbility) {
-					if (targets[j].ability === '&unknown') {
-						pokeB.ability = pokeB.template.abilities ? pokeB.template.abilities[0] : null;
+				if (!target.supressedAbility) {
+					if (target.ability === '&unknown') {
+						pokeB.ability = getAbility(pokeB.template.abilities[0]);
 					} else {
-						pokeB.ability = targets[j].ability;
+						pokeB.ability = target.ability;
 					}
 				}
 				const dmg = calculate(
@@ -168,6 +168,8 @@ export class IngameNoStatus implements BattleModule {
 	 */
 
 	evaluateMoveDecision(battle: ActiveBattle, desEnv: Decision[], des: MoveDecision, act: number): number {
+		if (!battle.request.active) throw new Error('Active pokemon not received yet');
+
 		let final = 0;
 		const p = battle.request.side.pokemon[act];
 		const a = battle.request.active[act];
@@ -175,7 +177,7 @@ export class IngameNoStatus implements BattleModule {
 
 		if (move.category === 'Status') return 0;
 		if (BadMoves.includes(move.id)) return 0;
-		if (des.target < 0) return 0; // Do not kill your own allies
+		if (des.target && des.target < 0) return 0; // Do not kill your own allies
 
 		if (a.canMegaEvo) {
 			if (!des.transformation) return 0; // Mega evolve by default
@@ -186,47 +188,43 @@ export class IngameNoStatus implements BattleModule {
 		const conditionsA = new Conditions({
 			side: battle.self.side,
 			pokemon: battle.self.pokemon,
-			volatiles: battle.self.active[act].volatiles,
-			boosts: battle.self.active[act].boosts,
+			volatiles: battle.self.active[act]?.volatiles,
+			boosts: battle.self.active[act]?.boosts,
 		});
 
-		let targets = [];
-		if (typeof des.target === 'number') {
-			targets = [battle.foe.active[des.target]];
-		} else {
-			targets = battle.foe.active;
-		}
+		const targets = typeof des.target === 'number' ? [battle.foe.active[des.target]] : battle.foe.active;
 
-		for (let i = 0; i < targets.length; i++) {
-			if (!targets[i]) continue;
+		for (const target of targets) {
+			if (!target) continue;
 			const conditionsB = new Conditions({
 				side: battle.foe.side,
 				pokemon: battle.foe.pokemon,
-				volatiles: targets[i].volatiles,
-				boosts: targets[i].boosts,
+				volatiles: target.volatiles,
+				boosts: target.boosts,
 			});
 			const pokeB = new Pokemon(
-				targets[i].template,
+				target.template,
 				{
-					level: targets[i].level,
-					gender: targets[i].gender,
-					shiny: targets[i].shiny,
+					level: target.level,
+					gender: target.gender,
+					shiny: target.shiny,
+					terastallize: target.terastallize,
 					evs: { hp: 192, def: 124, spd: 124 },
 				},
 				battle
 			);
-			pokeB.hp = targets[i].hp;
-			pokeB.status = targets[i].status;
-			if (targets[i].item === '&unknown') {
+			pokeB.hp = target.hp;
+			pokeB.status = target.status;
+			if (target.item === '&unknown') {
 				pokeB.item = null;
 			} else {
-				pokeB.item = targets[i].item;
+				pokeB.item = target.item;
 			}
-			if (!targets[i].supressedAbility) {
-				if (targets[i].ability === '&unknown') {
-					pokeB.ability = pokeB.template.abilities ? pokeB.template.abilities[0] : null;
+			if (!target.supressedAbility) {
+				if (target.ability === '&unknown') {
+					pokeB.ability = getAbility(pokeB.template.abilities[0]);
 				} else {
-					pokeB.ability = targets[i].ability;
+					pokeB.ability = target.ability;
 				}
 			}
 			const dmg = calculate(
