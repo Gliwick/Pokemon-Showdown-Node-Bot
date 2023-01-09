@@ -6,7 +6,7 @@
 import { createWriteStream, PathLike, writeFileSync, WriteStream } from 'fs';
 import { inspect } from 'util';
 
-import { StatsExceptHPTable } from '../../../data/types-dex';
+import { BoostID, StatsExceptHPTable } from '../../../data/types-dex';
 import { colors } from '../../../index';
 import { errlog, error } from '../../../log';
 import { toId, toName } from '../../../tools';
@@ -88,8 +88,8 @@ interface Status {
 	status?: string;
 }
 
-interface Ident {
-	side: string;
+interface Identity {
+	side: keyof Battle['players'];
 	slot: number;
 	name: string;
 }
@@ -493,37 +493,40 @@ export class Battle {
 	getActive(str?: string): Pokemon | null {
 		if (!str) return null;
 		const side = str.substring(0, 2);
+		if (side !== 'p1' && side !== 'p2') {
+			error('Unknown side: ' + side);
+			return null;
+		}
+
 		str = str.substring(side.length);
 		const pokeId = str.substring(0, 1);
 		const slot = this.parseSlot(pokeId);
 		str = str.substring(pokeId.length);
 		const name = toName(str.substring(1));
-		if (!(side in this.players)) {
-			error('Unknown side: ' + side);
-			return null;
-		}
-		const player = this.players[side as keyof Battle['players']];
-		const active = player.active?.[slot];
+		const player = this.players[side];
+		const active = player.active[slot];
 		if (active) {
 			active.name = name;
 			return active;
 		}
+		error('No active pokemon found at slot ' + slot + ' in ' + player.active);
 		return null;
 	}
 
-	parsePokemonIdent(str?: string): Ident | null {
+	parsePokemonIdentity(str?: string): Identity | null {
 		if (!str) return null;
 		const side = str.substring(0, 2);
+		if (side !== 'p1' && side !== 'p2') {
+			error('Unknown side: ' + side);
+			return null;
+		}
+
 		str = str.substring(side.length);
 		const pokeId = str.substring(0, 1);
 		const slot = this.parseSlot(pokeId);
 		str = str.substring(pokeId.length);
 		const name = toName(str.substring(1));
-		return {
-			side: side,
-			slot: slot,
-			name: name,
-		};
+		return { side, slot, name };
 	}
 
 	parseRequestPokemon(sideId: number, forceMega?: boolean): CalcPokemon {
@@ -532,9 +535,9 @@ export class Battle {
 		const p = this.request.side.pokemon[sideId];
 		const details = this.parseDetails(p.details);
 		const condition = this.parseStatus(p.condition);
-		const ident = this.parsePokemonIdent(p.ident);
+		const ident = this.parsePokemonIdentity(p.ident);
 
-		if (!details || !ident) throw new Error('Request pokemon has no details or ident: ' + JSON.stringify(p));
+		if (!details || !ident) throw new Error('Request pokemon has no details or identity: ' + JSON.stringify(p));
 
 		const side: keyof Battle['helpers'] = toId(this.request.side.name) === toId(Bot.status.nickName) ? 'self' : 'foe';
 		const pokeId = p.ident.split(': ')[1] + '|' + details.species;
@@ -555,6 +558,21 @@ export class Battle {
 			this as ActiveBattle
 		);
 		return poke;
+	}
+
+	parseStat(stat: string): BoostID | null {
+		if (
+			stat !== 'atk' &&
+			stat !== 'def' &&
+			stat !== 'spa' &&
+			stat !== 'spd' &&
+			stat !== 'spe' &&
+			stat !== 'accuracy' &&
+			stat !== 'evasion'
+		) {
+			return null;
+		}
+		return stat;
 	}
 
 	destroy(): void {

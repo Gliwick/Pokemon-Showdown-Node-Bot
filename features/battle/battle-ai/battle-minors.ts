@@ -3,17 +3,19 @@
 */
 
 import { AbilityData } from '../../../data/types-abilities';
+import { BoostID } from '../../../data/types-dex';
 import { ItemData } from '../../../data/types-items';
-import { error } from '../../../log';
 import { toId } from '../../../tools';
 import { Battle } from './battle';
-import { getAbility, getEffect, getItem, getMove, getPokemon, Type } from './battle-data';
+import { getAbility, getEffect, getItem, getMove, getPokemon, Type, WithID } from './battle-data';
 
 export type Minor = `-${string}`;
 
 export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<string, string>, isIntro?: boolean) => void)> = {
 	'-damage': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
+
 		const hp = this.parseHealth(args[2]);
 		poke.hp = hp;
 		if (kwargs.from) {
@@ -64,7 +66,9 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-heal': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
-		const det = this.parsePokemonIdent(args[1]);
+		if (!poke) return;
+
+		const det = this.parsePokemonIdentity(args[1]);
 		const hp = this.parseHealth(args[2]);
 		poke.hp = hp;
 		if (kwargs.from) {
@@ -78,38 +82,36 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 				case 'drain':
 					break;
 				case 'lunardance':
-					for (let i = 0; i < poke.moves.length; i++) {
-						poke.moves[i].restorePP();
-					}
-					this.players[det.side].side.wish = null;
+					poke.moves.forEach((m) => m.restorePP());
+					if (det) this.players[det.side].side.wish = null;
 					break;
 				case 'healingwish':
 				case 'wish':
-					this.players[det.side].side.wish = null;
+					if (det) this.players[det.side].side.wish = null;
 					break;
 				case 'leftovers':
 				case 'shellbell':
 				case 'blacksludge':
-					poke.item = { ...(effect as ItemData) };
+					poke.item = { ...(effect as WithID<ItemData>) };
 					break;
 			}
 		}
 	},
 
 	'-sethp': function (this: Battle, args) {
-		let poke, hp;
 		for (let i = 1; i < args.length - 1; i += 2) {
-			poke = this.getActive(args[i]);
-			hp = this.parseHealth(args[i + 1]);
-			poke.hp = hp;
+			const poke = this.getActive(args[i]);
+			if (poke) poke.hp = this.parseHealth(args[i + 1]);
 		}
 	},
 
 	'-boost': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
-		const stat = args[2];
+		if (!poke) return;
+
+		const stat = this.parseStat(args[2]);
 		const n = parseInt(args[3]) || 0;
-		poke.addBoost(stat, n);
+		if (stat) poke.addBoost(stat, n);
 		if (kwargs.from) {
 			const effect = getEffect(kwargs.from, this.gen);
 			const ofpoke = this.getActive(kwargs.of);
@@ -121,9 +123,11 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-unboost': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
-		const stat = args[2];
+		if (!poke) return;
+
+		const stat = this.parseStat(args[2]);
 		const n = parseInt(args[3]) || 0;
-		poke.addBoost(stat, -1 * n);
+		if (stat) poke.addBoost(stat, -1 * n);
 		if (kwargs.from) {
 			const effect = getEffect(kwargs.from, this.gen);
 			const ofpoke = this.getActive(kwargs.of);
@@ -135,82 +139,70 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-setboost': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
-		const stat = args[2];
+		if (!poke) return;
+
+		const stat = this.parseStat(args[2]);
 		const n = parseInt(args[3]) || 0;
-		poke.setBoost(stat, -1 * n);
+		if (stat) poke.setBoost(stat, -1 * n);
 		if (kwargs.from) {
 			const effect = getEffect(kwargs.from, this.gen);
-			switch (effect.id) {
-				case 'bellydrum':
-					break;
-				case 'angerpoint':
-					poke.markAbility('Anger Point');
-					break;
-			}
+			if (effect.id === 'angerpoint') poke.markAbility('Anger Point');
 		}
 	},
 
 	'-swapboost': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
 		const poke2 = this.getActive(args[2]);
+		if (!poke || !poke2) return;
+
 		if (args[3]) {
-			const stats = args[3].split(',');
-			let stat, tmp;
-			for (let i = 0; i < stats.length; i++) {
-				stat = toId(stats[i]);
-				tmp = poke.boosts[stat];
-				poke.boosts[stat] = poke2.boosts[stat];
-				poke2.boosts[stat] = tmp;
-				if (!poke.boosts[stat]) delete poke.boosts[stat];
-				if (!poke2.boosts[stat]) delete poke2.boosts[stat];
-			}
+			args[3]
+				.split(',')
+				.map(this.parseStat)
+				.forEach((stat) => stat && ([poke.boosts[stat], poke2.boosts[stat]] = [poke2.boosts[stat] || 0, poke.boosts[stat] || 0]));
 		} else {
-			const tmp = poke.boosts;
-			poke.boosts = poke2.boosts;
-			poke2.boosts = tmp;
+			[poke.boosts, poke2.boosts] = [{ ...poke2.boosts }, { ...poke.boosts }];
 		}
 	},
 
 	'-restoreboost': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
 		for (const i in poke.boosts) {
-			if (poke.boosts[i] < 0) delete poke.boosts[i];
+			const stat = i as BoostID;
+			if ((poke.boosts[stat] || 0) < 0) delete poke.boosts[stat];
 		}
 	},
 
 	'-copyboost': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
 		const poke2 = this.getActive(args[2]);
+		if (!poke || !poke2) return;
+
 		if (args[3]) {
-			const stats = args[3].split(',');
-			let stat;
-			for (let i = 0; i < stats.length; i++) {
-				stat = toId(stats[i]);
-				poke.boosts[stat] = poke2.boosts[stat];
-				if (!poke.boosts[stat]) delete poke.boosts[stat];
-			}
+			args[3]
+				.split(',')
+				.map(this.parseStat)
+				.forEach((stat) => stat && (poke.boosts[stat] = poke2.boosts[stat] || 0));
 		} else {
-			poke.removeAllBoosts();
 			poke.boosts = { ...poke2.boosts };
 		}
 	},
 
 	'-clearboost': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
-		poke.removeAllBoosts();
+		if (poke) poke.removeAllBoosts();
 	},
 
 	'-invertboost': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
-		poke.invertAllBoosts();
+		if (poke) poke.invertAllBoosts();
 	},
 
 	'-clearallboost': function (this: Battle) {
-		for (const p in this.players) {
-			for (let i = 0; i < this.players[p].active.length; i++) {
-				this.players[p].active[i].removeAllBoosts();
-			}
-		}
+		Object.values(this.players)
+			.flatMap((p) => p.active)
+			.forEach((active) => active && active.removeAllBoosts());
 	},
 
 	'-miss': '-crit',
@@ -219,21 +211,18 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 	'-crit': function (this: Battle, args, kwargs, isIntro) {
 		// Not real information - message minors
 		if (isIntro) return;
-		const ident = this.parsePokemonIdent(args[1]);
-		this.message(args[0].substring(1), ident.side, ident.name);
+		const ident = this.parsePokemonIdentity(args[1]);
+		this.message(args[0].substring(1), ident?.side, ident?.name);
 	},
 
 	'-immune': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const effect = getEffect(args[2], this.gen);
 		const fromeffect = getEffect(kwargs.from, this.gen);
-		switch (effect.id) {
-			case 'confusion':
-				break;
-			default:
-				if (fromeffect?.effectType === 'Ability') {
-					poke.markAbility((fromeffect as AbilityData).name);
-				}
+		if (poke && effect.id !== 'confusion') {
+			if (fromeffect?.effectType === 'Ability') {
+				poke.markAbility((fromeffect as AbilityData).name);
+			}
 		}
 	},
 
@@ -241,76 +230,51 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 		const poke = this.getActive(args[1]);
 		const effect = getEffect(args[2], this.gen);
 		const fromeffect = getEffect(kwargs.from, this.gen);
-		if (fromeffect.id === 'skydrop') {
-			return;
-		}
-		switch (effect.id) {
-			case 'brn':
-			case 'tox':
-			case 'psn':
-			case 'slp':
-			case 'par':
-			case 'frz':
-			case 'substitute':
-				break;
-			case 'hyperspacefury':
-			case 'darkvoid':
-			case 'magikarpsrevenge':
-			case 'skydrop':
-				break;
-			case 'sunnyday':
-			case 'raindance':
-			case 'sandstorm':
-			case 'hail':
-				break;
-			case 'unboost':
-				if (fromeffect.effectType === 'Ability') {
-					poke.markAbility(fromeffect.id);
-				}
-				break;
+		if (poke && fromeffect.id !== 'skydrop' && effect.id === 'unboost') {
+			if (fromeffect.effectType === 'Ability') {
+				poke.markAbility(fromeffect.id);
+			}
 		}
 	},
 
 	'-prepare': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
 		const move = args[2];
-		const target = this.parsePokemonIdent(args[1]);
-		if (!poke || !target) {
-			error('No active pokemon found or no target parsed');
-			return;
-		}
-		poke.prepareMove(move, target.slot);
+		const target = this.parsePokemonIdentity(args[1]);
+		if (poke && target) poke.prepareMove(move, target.slot);
 	},
 
 	'-status': function (this: Battle, args, kwargs, isIntro) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
+
 		poke.status = args[2];
 		poke.helpers.statusCounter = 0;
 		if (poke.status === 'slp') {
 			poke.helpers.sleepCounter = 0;
 		}
-		const det = this.parsePokemonIdent(args[1]);
-		if (!isIntro) this.message('start-' + poke.status, det.side, poke.name); // hax
+		const det = this.parsePokemonIdentity(args[1]);
+		if (!isIntro) this.message('start-' + poke.status, det?.side, poke.name); // hax
 	},
 
 	'-curestatus': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
 		poke.status = '';
 		if (!args[2] || args[2] === 'confusion') poke.removeVolatile('confusion');
 	},
 
 	'-cureteam': function (this: Battle, args) {
-		const ident = this.parsePokemonIdent(args[1]);
-		if (this.players[ident.side]) {
-			const pokes = this.players[ident.side].pokemon;
-			for (let i = 0; i < pokes.length; i++) {
-				pokes[i].status = '';
-			}
+		const ident = this.parsePokemonIdentity(args[1]);
+		if (ident && this.players[ident.side]) {
+			this.players[ident.side].pokemon.forEach((poke) => (poke.status = ''));
 		}
 	},
 
 	'-item': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
+
 		const item = getItem(args[2], this.gen, this.id);
 		const effect = getEffect(kwargs.from, this.gen);
 		const ofpoke = this.getActive(kwargs.of);
@@ -328,7 +292,7 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 					poke.itemEffect = 'found';
 					break;
 				case 'frisk':
-					ofpoke.markAbility('Frisk');
+					if (ofpoke) ofpoke.markAbility('Frisk');
 					if (kwargs.identify) {
 						// used for gen 6
 						poke.itemEffect = 'frisked';
@@ -359,6 +323,8 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-enditem': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
+
 		const item = getItem(args[2], this.gen, this.id);
 		const effect = getEffect(kwargs.from, this.gen);
 		poke.item = null;
@@ -417,6 +383,8 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-ability': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
+
 		const ability = getAbility(args[2], this.gen, this.id);
 		const effect = getEffect(kwargs.from, this.gen);
 		poke.markAbility(ability.name, !!effect.id && !kwargs.fail);
@@ -425,12 +393,14 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-endability': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
-		poke.supressedAbility = true;
+		if (poke) poke.supressedAbility = true;
 	},
 
 	'-transform': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
 		const tpoke = this.getActive(args[2]);
+		if (!poke || !tpoke) return;
+
 		const effect = getEffect(kwargs.from, this.gen);
 		if (effect.effectType === 'Ability') {
 			poke.markAbility((effect as AbilityData).name);
@@ -440,6 +410,8 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-formechange': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
+
 		const template = getPokemon(args[2], this.gen, this.id);
 		const fromeffect = getEffect(kwargs.from, this.gen);
 		poke.removeVolatile('typeadd');
@@ -453,6 +425,8 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-mega': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
+
 		const item = getItem(args[3], this.gen, this.id);
 		if (args[2] !== 'Rayquaza' && item.megaStone) {
 			poke.item = item;
@@ -463,12 +437,14 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-terastallize': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
-		poke.terastallize = args[2] as Type;
+		if (poke) poke.terastallize = args[2] as Type;
 	},
 
 	'-start': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
-		const ident = this.parsePokemonIdent(args[1]);
+		if (!poke) return;
+
+		const ident = this.parsePokemonIdentity(args[1]);
 		const effect = getEffect(args[2], this.gen);
 		const ofpoke = this.getActive(kwargs.of);
 		const fromeffect = getEffect(kwargs.from, this.gen);
@@ -494,14 +470,17 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 				}
 
 				if (fromeffect.id === 'reflecttype') {
-					poke.volatiles.typechange = [...ofpoke.template.types];
+					if (ofpoke) poke.volatiles.typechange = [...ofpoke.template.types];
 				} else {
 					poke.volatiles.typechange = args[3] ? args[3].split('/') : ['???'];
 				}
 
 				if (!fromeffect?.id) {
 					const side = args[1].substring(0, 2);
-					const helpers = toId(this.players[side].name) === toId(Bot.status.nickName) ? this.helpers.self : this.helpers.foe;
+					const helpers =
+						(side === 'p1' || side === 'p2') && toId(this.players[side]?.name) === toId(Bot.status.nickName)
+							? this.helpers.self
+							: this.helpers.foe;
 					const pokeId = poke.name + '|' + poke.species;
 					if (!helpers[pokeId]) helpers[pokeId] = {};
 					if (!helpers[pokeId].template) helpers[pokeId].template = {};
@@ -534,16 +513,16 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 				poke.removeVolatile('telekinesis');
 				break;
 			case 'doomdesire':
-				this.players[ident.side].side.doomdesire = { turn: this.turn };
-				break;
 			case 'futuresight':
-				this.players[ident.side].side.futuresight = { turn: this.turn };
+				if (ident) this.players[ident.side].side[effect.id] = { turn: this.turn };
 				break;
 		}
 	},
 
 	'-end': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
+
 		const effect = getEffect(args[2], this.gen);
 		if (effect.id.startsWith('protosynthesis')) {
 			poke.removeVolatile('protosynthesis');
@@ -574,18 +553,18 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-activate': function (this: Battle, args, kwargs) {
 		const poke = this.getActive(args[1]);
+		if (!poke) return;
+
 		const effect = getEffect(args[2], this.gen);
 		const ofpoke = this.getActive(kwargs.of);
-		const ofIdent = this.parsePokemonIdent(kwargs.of);
+		const ofIdent = this.parsePokemonIdentity(kwargs.of);
 		if (effect.effectType === 'Ability') {
 			poke.markAbility((effect as AbilityData).name);
 		}
 		switch (effect.id) {
 			case 'brickbreak':
 			case 'psychicfangs':
-				this.players[ofIdent.side].removeSideCondition('Reflect');
-				this.players[ofIdent.side].removeSideCondition('LightScreen');
-				this.players[ofIdent.side].removeSideCondition('AuroraVeil');
+				if (ofIdent) ['Reflect', 'LightScreen', 'AuroraVeil'].forEach((c) => this.players[ofIdent.side].removeSideCondition(c));
 				break;
 			case 'spite':
 				const move = getMove(args[3], this.gen, this.id).name;
@@ -597,7 +576,7 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 				poke.removeVolatile('telekinesis');
 				break;
 			case 'skillswap':
-				if (this.gen <= 4) break;
+				if (this.gen <= 4 || !ofpoke) break;
 				const pokeability = args[3] ? getAbility(args[3], this.gen, this.id) : ofpoke.ability;
 				const ofpokeability = args[4] ? getAbility(args[4], this.gen, this.id) : poke.ability;
 				if (pokeability) {
@@ -623,12 +602,14 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-sidestart': function (this: Battle, args) {
 		const side = this.getSide(args[1]);
+		if (!side) return;
 		const effect = getEffect(args[2], this.gen);
 		side.addSideCondition(effect.id);
 	},
 
 	'-sideend': function (this: Battle, args) {
 		const side = this.getSide(args[1]);
+		if (!side) return;
 		const effect = getEffect(args[2], this.gen);
 		side.removeSideCondition(effect.id);
 	},

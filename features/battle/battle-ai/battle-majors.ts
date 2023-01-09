@@ -243,7 +243,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		const poke = this.getActive(args[1]);
 		if (!poke) return;
 
-		const det = this.parsePokemonIdent(args[1]);
+		const det = this.parsePokemonIdentity(args[1]);
 		poke.fainted = true;
 		poke.active = false;
 		poke.passing = null;
@@ -252,16 +252,11 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 	},
 
 	swap: function (this: Battle, args) {
-		const poke = this.parsePokemonIdent(args[1]);
+		const poke = this.parsePokemonIdentity(args[1]);
 		if (!poke) return;
 
 		const to = parseInt(args[2]) || 0;
-		if (!(poke.side in this.players)) {
-			error('Unknown side: ' + poke.side);
-			return;
-		}
-
-		const player = this.players[poke.side as keyof Battle['players']];
+		const player = this.players[poke.side];
 		const temp = player.active[poke.slot];
 		player.active[poke.slot] = player.active[to];
 		player.active[to] = temp;
@@ -296,17 +291,9 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 			if (poke.transformed) move.pp = 5;
 			poke.moves.push(move);
 		}
-		if (move.id === 'wish' || move.id === 'healingwish' || move.id === 'lunardance') {
-			const det = this.parsePokemonIdent(args[1]);
-			if (!det || !(det.side in this.players)) {
-				error('Unknown side: ' + det?.side);
-			} else {
-				this.players[det.side as keyof Battle['players']].side.wish = {
-					move: move.id,
-					turn: this.turn,
-					poke: poke,
-				};
-			}
+		if (['wish', 'healingwish', 'lunardance'].includes(move.id)) {
+			const det = this.parsePokemonIdentity(args[1]);
+			if (det) this.players[det.side].side.wish = { move: move.id, turn: this.turn, poke };
 		}
 		if (move.id === 'batonpass') {
 			poke.passing = this.turn;
@@ -331,7 +318,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 		const effect = getEffect(args[2], this.gen);
 		const effectId = effect.id;
 		const moveTemplate = getMove(args[3] || '', this.gen, this.id);
-		const det = this.parsePokemonIdent(args[1]);
+		const det = this.parsePokemonIdentity(args[1]);
 		switch (effectId) {
 			case 'taunt':
 			case 'gravity':
