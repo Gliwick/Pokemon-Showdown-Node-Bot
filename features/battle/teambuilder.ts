@@ -225,10 +225,8 @@ export class TeamBuilder {
 				Object.entries(template?.abilities || {})
 					.filter(([, ab]) => toId(set.ability) === toId(ab))
 					.map(([key]) => key)[0] || toId(set.ability);
-			const evs = Stats.map((stat) => (set.evs || {})[stat] || '').join(',');
-			const ivs = Stats.map((stat) => (set.ivs || {})[stat])
-				.map((v) => emptyIfDefault(v, 31))
-				.join(',');
+			const evs = Stats.map((stat) => (set.evs || {})[stat] || '');
+			const ivs = Stats.map((stat) => (set.ivs || {})[stat]).map((v) => emptyIfDefault(v, 31));
 			const misc: string[] = [
 				set.hpType || '',
 				toId(set.pokeball),
@@ -236,7 +234,6 @@ export class TeamBuilder {
 				emptyIfDefault(set.dynamaxLevel, 10),
 				set.teraType || '',
 			];
-			const miscStr = emptyIfDefault(misc.join(','), misc.map(() => '').join(','));
 
 			const bufSet: string[] = [
 				name,
@@ -245,12 +242,12 @@ export class TeamBuilder {
 				emptyIfDefault(ability, '0'),
 				set.moves.map(toId).join(','),
 				set.nature,
-				emptyIfDefault(evs, ',,,,,'),
+				evs.join('') ? evs.join(',') : '',
 				emptyIfDefault(set.gender, template?.gender),
-				emptyIfDefault(ivs, ',,,,,'),
+				ivs.join('') ? ivs.join(',') : '',
 				set.shiny ? 'S' : '',
 				emptyIfDefault(set.level, 100),
-				emptyIfDefault(set.happiness, 255) + (miscStr ? ',' + miscStr : ''),
+				emptyIfDefault(set.happiness, 255) + (misc.join('') ? ',' + misc.join(',') : ''),
 			];
 			buf.push(bufSet.join('|'));
 		}
