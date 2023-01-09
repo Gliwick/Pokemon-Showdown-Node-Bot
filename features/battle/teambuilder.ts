@@ -50,12 +50,12 @@ const BattleStatNames: Record<StatID, string> = {
 };
 
 interface PokeSet {
-	name: string;
+	name?: string;
 	species: string;
-	item: string;
-	ability: string;
+	item?: string;
+	ability?: string;
 	moves: string[];
-	nature: string;
+	nature?: string;
 	evs?: StatsTable;
 	gender?: string;
 	ivs?: SparseStatsTable;
@@ -66,7 +66,7 @@ interface PokeSet {
 	hpType?: string;
 	gigantamax?: boolean;
 	dynamaxLevel?: number;
-	teraType: string;
+	teraType?: string;
 }
 
 export class TeamBuilder {
@@ -241,7 +241,7 @@ export class TeamBuilder {
 				toId(set.item),
 				emptyIfDefault(ability, '0'),
 				set.moves.map(toId).join(','),
-				set.nature,
+				set.nature || '',
 				evs.join('') ? evs.join(',') : '',
 				emptyIfDefault(set.gender, template?.gender),
 				ivs.join('') ? ivs.join(',') : '',
@@ -399,104 +399,71 @@ export class TeamBuilder {
 			if (team.includes('\n')) return team;
 			team = this.fastUnpackTeam(team);
 		}
-		let text = '';
+		const lines: string[] = [];
 		for (let i = 0; i < team.length; i++) {
-			const curSet = team[i];
-			if (curSet.name !== curSet.species) {
-				text += '' + curSet.name + ' (' + (getPokemon(curSet.species)?.name || curSet.species) + ')';
-			} else {
-				text += '' + (getPokemon(curSet.species)?.name || curSet.species);
+			const set: PokeSet = team[i];
+			const name =
+				set.name !== set.species
+					? set.name + ' (' + (getPokemon(set.species)?.name || set.species) + ')'
+					: getPokemon(set.species)?.name || set.species;
+			const firstLine = [name];
+			if (set.gender === 'M' || set.gender === 'F') firstLine.push('(' + set.gender + ')');
+			if (set.item) {
+				firstLine.push('@');
+				firstLine.push(getItem(set.item)?.name || set.item);
 			}
-			if (curSet.gender === 'M') text += ' (M)';
-			if (curSet.gender === 'F') text += ' (F)';
-			if (curSet.item) {
-				curSet.item = getItem(curSet.item)?.name || curSet.item;
-				text += ' @ ' + curSet.item;
+			lines.push(firstLine.join(' '));
+
+			if (set.ability) {
+				lines.push('Ability: ' + set.ability);
 			}
-			text += '\n';
-			if (curSet.ability) {
-				text += 'Ability: ' + curSet.ability + '\n';
+			if (set.level && set.level !== 100) {
+				lines.push('Level: ' + set.level);
 			}
-			if (curSet.level && curSet.level !== 100) {
-				text += 'Level: ' + curSet.level + '\n';
+			if (set.shiny) {
+				lines.push('Shiny: Yes');
 			}
-			if (curSet.shiny) {
-				text += 'Shiny: Yes\n';
+			if (set.teraType) {
+				lines.push('Tera Type: ' + set.teraType);
 			}
-			if (curSet.teraType) {
-				text += 'Tera Type: ' + curSet.teraType + '\n';
+			if (typeof set.happiness === 'number' && set.happiness !== 255) {
+				lines.push('Happiness: ' + set.happiness);
 			}
-			if (typeof curSet.happiness === 'number' && curSet.happiness !== 255) {
-				text += 'Happiness: ' + curSet.happiness + '\n';
-			}
-			let first = true;
-			const { evs } = curSet;
+
+			const { evs, ivs } = set;
 			if (evs) {
-				Stats.forEach((j) => {
-					if (!evs[j]) return;
-					if (first) {
-						text += 'EVs: ';
-						first = false;
-					} else {
-						text += ' / ';
-					}
-					text += '' + evs[j] + ' ' + BattleStatNames[j];
-				});
+				const evsStr = (Stats.map((stat) => [stat, evs[stat]]) as [StatID, number][])
+					.filter(([, ev]) => !!ev && !isNaN(ev))
+					.map(([stat, ev]) => ev + ' ' + BattleStatNames[stat])
+					.join(' / ');
+				if (evsStr) lines.push('EVs: ' + evsStr);
 			}
-			if (!first) {
-				text += '\n';
+			if (set.nature) {
+				lines.push('' + set.nature + ' Nature');
 			}
-			if (curSet.nature) {
-				text += '' + curSet.nature + ' Nature' + '\n';
-			}
-			first = true;
-			const { ivs } = curSet;
 			if (ivs) {
-				let defaultIvs = true;
-				let hpType: string | null = null;
-				for (let j = 0; j < curSet.moves.length; j++) {
-					const move = curSet.moves[j];
-					if (move.startsWith('Hidden Power ') && !move.startsWith('Hidden Power [')) {
-						hpType = move.substring('Hidden Power '.length);
-						if (!hpType || !typechart[hpType]?.HPivs) {
-							continue;
-						}
-						if (Stats.some((stat) => (ivs[stat] ?? 31) !== (typechart[hpType as string].HPivs?.[stat] || 31))) {
-							defaultIvs = false;
-						}
+				const hiddenPower = set.moves.filter((m) => m.startsWith('Hidden Power ') && !m.startsWith('Hidden Power ['))[0];
+				const hpType = hiddenPower && hiddenPower.substring('Hidden Power '.length);
+				const defaultIvs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31, ...((hpType && typechart[hpType]?.HPivs) || {}) };
+				const ivsStr = (Stats.map((stat) => [stat, ivs[stat]]) as [StatID, number][])
+					.filter(([stat, iv]) => !isNaN(iv) && !isUndefinedOrEquals(iv, defaultIvs[stat]))
+					.map(([stat, iv]) => iv + ' ' + BattleStatNames[stat])
+					.join(' / ');
+				if (ivsStr) lines.push('IVs: ' + ivsStr);
+			}
+
+			set.moves
+				.map((m) => {
+					if (m.startsWith('Hidden Power ')) {
+						return 'Hidden Power [' + m.substring('Hidden Power '.length) + ']';
 					}
-				}
-				if (defaultIvs && !hpType) {
-					if (Stats.some((stat) => !isUndefinedOrEquals(ivs[stat], 31))) {
-						defaultIvs = false;
-					}
-				}
-				if (!defaultIvs) {
-					Stats.forEach((stat) => {
-						const iv = ivs[stat];
-						if (!iv || isNaN(iv) || iv === 31) return;
-						if (first) {
-							text += 'IVs: ';
-							first = false;
-						} else {
-							text += ' / ';
-						}
-						text += '' + iv + ' ' + BattleStatNames[stat];
-					});
-				}
-			}
-			if (!first) {
-				text += '\n';
-			}
-			for (let j = 0; j < curSet.moves.length; j++) {
-				let move = curSet.moves[j];
-				if (move.startsWith('Hidden Power ')) {
-					move = move.substring(0, 'Hidden Power '.length) + '[' + move.substring('Hidden Power '.length) + ']';
-				}
-				text += '- ' + (getMove(move)?.name || move) + '\n';
-			}
-			text += '\n';
+					return m;
+				})
+				.map((m) => '- ' + getMove(m)?.name || m)
+				.forEach((line) => lines.push(line));
+
+			lines.push('');
 		}
-		return text;
+		return lines.join('\n');
 	}
 }
