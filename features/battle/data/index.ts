@@ -17,7 +17,7 @@ function load(mod: string, filename: string): any {
 
 export function getPokemon(name: string, mod?: string): Modded<SpeciesData> | null {
 	try {
-		const pokedex: Record<string, SpeciesData> = mod ? load(mod, 'pokedex.js')?.BattlePokedex : DataDownloader.getPokedex();
+		const pokedex: Record<string, SpeciesData> = mod ? load(mod, 'pokedex.js')?.BattlePokedex || {} : DataDownloader.getPokedex();
 		return { ...pokedex[toId(name)] } || null;
 	} catch (e: any) {
 		errlog(e.stack);
@@ -35,7 +35,9 @@ export function getItem(name: string, mod?: string): Modded<ItemData> | null {
 
 export function getAbility(name: string, mod?: string): Modded<AbilityData> | null {
 	try {
-		const abilitydex: Record<string, AbilityData> = mod ? load(mod, 'abilities.js')?.BattleAbilities : DataDownloader.getAbilities();
+		const abilitydex: Record<string, AbilityData> = mod
+			? load(mod, 'abilities.js')?.BattleAbilities || {}
+			: DataDownloader.getAbilities();
 		return { ...abilitydex[toId(name)] } || null;
 	} catch (e: any) {}
 	return null;
@@ -43,7 +45,7 @@ export function getAbility(name: string, mod?: string): Modded<AbilityData> | nu
 
 export function getMove(name: string, mod?: string): Modded<MoveData> | null {
 	try {
-		const movedex: Record<string, MoveData> = mod ? load(mod, 'moves.js')?.BattleMovedex : DataDownloader.getMovedex();
+		const movedex: Record<string, MoveData> = mod ? load(mod, 'moves.js')?.BattleMovedex || {} : DataDownloader.getMovedex();
 		return { ...movedex[toId(name)] } || null;
 	} catch (e: any) {}
 	return null;
@@ -52,7 +54,7 @@ export function getMove(name: string, mod?: string): Modded<MoveData> | null {
 export function getFormatsData(name: string, mod?: string): Modded<SpeciesFormatsData> | null {
 	try {
 		const pokedex: Record<string, SpeciesFormatsData> = mod
-			? load(mod, 'formats-data.js')?.BattleFormatsData
+			? load(mod, 'formats-data.js')?.BattleFormatsData || {}
 			: DataDownloader.getFormatsData();
 		return { ...pokedex[toId(name)] } || null;
 	} catch (e: any) {}
