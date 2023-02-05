@@ -192,7 +192,7 @@ export class IngameNoStatus implements BattleModule {
 			boosts: battle.self.active[act]?.boosts,
 		});
 
-		const targets = typeof des.target === 'number' ? [battle.foe.active[des.target]] : battle.foe.active;
+		const targets = des.target != null ? [battle.foe.active[des.target]] : battle.foe.active;
 
 		for (const target of targets) {
 			if (!target) continue;

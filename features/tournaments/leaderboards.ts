@@ -49,22 +49,18 @@ export class LeaderboardsManager {
 		return true;
 	}
 
-	filterTier(tier: string, filter: string | string[] | RegExp | Record<string, boolean>): boolean {
+	filterTier(tier: string, filter?: string | string[] | RegExp | Record<string, boolean>): boolean {
 		tier = toId(tier || '');
-		if (typeof filter === 'string') {
-			return tier === toId(filter);
-		} else if (filter !== null && typeof filter === 'object') {
-			if (Array.isArray(filter)) {
-				if (filter.includes(tier)) return true;
-				return false;
-			} else if (filter instanceof RegExp) {
-				return filter.test(tier);
-			} else {
-				if (tier in filter) return true;
-				return false;
-			}
-		} else {
+		if (!filter) {
 			return true;
+		} else if (typeof filter === 'string') {
+			return tier === toId(filter);
+		} else if (Array.isArray(filter)) {
+			return filter.includes(tier);
+		} else if (filter instanceof RegExp) {
+			return filter.test(tier);
+		} else {
+			return tier in filter;
 		}
 	}
 

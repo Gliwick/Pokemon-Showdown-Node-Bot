@@ -303,7 +303,7 @@ export class Move {
 	helpers = {};
 
 	constructor(template: MoveData, move?: Partial<Move>) {
-		if (!template || typeof template !== 'object') throw new Error('Invalid move template');
+		if (!template) throw new Error('Invalid move template');
 		this.template = template;
 		this.name = this.template.name;
 		this.id = toId(template.name);
@@ -374,7 +374,7 @@ export class Pokemon implements PokemonDetails {
 	helpers: Record<string, any> = {};
 
 	constructor(template: SpeciesData, properties: Partial<Pokemon>) {
-		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
+		if (!template) throw new Error('Invalid pokemon template');
 
 		this.template = template;
 		this.species = this.template.name;

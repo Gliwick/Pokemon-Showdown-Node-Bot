@@ -299,7 +299,7 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 			poke.passing = this.turn;
 		}
 		if (!noDeductPP && kwargs.from !== 'lockedmove') {
-			if (args[1] !== args[3] && typeof poke2?.ability !== 'string' && poke2?.ability?.id === 'pressure') {
+			if (args[1] !== args[3] && poke2?.ability !== '&unknown' && poke2?.ability?.id === 'pressure') {
 				move.pp -= 2;
 			} else {
 				move.pp--;

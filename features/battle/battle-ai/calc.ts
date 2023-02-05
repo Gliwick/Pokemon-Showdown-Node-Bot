@@ -45,7 +45,7 @@ export class Pokemon implements PokemonDetails {
 	category: Category | 'Status' | 'Mixed' = 'Mixed';
 
 	constructor(template: SpeciesData, properties: Partial<Pokemon> & { helpers?: Record<string, any> }, battle?: ActiveBattle) {
-		if (!template || typeof template !== 'object') throw new Error('Invalid pokemon template');
+		if (!template) throw new Error('Invalid pokemon template');
 		const { helpers, ...rest } = properties;
 		this.template = { ...template, ...(helpers?.template || {}) };
 
@@ -146,14 +146,10 @@ export class Pokemon implements PokemonDetails {
 		return types;
 	}
 
-	hasType(type_s: Type | Type[], conditions: Conditions): boolean {
+	hasType(type: Type | Type[], conditions: Conditions): boolean {
 		const pokemonTypes = this.getTypes(conditions);
-		if (typeof type_s === 'string') return pokemonTypes.includes(type_s);
-
-		for (const type of type_s) {
-			if (pokemonTypes.includes(type)) return true;
-		}
-		return false;
+		const types = Array.isArray(type) ? type : [type];
+		return types.some((t) => pokemonTypes.includes(t));
 	}
 
 	hasAbility(ability: string | Record<string, any>): boolean {
@@ -222,7 +218,7 @@ export class Conditions {
 	immediate: Record<string, any> = {};
 
 	constructor(data: Partial<Conditions>) {
-		if (typeof data !== 'object') throw new Error('Invalid conditions data');
+		if (!data) throw new Error('Invalid conditions data');
 		(
 			(Object.keys(data) as (keyof Conditions)[]).filter((k) => data[k] && typeof data[k] === 'object') as KeyOfValueType<
 				Conditions,
@@ -738,13 +734,13 @@ export function calculate(
 	switch (move.id) {
 		// undetermined bp
 		case 'frustration':
-			if (typeof atkPoke.happiness !== 'number') bp = 102;
+			if (atkPoke.happiness === undefined) bp = 255;
 			else bp = Math.floor(((255 - atkPoke.happiness) * 2) / 5) || 1;
 			break;
 		case 'return':
 		case 'pikapapow':
 		case 'veeveevolley':
-			if (typeof atkPoke.happiness !== 'number') bp = 102;
+			if (atkPoke.happiness === undefined) bp = 255;
 			else bp = Math.floor((atkPoke.happiness * 2) / 5) || 1;
 			break;
 		case 'fling':
@@ -1354,7 +1350,7 @@ export function calculate(
 		if (gen === 2) hitsBP = [bp, bp + 10, bp + 20];
 		else hitsBP = [bp, 2 * bp, 3 * bp];
 	} else if (move.multihit) {
-		const numberOfHits = typeof move.multihit === 'number' ? move.multihit : move.multihit[1] || 1;
+		const numberOfHits = Array.isArray(move.multihit) ? move.multihit[1] || 1 : move.multihit;
 		for (let hit = 1; hit < numberOfHits; hit++) {
 			hitsBP.push(bp);
 		}
@@ -1404,11 +1400,7 @@ export function calculate(
 	}
 
 	let multihitRolls: number[] = [];
-	if (
-		move.multihit &&
-		typeof move.multihit !== 'number' &&
-		!(atkPoke.hasAbility('skilllink') && !defPoke.hasAbility('neutralizinggas'))
-	) {
+	if (move.multihit && Array.isArray(move.multihit) && !(atkPoke.hasAbility('skilllink') && !defPoke.hasAbility('neutralizinggas'))) {
 		if (move.multihit[0] === 2 && move.multihit[1] === 5) {
 			if (atkPoke.hasItem('loadeddice')) multihitRolls = [4, 5];
 			else multihitRolls = gen >= 5 ? [2, 2, 3, 3, 4, 5] : [2, 2, 2, 3, 3, 3, 4, 5];
