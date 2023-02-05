@@ -10,7 +10,7 @@ import { MODS_DATA_DIR } from '../battle-ai/battle-data';
 
 type Modded<T> = T & { inherit?: boolean };
 
-function load(mod: string, filename: string): any {
+function load(mod: string, filename: string): Record<string, any> | null {
 	const path = (Config.battleModsDir || MODS_DATA_DIR) + mod + '/' + filename;
 	return existsSync(path) ? require(path) : null;
 }
