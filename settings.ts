@@ -406,7 +406,7 @@ export class SettingsManager {
 			url,
 			((data: string | null, err: Error | null): void => {
 				if (err) {
-					if (typeof callback === 'function') callback(null, err);
+					if (callback) callback(null, err);
 					return;
 				}
 				let file: string;
@@ -422,7 +422,7 @@ export class SettingsManager {
 							this.httpCache[file] = { url: url, time: Date.now() };
 							this.cacheFFM.writeObj(this.httpCache);
 						}
-						if (typeof callback === 'function') callback(data, null);
+						if (callback) callback(data, null);
 					}).bind(this)
 				);
 			}).bind(this)

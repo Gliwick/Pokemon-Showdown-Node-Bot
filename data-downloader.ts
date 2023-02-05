@@ -46,8 +46,8 @@ export class DataDownloader {
 		},
 	];
 
-	httpsGet(url: string, callback: (data: string | null, error?: Error) => void): void {
-		if (typeof callback !== 'function') return;
+	httpsGet(url: string, callback?: (data: string | null, error?: Error) => void): void {
+		if (!callback) return;
 		get(url, (res: IncomingMessage): void => {
 			const data = { data: '' };
 			res.on('data', (part: any): void => {
@@ -64,22 +64,22 @@ export class DataDownloader {
 		});
 	}
 
-	downloadFile(url: string, file: string, callback: (success: boolean, error?: Error) => void): void {
+	downloadFile(url: string, file: string, callback?: (success: boolean, error?: Error) => void): void {
 		this.httpsGet(url, (data, err): void => {
 			if (err || !data) {
-				if (typeof callback === 'function') callback(false, err);
+				if (callback) callback(false, err);
 				return;
 			}
 			writeFile('./data/' + file, data, (err2: NodeJS.ErrnoException | null): void => {
 				if (err2) {
-					if (typeof callback === 'function') callback(false, err2);
+					if (callback) callback(false, err2);
 					return;
 				}
 				try {
 					uncacheTree('./data/' + file);
 				} catch (e: any) {}
 				debug('Downloaded data file: ' + '../data/' + file);
-				if (typeof callback === 'function') callback(true);
+				if (callback) callback(true);
 			});
 		});
 	}
