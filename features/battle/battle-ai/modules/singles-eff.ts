@@ -986,7 +986,7 @@ export class SinglesEffective implements BattleModule {
 				if (
 					movePriority > 0 &&
 					((battle.conditions['psychicterrain'] && foePoke.isGrounded(foeConditions)) ||
-						foePoke.hasAbility({ dazzling: 1, queenlymajesty: 1 }))
+						foePoke.hasAbility({ armortail: 1, dazzling: 1, queenlymajesty: 1 }))
 				) {
 					res.unviable.push(des);
 					continue;
