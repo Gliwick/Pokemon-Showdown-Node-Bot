@@ -316,9 +316,10 @@ export function getMoveType(poke: Pokemon, move: WithID<MoveData>, conditions: C
 		case 'aurawheel':
 			if (poke.template.name === 'Morpeko-Hangry') return 'Dark';
 			return moveType;
-		case 'ragingbull':
-			if (poke.template.name === 'Tauros-Paldea-Fire') return 'Fire';
-			if (poke.template.name === 'Tauros-Paldea-Water') return 'Water';
+		case 'ivycudgel':
+			if (poke.template.name.startsWith('Ogerpon-Wellspring')) return 'Water';
+			if (poke.template.name.startsWith('Ogerpon-Hearthflame')) return 'Fire';
+			if (poke.template.name.startsWith('Ogerpon-Cornerstone')) return 'Rock';
 			return moveType;
 		case 'judgment':
 			return (poke.item?.onPlate as Type) || moveType;
@@ -326,26 +327,36 @@ export function getMoveType(poke: Pokemon, move: WithID<MoveData>, conditions: C
 			return (poke.item?.onMemory as Type) || moveType;
 		case 'naturalgift':
 			return (poke.item?.naturalGift?.type as Type) || moveType;
+		case 'ragingbull':
+			if (poke.template.name === 'Tauros-Paldea-Fire') return 'Fire';
+			if (poke.template.name === 'Tauros-Paldea-Water') return 'Water';
+			return moveType;
 		case 'revelationdance':
 			return poke.getTypes(conditions)[0];
 		case 'struggle':
 			return '???';
-		case 'technoblast':
-			return (poke.item?.onDrive as Type) || moveType;
-		case 'weatherball':
-			if (['primordialsea', 'raindance'].includes(globalConditions.weather)) return 'Water';
-			if (['desolateland', 'sunnyday'].includes(globalConditions.weather)) return 'Fire';
-			if (globalConditions.weather === 'sandstorm') return 'Rock';
-			if (['hail', 'snow'].includes(toId(globalConditions.weather))) return 'Ice';
-			return moveType;
 		case 'terrainpulse':
 			if (globalConditions.electricterrain) return 'Electric';
 			if (globalConditions.grassyterrain) return 'Grass';
 			if (globalConditions.mistyterrain) return 'Fairy';
 			if (globalConditions.psychicterrain) return 'Psychic';
 			return moveType;
+		case 'technoblast':
+			return (poke.item?.onDrive as Type) || moveType;
 		case 'terablast':
 			return poke.terastallize || moveType;
+		case 'terrainpulse':
+			if (globalConditions.electricterrain) return 'Electric';
+			if (globalConditions.grassyterrain) return 'Grass';
+			if (globalConditions.mistyterrain) return 'Fairy';
+			if (globalConditions.psychicterrain) return 'Psychic';
+			return moveType;
+		case 'weatherball':
+			if (['primordialsea', 'raindance'].includes(globalConditions.weather)) return 'Water';
+			if (['desolateland', 'sunnyday'].includes(globalConditions.weather)) return 'Fire';
+			if (globalConditions.weather === 'sandstorm') return 'Rock';
+			if (['hail', 'snow'].includes(toId(globalConditions.weather))) return 'Ice';
+			return moveType;
 	}
 
 	if (poke.ability && !poke.supressedAbility) {
@@ -637,7 +648,10 @@ export function calculate(
 
 	let notImmune = false;
 	if (move.id === 'struggle') notImmune = true;
-	if (['Fighting', 'Normal'].includes(moveType) && (defConditions.volatiles.foresight || atkPoke.hasAbility('scrappy'))) {
+	if (
+		['Fighting', 'Normal'].includes(moveType) &&
+		(defConditions.volatiles.foresight || atkPoke.hasAbility({ mindseye: 1, scrappy: 1 }))
+	) {
 		notImmune = true;
 	}
 	if (moveType === 'Ground' && (move.id === 'thousandarrows' || globalConditions.gravity)) notImmune = true;
@@ -953,6 +967,9 @@ export function calculate(
 		case 'risingvoltage':
 			if (globalConditions.electricterrain && defPoke.isGrounded(defConditions)) bp *= 2;
 			break;
+		case 'psyblade':
+			if (globalConditions.electricterrain) bp = Math.floor(bp * 1.5);
+			break;
 		case 'expandingforce':
 			if (globalConditions.psychicterrain && atkPoke.isGrounded(atkConditions)) bp = Math.floor(bp * 1.5);
 			break;
@@ -1251,7 +1268,13 @@ export function calculate(
 			case 'desolateland':
 			case 'sunnyday':
 				if (move.type === 'Fire') modifier *= 1.5;
-				if (move.type === 'Water') modifier *= weather === 'sunnyday' ? 0.5 : 0;
+				if (move.type === 'Water') {
+					if (weather === 'desolateland') {
+						modifier = 0;
+					} else if (move.id === 'hydrosteam') {
+						modifier *= 1.5;
+					} else modifier *= 0.5;
+				}
 				break;
 			case 'sandstorm':
 				if (gen >= 4 && defTypes.includes('Rock') && defStat === 'spd') def = Math.floor(def * 1.5);

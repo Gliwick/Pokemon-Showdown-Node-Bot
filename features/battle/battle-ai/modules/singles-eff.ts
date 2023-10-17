@@ -261,12 +261,25 @@ export class SinglesEffective implements BattleModule {
 				if (foePoke.hasAbility('competitive')) foeConditions.boosts.spa = (foeConditions.boosts.spa || 0) + 2;
 			}
 		}
+		if (selfPoke.hasAbility('supersweetsyrup')) {
+			if (foePoke.hasAbility('mirrorarmor')) {
+				selfConditions.boosts.evasion -= 1;
+			} else if (!foePoke.hasAbility({ clearbody: 1, whitesmoke: 1, fullmetalbody: 1 }) && !foePoke.hasItem('clearamulet')) {
+				if (!foeConditions.boosts.evasion) foeConditions.boosts.evasion = 0;
+				if (foePoke.hasAbility('contrary')) foeConditions.boosts.evasion += 1;
+				else foeConditions.boosts.evasion -= 1;
+				if (foePoke.hasAbility('competitive')) foeConditions.boosts.spa = (foeConditions.boosts.spa || 0) + 2;
+				if (foePoke.hasAbility('defiant')) foeConditions.boosts.atk = (foeConditions.boosts.atk || 0) + 2;
+			}
+		}
 		if (selfPoke.hasAbility('download')) {
 			if (foePoke.template.baseStats.spd <= foePoke.template.baseStats.def) selfConditions.boosts.spa += 1;
 			else selfConditions.boosts.atk += 1;
 		}
-		if (selfPoke.hasAbility('intrepidsword')) selfConditions.boosts.atk += 1;
-		if (selfPoke.hasAbility('dauntlessshield')) selfConditions.boosts.def += 1;
+		if (selfPoke.hasAbility({ intrepidsword: 1, embodyaspecthearthflame: 1 })) selfConditions.boosts.atk += 1;
+		if (selfPoke.hasAbility({ dauntlessshield: 1, embodyaspectcornerstone: 1 })) selfConditions.boosts.def += 1;
+		if (selfPoke.hasAbility('embodyaspectwellspring')) selfConditions.boosts.spd += 1;
+		if (selfPoke.hasAbility('embodyaspectteal')) selfConditions.boosts.spe += 1;
 		if (selfPoke.hasAbility('screencleaner')) {
 			selfConditions.side['lightscreen'] = false;
 			selfConditions.side['reflect'] = false;
@@ -590,13 +603,7 @@ export class SinglesEffective implements BattleModule {
 						move.secondary.status === 'brn' &&
 						(move.secondary.chance >= 20 || (move.secondary.chance >= 10 && selfPoke.hasAbility('serenegrace')))) ||
 					(move.id in { firefang: 1, triattack: 1 } && selfPoke.hasAbility('serenegrace')) ||
-					(move.id === 'burningjealousy' &&
-						!isActive &&
-						(selfConditions.boosts.atk > 0 ||
-							selfConditions.boosts.def > 0 ||
-							selfConditions.boosts.spa > 0 ||
-							selfConditions.boosts.spd > 0 ||
-							selfConditions.boosts.spe > 0)) ||
+					(move.id === 'burningjealousy' && !isActive && Object.values(selfConditions.boosts).some((b) => b > 0)) ||
 					(move.id === 'psychoshift' && foePoke.status === 'brn')
 				) {
 					foeCanBurn = true;
@@ -1959,6 +1966,7 @@ export class SinglesEffective implements BattleModule {
 								break;
 						}
 					}
+					if (!afterMoveStatus && selfPoke.hasAbility('toxicchain')) afterMoveStatus = 'tox';
 				}
 				if (afterMoveStatus) {
 					switch (afterMoveStatus) {
