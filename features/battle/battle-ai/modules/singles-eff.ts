@@ -3032,8 +3032,9 @@ export class SinglesEffective implements BattleModule {
 				battle.request.side.pokemon[sideId].moves.some((move) =>
 					['bellydrum', 'clangoroussoul', 'filletaway', 'lastrespects', 'revivalblessing', 'shellsmash'].includes(move)
 				)
-			)
+			) {
 				continue;
+			}
 			leads.push(decisions[i]);
 		}
 
