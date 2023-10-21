@@ -1043,7 +1043,7 @@ export class SinglesEffective implements BattleModule {
 				}
 				continue;
 			}
-			if (move.selfSwitch) {
+			if (move.selfSwitch && move.id !== 'revivalblessing') {
 				if (['frz', 'slp'].includes(selfPoke.status || '') || selfConditions.volatiles['confusion']) {
 					res.unviable.push(des);
 				} else if (move.flags?.contact && (foePoke.hasAbility({ ironbarbs: 1, roughskin: 1 }) || foePoke.hasItem('rockyhelmet'))) {

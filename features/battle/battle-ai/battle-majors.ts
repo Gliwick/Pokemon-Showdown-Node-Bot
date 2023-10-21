@@ -175,7 +175,6 @@ export const majors: Record<string, string | ((args: string[], kwargs: Record<st
 			return;
 		}
 
-		this.debug('switch' + args);
 		const slot = this.parseSlot(spl[0].charAt(2));
 		const name = toName(spl[1]);
 		const details = this.parseDetails(args[2]);
