@@ -238,47 +238,74 @@ export function getRolls(n: number, pmin = 0.85, pmax = 1): number[] {
 	return rolls;
 }
 
-export class Damage {
-	rolls: number[];
-	hp: number;
-	percents: number[] = [];
+class DamageRoll {
+	damage: number;
+	chance: number;
 
-	constructor(hp: number, rolls?: number[]) {
-		this.rolls = rolls || [];
+	constructor(damage: number, chance = 1) {
+		this.damage = damage;
+		this.chance = chance;
+	}
+}
+
+export class Damage {
+	rolls: DamageRoll[] = [];
+	hp: number;
+	percents: DamageRoll[] = [];
+
+	constructor(hp: number, rolls?: number[] | DamageRoll[]) {
 		this.hp = hp || 1;
 
-		this.percents = [];
-		for (let i = 0; i < this.rolls.length; i++) {
-			if (hp === 0) {
-				this.percents.push(100);
+		this.rolls = [];
+		if (rolls) {
+			for (const roll of rolls) {
+				if (typeof roll == 'number') {
+					this.rolls.push({ damage: roll, chance: 1 });
+				}
+			}
+
+			if (hp <= 0) {
+				this.percents = [new DamageRoll(100)];
 			} else {
-				this.percents.push((this.rolls[i] * 100) / hp);
+				this.percents = [];
+				for (const roll of this.rolls) {
+					this.percents.push(new DamageRoll((roll.damage * 100) / hp, roll.chance));
+				}
+				this.percents.sort((a, b) => a.damage - b.damage);
 			}
 		}
-		this.percents.sort();
 	}
 
 	getChance(p: number): number {
 		if (!this.percents || this.percents.length) return 0;
 		if (!this.hp || this.hp <= 0) return 100;
 		let s = 0;
-		for (let i = 0; i < this.percents.length; i++) {
-			if (this.percents[i] >= p) s++;
+		for (const roll of this.percents) {
+			if (roll.damage >= p) s += roll.chance;
 		}
-		return (s * 100) / this.percents.length;
+		const chanceSum = this.percents.reduce((acc, v) => acc + v.chance, 0);
+		return (s * 100) / chanceSum;
 	}
 
 	getMax(): number {
-		return this.percents[0] || 0;
+		return this.percents.length === 0 ? 0 : this.percents[this.percents.length - 1].damage;
 	}
 
 	getMin(): number {
-		return this.percents[0] || 0;
+		return this.percents.length === 0 ? 0 : this.percents[0].damage;
 	}
 
 	getAvg(): number {
 		if (!this.percents.length) return 0;
-		return this.percents[Math.ceil(this.percents.length / 2) - 1];
+		const chanceThreshold = this.percents.reduce((acc, v) => acc + v.chance, 0) / 2.0;
+		let damageChance = 0;
+		for (const roll of this.percents) {
+			damageChance += roll.chance;
+			if (damageChance >= chanceThreshold) {
+				return roll.damage;
+			}
+		}
+		return this.getMax();
 	}
 }
 
@@ -391,6 +418,67 @@ function getDamage(level: number, bp: number, atk: number, def: number, modifier
 			(Math.floor(Math.floor(((Math.floor((2 * level) / 5.0) + 2) * bp * atk) / def) / 50.0) + 2) * modifier * typeEffectiveness
 		) || 1
 	);
+}
+
+function equalChanceRolls(minHits: number, maxHits: number): DamageRoll[] {
+	const rolls: DamageRoll[] = [];
+	for (let hits = minHits; hits <= maxHits; hits++) {
+		rolls.push(new DamageRoll(hits));
+	}
+	return rolls;
+}
+
+function multiaccuracyRolls(maxHits: number, accuracy: number): DamageRoll[] {
+	const rolls: DamageRoll[] = [];
+	for (let hits = 1; hits < maxHits; hits++) {
+		rolls.push(new DamageRoll(hits, Math.pow(accuracy / 100.0, hits - 1) * (1 - accuracy / 100.0) * 100));
+	}
+	rolls.push(new DamageRoll(maxHits, Math.pow(accuracy / 100.0, maxHits - 1) * 100));
+	return rolls;
+}
+
+function getMultihitRolls(
+	atkPoke: Pokemon,
+	atkConditions: Conditions,
+	defPoke: Pokemon,
+	move: WithID<MoveData>,
+	gen: number
+): DamageRoll[] | undefined {
+	if (move.id === 'triplekick' && gen === 2) {
+		return equalChanceRolls(1, 3);
+	}
+
+	if (move.id === 'ficklebeam') {
+		return [new DamageRoll(1, 7), new DamageRoll(2, 3)];
+	}
+
+	if (!move.multihit) {
+		return;
+	}
+
+	const hasSkillLink = atkPoke.hasAbility('skilllink') && !defPoke.hasAbility('neutralizinggas');
+	const hasLoadedDice = atkPoke.hasItem('loadeddice');
+
+	if (typeof move.multihit === 'number') {
+		if (!move.multiaccuracy || hasSkillLink || atkPoke.hasItem({ widelens: 1, zoomlens: 1 })) {
+			return;
+		}
+		if (move.multihit === 10 && hasLoadedDice) return equalChanceRolls(4, 10);
+		return multiaccuracyRolls(move.multihit, move.accuracy as number);
+	}
+
+	if (move.multihit[0] === 2 && move.multihit[1] === 5) {
+		if (hasLoadedDice) return equalChanceRolls(4, 5);
+		const twoOrThreeHitsChance = gen >= 5 ? 2 : 3;
+		return [
+			new DamageRoll(2, twoOrThreeHitsChance),
+			new DamageRoll(3, twoOrThreeHitsChance),
+			new DamageRoll(4, 1),
+			new DamageRoll(5, 1),
+		];
+	}
+
+	return equalChanceRolls(move.multihit[0], move.multihit[1]);
 }
 
 /*
@@ -844,7 +932,8 @@ export function calculate(
 			break;
 		case 'wringout':
 		case 'crushgrip':
-			bp = Math.floor(120 * (defPoke.hp / 100)) || 1;
+		case 'hardpress':
+			bp = Math.floor(move.basePower * Math.min(defPoke.hp / 100, 1)) || 1;
 			if (bp > 120) bp = 120;
 			break;
 		case 'punishment':
@@ -1248,6 +1337,9 @@ export function calculate(
 				case 'multiscale':
 					if (defPoke.hp >= 100) modifier *= 0.5;
 					break;
+				case 'terashell':
+					if (defPoke.hp >= 100) typeEffectiveness = Math.min(typeEffectiveness, 0.5);
+					break;
 				case 'punkrock':
 					if (move.flags?.sound) modifier *= 0.5;
 					break;
@@ -1422,35 +1514,20 @@ export function calculate(
 		}
 	}
 
-	let multihitRolls: number[] = [];
-	if (move.multihit && Array.isArray(move.multihit) && !(atkPoke.hasAbility('skilllink') && !defPoke.hasAbility('neutralizinggas'))) {
-		if (move.multihit[0] === 2 && move.multihit[1] === 5) {
-			if (atkPoke.hasItem('loadeddice')) multihitRolls = [4, 5];
-			else multihitRolls = gen >= 5 ? [2, 2, 3, 3, 4, 5] : [2, 2, 2, 3, 3, 3, 4, 5];
-		} else if (['tripleaxel', 'triplekick'].includes(move.id) && !atkPoke.hasItem({ widelens: 1, zoomlens: 1 })) {
-			if (atkPoke.hasItem('loadeddice')) multihitRolls = [3];
-			else multihitRolls = gen > 2 ? [1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3] : [1, 2, 3];
-		} else if (move.id === 'populationbomb' && !atkPoke.hasItem({ widelens: 1, zoomlens: 1 })) {
-			if (atkPoke.hasItem('loadeddice')) multihitRolls = [4, 5, 6, 7, 8, 9, 10];
-			else multihitRolls = [1, 1, 2, 2, 3, 3, 4, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10, 10, 10];
-		} else {
-			multihitRolls = [];
-			for (let numberOfHits = move.multihit[0]; numberOfHits <= move.multihit[1]; numberOfHits++) {
-				multihitRolls.push(numberOfHits);
-			}
-		}
-	}
+	const multihitRolls = getMultihitRolls(atkPoke, atkConditions, defPoke, move, gen);
 
-	if (multihitRolls.length) {
-		for (let i = 0; i < multihitRolls.length; i++) {
+	if (multihitRolls) {
+		const rolls: DamageRoll[] = multihitRolls.map((roll) => {
+			const numberOfHits = roll.damage;
 			let rollDmg = 0;
-			for (let hitNumber = 0; hitNumber < multihitRolls[i]; hitNumber++) {
-				rollDmg += getDamage(atkPoke.level, hitsBP[hitNumber], atk, def, modifier, typeEffectiveness);
+			for (let hitNumber = 0; hitNumber < numberOfHits; hitNumber++) {
+				const hitBP = typeof hitsBP === 'number' ? hitsBP : hitsBP[hitNumber];
+				rollDmg += getDamage(atkPoke.level, hitBP, atk, def, modifier, typeEffectiveness);
 			}
-			multihitRolls[i] = rollDmg;
-		}
+			return new DamageRoll(rollDmg, roll.chance);
+		});
 		// multihit rolls more important than damage rolls
-		return new Damage(defStats.hp, multihitRolls);
+		return new Damage(defStats.hp, rolls);
 	}
 
 	let dmg = 0;

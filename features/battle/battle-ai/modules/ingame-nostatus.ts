@@ -39,7 +39,17 @@ const BadMoves = [
 /*
  * Moves which require 2 turs without any protection
  */
-const DoubleTurnMoves = ['iceburn', 'freezeshock', 'meteorbeam', 'razorwind', 'skullbash', 'skyattack', 'solarbeam', 'solarblade'];
+const DoubleTurnMoves = [
+	'electrobeam',
+	'iceburn',
+	'freezeshock',
+	'meteorbeam',
+	'razorwind',
+	'skullbash',
+	'skyattack',
+	'solarbeam',
+	'solarblade',
+];
 
 /*
  * Team and Switch Decisions

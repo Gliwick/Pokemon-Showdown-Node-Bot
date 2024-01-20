@@ -16,11 +16,13 @@ const ProtectionMoves = [
 	'protect',
 	'detect',
 	'kingsshield',
-	'quickguard',
 	'spikyshield',
-	'wideguard',
 	'banefulbunker',
 	'obstruct',
+	'silktrap',
+	'burningbulwark',
+	'quickguard',
+	'wideguard',
 	'maxguard',
 	'endure',
 ];
@@ -561,14 +563,19 @@ export class SinglesEffective implements BattleModule {
 				move.id in { hurricane: 1, thunder: 1 } &&
 				!supressedWeather &&
 				toId(gconditions.weather) in { desolateland: 1, sunnyday: 1 }
-			)
+			) {
 				continue;
+			}
 			if (
 				move.id in { solarbeam: 1, solarblade: 1 } &&
 				!supressedWeather &&
 				!(toId(gconditions.weather) in { desolateland: 1, sunnyday: 1 })
-			)
+			) {
 				continue;
+			}
+			if (move.id === 'electrobeam' && !supressedWeather && !(toId(gconditions.weather) in { primordialsea: 1, raindance: 1 })) {
+				continue;
+			}
 
 			let dmg = 0;
 			if (move.category !== 'Status') {
@@ -664,14 +671,19 @@ export class SinglesEffective implements BattleModule {
 				move.id in { hurricane: 1, thunder: 1 } &&
 				!supressedWeather &&
 				toId(gconditions.weather) in { desolateland: 1, sunnyday: 1 }
-			)
+			) {
 				continue;
+			}
 			if (
 				move.id in { solarbeam: 1, solarblade: 1 } &&
 				!supressedWeather &&
 				!(toId(gconditions.weather) in { desolateland: 1, sunnyday: 1 })
-			)
+			) {
 				continue;
+			}
+			if (move.id === 'electrobeam' && !supressedWeather && !(toId(gconditions.weather) in { primordialsea: 1, raindance: 1 })) {
+				continue;
+			}
 
 			let dmg = 0;
 			if (move.category !== 'Status') {
@@ -1843,13 +1855,28 @@ export class SinglesEffective implements BattleModule {
 				move.id in { solarbeam: 1, solarblade: 1 } &&
 				!supressedWeather &&
 				!(toId(battle.conditions.weather) in { desolateland: 1, sunnyday: 1 })
-			)
+			) {
 				continue;
+			}
+			if (
+				move.id === 'electrobeam' &&
+				!supressedWeather &&
+				!(toId(battle.conditions.weather) in { primordialsea: 1, raindance: 1 })
+			) {
+				continue;
+			}
 			if (
 				(move.id === 'burnup' && !selfPoke.hasType('Fire', selfConditions)) ||
 				(move.id === 'doubleshock' && !selfPoke.hasType('Electric', selfConditions))
-			)
+			) {
 				continue;
+			}
+			if (move.id === 'upperhand') {
+				const movesB = battle.foe.active[0].moves;
+				if (!movesB.some((m) => m.template.status !== 'Status' && m.template.priority > 0 && m.template.priority <= 3)) {
+					continue;
+				}
+			}
 
 			const dmg = calculate(
 				{ poke: selfPoke, conditions: selfConditions },
@@ -1903,9 +1930,9 @@ export class SinglesEffective implements BattleModule {
 			}
 
 			if (
-				move.id === 'suckerpunch' &&
+				['thunderclap', 'suckerpunch'].includes(move.id) &&
 				!foeConditions.volatiles['taunt'] &&
-				(foeRecoveryHP > 0 || battle.self.active[0].helpers.lastMove === 'suckerpunch')
+				(foeRecoveryHP > 0 || battle.self.active[0].helpers.lastMove === move.id)
 			)
 				continue;
 
@@ -1934,7 +1961,7 @@ export class SinglesEffective implements BattleModule {
 			let residual: number | number[] = 0;
 
 			// status
-			if (!foePoke.hasAbility('magicguard')) {
+			if (!foePoke.hasAbility({ magicguard: 1, purifyingsalt: 1 })) {
 				let afterMoveStatus = foePoke.status;
 				if (afterMoveStatus) {
 					if (afterMoveStatus === 'brn' && move.id === 'sparklingaria') afterMoveStatus = null;
@@ -1943,11 +1970,14 @@ export class SinglesEffective implements BattleModule {
 					(!foeConditions.volatiles['substitute'] || selfPoke.hasAbility('infiltrator')) &&
 					!(battle.conditions['mistyterrain'] && foePoke.isGrounded(foeConditions))
 				) {
+					const secondary = move.secondary;
+					const chance = secondary?.chance;
 					if (
 						!selfPoke.hasAbility('sheerforce') &&
-						move.secondary &&
-						move.secondary.status &&
-						(move.secondary.chance >= 50 || (move.secondary.chance >= 25 && selfPoke.hasAbility('serenegrace')))
+						secondary &&
+						secondary.status &&
+						chance &&
+						(chance >= 50 || (chance >= 25 && selfPoke.hasAbility('serenegrace')))
 					) {
 						afterMoveStatus = move.secondary.status;
 					}
@@ -2010,11 +2040,11 @@ export class SinglesEffective implements BattleModule {
 			if (foePoke.item && (move.id !== 'knockoff' || foePoke.hasAbility('stickyhold')) && !foePoke.hasAbility('klutz')) {
 				switch (foePoke.item.id) {
 					case 'leftovers':
-						if (!foeConditions.volatiles['healblock']) residual += 6.25;
+						if (!foeConditions.volatiles['healblock'] && move.id !== 'psychicnoise') residual += 6.25;
 						break;
 					case 'blacksludge':
 						if (foePoke.hasType('Poison', foeConditions)) {
-							if (!foeConditions.volatiles['healblock']) residual += 6.25;
+							if (!foeConditions.volatiles['healblock'] && move.id !== 'psychicnoise') residual += 6.25;
 						} else if (!foePoke.hasAbility('magicguard')) {
 							residual -= 12.5;
 						}
@@ -2056,7 +2086,7 @@ export class SinglesEffective implements BattleModule {
 							break;
 						case 'primordealsea':
 						case 'raindance':
-							if (!foeConditions.volatiles['healblock']) {
+							if (!foeConditions.volatiles['healblock'] && move.id !== 'psychicnoise') {
 								if (foePoke.hasAbility('dryskin')) residual += 12.5;
 								if (foePoke.hasAbility('raindish')) residual += 6.25;
 							}
@@ -2069,14 +2099,16 @@ export class SinglesEffective implements BattleModule {
 								residual -= 6.25;
 							break;
 						case 'hail':
+						case 'snow':
 							if (foePoke.hasAbility('icebody')) {
-								if (!foeConditions.volatiles['healblock']) residual += 6.25;
-							} else if (!foePoke.hasType('Ice', foeConditions) && !foePoke.hasAbility('forecast')) {
+								if (!foeConditions.volatiles['healblock'] && move.id !== 'psychicnoise') residual += 6.25;
+							} else if (
+								afterMoveWeather === 'hail' &&
+								!foePoke.hasType('Ice', foeConditions) &&
+								!foePoke.hasAbility('forecast')
+							) {
 								residual -= 6.25;
 							}
-							break;
-						case 'snow':
-							if (foePoke.hasAbility('icebody') && !foeConditions.volatiles['healblock']) residual += 6.25;
 							break;
 					}
 				}
@@ -2094,9 +2126,11 @@ export class SinglesEffective implements BattleModule {
 				].includes(move.id) &&
 				(move.id === 'maxovergrowth' || battle.conditions['grassyterrain']) &&
 				!foeConditions.volatiles['healblock'] &&
+				move.id !== 'psychicnoise' &&
 				foePoke.isGrounded(foeConditions)
-			)
+			) {
 				residual += 6.25;
+			}
 
 			// gmax effects
 			if (
@@ -2548,8 +2582,16 @@ export class SinglesEffective implements BattleModule {
 				move.id in { solarbeam: 1, solarblade: 1 } &&
 				!supressedWeather &&
 				toId(battle.conditions.weather) in { desolateland: 1, sunnyday: 1 }
-			)
+			) {
 				filteredMoves.push(finalDamageMoves[i]);
+			}
+			if (
+				move.id === 'electrobeam' &&
+				!supressedWeather &&
+				!(toId(battle.conditions.weather) in { primordialsea: 1, raindance: 1 })
+			) {
+				filteredMoves.push(finalDamageMoves[i]);
+			}
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 
