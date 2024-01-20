@@ -10,7 +10,7 @@ import { SpeciesData } from '../../../data/types-species';
 import { KeyOfValueType } from '../../../global-types';
 import { toId } from '../../../tools';
 import { Battle } from './battle';
-import { CurrentGen, Pokemon as BattlePokemon, PokemonDetails, Type, WithID } from './battle-data';
+import { CurrentGen, Pokemon as BattlePokemon, PokemonDetails, TeraType, Type, WithID } from './battle-data';
 import { Transformation } from './decision';
 import { ActiveBattle } from './modules';
 import { getMultipleEff } from './typechart';
@@ -27,7 +27,7 @@ export class Pokemon implements PokemonDetails {
 	level = 100;
 	shiny = false;
 	gender: GenderName = '';
-	terastallize: Type | null = null;
+	terastallize: TeraType | null = null;
 
 	name: string;
 	item: Readonly<WithID<ItemData>> | null = null;
@@ -134,10 +134,12 @@ export class Pokemon implements PokemonDetails {
 	}
 
 	getTypes(conditions: Conditions, preterastallized = false): Type[] {
-		if (!preterastallized && this.terastallize) return [this.terastallize];
+		if (!preterastallized && this.terastallize && this.terastallize !== 'Stellar') {
+			return [this.terastallize];
+		}
 
 		let types: Type[] = [...(this.template.types || [])] as Type[];
-		if (conditions && conditions.volatiles) {
+		if (conditions?.volatiles) {
 			if (conditions.volatiles.typechange?.length) types = [...conditions.volatiles.typechange];
 			if (conditions.volatiles.typeadd) {
 				types.push(conditions.volatiles.typeadd);
@@ -371,7 +373,11 @@ export function getMoveType(poke: Pokemon, move: WithID<MoveData>, conditions: C
 		case 'technoblast':
 			return (poke.item?.onDrive as Type) || moveType;
 		case 'terablast':
+			if (poke.terastallize === 'Stellar') return '???';
 			return poke.terastallize || moveType;
+		case 'terastarstorm':
+			if (poke.terastallize === 'Stellar') return '???';
+			return moveType;
 		case 'terrainpulse':
 			if (globalConditions.electricterrain) return 'Electric';
 			if (globalConditions.grassyterrain) return 'Grass';
@@ -744,11 +750,11 @@ export function calculate(
 	}
 	if (moveType === 'Ground' && (move.id === 'thousandarrows' || globalConditions.gravity)) notImmune = true;
 
-	const { inversebattle } = globalConditions;
+	const inversebattle = !!globalConditions.inversebattle;
 	const defTypes = [...defPoke.getTypes(defConditions)];
-	let typeEffectiveness = getMultipleEff(moveType, defTypes, gen, notImmune, !!inversebattle, battleId);
+	let typeEffectiveness = getMultipleEff(moveType, defTypes, gen, notImmune, inversebattle, battleId);
 	if (move.id === 'flyingpress') {
-		typeEffectiveness *= getMultipleEff('Flying', defTypes, gen, notImmune, !!inversebattle, battleId);
+		typeEffectiveness *= getMultipleEff('Flying', defTypes, gen, notImmune, inversebattle, battleId);
 	}
 	if (move.id === 'freezedry' && defTypes.includes('Water')) {
 		typeEffectiveness =
@@ -758,9 +764,12 @@ export function calculate(
 				defTypes.filter((t) => t !== 'Water'),
 				gen,
 				notImmune,
-				!!inversebattle,
+				inversebattle,
 				battleId
 			);
+	}
+	if (['terablast', 'terastarstorm'].includes(move.id) && atkPoke.terastallize === 'Stellar') {
+		typeEffectiveness = defPoke.terastallize ? 2 : 1;
 	}
 	if (move.type === 'Shadow') typeEffectiveness = 2;
 
@@ -1039,6 +1048,9 @@ export function calculate(
 		case 'gravapple':
 			if (globalConditions.gravity) bp = Math.floor(bp * 1.5);
 			break;
+		case 'terablast':
+			if (atkPoke.terastallize === 'Stellar') bp = 100;
+			break;
 		case 'terrainpulse':
 			if (atkPoke.isGrounded(atkConditions)) {
 				for (const gcondition in globalConditions) {
@@ -1280,17 +1292,20 @@ export function calculate(
 
 	/* STAB */
 	let stab = 1;
-	if (moveType !== '???') {
+	if (moveType !== '???' || ['terablast', 'terastarstorm'].includes(move.id)) {
 		if (atkPoke.terastallize) {
 			const originalStab = atkPoke.getTypes(atkConditions, true).includes(moveType);
 			const teraStab = move.type === atkPoke.terastallize;
-			if (originalStab && teraStab && !['firepledge', 'grasspledge', 'waterpledge'].includes(move.id)) {
+			const stellar = atkPoke.terastallize === 'Stellar';
+			if (originalStab && (teraStab || stellar) && !['firepledge', 'grasspledge', 'waterpledge'].includes(move.id)) {
 				if (battle) battle.debug('applying double ' + move.type + ' stab from terastallization');
 				stab = atkPoke.hasAbility('adaptability') ? 2.25 : 2;
 			} else if (teraStab) {
 				stab = atkPoke.hasAbility('adaptability') ? 2 : 1.5;
 			} else if (originalStab) {
 				stab = 1.5;
+			} else if (stellar) {
+				stab = 1.2;
 			}
 		} else if (atkPoke.hasType(moveType, atkConditions) || atkPoke.hasAbility({ libero: 1, protean: 1 })) {
 			stab = atkPoke.hasAbility('adaptability') ? 2 : 1.5;
@@ -1503,7 +1518,7 @@ export function calculate(
 			) {
 				if (!defPoke.hasAbility('contrary')) secondHitMultiplier = 1.5;
 				else secondHitMultiplier = 0.66;
-			} else if (['makeitrain', 'superpower'].includes(move.id)) {
+			} else if (['makeitrain', 'superpower'].includes(move.id) || (move.id === 'terablast' && atkPoke.terastallize === 'Stellar')) {
 				secondHitMultiplier = 0.66;
 			} else if (['dracometeor', 'fleurcannon', 'leafstorm', 'overheat', 'psychoboost'].includes(move.id)) {
 				secondHitMultiplier = 0.5;

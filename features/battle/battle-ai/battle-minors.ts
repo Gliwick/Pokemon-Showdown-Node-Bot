@@ -7,7 +7,7 @@ import { BoostID } from '../../../data/types-dex';
 import { ItemData } from '../../../data/types-items';
 import { toId } from '../../../tools';
 import { Battle } from './battle';
-import { getAbility, getEffect, getItem, getMove, getPokemon, Type, WithID } from './battle-data';
+import { getAbility, getEffect, getItem, getMove, getPokemon, TeraType, WithID } from './battle-data';
 
 export type Minor = `-${string}`;
 
@@ -437,7 +437,7 @@ export const minors: Record<Minor, Minor | ((args: string[], kwargs: Record<stri
 
 	'-terastallize': function (this: Battle, args) {
 		const poke = this.getActive(args[1]);
-		if (poke) poke.terastallize = args[2] as Type;
+		if (poke) poke.terastallize = args[2] as TeraType;
 	},
 
 	'-start': function (this: Battle, args, kwargs) {

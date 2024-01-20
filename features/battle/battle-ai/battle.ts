@@ -11,7 +11,7 @@ import { colors } from '../../../index';
 import { errlog, error } from '../../../log';
 import { toId, toName } from '../../../tools';
 import { BattleBot } from '.';
-import { CurrentGen, getAbility, getItem, getPokemon, Player, Pokemon, PokemonDetails, Type } from './battle-data';
+import { CurrentGen, getAbility, getItem, getPokemon, Player, Pokemon, PokemonDetails, TeraType, Type } from './battle-data';
 import { majors } from './battle-majors';
 import { Minor, minors } from './battle-minors';
 import { Pokemon as CalcPokemon } from './calc';
@@ -439,7 +439,7 @@ export class Battle {
 				poke.gender = d;
 			}
 			if (d.startsWith('tera:')) {
-				poke.terastallize = d.substring('tera:'.length) as Type;
+				poke.terastallize = d.substring('tera:'.length) as TeraType;
 			}
 		});
 		return poke;

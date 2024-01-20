@@ -2702,7 +2702,8 @@ export class SinglesEffective implements BattleModule {
 		// prefer terastal
 		filteredMoves = [];
 		for (let i = 0; i < finalDamageMoves.length; i++) {
-			if (finalDamageMoves[i].transformation?.terastallize) filteredMoves.push(finalDamageMoves[i]);
+			const transformation = finalDamageMoves[i].transformation;
+			if (typeof transformation === 'object' && transformation?.terastallize) filteredMoves.push(finalDamageMoves[i]);
 		}
 		if (filteredMoves.length > 0) finalDamageMoves = filteredMoves;
 

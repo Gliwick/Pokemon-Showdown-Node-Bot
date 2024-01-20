@@ -4,7 +4,7 @@
 
 import { MoveData } from '../../../data/types-moves';
 import { Battle, RequestMove } from './battle';
-import { Type, WithID } from './battle-data';
+import { TeraType, WithID } from './battle-data';
 
 type DecisionType = 'move' | 'switch' | 'team' | 'pass' | 'shift';
 
@@ -23,7 +23,7 @@ export abstract class Decision {
 	protected abstract getArgsStr(battle?: Battle): string;
 }
 
-export type Transformation = { terastallize: Type } | string;
+export type Transformation = { terastallize: TeraType } | string;
 
 export class MoveDecision extends Decision {
 	moveId: number;
@@ -285,7 +285,7 @@ export function getDecisions(battle: Battle): Decision[][] | null {
 						if (mega) tables[i].push(new MoveDecision(j, target, 'mega', move.move, move.pp));
 						if (active.canTerastallize)
 							tables[i].push(
-								new MoveDecision(j, target, { terastallize: active.canTerastallize as Type }, move.move, move.pp)
+								new MoveDecision(j, target, { terastallize: active.canTerastallize as TeraType }, move.move, move.pp)
 							);
 					}
 

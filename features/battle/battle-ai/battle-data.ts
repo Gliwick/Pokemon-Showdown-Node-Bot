@@ -46,6 +46,8 @@ export type Type =
 	| 'Water'
 	| '???';
 
+export type TeraType = Type | 'Stellar';
+
 function getMods(gen: number, battleId?: string): string[] {
 	const mods = [...Array(CurrentGen - 1).keys()]
 		.filter((i) => i >= gen)
@@ -327,7 +329,7 @@ export interface PokemonDetails {
 	level: number;
 	shiny: boolean;
 	gender: GenderName;
-	terastallize: Type | null;
+	terastallize: TeraType | null;
 }
 
 export class Pokemon implements PokemonDetails {
@@ -339,7 +341,7 @@ export class Pokemon implements PokemonDetails {
 	gender: GenderName = '';
 	level = 100;
 	shiny = false;
-	terastallize: Type | null = null;
+	terastallize: TeraType | null = null;
 
 	transformed = false;
 	transformPrev: Pick<Pokemon, 'template' | 'species' | 'shiny' | 'moves' | 'ability' | 'baseAbility' | 'abilityStack'> | null = null;
