@@ -3073,7 +3073,7 @@ export class SinglesEffective implements BattleModule {
 			if (poke.hasItem({ boosterenergy: 1, powerherb: 1, throatspray: 1, whiteherb: 1 })) continue;
 			if (
 				battle.request.side.pokemon[sideId].moves.some((move) =>
-					['bellydrum', 'clangoroussoul', 'filletaway', 'lastrespects', 'revivalblessing', 'shellsmash'].includes(move)
+					['bellydrum', 'clangoroussoul', 'filletaway', 'lastrespects', 'noretreat', 'revivalblessing', 'shellsmash'].includes(move)
 				)
 			) {
 				continue;
