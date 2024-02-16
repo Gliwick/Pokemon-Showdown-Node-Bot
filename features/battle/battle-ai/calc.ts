@@ -74,7 +74,7 @@ export class Pokemon implements PokemonDetails {
 	}
 
 	getBaseStat(stat: StatID): number {
-		if (this.template && this.template.baseStats) {
+		if (this.template?.baseStats) {
 			if (this.template.name === 'Aegislash' && this.hasAbility('stancechange') && ['atk', 'spa'].includes(stat)) return 140;
 			else return this.template.baseStats[stat] || 0;
 		} else {
@@ -263,6 +263,8 @@ export class Damage {
 			for (const roll of rolls) {
 				if (typeof roll == 'number') {
 					this.rolls.push({ damage: roll, chance: 1 });
+				} else {
+					this.rolls.push(roll);
 				}
 			}
 
@@ -417,6 +419,77 @@ export function getMoveType(poke: Pokemon, move: WithID<MoveData>, conditions: C
 	return moveType;
 }
 
+function getCritStage(atkPoke: Pokemon, atkConditions: Conditions, defPoke: Pokemon, move: WithID<MoveData>, gen: number): number {
+	if (defPoke.hasAbility({ battlearmor: 1, shellarmor: 1 })) {
+		return 0;
+	}
+
+	if (atkConditions.immediate.crit || move.willCrit) {
+		return 4;
+	}
+
+	let stage = (move.critRatio || 1) - 1;
+	if (atkPoke.hasItem({ razorclaw: 1, scopelens: 1 })) {
+		stage += 1;
+	}
+	if (atkPoke.hasAbility({ superluck: 1 })) {
+		stage += 1;
+	}
+	if (atkConditions.volatiles['dragoncheer']) {
+		stage += atkPoke.hasType('Dragon', atkConditions) ? 2 : 1;
+	}
+	if (atkConditions.volatiles['gmaxchistrike']) {
+		stage += 1;
+	}
+	if (atkPoke.hasItem({ leek: 1, luckypunch: 1, stick: 1 }) && atkPoke.item?.itemUser?.includes(atkPoke.template.name)) {
+		stage += 2;
+	}
+	if (atkConditions.volatiles['focusenergy']) {
+		stage += gen > 2 ? 2 : 1;
+	}
+	return stage;
+}
+
+function getCritRatio(atkPoke: Pokemon, atkConditions: Conditions, defPoke: Pokemon, move: WithID<MoveData>, gen: number): number {
+	if (gen === 1) {
+		let baseRatio = atkPoke.getBaseStat('spe') / 512.0;
+		if (move.critRatio && move.critRatio > 1) {
+			baseRatio *= 8;
+		}
+		if (atkConditions.volatiles['focusenergy']) {
+			baseRatio /= 4.0;
+		}
+		return baseRatio;
+	}
+
+	const stage = getCritStage(atkPoke, atkConditions, defPoke, move, gen);
+
+	if (gen <= 4) {
+		switch (stage) {
+			case 0:
+			case 1:
+				return 0;
+			case 2:
+				return 0.25;
+			case 3:
+				if (gen === 2) return 85.0 / 256.0;
+				return 1.0 / 3.0;
+			default:
+				return 0.5;
+		}
+	}
+
+	switch (stage) {
+		case 0:
+		case 1:
+			return 0;
+		case 2:
+			return 0.5;
+		default:
+			return 1;
+	}
+}
+
 function getDamage(level: number, bp: number, atk: number, def: number, modifier: number, typeEffectiveness: number): number {
 	if (bp === 0) return 0;
 	return (
@@ -424,6 +497,23 @@ function getDamage(level: number, bp: number, atk: number, def: number, modifier
 			(Math.floor(Math.floor(((Math.floor((2 * level) / 5.0) + 2) * bp * atk) / def) / 50.0) + 2) * modifier * typeEffectiveness
 		) || 1
 	);
+}
+
+function getMultihitDamage(level: number, hitsBP: number[], atk: number, def: number, modifier: number, typeEffectiveness: number): number {
+	return hitsBP.reduce((dmg, hitBP) => dmg + getDamage(level, hitBP, atk, def, modifier, typeEffectiveness), 0);
+}
+
+function getDamageRolls(
+	level: number,
+	hitsBP: number[],
+	atk: number,
+	def: number,
+	modifier: number,
+	typeEffectiveness: number,
+	chance = 1
+): DamageRoll[] {
+	const dmg = getMultihitDamage(level, hitsBP, atk, def, modifier, typeEffectiveness);
+	return getRolls(dmg).map((roll) => new DamageRoll(roll, chance));
 }
 
 function equalChanceRolls(minHits: number, maxHits: number): DamageRoll[] {
@@ -443,19 +533,9 @@ function multiaccuracyRolls(maxHits: number, accuracy: number): DamageRoll[] {
 	return rolls;
 }
 
-function getMultihitRolls(
-	atkPoke: Pokemon,
-	atkConditions: Conditions,
-	defPoke: Pokemon,
-	move: WithID<MoveData>,
-	gen: number
-): DamageRoll[] | undefined {
+function getMultihitRolls(atkPoke: Pokemon, defPoke: Pokemon, move: WithID<MoveData>, gen: number): DamageRoll[] | undefined {
 	if (move.id === 'triplekick' && gen === 2) {
 		return equalChanceRolls(1, 3);
-	}
-
-	if (move.id === 'ficklebeam') {
-		return [new DamageRoll(1, 7), new DamageRoll(2, 3)];
 	}
 
 	if (!move.multihit) {
@@ -752,12 +832,12 @@ export function calculate(
 
 	const inversebattle = !!globalConditions.inversebattle;
 	const defTypes = [...defPoke.getTypes(defConditions)];
-	let typeEffectiveness = getMultipleEff(moveType, defTypes, gen, notImmune, inversebattle, battleId);
+	let typeEff = getMultipleEff(moveType, defTypes, gen, notImmune, inversebattle, battleId);
 	if (move.id === 'flyingpress') {
-		typeEffectiveness *= getMultipleEff('Flying', defTypes, gen, notImmune, inversebattle, battleId);
+		typeEff *= getMultipleEff('Flying', defTypes, gen, notImmune, inversebattle, battleId);
 	}
 	if (move.id === 'freezedry' && defTypes.includes('Water')) {
-		typeEffectiveness =
+		typeEff =
 			2 *
 			getMultipleEff(
 				moveType,
@@ -769,9 +849,9 @@ export function calculate(
 			);
 	}
 	if (['terablast', 'terastarstorm'].includes(move.id) && atkPoke.terastallize === 'Stellar') {
-		typeEffectiveness = defPoke.terastallize ? 2 : 1;
+		typeEff = defPoke.terastallize ? 2 : 1;
 	}
-	if (move.type === 'Shadow') typeEffectiveness = 2;
+	if (move.type === 'Shadow') typeEff = 2;
 
 	let immune = false;
 
@@ -820,12 +900,12 @@ export function calculate(
 				if (movePriority > 0) immune = true;
 				break;
 			case 'wonderguard':
-				if (typeEffectiveness < 2) immune = true;
+				if (typeEff < 2) immune = true;
 				break;
 		}
 	}
 
-	if (immune || typeEffectiveness === 0) return new Damage(defStats.hp);
+	if (immune || typeEff === 0) return new Damage(defStats.hp);
 
 	/******************************
 	 * Base power
@@ -1082,7 +1162,7 @@ export function calculate(
 			break;
 		case 'collisioncourse':
 		case 'electrodrift':
-			if (typeEffectiveness > 1) bp = Math.floor(bp * 1.5);
+			if (typeEff > 1) bp = Math.floor(bp * 1.5);
 			break;
 	}
 
@@ -1181,7 +1261,7 @@ export function calculate(
 	if (defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility('neutralizinggas')) {
 		switch (defPoke.ability.id) {
 			case 'prismarmor':
-				if (typeEffectiveness > 1) bp = Math.floor(bp * 0.75);
+				if (typeEff > 1) bp = Math.floor(bp * 0.75);
 				break;
 			case 'shadowshield':
 				if (defPoke.hp >= 100) bp = Math.floor(bp * 0.5);
@@ -1244,7 +1324,7 @@ export function calculate(
 				if (moveType === 'Normal') bp = Math.floor(bp * 1.2);
 				break;
 			case 'expertbelt':
-				if (typeEffectiveness > 1) bp = Math.floor(bp * 1.2);
+				if (typeEff > 1) bp = Math.floor(bp * 1.2);
 				break;
 			case 'punchingglove':
 				if (move.flags?.punch) bp = Math.floor(bp * 1.1);
@@ -1319,10 +1399,10 @@ export function calculate(
 	if (atkPoke.ability && !atkPoke.supressedAbility && !defPoke.hasAbility('neutralizinggas')) {
 		switch (atkPoke.ability.id) {
 			case 'tintedlens':
-				if (typeEffectiveness < 1) modifier *= 2;
+				if (typeEff < 1) modifier *= 2;
 				break;
 			case 'neuroforce':
-				if (typeEffectiveness > 1) modifier *= 1.25;
+				if (typeEff > 1) modifier *= 1.25;
 				break;
 		}
 	}
@@ -1330,7 +1410,7 @@ export function calculate(
 	if (defPoke.ability && !defPoke.supressedAbility && !atkPoke.hasAbility('neutralizinggas')) {
 		switch (defPoke.ability.id) {
 			case 'prismarmor':
-				if (typeEffectiveness > 1) modifier *= 0.75;
+				if (typeEff > 1) modifier *= 0.75;
 				break;
 			case 'shadowshield':
 				if (defPoke.hp >= 100) modifier *= 0.5;
@@ -1347,13 +1427,13 @@ export function calculate(
 					break;
 				case 'filter':
 				case 'solidrock':
-					if (typeEffectiveness > 1) modifier *= 0.75;
+					if (typeEff > 1) modifier *= 0.75;
 					break;
 				case 'multiscale':
 					if (defPoke.hp >= 100) modifier *= 0.5;
 					break;
 				case 'terashell':
-					if (defPoke.hp >= 100) typeEffectiveness = Math.min(typeEffectiveness, 0.5);
+					if (defPoke.hp >= 100) typeEff = Math.min(typeEff, 0.5);
 					break;
 				case 'punkrock':
 					if (move.flags?.sound) modifier *= 0.5;
@@ -1399,24 +1479,7 @@ export function calculate(
 		else atk = atkPoke.getBoostedStat(atkStat, atk, atkConditions.boosts);
 	}
 
-	const willCrit =
-		atkConditions.immediate.crit ||
-		move.willCrit ||
-		(atkPoke.hasItem({ leek: 1, luckypunch: 1, stick: 1 }) &&
-			atkPoke.item?.itemUser &&
-			atkPoke.item.itemUser.includes(atkPoke.template.name));
-
-	if (defConditions.boosts[defStat]) {
-		if (!willCrit && !move.ignoreDefensive && !atkPoke.hasAbility('unaware')) {
-			def = defPoke.getBoostedStat(defStat, def, defConditions.boosts);
-		}
-	}
-
 	/* immediate */
-
-	if (willCrit) {
-		modifier *= gen > 5 ? 1.5 : 2;
-	}
 
 	if (atkConditions.immediate.helpinghand) modifier *= 1.5;
 
@@ -1475,6 +1538,23 @@ export function calculate(
 	 * Damage
 	 *******************************/
 
+	const boostedDef =
+		move.ignoreDefensive || atkPoke.hasAbility('unaware') ? def : defPoke.getBoostedStat(defStat, def, defConditions.boosts);
+
+	const critRatio = getCritRatio(atkPoke, atkConditions, defPoke, move, gen);
+	let critModifier: number;
+	if (gen === 1) {
+		const l = atkPoke.level || 100;
+		critModifier = (2 * l + 5) / (l + 5.0);
+	} else if (gen < 6) {
+		critModifier = 2;
+	} else {
+		critModifier = 1.5;
+	}
+	if (atkPoke.hasAbility('sniper')) {
+		critModifier *= 1.5;
+	}
+
 	let hitsBP = [bp];
 	if (['tripleaxel', 'triplekick'].includes(move.id)) {
 		if (gen === 2) hitsBP = [bp, bp + 10, bp + 20];
@@ -1529,7 +1609,7 @@ export function calculate(
 		}
 	}
 
-	const multihitRolls = getMultihitRolls(atkPoke, atkConditions, defPoke, move, gen);
+	const multihitRolls = getMultihitRolls(atkPoke, defPoke, move, gen);
 
 	if (multihitRolls) {
 		const rolls: DamageRoll[] = multihitRolls.map((roll) => {
@@ -1537,7 +1617,14 @@ export function calculate(
 			let rollDmg = 0;
 			for (let hitNumber = 0; hitNumber < numberOfHits; hitNumber++) {
 				const hitBP = typeof hitsBP === 'number' ? hitsBP : hitsBP[hitNumber];
-				rollDmg += getDamage(atkPoke.level, hitBP, atk, def, modifier, typeEffectiveness);
+				rollDmg += getDamage(
+					atkPoke.level,
+					hitBP,
+					atk,
+					critRatio >= 1 ? def : boostedDef,
+					(critRatio >= 1 ? critModifier : 1) * modifier,
+					typeEff
+				);
 			}
 			return new DamageRoll(rollDmg, roll.chance);
 		});
@@ -1545,10 +1632,31 @@ export function calculate(
 		return new Damage(defStats.hp, rolls);
 	}
 
-	let dmg = 0;
-	for (const hitBP of hitsBP) {
-		dmg += getDamage(atkPoke.level, hitBP, atk, def, modifier, typeEffectiveness);
+	if (move.id === 'ficklebeam') {
+		const rolls = getDamageRolls(atkPoke.level, hitsBP, atk, boostedDef, modifier, typeEff, 0.7).concat(
+			getDamageRolls(
+				atkPoke.level,
+				hitsBP.map((v) => 2 * v),
+				atk,
+				boostedDef,
+				modifier,
+				typeEff,
+				0.3
+			)
+		);
+		return new Damage(defStats.hp, rolls);
 	}
 
-	return new Damage(defStats.hp, getRolls(dmg));
+	let rolls: DamageRoll[] = [];
+	if (critRatio < 1) {
+		rolls = rolls.concat(getDamageRolls(atkPoke.level, hitsBP, atk, boostedDef, modifier, typeEff, 1 - critRatio));
+	}
+	if (critRatio > 0) {
+		def;
+		rolls = rolls.concat(
+			getDamageRolls(atkPoke.level, hitsBP, atk, boostedDef, critModifier * modifier, typeEff, Math.min(1, critRatio))
+		);
+	}
+
+	return new Damage(defStats.hp, rolls);
 }
