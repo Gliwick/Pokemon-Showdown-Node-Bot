@@ -1541,20 +1541,6 @@ export function calculate(
 	const boostedDef =
 		move.ignoreDefensive || atkPoke.hasAbility('unaware') ? def : defPoke.getBoostedStat(defStat, def, defConditions.boosts);
 
-	const critRatio = getCritRatio(atkPoke, atkConditions, defPoke, move, gen);
-	let critModifier: number;
-	if (gen === 1) {
-		const l = atkPoke.level || 100;
-		critModifier = (2 * l + 5) / (l + 5.0);
-	} else if (gen < 6) {
-		critModifier = 2;
-	} else {
-		critModifier = 1.5;
-	}
-	if (atkPoke.hasAbility('sniper')) {
-		critModifier *= 1.5;
-	}
-
 	let hitsBP = [bp];
 	if (['tripleaxel', 'triplekick'].includes(move.id)) {
 		if (gen === 2) hitsBP = [bp, bp + 10, bp + 20];
@@ -1609,6 +1595,20 @@ export function calculate(
 		}
 	}
 
+	const critRatio = Math.pow(getCritRatio(atkPoke, atkConditions, defPoke, move, gen), hitsBP.length);
+	let critModifier: number;
+	if (gen === 1) {
+		const l = atkPoke.level || 100;
+		critModifier = (2 * l + 5) / (l + 5.0);
+	} else if (gen < 6) {
+		critModifier = 2;
+	} else {
+		critModifier = 1.5;
+	}
+	if (atkPoke.hasAbility('sniper')) {
+		critModifier *= 1.5;
+	}
+
 	const multihitRolls = getMultihitRolls(atkPoke, defPoke, move, gen);
 
 	if (multihitRolls) {
@@ -1652,7 +1652,6 @@ export function calculate(
 		rolls = rolls.concat(getDamageRolls(atkPoke.level, hitsBP, atk, boostedDef, modifier, typeEff, 1 - critRatio));
 	}
 	if (critRatio > 0) {
-		def;
 		rolls = rolls.concat(
 			getDamageRolls(atkPoke.level, hitsBP, atk, boostedDef, critModifier * modifier, typeEff, Math.min(1, critRatio))
 		);
