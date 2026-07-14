@@ -33,7 +33,7 @@ interface Matchup {
 	inflicted: number;
 }
 
-interface SupportViabilityCategoties {
+interface SupportViabilityCategories {
 	obligatory: MoveDecision[];
 	viable: MoveDecision[];
 	unviable: MoveDecision[];
@@ -796,8 +796,8 @@ export class SinglesEffective implements BattleModule {
 		);
 	}
 
-	getViableSupportMoves(battle: ActiveBattle, decisions: Decision[]): SupportViabilityCategoties {
-		const res: SupportViabilityCategoties = {
+	getViableSupportMoves(battle: ActiveBattle, decisions: Decision[]): SupportViabilityCategories {
+		const res: SupportViabilityCategories = {
 			obligatory: [],
 			viable: [],
 			unviable: [],
@@ -2385,7 +2385,7 @@ export class SinglesEffective implements BattleModule {
 		foePoke: Pokemon,
 		bestSw: SwitchDecision | null,
 		damageMoves: DamageViabilityCategories,
-		supportMoves: SupportViabilityCategoties
+		supportMoves: SupportViabilityCategories
 	): void {
 		battle.debug(this.toLogString(selfPoke) + '\nVS\n' + this.toLogString(foePoke));
 
