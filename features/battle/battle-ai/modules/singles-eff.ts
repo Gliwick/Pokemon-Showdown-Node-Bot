@@ -1221,6 +1221,7 @@ export class SinglesEffective implements BattleModule {
 					)
 						res.viable.push(des);
 					else res.unviable.push(des);
+					continue;
 				case 'geomancy':
 					if (selfPoke.item && selfPoke.item.id === 'powerherb') res.viable.push(des);
 					else if (!selfPoke.item) res.unviable.push(des);
